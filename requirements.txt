@@ -1,0 +1,13 @@
+# 20/09/2026: aiogram e pyTelegramBotAPI saíram junto com o bot do Telegram.
+aiosqlite
+requests==2.32.3
+python-dotenv==1.0.0
+fastapi
+uvicorn
+# upload do comprovante de Pix: o FastAPI exige este pacote pra aceitar
+# File()/UploadFile. Não aparece em nenhum 'import' do nosso código —
+# é dependência implícita de um recurso do framework.
+python-multipart
+# miniaturas das artes. OPCIONAL: sem ele o jogo serve a imagem cheia,
+# que funciona e só gasta mais banda. Ver webapp/imagens.py.
+Pillow
