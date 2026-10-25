@@ -29,8 +29,6 @@ const config: NextConfig = {
           "img-src 'self' data: https:",
           "font-src 'self'",
           "connect-src 'self'",
-          // canvas-confetti desenha num worker criado a partir de blob.
-          "worker-src 'self' blob:",
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self'",

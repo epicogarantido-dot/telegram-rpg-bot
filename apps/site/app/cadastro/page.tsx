@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BotaoEnviar } from "../../componentes/BotaoEnviar";
 import { Lock, MessageCircle, Sparkles } from "lucide-react";
 import { gravarDesafio, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros } from "../../lib/membros";
 
@@ -46,7 +47,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
           <input type="checkbox" name="consentimento" value="sim" required />
           <span>Concordo em receber mensagens sobre cursos e novidades pelo WhatsApp. Posso sair quando quiser respondendo SAIR.</span>
         </label>
-        <button type="submit"><MessageCircle size={18} aria-hidden /> Continuar</button>
+        <BotaoEnviar carregando="Criando conta…"><MessageCircle size={18} aria-hidden /> Continuar</BotaoEnviar>
       </form>
       <p className="suave pequeno"><Lock className="icone" aria-hidden /> No próximo passo você confirma o número mandando um código pro nosso WhatsApp. Sem SMS, sem custo.</p>
       <p>Já tem conta? <Link href="/entrar">Entrar</Link></p>

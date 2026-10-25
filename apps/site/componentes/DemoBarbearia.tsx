@@ -1,8 +1,7 @@
 import { CalendarCheck, MapPin, Star } from "lucide-react";
-import { Inclinavel } from "./Inclinavel";
 
 /**
- * Vitrine do produto: um celular em 3D mostrando como fica o "book" de uma
+ * Vitrine do produto: um celular mostrando como fica o "book" de uma
  * barbearia (trabalhos + agenda). É só HTML/CSS, sem imagem pra baixar.
  */
 const TRABALHOS = ["degradê", "navalhado", "barba", "social", "pigmentação", "kids"];
@@ -10,7 +9,7 @@ const HORARIOS = [["09:00", true], ["09:30", false], ["10:00", true], ["10:30", 
 
 export function DemoBarbearia() {
   return (
-    <Inclinavel intensidade={14} className="demo-palco">
+    <div className="demo-palco">
       <div className="celular" aria-label="Exemplo do site de uma barbearia" role="img">
         <div className="celular-tela">
           <div className="demo-capa">
@@ -35,6 +34,6 @@ export function DemoBarbearia() {
           <div className="demo-botao">Agendar agora</div>
         </div>
       </div>
-    </Inclinavel>
+    </div>
   );
 }

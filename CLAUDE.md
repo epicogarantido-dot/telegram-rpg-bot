@@ -11,7 +11,7 @@ num site e num bot de WhatsApp. Tudo em TypeScript, monorepo com npm workspaces.
 - `packages/prospeccao` — leads por nicho via Google Places API, SQLite em `data/privado/` (fora do git), mensagem de convite, opt-out.
 - `packages/agenda` — SaaS de agendamento: contas, assinatura (Pix estático `pix.ts`, acesso até `acesso_ate`, só o admin libera), serviços, profissionais, expediente, disponibilidade (`horariosLivres`, pura) e agendamentos. SQLite em `data/privado/agenda.db`; tudo filtrado por `barbearia_id`.
 - `packages/membros` — contas dos alunos: login = WhatsApp + senha; número provado mandando código ao bot (`confirmarPeloWhatsapp`), limite de tentativas, progresso, exclusão (LGPD). SQLite em `data/privado/membros.db`.
-- `apps/site` — Next.js (App Router). Alunos: `/cadastro`, `/confirmar`, `/entrar`, `/esqueci`, `/minha-area`; bot chama `/api/whatsapp/codigo` com `BOT_SEGREDO`. 3D em `componentes/Cena3D.tsx` (three.js), celular demo em `DemoBarbearia.tsx`. `/app` (painel do barbeiro; bloqueado → `/app/assinatura`), `/b/<slug>` (cliente agenda), `/painel/assinaturas` (admin confirma Pix), `/painel/backup`. Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
+- `apps/site` — Next.js (App Router). Alunos: `/cadastro`, `/confirmar`, `/entrar`, `/esqueci`, `/minha-area`; bot chama `/api/whatsapp/codigo` com `BOT_SEGREDO`. Celular de demonstração em `componentes/DemoBarbearia.tsx`; botões de formulário usam `BotaoEnviar` (estado de carregando). `/app` (painel do barbeiro; bloqueado → `/app/assinatura`), `/b/<slug>` (cliente agenda), `/painel/assinaturas` (admin confirma Pix), `/painel/backup`. Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
 - `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte.
 - `docs/` — `seguranca.md`, licenças/fontes, riscos do WhatsApp e `estrategia.md` (funil e roadmap do SaaS).
 
@@ -42,5 +42,5 @@ npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
 - Acesso vencido bloqueia o painel E a página pública; "já paguei" nunca libera sozinho — só `confirmarPagamento` (admin).
 - Toda consulta do SaaS recebe `barbeariaId` da sessão (`exigirBarbeiro`), nunca do formulário.
 - O bot nunca envia mensagem primeiro, nem pra código de login: a pessoa manda o código pra ele.
-- Animações e 3D sempre respeitam `prefers-reduced-motion` e pausam fora da tela.
+- Visual: o dono prefere o estilo limpo (sem 3D/confete). Antes de mexer no design, use as skills `frontend-design` e `diretrizes-interface`; animação só em resposta a uma ação da pessoa e sempre respeitando `prefers-reduced-motion`.
 - Código e textos em português; identificadores também.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BotaoEnviar } from "../../componentes/BotaoEnviar";
 import { gravarDesafio, ipDaRequisicao, mensagemMembro, obterMembros } from "../../lib/membros";
 
 export const metadata = { title: "Esqueci a senha" };
@@ -26,7 +27,7 @@ export default async function Esqueci({ searchParams }: { searchParams: Promise<
         <label>WhatsApp (com DDD)
           <input name="telefone" required inputMode="tel" autoComplete="username" placeholder="(11) 98765-4321" />
         </label>
-        <button type="submit">Continuar</button>
+        <BotaoEnviar carregando="Gerando código…">Continuar</BotaoEnviar>
       </form>
       <p><Link href="/entrar">Voltar</Link></p>
     </div>

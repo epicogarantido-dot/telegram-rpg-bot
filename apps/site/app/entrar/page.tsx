@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BotaoEnviar } from "../../componentes/BotaoEnviar";
 import { LogIn } from "lucide-react";
 import {
   gravarDesafio, gravarSessaoMembro, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros,
@@ -39,7 +40,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         <label>Senha
           <input name="senha" type="password" required autoComplete="current-password" />
         </label>
-        <button type="submit"><LogIn size={18} aria-hidden /> Entrar</button>
+        <BotaoEnviar carregando="Entrando…"><LogIn size={18} aria-hidden /> Entrar</BotaoEnviar>
       </form>
       <p><Link href="/esqueci">Esqueci a senha</Link> · <Link href="/cadastro">Criar conta grátis</Link></p>
     </div>

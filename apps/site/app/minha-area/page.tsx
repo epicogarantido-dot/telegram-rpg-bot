@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, LogOut, Trophy } from "lucide-react";
 import { carregarCursos } from "@aprenda/catalogo";
-import { Confete } from "../../componentes/Confete";
 import { exigirMembro, obterMembros, sairMembro } from "../../lib/membros";
 
 export const metadata = { title: "Minha área", robots: { index: false } };
@@ -32,9 +31,8 @@ export default async function MinhaArea({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      {sp.bemvindo && <Confete />}
       <div className="linha-topo">
-        <h1>{sp.bemvindo ? `Bem-vindo, ${primeiroNome}! 🎉` : `Olá, ${primeiroNome}!`}</h1>
+        <h1>{sp.bemvindo ? `Bem-vindo, ${primeiroNome}!` : `Olá, ${primeiroNome}!`}</h1>
         <form action={sair}><button className="botao-sec"><LogOut size={16} aria-hidden /> Sair</button></form>
       </div>
       {sp.senha && <p className="atribuicao">Senha trocada. Os outros aparelhos foram desconectados.</p>}

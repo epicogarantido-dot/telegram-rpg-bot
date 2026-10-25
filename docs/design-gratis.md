@@ -49,3 +49,24 @@ produto. Baixe a foto, otimize e coloque em `apps/site/public/` (não linke dire
 
 [shadcn/ui](https://ui.shadcn.com) e [daisyUI](https://daisyui.com) (MIT) são ótimos, mas dependem de
 Tailwind CSS. O site usa CSS próprio; só vale migrar se o visual precisar crescer muito.
+
+## Inspiração e componentes (avaliados em 25/10/2026)
+
+| Site | O que é | Custo / licença | Serve pra nós? |
+|---|---|---|---|
+| [React Bits](https://reactbits.dev) | 217 componentes animados em React | Grátis, MIT + Commons Clause (pode usar no site, não pode revender o componente) | Sim, com moderação: escolher 1 efeito por página |
+| [21st.dev](https://21st.dev) | Biblioteca de componentes e prompts | Grátis só 2 cópias/dia; ilimitado a partir de US$ 6/mês | Pra olhar ideias; o MCP "Magic" é pago |
+| [Uiverse](https://uiverse.io) | Botões, cards, loaders em HTML/CSS puro | Grátis, MIT | Sim — copiar e colar CSS, sem dependência |
+| [Motionsites](https://motionsites.ai) | Galeria de prompts de landing page | Parte paga | Só inspiração |
+| [Seasats](https://www.seasats.com), [Alche](https://alche.studio), [Aether](https://aether.so) | Sites de empresas (vitrine de design) | — | Inspiração: tipografia grande, foto/vídeo forte, menu lateral criativo |
+| Dora.run, Infinitepapers | — | Bloqueados pela rede da sessão / "em breve" | Não deu pra ver |
+
+## Ferramentas pro Claude (do vídeo)
+
+| Ferramenta | Veredito |
+|---|---|
+| **frontend-design** (Anthropic) | ✅ Instalada no projeto (`.claude/skills/frontend-design`, Apache 2.0) |
+| **Web Interface Guidelines** (Vercel) | ✅ Instalada como `.claude/skills/diretrizes-interface` (lê a lista oficial, MIT) |
+| **Chrome DevTools MCP** (Google) | Grátis, mas o Playwright que já está no `.mcp.json` faz o mesmo papel |
+| **shadcn MCP** | Grátis, mas exige migrar o site pra Tailwind; só vale se adotarmos shadcn |
+| **Magic MCP (21st.dev)** | ❌ Pago (créditos de IA) — fora da regra de custo zero |

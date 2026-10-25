@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BotaoEnviar } from "../../../componentes/BotaoEnviar";
 import {
   apagarDesafio, gravarSessaoMembro, lerDesafio, mensagemMembro, obterMembros,
 } from "../../../lib/membros";
@@ -32,7 +33,7 @@ export default async function NovaSenha({ searchParams }: { searchParams: Promis
       <form action={trocar} className="formulario">
         <label>Nova senha<input name="senha" type="password" required minLength={8} maxLength={128} autoComplete="new-password" /></label>
         <label>Repita a senha<input name="confirmacao" type="password" required minLength={8} maxLength={128} autoComplete="new-password" /></label>
-        <button type="submit">Salvar e entrar</button>
+        <BotaoEnviar carregando="Salvando…">Salvar e entrar</BotaoEnviar>
       </form>
       <p className="suave pequeno">Por segurança, todos os outros aparelhos conectados serão desconectados.</p>
     </div>
