@@ -387,3 +387,16 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .equipe-item { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--borda); }
 .equipe-item form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .equipe-item select, .equipe-item input { padding: 8px 10px; font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); }
+
+/* ---------- avisos no celular (painel do barbeiro) ---------- */
+.avisos-celular {
+  display: grid; gap: 12px; margin: 24px 0; padding: 16px 18px;
+  border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao);
+}
+.avisos-celular p { margin: 0; }
+.avisos-celular svg { vertical-align: -3px; }
+.avisos-celular .botao { justify-self: start; }
+.avisos-mensagem { color: var(--suave); font-size: 14px; }
+/* Horário aberto pelo aviso: destaca o cartão. */
+.lead:target { border-color: var(--destaque); box-shadow: 0 0 0 3px var(--destaque-claro); }
+.lead { scroll-margin-top: 90px; }

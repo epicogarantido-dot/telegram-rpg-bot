@@ -220,6 +220,8 @@
 .b-assinatura { opacity: 0.75; text-underline-offset: 4px; }
 .b-assinatura:hover { opacity: 1; }
 .b-barra-celular { display: none; }
+/* Dentro do agendamento a barra "Agendar" só atrapalha. */
+.site-b:has(.b-agendar, .b-confirmado) .b-barra-celular { display: none !important; }
 @media (max-width: 760px) {
   .site-b { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
   .b-barra-celular {
@@ -239,7 +241,64 @@
 .site-b .formulario button { border-radius: var(--t-botao-raio); text-transform: var(--t-botao-caixa); letter-spacing: var(--t-botao-espaco); }
 .site-b[data-tema] .b-agendar h2 { font-size: clamp(1.25rem, 3vw, 1.6rem); margin: 36px 0 12px; text-align: left; }
 .site-b[data-tema] .b-agendar h2::after { display: none; }
-.b-agendar .formulario { margin-top: 12px; }
+.b-agendar { max-width: 760px; }
+.b-passo { margin: 0; font-size: 14px; color: var(--suave); }
+.site-b[data-tema] .b-agendar h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); }
+
+/* Passo 1: serviços em lista, uma linha = um toque. */
+.b-lista-servicos { list-style: none; margin: 24px 0 0; padding: 0; border-top: 1px solid var(--borda); }
+.b-lista-servicos a {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto 18px; align-items: center; gap: 14px;
+  min-height: 64px; padding: 12px 4px; border-bottom: 1px solid var(--borda); text-decoration: none;
+}
+.b-lista-servicos a:hover .b-lista-nome { text-decoration: underline; text-underline-offset: 4px; }
+.b-lista-servicos a:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.b-lista-nome { font-weight: 600; font-size: 1.05rem; }
+.b-lista-info { color: var(--suave); font-size: 14px; }
+.b-lista-preco { font-weight: 600; font-variant-numeric: tabular-nums; }
+.site-b[data-tema="tecnico"] .b-lista-servicos { border: 0; display: grid; gap: 10px; }
+.site-b[data-tema="tecnico"] .b-lista-servicos a { border: 0; background: var(--cartao); border-radius: 18px; padding: 12px 20px; box-shadow: var(--sombra); }
+
+/* Passo 2: profissional, dias e horários. */
+.b-escolhido { margin: 16px 0 0; color: var(--suave); }
+.b-escolhido a { color: var(--texto); text-underline-offset: 4px; }
+.b-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.b-dias {
+  display: flex; gap: 8px; margin: 20px -16px 0; padding: 4px 16px 8px; overflow-x: auto;
+  scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: thin;
+}
+.b-dia {
+  flex: 0 0 auto; scroll-snap-align: start; display: grid; justify-items: center; gap: 2px;
+  min-width: 72px; padding: 10px 12px; text-decoration: none; border: 1px solid var(--borda);
+  border-radius: var(--t-botao-raio); background: var(--cartao); color: var(--texto); font-size: 14px;
+}
+.b-dia strong { font-size: 1rem; font-variant-numeric: tabular-nums; }
+.b-dia.escolhido { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); }
+.b-dia.lotado { opacity: 0.45; }
+.b-dia.lotado small { font-size: 11px; }
+a.b-dia:hover:not(.escolhido) { border-color: var(--texto); }
+a.b-dia:focus-visible, .b-horas a:focus-visible, .b-chips a:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.site-b[data-tema] .b-agendar .b-dia-titulo { font: 600 1rem var(--fonte-texto); letter-spacing: normal; text-transform: none; margin: 24px 0 12px; text-align: left; color: var(--texto); }
+.site-b[data-tema] .b-agendar .b-dia-titulo::after { display: none; }
+.b-horas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.b-horas a {
+  display: grid; place-items: center; min-height: 48px; text-decoration: none; font-weight: 600; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--borda); border-radius: var(--t-botao-raio); background: var(--cartao); color: var(--texto);
+}
+.b-horas a:hover { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); }
+
+/* Passo 3: resumo e dados. */
+.b-resumo { margin: 20px 0 8px; padding: 18px 20px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); display: grid; gap: 4px; }
+.b-resumo p { margin: 0; }
+.b-resumo-quando { font: var(--t-titulo-peso) 1.4rem var(--fonte-titulo); }
+.b-resumo a { font-size: 14px; color: var(--suave); text-underline-offset: 4px; justify-self: start; }
+.b-form-agendar { margin-top: 16px; }
+.b-form-agendar label { margin-bottom: -6px; color: var(--texto); font-weight: 600; }
+.b-dica { color: var(--suave); margin-top: -4px; }
+.b-form-agendar .b-botao {
+  width: 100%; min-height: 52px; margin-top: 8px; border-radius: var(--t-botao-raio); clip-path: var(--t-botao-forma);
+  font: 600 15px var(--fonte-texto); text-transform: var(--t-botao-caixa); letter-spacing: var(--t-botao-espaco);
+}
 .b-indisponivel { text-align: center; display: grid; gap: 16px; justify-items: center; }
 
 /* ======================================================================

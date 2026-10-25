@@ -296,3 +296,57 @@ describe("efeitos: ano de abertura e antes/depois", () => {
     expect(b.fotos(a.id)[0]!.antesDe).toBeNull();
   });
 });
+
+describe("avisos no celular do barbeiro", () => {
+  const sub = (n: number) => ({ endpoint: `https://fcm.googleapis.com/fcm/send/aparelho-${n}`, p256dh: "B".repeat(87), auth: "a".repeat(22) });
+
+  it("guarda por barbearia, troca de dono sem duplicar e remove só o próprio", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    b.salvarInscricaoAviso(a.id, sub(1));
+    b.salvarInscricaoAviso(a.id, sub(1));
+    expect(b.inscricoesAviso(a.id)).toHaveLength(1);
+    b.removerInscricaoAviso(sub(1).endpoint, o.id);
+    expect(b.inscricoesAviso(a.id)).toHaveLength(1);
+    b.salvarInscricaoAviso(o.id, sub(1));
+    expect(b.inscricoesAviso(a.id)).toHaveLength(0);
+    expect(b.inscricoesAviso(o.id)).toHaveLength(1);
+    b.removerInscricaoAviso(sub(1).endpoint);
+    expect(b.inscricoesAviso(o.id)).toHaveLength(0);
+  });
+
+  it("recusa endereço estranho e passa do limite de aparelhos", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    expect(() => b.salvarInscricaoAviso(a.id, { ...sub(1), endpoint: "http://inseguro.com/x" })).toThrow(ErroAgenda);
+    expect(() => b.salvarInscricaoAviso(a.id, { ...sub(1), auth: "<script>" })).toThrow(ErroAgenda);
+    for (let i = 0; i < 10; i++) b.salvarInscricaoAviso(a.id, sub(i));
+    expect(() => b.salvarInscricaoAviso(a.id, sub(99))).toThrow(/Limite/);
+  });
+
+  it("dados do aviso só saem pra barbearia dona do agendamento", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const servico = b.servicos(a.id, true)[0]!;
+    const prof = b.profissionais(a.id, true)[0]!;
+    const agora = new Date();
+    let id = 0;
+    for (let i = 1; i < 10 && !id; i++) {
+      const data = somarDias(agoraNoFuso(a.fuso, agora).slice(0, 10), i);
+      const hora = b.horariosLivres(a.id, prof.id, servico.id, data, agora)[0];
+      if (hora) id = b.agendar({ barbeariaId: a.id, profissionalId: prof.id, servicoId: servico.id, data, hora, clienteNome: "Lucas", clienteTelefone: "5519998765432", agora });
+    }
+    expect(b.agendamentoParaAviso(a.id, id)).toMatchObject({ clienteNome: "Lucas", servico: servico.nome, profissional: prof.nome });
+    expect(b.agendamentoParaAviso(o.id, id)).toBeUndefined();
+  });
+
+  it("configurações guardam e trocam valor", () => {
+    const b = new BancoAgenda(":memory:");
+    expect(b.configuracao("x")).toBeUndefined();
+    b.definirConfiguracao("x", "1");
+    b.definirConfiguracao("x", "2");
+    expect(b.configuracao("x")).toBe("2");
+  });
+});

@@ -190,6 +190,14 @@ export class BancoAgenda {
       CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria);
     `);
     this.garantirColuna("fotos", "antes_de", "TEXT");
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS avisos_inscricoes (
+        endpoint TEXT PRIMARY KEY,
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        p256dh TEXT NOT NULL, auth TEXT NOT NULL, criado_em TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS configuracoes (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
+    `);
   }
 
   private garantirColuna(tabela: string, coluna: string, definicao: string): void {
@@ -583,5 +591,45 @@ export class BancoAgenda {
   /** A rota pública de imagem só entrega arquivo que está registrado no banco. */
   fotoExiste(arquivo: string): boolean {
     return !!this.db.prepare("SELECT 1 FROM fotos WHERE arquivo = ?").get(arquivo);
+  }
+
+  // ---------- avisos no celular do barbeiro (Web Push) ----------
+
+  /** Guarda o aparelho que pediu avisos. Se o mesmo endpoint já existia, passa a ser desta barbearia. */
+  salvarInscricaoAviso(barbeariaId: number, inscricao: { endpoint: string; p256dh: string; auth: string }): void {
+    const { endpoint, p256dh, auth } = inscricao;
+    if (!/^https:\/\/[^\s]{10,}$/.test(endpoint) || endpoint.length > 1000) throw new ErroAgenda("Aparelho inválido.");
+    if (!/^[A-Za-z0-9_-]{20,200}$/.test(p256dh) || !/^[A-Za-z0-9_-]{10,100}$/.test(auth)) throw new ErroAgenda("Aparelho inválido.");
+    const total = (this.db.prepare("SELECT COUNT(*) AS n FROM avisos_inscricoes WHERE barbearia_id = ? AND endpoint <> ?").get(barbeariaId, endpoint) as { n: number }).n;
+    if (total >= 10) throw new ErroAgenda("Limite de 10 aparelhos com aviso. Desligue em algum antes.");
+    this.db.prepare(`INSERT INTO avisos_inscricoes (endpoint, barbearia_id, p256dh, auth, criado_em) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(endpoint) DO UPDATE SET barbearia_id = excluded.barbearia_id, p256dh = excluded.p256dh, auth = excluded.auth`)
+      .run(endpoint, barbeariaId, p256dh, auth, new Date().toISOString());
+  }
+
+  inscricoesAviso(barbeariaId: number): { endpoint: string; p256dh: string; auth: string }[] {
+    return this.db.prepare("SELECT endpoint, p256dh, auth FROM avisos_inscricoes WHERE barbearia_id = ?").all(barbeariaId) as { endpoint: string; p256dh: string; auth: string }[];
+  }
+
+  /** Remove um aparelho: pelo próprio barbeiro (com barbeariaId) ou quando o serviço de push diz que ele sumiu. */
+  removerInscricaoAviso(endpoint: string, barbeariaId?: number): void {
+    if (barbeariaId === undefined) this.db.prepare("DELETE FROM avisos_inscricoes WHERE endpoint = ?").run(endpoint);
+    else this.db.prepare("DELETE FROM avisos_inscricoes WHERE endpoint = ? AND barbearia_id = ?").run(endpoint, barbeariaId);
+  }
+
+  configuracao(chave: string): string | undefined {
+    return (this.db.prepare("SELECT valor FROM configuracoes WHERE chave = ?").get(chave) as { valor: string } | undefined)?.valor;
+  }
+
+  definirConfiguracao(chave: string, valor: string): void {
+    this.db.prepare("INSERT INTO configuracoes (chave, valor) VALUES (?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor").run(chave, valor);
+  }
+
+  /** Dados de um agendamento pra montar o aviso (só da própria barbearia). */
+  agendamentoParaAviso(barbeariaId: number, id: number): { clienteNome: string; clienteTelefone: string; inicio: string; servico: string; profissional: string } | undefined {
+    return this.db.prepare(`SELECT a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio,
+        s.nome AS servico, p.nome AS profissional
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
+      WHERE a.id = ? AND a.barbearia_id = ?`).get(id, barbeariaId) as ReturnType<BancoAgenda["agendamentoParaAviso"]>;
   }
 }

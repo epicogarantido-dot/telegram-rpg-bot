@@ -118,7 +118,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           <ul>
             {vagas.itens.map((v) => (
               <li key={v.hora}>
-                <Link href={`${base}/agendar?servico=${servicos[0]!.id}&profissional=${v.profissionalId}&data=${vagas.data}&hora=${v.hora}`}>{v.hora}</Link>
+                <Link href={`${base}/agendar?servico=${servicos[0]!.id}&com=${v.profissionalId}&data=${vagas.data}&hora=${v.hora}`}>{v.hora}</Link>
               </li>
             ))}
           </ul>

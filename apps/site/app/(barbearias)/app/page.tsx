@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
+import { MessageCircle } from "lucide-react";
+import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
+import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -13,6 +16,31 @@ async function cancelar(form: FormData) {
   const { barbearia } = await exigirAcessoAtivo();
   obterAgenda().cancelar(barbearia.id, Number(form.get("id")));
   revalidatePath("/app");
+}
+
+async function salvarAviso(inscricao: { endpoint: string; p256dh: string; auth: string }): Promise<string | null> {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  try {
+    obterAgenda().salvarInscricaoAviso(barbearia.id, {
+      endpoint: String(inscricao.endpoint), p256dh: String(inscricao.p256dh), auth: String(inscricao.auth),
+    });
+    return null;
+  } catch (e) {
+    return mensagemDeErro(e);
+  }
+}
+
+async function removerAviso(endpoint: string): Promise<void> {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  obterAgenda().removerInscricaoAviso(String(endpoint), barbearia.id);
+}
+
+async function testarAviso(): Promise<number> {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  return avisoDeTeste(barbearia.id);
 }
 
 async function sair() {
@@ -54,6 +82,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {" · "}<Link href="/app/assinatura">Assinatura</Link>
       </p>
 
+      <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
+
       <nav className="navegacao">
         <Link href={`/app?data=${somarDias(data, -1)}`}>← dia anterior</Link>
         <strong>{data === hoje ? "Hoje — " : ""}{formatarData(data)}</strong>
@@ -62,20 +92,24 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
       {agenda.length === 0 && <p>Nenhum agendamento neste dia.</p>}
       {agenda.map((a) => (
-        <div key={a.id} className={`cartao lead ${a.status === "cancelado" ? "cancelado" : ""}`}>
+        <div key={a.id} id={`ag-${a.id}`} className={`cartao lead ${a.status === "cancelado" ? "cancelado" : ""}`}>
           <div>
             <strong>{a.inicio.slice(11)}–{a.fim.slice(11)}</strong> · {a.servico} com {a.profissional}
             {a.status === "cancelado" && <span className="etiqueta" style={{ marginLeft: 8 }}>cancelado</span>}
             <br />
-            {a.clienteNome} ·{" "}
-            <a href={linkWhatsapp(a.clienteTelefone, `Olá, ${a.clienteNome}! Aqui é da ${barbearia.nome}, sobre seu horário de ${formatarData(data)} às ${a.inicio.slice(11)}.`)}
-              target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            {a.clienteNome}
           </div>
           {a.status === "confirmado" && (
-            <form action={cancelar} className="acoes">
-              <input type="hidden" name="id" value={a.id} />
-              <button className="botao-sec">Cancelar</button>
-            </form>
+            <div className="acoes">
+              <a className="botao-sec" target="_blank" rel="noopener noreferrer"
+                href={linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio }))}>
+                <MessageCircle size={16} aria-hidden /> Confirmar no WhatsApp
+              </a>
+              <form action={cancelar}>
+                <input type="hidden" name="id" value={a.id} />
+                <button className="botao-sec">Cancelar</button>
+              </form>
+            </div>
           )}
         </div>
       ))}

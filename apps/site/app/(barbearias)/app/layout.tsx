@@ -3,6 +3,13 @@ import { cookies } from "next/headers";
 import { CalendarDays, Images, LayoutTemplate, Settings, Wallet } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 
+// O painel pode ser instalado no celular como app (avisos de horário novo).
+export const metadata = {
+  manifest: "/painel.webmanifest",
+  appleWebApp: { capable: true, title: "Agenda", statusBarStyle: "default" as const },
+  icons: { apple: "/painel/icone-192.png" },
+};
+
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
   const usuario = obterAgenda().usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
   const barbearia = usuario && obterAgenda().barbeariaPorId(usuario.barbeariaId);

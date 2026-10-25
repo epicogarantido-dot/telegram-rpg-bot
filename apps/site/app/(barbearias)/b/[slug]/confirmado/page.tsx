@@ -20,14 +20,14 @@ export default async function Confirmado({ params, searchParams }: {
   const quando = sp.data && dataValida(sp.data) && sp.hora ? `${formatarData(sp.data)} às ${sp.hora}` : "";
 
   return (
-    <section className="b-secao b-indisponivel">
+    <section className="b-secao b-indisponivel b-confirmado">
       <h1>Agendado! ✂️</h1>
       <p>{servico?.nome} com {prof?.nome} na {b.nome}<br /><strong>{quando}</strong></p>
       {b.endereco && <p>📍 {b.endereco}</p>}
       <p>
         <a className="b-botao" target="_blank" rel="noopener noreferrer"
           href={linkWhatsapp(b.telefone, `Olá! Acabei de agendar ${servico?.nome ?? ""} para ${quando}.`)}>
-          Falar com a barbearia no WhatsApp
+          Falar no WhatsApp
         </a>
       </p>
       <p><small>Precisa remarcar ou cancelar? Fale com a barbearia pelo WhatsApp.</small></p>
