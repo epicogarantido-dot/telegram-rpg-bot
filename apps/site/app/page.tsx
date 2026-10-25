@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Globe2, HeartHandshake, Languages, Search, ShieldCheck } from "lucide-react";
 import { carregarCursos } from "@aprenda/catalogo";
 import { CartaoCurso } from "./componentes";
 
@@ -8,26 +9,40 @@ export default async function Inicio() {
   return (
     <>
       <section className="heroi">
-        <h1>O conhecimento do mundo, em português.</h1>
+        <span className="selo"><Globe2 className="icone" aria-hidden /> Cursos abertos do mundo todo</span>
+        <h1>O conhecimento do mundo, <em>em português.</em></h1>
         <p>
-          Reunimos cursos gratuitos e abertos de universidades e comunidades do mundo todo e traduzimos
-          para você — sempre com crédito aos autores originais.
+          Reunimos cursos gratuitos de universidades e comunidades do mundo inteiro e traduzimos para você,
+          sempre com crédito aos autores originais.
         </p>
-        <form action="/cursos" className="busca">
+        <form action="/cursos" className="busca" role="search">
           <input name="q" placeholder="O que você quer aprender?" aria-label="Buscar cursos" />
-          <button type="submit">Buscar</button>
+          <button type="submit"><Search size={18} aria-hidden /> Buscar</button>
         </form>
+        {areas.length > 0 && (
+          <div className="etiquetas">
+            {areas.map((a) => (
+              <Link key={a} href={`/cursos?q=${encodeURIComponent(a)}`} className="etiqueta">{a}</Link>
+            ))}
+          </div>
+        )}
       </section>
-      {areas.length > 0 && (
-        <p>
-          Áreas:{" "}
-          {areas.map((a) => (
-            <Link key={a} href={`/cursos?q=${encodeURIComponent(a)}`} className="etiqueta" style={{ marginRight: 8 }}>
-              {a}
-            </Link>
-          ))}
-        </p>
-      )}
+
+      <section className="vantagens" aria-label="Por que Aprenda Livre">
+        <div className="vantagem">
+          <span className="chip-icone"><Languages size={20} aria-hidden /></span>
+          <div><strong>Em português</strong><span>Material de fora traduzido com cuidado, sem perder o original.</span></div>
+        </div>
+        <div className="vantagem">
+          <span className="chip-icone acento"><HeartHandshake size={20} aria-hidden /></span>
+          <div><strong>Grátis de verdade</strong><span>Sem cadastro, sem pegadinha. Abriu, estudou.</span></div>
+        </div>
+        <div className="vantagem">
+          <span className="chip-icone"><ShieldCheck size={20} aria-hidden /></span>
+          <div><strong>Licença aberta</strong><span>Só publicamos o que o autor permite traduzir e compartilhar.</span></div>
+        </div>
+      </section>
+
       <h2>Cursos</h2>
       <div className="grade">
         {cursos.map((c) => <CartaoCurso key={c.slug} curso={c} />)}

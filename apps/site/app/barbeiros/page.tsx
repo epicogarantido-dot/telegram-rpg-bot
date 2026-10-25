@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ArrowRight, CalendarCheck, GraduationCap, MessagesSquare, Scissors } from "lucide-react";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "../../lib/painel";
 
@@ -27,8 +28,8 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   return (
     <>
       <section className="heroi">
-        <span className="etiqueta">Grátis para barbeiros</span>
-        <h1>Agenda cheia, cadeira girando. ✂️</h1>
+        <span className="selo"><Scissors className="icone" aria-hidden /> Grátis para barbeiros</span>
+        <h1>Agenda cheia, <em>cadeira girando.</em></h1>
         <p>
           Uma comunidade no WhatsApp só de barbeiros: dicas para atrair e fidelizar clientes, cursos gratuitos
           de gestão e marketing, e acesso antecipado ao nosso app de agendamento online.
@@ -36,9 +37,20 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
       </section>
 
       <div className="grade">
-        <div className="cartao"><h3>💬 Comunidade</h3><p>Troque experiência com barbeiros do Brasil todo. Sem spam, sem corrente.</p></div>
-        <div className="cartao"><h3>🎓 Cursos gratuitos</h3><p>Gestão, redes sociais, atendimento e precificação, em português.</p></div>
-        <a href="/app/cadastro" className="cartao"><h3>📅 Agendamento online</h3><p>Seu cliente marca horário pelo link, você vê a agenda no celular. Grátis no período de teste — crie a sua agora →</p></a>
+        <div className="cartao">
+          <span className="chip-icone"><MessagesSquare size={20} aria-hidden /></span>
+          <h3>Comunidade</h3><p>Troque experiência com barbeiros do Brasil todo. Sem spam, sem corrente.</p>
+        </div>
+        <div className="cartao">
+          <span className="chip-icone acento"><GraduationCap size={20} aria-hidden /></span>
+          <h3>Cursos gratuitos</h3><p>Gestão, redes sociais, atendimento e precificação, em português.</p>
+        </div>
+        <a href="/app/cadastro" className="cartao">
+          <span className="chip-icone"><CalendarCheck size={20} aria-hidden /></span>
+          <h3>Agendamento online</h3>
+          <p>Seu cliente marca horário pelo link, você vê a agenda no celular. Teste grátis.</p>
+          <div className="rodape-cartao"><span style={{ color: "var(--destaque)", fontWeight: 600 }}>Criar minha agenda <ArrowRight className="icone" aria-hidden /></span></div>
+        </a>
       </div>
 
       <h2 id="inscricao">Quero participar</h2>
