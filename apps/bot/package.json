@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aprenda/catalogo": "*",
+    "@aprenda/prospeccao": "*",
     "@hapi/boom": "^10.0.1",
     "baileys": "7.0.0-rc14",
     "pino": "^10.4.0",

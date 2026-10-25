@@ -4,13 +4,16 @@
  * ⚠️ Isso viola os Termos do WhatsApp e o número pode ser banido a qualquer
  * momento. Use um chip dedicado, nunca o seu número pessoal, e mantenha o
  * bot só RESPONDENDO — nada de disparo em massa. Ver docs/whatsapp.md.
+ * Convites de prospecção são enviados por uma PESSOA, um a um, pelo painel
+ * (/painel); o bot só cuida das respostas, inclusive do "SAIR".
  */
 import { Boom } from "@hapi/boom";
-import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, useMultiFileAuthState } from "baileys";
+import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, useMultiFileAuthState } from "baileys";
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
-import { responder, type Contexto } from "./responder.ts";
+import { BancoProspeccao } from "@aprenda/prospeccao";
+import { ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
 
 const PASTA_SESSAO = new URL("../auth/", import.meta.url).pathname;
@@ -19,6 +22,7 @@ const numeroPareamento = process.env.BOT_NUMERO?.replace(/\D/g, "");
 
 const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
+const banco = new BancoProspeccao();
 console.log(`📚 ${ctx.cursos.length} cursos carregados`);
 
 async function conectar(): Promise<void> {
@@ -70,7 +74,18 @@ async function conectar(): Promise<void> {
       if (!texto) continue;
       if (!limitador.permitir(chat)) continue;
 
-      const resposta = responder(texto, ctx);
+      // No WhatsApp novo o chat pode vir como LID (@lid); o número real vem em remoteJidAlt.
+      const jidTelefone = isPnUser(chat) ? chat : msg.key.remoteJidAlt;
+      const telefone = jidTelefone?.split("@")[0]?.split(":")[0];
+
+      let resposta: string | null;
+      if (ehPedidoDeSaida(texto)) {
+        if (telefone) banco.bloquear(telefone);
+        else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
+        resposta = RESPOSTA_SAIDA;
+      } else {
+        resposta = responder(texto, ctx);
+      }
       if (!resposta) continue;
       try {
         await sock.readMessages([msg.key]);

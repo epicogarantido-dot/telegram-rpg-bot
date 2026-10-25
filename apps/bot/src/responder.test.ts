@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { carregarCursos } from "@aprenda/catalogo";
-import { responder } from "./responder.ts";
+import { ehPedidoDeSaida, responder } from "./responder.ts";
 
 const ctx = { cursos: await carregarCursos(), siteUrl: "https://exemplo.com/" };
 
@@ -27,4 +27,10 @@ describe("responder", () => {
   it("ignora mensagem vazia", () => {
     expect(responder("   ", ctx)).toBeNull();
   });
+});
+
+it("reconhece pedido de saída", () => {
+  expect(ehPedidoDeSaida(" SAIR ")).toBe(true);
+  expect(ehPedidoDeSaida("Parar.")).toBe(true);
+  expect(ehPedidoDeSaida("quero sair cedo hoje")).toBe(false);
 });

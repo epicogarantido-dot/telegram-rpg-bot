@@ -10,6 +10,7 @@
     "build:site": "npm run build -w @aprenda/site",
     "bot": "npm run start -w @aprenda/bot",
     "ingerir": "npm run ingerir -w @aprenda/ingestao --",
+    "prospectar": "npm run prospectar -w @aprenda/prospeccao --",
     "traduzir": "npm run traduzir -w @aprenda/ingestao --",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"

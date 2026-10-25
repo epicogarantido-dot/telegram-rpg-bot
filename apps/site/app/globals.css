@@ -68,3 +68,21 @@ main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
 .licao img { max-width: 100%; height: auto; }
 .licao pre { overflow-x: auto; background: var(--cartao); border: 1px solid var(--borda); padding: 12px; border-radius: 8px; }
 .navegacao { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; }
+.botao, .botao-sec {
+  display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 14px;
+  text-decoration: none; cursor: pointer; border: 1px solid var(--destaque);
+}
+.botao { background: var(--destaque); color: var(--fundo); }
+.botao-sec { background: transparent; color: var(--destaque); }
+.lead { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.formulario { display: grid; gap: 12px; max-width: 480px; }
+.formulario input:not([type="checkbox"]), .formulario select {
+  padding: 12px 14px; font-size: 16px; border-radius: 10px; border: 1px solid var(--borda);
+  background: var(--cartao); color: var(--texto);
+}
+.formulario label { font-size: 14px; color: var(--suave); }
+.formulario button {
+  padding: 12px 18px; border: 0; border-radius: 10px; background: var(--destaque); color: var(--fundo);
+  font-size: 16px; cursor: pointer;
+}

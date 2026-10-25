@@ -18,6 +18,13 @@ Comandos:
 • *curso* <código> — detalhes de um curso
 • *menu* — mostra esta mensagem`;
 
+/** Palavras de opt-out: quem manda isso nunca mais é contatado. */
+export function ehPedidoDeSaida(texto: string): boolean {
+  return ["sair", "parar", "pare", "stop", "descadastrar", "remover"].includes(normalizar(texto.trim()).replace(/[!.]/g, ""));
+}
+
+export const RESPOSTA_SAIDA = "Pronto, você não vai mais receber mensagens nossas. Desculpe o incômodo e bom trabalho! 🙏";
+
 export function responder(textoRecebido: string, ctx: Contexto): string | null {
   const texto = textoRecebido.trim();
   if (!texto) return null;

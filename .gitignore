@@ -9,3 +9,5 @@ apps/bot/auth/
 data/cache/
 *.log
 *.tsbuildinfo
+# leads e inscrições: dados pessoais (LGPD), nunca no git
+data/privado/
