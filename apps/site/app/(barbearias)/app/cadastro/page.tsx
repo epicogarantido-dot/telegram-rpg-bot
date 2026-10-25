@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ErroAgenda } from "@aprenda/agenda";
+import { ErroAgenda, planoDoAmbiente } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
-import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
 
 export const metadata = { title: "Criar conta — Agenda" };
@@ -30,10 +30,14 @@ async function cadastrar(form: FormData) {
 
 export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const { erro } = await searchParams;
+  const plano = planoDoAmbiente();
   return (
     <>
       <h1>Agenda online para sua barbearia</h1>
-      <p>Seu cliente marca pelo link, você vê tudo no celular. Grátis enquanto estamos em teste.</p>
+      <p>Seu cliente marca pelo link, você vê tudo no celular.</p>
+      <p className="suave">
+        {plano.testeDias > 0 && `Teste grátis por ${plano.testeDias} dias. `}Pra continuar: contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
+      </p>
       {erro && <p className="erro">{erro}</p>}
       <form action={cadastrar} className="formulario">
         <input name="barbearia" placeholder="Nome da barbearia" required maxLength={60} />

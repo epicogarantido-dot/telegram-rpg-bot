@@ -537,3 +537,5 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
   .venda-faixa { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .venda-faixa img { border-width: 6px; border-radius: 20px; }
 }
+.venda-valores { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-bottom: 12px; }
+.venda-valores .venda-valor { margin: 0; }

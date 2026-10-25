@@ -634,3 +634,36 @@ describe("folga em parte do dia", () => {
     expect(b.bloqueiosDoDia(a.id, dia)).toHaveLength(1);
   });
 });
+
+describe("preço: contratação e mensalidade", () => {
+  it("primeira cobrança é a contratação; depois de confirmada, vem a mensalidade", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 5000, adesaoCentavos: 10000, dias: 30, testeDias: 7 });
+    const { barbearia } = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" });
+    const primeira = b.pagamentoAberto(barbearia.id);
+    expect(primeira.valorCentavos).toBe(10000);
+    expect(b.jaContratou(barbearia.id)).toBe(false);
+    b.confirmarPagamento(primeira.id);
+    expect(b.jaContratou(barbearia.id)).toBe(true);
+    expect(b.pagamentoAberto(barbearia.id).valorCentavos).toBe(5000);
+  });
+
+  it("sem contratação configurada, toda cobrança é a mensalidade", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 5000, dias: 30, testeDias: 7 });
+    const { barbearia } = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" });
+    expect(b.pagamentoAberto(barbearia.id).valorCentavos).toBe(5000);
+  });
+
+  it("cobrança em aberto acompanha mudança de preço; a já informada não muda", () => {
+    const arq = ":memory:";
+    const b1 = new BancoAgenda(arq, { valorCentavos: 2990, dias: 30, testeDias: 7 });
+    const { barbearia } = b1.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" });
+    const antiga = b1.pagamentoAberto(barbearia.id);
+    expect(antiga.valorCentavos).toBe(2990);
+    // Mesmo banco, preço novo (simula reiniciar com outro .env).
+    Object.assign(b1.plano, { valorCentavos: 5000, adesaoCentavos: 10000 });
+    expect(b1.pagamentoAberto(barbearia.id)).toMatchObject({ id: antiga.id, valorCentavos: 10000 });
+    b1.informarPagamento(barbearia.id, antiga.id, "Zé");
+    Object.assign(b1.plano, { adesaoCentavos: 12000 });
+    expect(b1.pagamentoAberto(barbearia.id).valorCentavos).toBe(10000);
+  });
+});

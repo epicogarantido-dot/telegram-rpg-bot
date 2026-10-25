@@ -73,6 +73,8 @@ const PERGUNTAS = [
 export default async function Barbeiros({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const { erro } = await searchParams;
   const plano = planoDoAmbiente();
+  // Sem contratação configurada, o primeiro pagamento é a própria mensalidade.
+  const adesao = plano.adesaoCentavos || plano.valorCentavos;
   const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
 
   return (
@@ -89,7 +91,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <a href="#estilos" className="botao-sec">Ver os estilos</a>
           </div>
           <p className="venda-preco-curto">
-            {plano.testeDias} dias grátis. Depois, {reais(plano.valorCentavos)} a cada {plano.dias} dias no Pix. Sem cartão, sem fidelidade.
+            {plano.testeDias > 0 && `${plano.testeDias} dias grátis. `}Contratação de {reais(adesao)} e depois {reais(plano.valorCentavos)} por mês, no Pix. Sem cartão, sem fidelidade.
           </p>
         </div>
         <figure className="venda-celular" aria-hidden="true">
@@ -128,10 +130,14 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
       <section className="venda-plano" aria-labelledby="plano-titulo">
         <div>
           <h2 id="plano-titulo">Quanto custa</h2>
-          <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> a cada {plano.dias} dias</p>
+          <div className="venda-valores">
+            <p className="venda-valor"><strong>{reais(adesao)}</strong> na contratação</p>
+            <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
+          </div>
           <ul>
-            <li>{plano.testeDias} dias grátis pra testar com seus clientes de verdade.</li>
-            <li>Pagamento por Pix, sem cartão. Sem fidelidade.</li>
+            {plano.testeDias > 0 && <li>{plano.testeDias} dias grátis pra testar antes de contratar.</li>}
+            <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
+            <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
           </ul>
         </div>

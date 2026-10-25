@@ -28,6 +28,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
   const pagamento = banco.pagamentoAberto(barbearia.id);
+  const contratacao = !banco.jaContratou(barbearia.id) && (banco.plano.adesaoCentavos ?? 0) > 0;
   const historico = banco.pagamentosDaBarbearia(barbearia.id).filter((p) => p.id !== pagamento.id);
   const pixConfigurado = !!(configPix.chave && configPix.nome && configPix.cidade);
   const copiaECola = pixConfigurado
@@ -49,7 +50,10 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       )}
       {erro && <p className="erro">{erro}</p>}
 
-      <h2>Pagar com Pix — {reais(pagamento.valorCentavos)} por {pagamento.dias} dias</h2>
+      <h2>Pagar com Pix — {reais(pagamento.valorCentavos)} {contratacao ? `(contratação, já inclui os primeiros ${pagamento.dias} dias)` : `por ${pagamento.dias} dias`}</h2>
+      {contratacao && (
+        <p className="suave">Depois, a mensalidade pra manter o site e a agenda é {reais(banco.plano.valorCentavos)} a cada {banco.plano.dias} dias.</p>
+      )}
       {!pixConfigurado ? (
         <p>Pagamento ainda não configurado. Fale com o suporte.</p>
       ) : (

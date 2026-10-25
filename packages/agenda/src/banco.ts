@@ -114,7 +114,10 @@ export interface Usuario { id: number; barbeariaId: number; nome: string; email:
 export class ErroAgenda extends Error {}
 
 export interface Plano {
+  /** Mensalidade: cada pagamento depois do primeiro. */
   valorCentavos: number;
+  /** Contratação: valor do PRIMEIRO pagamento (já inclui o primeiro período). 0/ausente = igual à mensalidade. */
+  adesaoCentavos?: number;
   dias: number;
   /** Dias grátis na criação da conta. 0 = precisa pagar antes de usar. */
   testeDias: number;
@@ -122,7 +125,8 @@ export interface Plano {
 
 export function planoDoAmbiente(): Plano {
   return {
-    valorCentavos: Math.round(Number(process.env.PLANO_VALOR ?? "29.90") * 100),
+    valorCentavos: Math.round(Number(process.env.PLANO_VALOR ?? "50") * 100),
+    adesaoCentavos: Math.round(Number(process.env.PLANO_ADESAO ?? "100") * 100),
     dias: Number(process.env.PLANO_DIAS ?? 30),
     testeDias: Number(process.env.PLANO_TESTE_DIAS ?? 7),
   };
@@ -773,14 +777,31 @@ export class BancoAgenda {
     return Math.round((Date.parse(b.acessoAte) - Date.parse(hoje)) / 86_400_000) + 1;
   }
 
+  /** Já teve algum pagamento confirmado (ou seja, já pagou a contratação)? */
+  jaContratou(barbeariaId: number): boolean {
+    return !!this.db.prepare("SELECT 1 FROM pagamentos WHERE barbearia_id = ? AND status = 'confirmado' LIMIT 1").get(barbeariaId);
+  }
+
+  /** Valor da próxima cobrança: contratação na primeira vez, mensalidade depois. */
+  valorDaProximaCobranca(barbeariaId: number): number {
+    const adesao = this.plano.adesaoCentavos ?? 0;
+    return adesao > 0 && !this.jaContratou(barbeariaId) ? adesao : this.plano.valorCentavos;
+  }
+
   /** Pagamento em aberto da barbearia; cria um se não houver. Evita uma pilha de cobranças repetidas. */
   pagamentoAberto(barbeariaId: number): Pagamento {
+    const valor = this.valorDaProximaCobranca(barbeariaId);
     const existente = this.db.prepare(`SELECT ${COLUNAS_PAGAMENTO} FROM pagamentos p JOIN barbearias b ON b.id = p.barbearia_id
       WHERE p.barbearia_id = ? AND p.status IN ('aberto', 'informado') ORDER BY p.id DESC LIMIT 1`).get(barbeariaId) as Pagamento | undefined;
+    // Se o preço mudou e o barbeiro ainda não disse que pagou, a cobrança em aberto acompanha o preço novo.
+    if (existente && existente.status === "aberto" && existente.valorCentavos !== valor) {
+      this.db.prepare("UPDATE pagamentos SET valor_centavos = ?, dias = ? WHERE id = ?").run(valor, this.plano.dias, existente.id);
+      return this.pagamentoAberto(barbeariaId);
+    }
     if (existente) return existente;
     const txid = `AG${barbeariaId}X${randomBytes(4).toString("hex").toUpperCase()}`;
     this.db.prepare(`INSERT INTO pagamentos (barbearia_id, txid, valor_centavos, dias, criado_em) VALUES (?, ?, ?, ?, ?)`)
-      .run(barbeariaId, txid, this.plano.valorCentavos, this.plano.dias, new Date().toISOString());
+      .run(barbeariaId, txid, valor, this.plano.dias, new Date().toISOString());
     return this.pagamentoAberto(barbeariaId);
   }
 
