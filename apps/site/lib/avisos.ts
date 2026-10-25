@@ -76,3 +76,25 @@ export async function avisarNovoAgendamento(barbeariaId: number, agendamentoId: 
 export async function avisoDeTeste(barbeariaId: number): Promise<number> {
   return enviar(barbeariaId, { titulo: "Avisos ligados ✅", corpo: "Assim vai chegar cada horário novo marcado pelo seu site.", url: "/app", tag: "teste" });
 }
+
+/** Cliente cancelou ou remarcou pelo link: o barbeiro fica sabendo na hora. */
+export async function avisarMudancaDoCliente(barbeariaId: number, m:
+  | { tipo: "cancelou"; id: number; cliente: string; servico: string; inicio: string }
+  | { tipo: "remarcou"; id: number; cliente: string; servico: string; inicio: string; novoInicio: string; profissional: string }): Promise<void> {
+  const quando = (dh: string) => `${formatarData(dh.slice(0, 10))} às ${dh.slice(11, 16)}`;
+  if (m.tipo === "cancelou") {
+    await enviar(barbeariaId, {
+      titulo: `${m.cliente} cancelou`,
+      corpo: `${m.servico} · ${quando(m.inicio)}. O horário voltou a ficar livre no site.`,
+      url: `/app?data=${m.inicio.slice(0, 10)}#ag-${m.id}`,
+      tag: `ag-${m.id}`,
+    });
+    return;
+  }
+  await enviar(barbeariaId, {
+    titulo: `${m.cliente} remarcou`,
+    corpo: `${m.servico} com ${m.profissional}: de ${quando(m.inicio)} para ${quando(m.novoInicio)}.`,
+    url: `/app?data=${m.novoInicio.slice(0, 10)}#ag-${m.id}`,
+    tag: `ag-${m.id}`,
+  });
+}

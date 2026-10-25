@@ -91,6 +91,12 @@ export interface Agendamento {
   fim: DataHora;
   status: "confirmado" | "cancelado";
 }
+/** O que o cliente vê na página do próprio horário (link secreto). */
+export interface HorarioCliente extends Agendamento {
+  duracaoMin: number;
+  /** Já começou ou passou: não dá mais pra cancelar nem remarcar pelo link. */
+  passou: boolean;
+}
 export interface Usuario { id: number; barbeariaId: number; nome: string; email: string }
 
 export class ErroAgenda extends Error {}
@@ -232,6 +238,9 @@ export class BancoAgenda {
       CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria);
     `);
     this.garantirColuna("fotos", "antes_de", "TEXT");
+    // Link do cliente: o banco guarda só o hash do token (como nas sessões).
+    this.garantirColuna("agendamentos", "token_cliente", "TEXT");
+    this.db.exec("CREATE INDEX IF NOT EXISTS agendamentos_token ON agendamentos(token_cliente)");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS avisos_inscricoes (
         endpoint TEXT PRIMARY KEY,
@@ -449,12 +458,13 @@ export class BancoAgenda {
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
   }
 
-  horariosLivres(barbeariaId: number, profissionalId: number, servicoId: number, data: Data, agora?: Date): string[] {
+  /** `ignorarId`: ao remarcar, o horário antigo do próprio cliente não conta como ocupado. */
+  horariosLivres(barbeariaId: number, profissionalId: number, servicoId: number, data: Data, agora?: Date, ignorarId?: number): string[] {
     const b = this.barbeariaPorId(barbeariaId);
     const servico = this.servicos(barbeariaId, true).find((s) => s.id === servicoId);
     if (!b || !servico || b.atendimento === "chegada") return [];
     if (b.fechadoEm === data) return [];
-    const ocupados = this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado");
+    const ocupados = this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado" && a.id !== ignorarId);
     return horariosLivres({
       data,
       expediente: this.expedientes(barbeariaId).get(diaDaSemana(data)),
@@ -509,6 +519,63 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  // ---------- link do cliente: ver, cancelar e remarcar sem login ----------
+
+  /** Cria o link secreto do horário. O token só existe aqui e na mão do cliente. */
+  criarLinkCliente(barbeariaId: number, id: number): string {
+    const { token, hash } = novoToken();
+    const r = this.db.prepare("UPDATE agendamentos SET token_cliente = ? WHERE id = ? AND barbearia_id = ?").run(hash, id, barbeariaId);
+    if (r.changes !== 1) throw new ErroAgenda("Horário não encontrado.");
+    return token;
+  }
+
+  horarioDoCliente(barbeariaId: number, token: string, agora?: Date): HorarioCliente | undefined {
+    if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return undefined;
+    const a = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, s.duracao_min AS duracaoMin,
+        a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome,
+        a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
+      WHERE a.token_cliente = ? AND a.barbearia_id = ?`).get(hashToken(token), barbeariaId) as Omit<HorarioCliente, "passou"> | undefined;
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!a || !b) return undefined;
+    return { ...a, passou: a.inicio <= agoraNoFuso(b.fuso, agora) };
+  }
+
+  /** Devolve o horário cancelado (pra avisar o barbeiro). */
+  cancelarPeloCliente(barbeariaId: number, token: string, agora?: Date): HorarioCliente {
+    const h = this.horarioDoCliente(barbeariaId, token, agora);
+    if (!h) throw new ErroAgenda("Horário não encontrado.");
+    if (h.status !== "confirmado") throw new ErroAgenda("Esse horário já foi cancelado.");
+    if (h.passou) throw new ErroAgenda("Esse horário já começou. Fale com a barbearia pelo WhatsApp.");
+    this.cancelar(barbeariaId, h.id);
+    return { ...h, status: "cancelado" };
+  }
+
+  /** Troca dia, hora e profissional do mesmo horário (mesmo serviço e cliente). Revalida na transação. */
+  remarcarPeloCliente(barbeariaId: number, token: string, novo: { profissionalId: number; data: Data; hora: string }, agora?: Date): { antes: HorarioCliente; depois: DataHora } {
+    const h = this.horarioDoCliente(barbeariaId, token, agora);
+    if (!h) throw new ErroAgenda("Horário não encontrado.");
+    if (h.status !== "confirmado") throw new ErroAgenda("Esse horário foi cancelado. Marque um novo.");
+    if (h.passou) throw new ErroAgenda("Esse horário já começou. Fale com a barbearia pelo WhatsApp.");
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b || !this.acessoAtivo(b, agora)) throw new ErroAgenda("Agenda temporariamente indisponível.");
+    if (!this.profissionais(barbeariaId, true).some((p) => p.id === novo.profissionalId)) throw new ErroAgenda("Profissional indisponível.");
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const livres = this.horariosLivres(barbeariaId, novo.profissionalId, h.servicoId, novo.data, agora, h.id);
+      if (!livres.includes(novo.hora)) throw new ErroAgenda("Esse horário acabou de ser ocupado. Escolha outro.");
+      const inicio = `${novo.data}T${novo.hora}`;
+      const fim = `${novo.data}T${deMinutos(paraMinutos(novo.hora) + h.duracaoMin)}`;
+      this.db.prepare("UPDATE agendamentos SET profissional_id = ?, inicio = ?, fim = ? WHERE id = ? AND barbearia_id = ?")
+        .run(novo.profissionalId, inicio, fim, h.id, barbeariaId);
+      this.db.exec("COMMIT");
+      return { antes: h, depois: inicio };
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
   }
 
   // ---------- assinatura (Pix com confirmação manual) ----------

@@ -434,3 +434,60 @@ describe("funcionamento: preços, intervalo, atendimento, fila e fechar hoje", (
     expect(() => b.adicionarProfissional(id, " ")).toThrow(ErroAgenda);
   });
 });
+
+describe("link do cliente: cancelar e remarcar", () => {
+  function cenario() {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const agora = new Date();
+    const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
+    const dias = Array.from({ length: 10 }, (_, i) => somarDias(hoje, i + 1)).filter((d) => b.expedientes(a.id).has(diaDaSemana(d)));
+    const [s] = b.servicos(a.id, true);
+    const [p] = b.profissionais(a.id, true);
+    const hora = b.horariosLivres(a.id, p!.id, s!.id, dias[0]!, agora)[0]!;
+    const id = b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data: dias[0]!, hora, clienteNome: "Lucas", clienteTelefone: "5519998765432", agora });
+    const token = b.criarLinkCliente(a.id, id);
+    return { b, a, o, agora, dias, s: s!, p: p!, hora, id, token };
+  }
+
+  it("o link só abre na barbearia certa e com o token certo", () => {
+    const { b, a, o, token, hora } = cenario();
+    expect(b.horarioDoCliente(a.id, token)).toMatchObject({ clienteNome: "Lucas", status: "confirmado", passou: false });
+    expect(b.horarioDoCliente(a.id, token)!.inicio.endsWith(hora)).toBe(true);
+    expect(b.horarioDoCliente(o.id, token)).toBeUndefined();
+    expect(b.horarioDoCliente(a.id, token.slice(0, -1) + (token.endsWith("A") ? "B" : "A"))).toBeUndefined();
+    expect(b.horarioDoCliente(a.id, "' OR 1=1 --")).toBeUndefined();
+  });
+
+  it("cancelar libera o horário e não cancela duas vezes", () => {
+    const { b, a, token, dias, s, p, hora, agora } = cenario();
+    expect(b.horariosLivres(a.id, p.id, s.id, dias[0]!, agora)).not.toContain(hora);
+    b.cancelarPeloCliente(a.id, token, agora);
+    expect(b.horariosLivres(a.id, p.id, s.id, dias[0]!, agora)).toContain(hora);
+    expect(() => b.cancelarPeloCliente(a.id, token, agora)).toThrow(/já foi cancelado/);
+    expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: dias[0]!, hora }, agora)).toThrow(/cancelado/);
+  });
+
+  it("remarcar troca dia e hora, libera o antigo e recusa horário ocupado", () => {
+    const { b, a, token, dias, s, p, hora, agora } = cenario();
+    const novoDia = dias[1]!;
+    const novaHora = b.horariosLivres(a.id, p.id, s.id, novoDia, agora)[2]!;
+    const r = b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: novoDia, hora: novaHora }, agora);
+    expect(r.depois).toBe(`${novoDia}T${novaHora}`);
+    expect(b.horarioDoCliente(a.id, token)!.inicio).toBe(`${novoDia}T${novaHora}`);
+    expect(b.horariosLivres(a.id, p.id, s.id, dias[0]!, agora)).toContain(hora);
+    // Outro cliente ocupa um horário; remarcar pra ele falha.
+    const ocupada = b.horariosLivres(a.id, p.id, s.id, novoDia, agora)[0]!;
+    b.agendar({ barbeariaId: a.id, profissionalId: p.id, servicoId: s.id, data: novoDia, hora: ocupada, clienteNome: "Outro", clienteTelefone: "5519991112222", agora });
+    expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: novoDia, hora: ocupada }, agora)).toThrow(/ocupado/);
+  });
+
+  it("depois que o horário começou, o link só mostra", () => {
+    const { b, a, token, dias, p, hora } = cenario();
+    const depois = new Date(Date.now() + 15 * 86_400_000);
+    expect(b.horarioDoCliente(a.id, token, depois)!.passou).toBe(true);
+    expect(() => b.cancelarPeloCliente(a.id, token, depois)).toThrow(/começou/);
+    expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: dias[0]!, hora }, depois)).toThrow(/começou/);
+  });
+});

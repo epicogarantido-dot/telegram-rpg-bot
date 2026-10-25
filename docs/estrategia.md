@@ -68,7 +68,7 @@ Pronto (MVP, SQLite local):
 - ✅ Agenda do dia no painel, cancelar, botão de WhatsApp pro cliente.
 
 Próximos:
-1. Cliente cancelar/remarcar pelo link (token único por agendamento).
+1. ~~Cliente cancelar/remarcar pelo link~~ — feito.
 2. ~~Agendar pelo bot e lembrete 1 h antes~~ — engavetado: o produto das barbearias não usa WhatsApp (`docs/bot-barbearias.md`).
 3. Bloqueio de horário avulso (folga, médico).
 - ✅ Agendar em 3 passos, com "qualquer um" e vagas somando a equipe.
@@ -76,7 +76,8 @@ Próximos:
 - ✅ Ordem de chegada: site mostra aberto/fechado e a fila com espera estimada; "Fechar hoje" no painel.
 - ✅ Avisos no celular do barbeiro (painel instalável + Web Push), com botão que abre o WhatsApp dele pra confirmar com o cliente.
 - ✅ "Adicionar à minha agenda" na confirmação: o celular do cliente lembra 1 h antes (.ics) ou Google Agenda.
-- Próximos: feed de calendário do barbeiro, cancelar/remarcar pelo link.
+- ✅ Cliente remarca ou cancela pelo link secreto do horário (também dentro do evento da agenda); barbeiro recebe aviso.
+- Próximos: feed de calendário do barbeiro.
 4. Perfil público com fotos de cortes — semente da rede social de barbeiros.
 
 ### Site da barbearia como área de venda
