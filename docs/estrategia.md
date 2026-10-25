@@ -69,7 +69,7 @@ Pronto (MVP, SQLite local):
 
 Próximos:
 1. Cliente cancelar/remarcar pelo link (token único por agendamento).
-2. Agendar pelo bot e lembrete 1 h antes (plano em `docs/bot-barbearias.md`).
+2. ~~Agendar pelo bot e lembrete 1 h antes~~ — engavetado: o produto das barbearias não usa WhatsApp (`docs/bot-barbearias.md`).
 3. Bloqueio de horário avulso (folga, médico).
 4. Perfil público com fotos de cortes — semente da rede social de barbeiros.
 

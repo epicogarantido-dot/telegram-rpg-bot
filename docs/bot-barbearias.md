@@ -1,4 +1,8 @@
-# Bot das barbearias — plano
+# Bot das barbearias — plano (engavetado)
+
+> **Engavetado.** O dono decidiu que o produto das barbearias não usa WhatsApp
+> (risco de banimento do Baileys). O agendamento fica só no site. Mantido aqui
+> caso um dia vá pra API oficial.
 
 O cliente agenda conversando no WhatsApp, e o horário cai na mesma agenda do
 site (painel `/app` e página `/b/<slug>`). Uma hora antes do corte, o bot
