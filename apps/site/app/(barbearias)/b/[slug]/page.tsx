@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
 import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
-import { DesenhoOficio } from "@/componentes/barbearia/DesenhoOficio";
 import { obterAgenda, reais } from "@/lib/agenda";
 import { dadosEstruturados, linkMapa, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
@@ -168,8 +167,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           </div>
         </section>
       )}
-
-      <DesenhoOficio />
 
       <section className="b-secao" id="servicos">
         <h2>Serviços</h2>

@@ -433,16 +433,6 @@
 .site-b[data-tema="extravagancia"] .b-vagas li a { border-color: var(--destaque); color: var(--destaque-forte); }
 .site-b[data-tema="cerimonia"] .b-vagas { justify-content: center; }
 
-/* Desenho do ofício: traço que se completa com a rolagem (ver efeitos). */
-.b-desenho-faixa { max-width: 720px; margin: 24px auto 0; padding-inline: 16px; }
-.b-desenho { display: block; width: 100%; height: auto; overflow: visible; stroke: var(--texto); stroke-width: 1.4; }
-.b-desenho .t-base { opacity: 0.35; }
-.site-b[data-tema="silencioso"] .b-desenho { stroke-width: 1; }
-.site-b[data-tema="cerimonia"] .b-desenho { stroke: rgb(255 255 255 / 0.75); stroke-width: 1; }
-.site-b[data-tema="tecnico"] .b-desenho { stroke: var(--acento); stroke-width: 1.6; }
-.site-b[data-tema="potencia"] .b-desenho { stroke: var(--destaque); stroke-width: 3; filter: drop-shadow(0 0 6px rgb(215 255 30 / 0.55)); }
-.site-b[data-tema="extravagancia"] .b-desenho { stroke: var(--destaque-forte); stroke-width: 1.2; filter: drop-shadow(0 0 4px rgb(232 199 102 / 0.4)); }
-
 /* Texto só pra leitor de tela. */
 .b-so-leitor {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -514,35 +504,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    EFEITOS — só com movimento liberado; cada tema respeita o próprio teto
    ====================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  /* Desenho do ofício: cada ferramenta se completa num trecho da rolagem. */
-  @supports (animation-timeline: view()) {
-    .b-desenho-faixa { view-timeline: --desenho block; }
-    .b-desenho :is(path, circle, rect) {
-      stroke-dasharray: 1; stroke-dashoffset: 1;
-      animation: desenhar linear both; animation-timeline: --desenho;
-    }
-    .b-desenho .t-tesoura > * { animation-range: entry 30% cover 25%; }
-    .b-desenho .t-pente > * { animation-range: cover 15% cover 35%; }
-    .b-desenho .t-navalha > * { animation-range: cover 25% cover 45%; }
-    .b-desenho .t-base { animation-range: entry 30% cover 45%; }
-
-    /* Parallax da foto de abertura nos temas de herói empilhado. */
-    .site-b:is([data-tema="silencioso"], [data-tema="atemporal"], [data-tema="tecnico"]) .b-heroi-midia img {
-      scale: 1.12; animation: parallax-suave linear both; animation-timeline: view(); animation-range: exit 0% exit 100%;
-    }
-    .site-b[data-tema="silencioso"] .b-heroi-midia img { scale: 1.06; }
-
-    /* Galeria em camadas (nível 3+): a coluna do meio corre em outra velocidade. */
-    @media (min-width: 761px) {
-      .site-b:is([data-efeitos="3"], [data-efeitos="4"], [data-efeitos="5"]) .b-galeria .b-foto:nth-child(3n + 2) {
-        animation: coluna-lenta linear both; animation-timeline: view(); animation-range: cover 0% cover 100%;
-      }
-    }
-
-    /* Potência: os títulos das seções avançam de lado com a rolagem. */
-    .site-b[data-tema="potencia"] .b-secao h2 { animation: titulo-desliza linear both; animation-timeline: view(); animation-range: entry 0% cover 50%; }
-  }
-
   /* Todos os temas: troca de cor e sublinhado respondem ao toque (nível 1). */
   .b-servico-acao, .b-contatos a { transition: color 0.2s; }
 
@@ -670,7 +631,4 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 @keyframes nevar { from { background-position: 0 0, 0 0, 0 0, 0 0; } to { background-position: 30px 220px, -20px 440px, 40px 220px, -30px 440px; } }
 @keyframes respirar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 @keyframes cor-no-centro { 0%, 30% { filter: grayscale(1); } 45%, 55% { filter: grayscale(0); } 70%, 100% { filter: grayscale(1); } }
-@keyframes parallax-suave { to { translate: 0 18%; } }
-@keyframes coluna-lenta { from { translate: 0 48px; } to { translate: 0 -48px; } }
-@keyframes titulo-desliza { from { translate: -14% 0; opacity: 0.3; } to { translate: 0 0; opacity: 1; } }
 @keyframes traco { from { transform: scaleX(0); } to { transform: scaleX(1); } }
