@@ -1,5 +1,15 @@
 # Estratégia: nicho → comunidade → receita
 
+## Dois sites
+
+1. **Site de cursos (este, `apps/site`)** — porta de entrada e captação: cursos grátis, conta com
+   WhatsApp + senha (lead confirmado e com consentimento), vitrine do produto pros barbeiros.
+2. **Site dos barbeiros (próximo, `apps/barbearias`)** — o "book" de cada barbearia (fotos dos
+   trabalhos) + agenda online + assinatura por Pix. Hoje a agenda ainda mora em `apps/site`
+   (`/app`, `/b/<slug>`) e vai ser movida pra lá.
+3. **Bot de WhatsApp** — responde dúvidas, confirma códigos de login, recebe SAIR.
+
+
 Exemplo com barbeiros; o mesmo funil serve pra qualquer nicho local
 (manicures, mecânicos, personal trainers, pet shops…).
 

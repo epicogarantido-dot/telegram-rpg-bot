@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <nav aria-label="Principal">
               <Link href="/cursos">Cursos</Link>
               <Link href="/barbeiros">Barbeiros</Link>
-              <Link href="/app">Minha agenda</Link>
+              <Link href="/minha-area" className="nav-destaque">Entrar</Link>
             </nav>
           </header>
         </div>

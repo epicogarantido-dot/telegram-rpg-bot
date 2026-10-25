@@ -31,7 +31,7 @@ export async function gravarSessao(): Promise<void> {
 export async function exigirLogin(): Promise<void> {
   const senha = process.env.PAINEL_SENHA;
   const valor = (await cookies()).get(COOKIE)?.value;
-  if (!senha || valor !== hashSenha(senha)) redirect("/entrar");
+  if (!senha || valor !== hashSenha(senha)) redirect("/painel/entrar");
 }
 
 let banco: BancoProspeccao | undefined;

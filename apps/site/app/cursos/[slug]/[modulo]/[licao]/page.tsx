@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { carregarCurso, carregarCursos } from "@aprenda/catalogo";
 import { renderizarMarkdown } from "../../../../../lib/markdown";
 import { Atribuicao } from "../../../../componentes";
+import { ProgressoLicao } from "../../../../../componentes/ProgressoLicao";
 
 type Params = { slug: string; modulo: string; licao: string };
 
@@ -40,6 +41,7 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
       </p>
       <h1>{licao.titulo}</h1>
       <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />
+      <ProgressoLicao curso={curso.slug} licao={licao.id} />
       <Atribuicao curso={curso} />
       <nav className="navegacao">
         {anterior ? <Link href={href(anterior)}>← {anterior.licao.titulo}</Link> : <span />}

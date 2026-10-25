@@ -12,6 +12,7 @@ import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, us
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
+import { extrairCodigo } from "@aprenda/membros";
 import { BancoProspeccao } from "@aprenda/prospeccao";
 import { ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
@@ -23,6 +24,28 @@ const numeroPareamento = process.env.BOT_NUMERO?.replace(/\D/g, "");
 const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
 const banco = new BancoProspeccao();
+const segredoSite = process.env.BOT_SEGREDO ?? "";
+
+/**
+ * Código de confirmação do site: quem manda a mensagem prova que é dono do
+ * número. O bot não decide nada, só repassa (número real + texto) pro site.
+ */
+async function confirmarCodigoNoSite(telefone: string, texto: string): Promise<string> {
+  if (segredoSite.length < 24) return "Confirmação indisponível no momento. Tente mais tarde.";
+  try {
+    const r = await fetch(`${siteUrl.replace(/\/$/, "")}/api/whatsapp/codigo`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${segredoSite}` },
+      body: JSON.stringify({ telefone, texto }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const d = (await r.json()) as { ok?: boolean; mensagem?: string };
+    return d.mensagem ?? "Não consegui confirmar agora. Tente de novo em instantes.";
+  } catch (e) {
+    console.error("Falha ao falar com o site:", e);
+    return "Não consegui confirmar agora. Tente de novo em instantes.";
+  }
+}
 console.log(`📚 ${ctx.cursos.length} cursos carregados`);
 
 async function conectar(): Promise<void> {
@@ -79,7 +102,11 @@ async function conectar(): Promise<void> {
       const telefone = jidTelefone?.split("@")[0]?.split(":")[0];
 
       let resposta: string | null;
-      if (ehPedidoDeSaida(texto)) {
+      if (extrairCodigo(texto)) {
+        resposta = telefone
+          ? await confirmarCodigoNoSite(telefone, texto)
+          : "Não consegui identificar seu número. Tente mandar de novo daqui a pouco.";
+      } else if (ehPedidoDeSaida(texto)) {
         if (telefone) banco.bloquear(telefone);
         else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
         resposta = RESPOSTA_SAIDA;

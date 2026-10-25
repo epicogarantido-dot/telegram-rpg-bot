@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight, CalendarCheck, GraduationCap, MessagesSquare, Scissors } from "lucide-react";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "../../lib/painel";
+import { DemoBarbearia } from "../../componentes/DemoBarbearia";
 
 export const metadata = {
   title: "Comunidade para barbeiros",
@@ -27,13 +28,16 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   const { erro } = await searchParams;
   return (
     <>
-      <section className="heroi">
-        <span className="selo"><Scissors className="icone" aria-hidden /> Grátis para barbeiros</span>
-        <h1>Agenda cheia, <em>cadeira girando.</em></h1>
-        <p>
-          Uma comunidade no WhatsApp só de barbeiros: dicas para atrair e fidelizar clientes, cursos gratuitos
-          de gestão e marketing, e acesso antecipado ao nosso app de agendamento online.
-        </p>
+      <section className="heroi vitrine">
+        <div>
+          <span className="selo"><Scissors className="icone" aria-hidden /> Grátis para barbeiros</span>
+          <h1>Agenda cheia, <em>cadeira girando.</em></h1>
+          <p>
+            Uma comunidade no WhatsApp só de barbeiros: dicas para atrair e fidelizar clientes, cursos gratuitos
+            de gestão e marketing, e acesso antecipado ao nosso app de agendamento online.
+          </p>
+        </div>
+        <DemoBarbearia />
       </section>
 
       <div className="grade">

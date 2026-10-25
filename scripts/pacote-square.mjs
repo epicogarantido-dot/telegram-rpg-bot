@@ -51,6 +51,7 @@ process.env.NODE_ENV = "production";
 process.env.APRENDA_DADOS ??= path.join(__dirname, "data/cursos");
 process.env.AGENDA_DB ??= path.join(__dirname, "data/privado/agenda.db");
 process.env.PROSPECCAO_DB ??= path.join(__dirname, "data/privado/prospeccao.db");
+process.env.MEMBROS_DB ??= path.join(__dirname, "data/privado/membros.db");
 process.chdir(path.join(__dirname, "apps/site"));
 require("./apps/site/server.js");
 `);
