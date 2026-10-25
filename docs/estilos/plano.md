@@ -11,6 +11,28 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 | Cerimônia | ●●○○○ Sutil | Um vídeo lento e escuro de detalhes (espuma, navalha, toalha), com uma única frase centralizada em letras finas e espaçadas. |
 | Elegância Atemporal | ●●○○○ Sutil | Fotos em preto e branco que ganham cor quando o dedo passa por cima. |
 
+## Lições de 15 barbearias reais (lista da Colorlib)
+
+**Adotar em todos os temas**
+
+- Agendar com um barbeiro específico, direto da foto dele na equipe (Abels on Queen). Nossa agenda já suporta.
+- Foto do ambiente na abertura, não só de cortes: mostrar as cadeiras e o espaço gera confiança (Scissors & Scotch, Capelli's).
+- Endereço, horário e telefone visíveis já na primeira tela (Balls Barbershop).
+- Desconto na primeira visita, em faixa discreta (Boardroom).
+- Vale-presente pra dar de presente (Scissors & Scotch, Crowsnest), pago com o Pix do próprio barbeiro.
+- Plano mensal do cliente: X cortes por mês com preço fechado (Scissors & Scotch).
+- Depoimentos dos próprios clientes ("The people have spoken"), escritos por eles, não copiados do Google.
+- Equipe com nome, foto e especialidade ("The people behind the chair").
+- Loja de produtos (pomada, óleo de barba) como etapa futura (Bruno's, Maverick, Shed).
+
+**Evitar**
+
+- Tela preta de carregamento antes do site aparecer (Tucson Barber ficou preto no teste): o site tem que aparecer na hora.
+- Pop-up de cadastro tampando tudo logo na entrada (Barber Blades).
+- Barra de aviso + aviso de cookies + menu tampando a foto principal ao mesmo tempo.
+- Carrossel que troca sozinho na abertura: ninguém lê, e pesa.
+- Botão de agendar escondido no menu: em todos os bons, ele está no topo e na abertura.
+
 ## Base comum
 
 **Páginas**
@@ -52,6 +74,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 
 **Pra quem:** Barbearia clássica premium: barba com toalha quente, cliente que gosta de ser tratado como rei.
 
+**Quem já faz algo assim:** Crowsnest (dourado, estrelas e selo vintage), Gentlemen Barber Clubs (logo dourado sobre foto, parallax na abertura), Abels on Queen (letra cursiva com ornamentos finos).
+
 **Página inicial, de cima pra baixo**
 
 1. Abertura com moldura ornamental e título com reflexo dourado
@@ -88,6 +112,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 
 **Pra quem:** Barbearia de bairro nobre, uma ou duas cadeiras, cliente que não quer barulho.
 
+**Quem já faz algo assim:** Bruno's Barbers: fundo branco, título grande em serifa ("Redefining the everyday standard."), quase nenhum enfeite.
+
 **Página inicial, de cima pra baixo**
 
 1. Uma foto em tela cheia, nome pequeno no canto
@@ -119,6 +145,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 **Marca registrada do site:** Uma faixa acolchoada (textura de costura de jaqueta) que acompanha a rolagem, com cartões macios por cima.
 
 **Pra quem:** Barbearia moderna e confortável: público jovem, famílias, ambiente climatizado com café.
+
+**Quem já faz algo assim:** Boardroom Salon (a "experiência" explicada em etapas com ícones, desconto na primeira visita) e Scissors & Scotch (planos mensais e vale-presente).
 
 **Página inicial, de cima pra baixo**
 
@@ -153,6 +181,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 **Marca registrada do site:** Um título gigante e inclinado que entra rasgando a tela, com uma faixa de neon que corre por baixo, como linha de chegada.
 
 **Pra quem:** Barbearia de degradê, freestyle e pigmentação: público jovem, ligado em futebol, carro e música.
+
+**Quem já faz algo assim:** Shed Barber e FreshCut: nome gigante por cima de fotos divididas ao meio, vermelho forte. Balls Barbershop: escuro com detalhe amarelo.
 
 **Página inicial, de cima pra baixo**
 
@@ -189,6 +219,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 
 **Pra quem:** Barbearia exclusiva, atendimento só com hora marcada, preço alto, uma hora inteira por cliente.
 
+**Quem já faz algo assim:** Abels on Queen (escuro, centralizado, letras espaçadas, "Agendar com o Mitch") e Capelli's (cadeira de couro na penumbra, "barbearia sob medida").
+
 **Página inicial, de cima pra baixo**
 
 1. Vídeo em tela cheia com uma frase e o botão branco em pílula
@@ -220,6 +252,8 @@ Fonte da verdade pra implementar os temas do site das barbearias. Visual: `atlas
 **Marca registrada do site:** Fotos em preto e branco que ganham cor quando o dedo passa por cima.
 
 **Pra quem:** Barbearia clássica e atemporal: noivos, terno e gravata, eventos, cliente de muitos anos.
+
+**Quem já faz algo assim:** New York Barbershop (foto em preto e branco, serifa grande: "Real Cuts. Real People.") e Maverick (preto e branco com itálico).
 
 **Página inicial, de cima pra baixo**
 
