@@ -28,20 +28,12 @@ export function Efeitos({ tema }: { tema: string }) {
         limpar.push(faiscas(raiz, "#d7ff1e"));
         if (matchMedia("(pointer: fine)").matches) limpar.push(ima(raiz));
       }
-      if (tema === "extravagancia" && aparelhoAguenta()) limpar.push(particulasDouradas(raiz));
       if (tema === "tecnico") limpar.push(contadores(raiz));
     }
     return () => limpar.forEach((f) => f());
   }, [tema, caminho]);
 
   return null;
-}
-
-function aparelhoAguenta(): boolean {
-  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-  if (nav.connection?.saveData) return false;
-  if ((nav.deviceMemory ?? 8) < 4) return false;
-  return (nav.hardwareConcurrency ?? 8) >= 4;
 }
 
 /** Roda `passo(dt)` a cada quadro só enquanto `alvo` estiver visível e a aba aberta. */
@@ -120,58 +112,6 @@ function ima(raiz: HTMLElement): () => void {
   };
   botoes.forEach((b) => { b.classList.add("b-ima"); b.addEventListener("pointermove", aoMover); b.addEventListener("pointerleave", aoSair); });
   return () => botoes.forEach((b) => { b.classList.remove("b-ima"); b.removeEventListener("pointermove", aoMover); b.removeEventListener("pointerleave", aoSair); });
-}
-
-/* ---------- Extravagância ---------- */
-
-/** Partículas douradas subindo devagar no fundo da abertura. */
-function particulasDouradas(raiz: HTMLElement): () => void {
-  const heroi = raiz.querySelector<HTMLElement>(".b-heroi");
-  if (!heroi) return () => {};
-  const canvas = document.createElement("canvas");
-  canvas.className = "b-particulas";
-  canvas.setAttribute("aria-hidden", "true");
-  heroi.insertBefore(canvas, heroi.querySelector(".b-heroi-texto"));
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return () => canvas.remove();
-  const dpr = Math.min(devicePixelRatio, 1.5);
-  let w = 0;
-  let h = 0;
-  const ajustar = () => {
-    w = heroi.clientWidth;
-    h = heroi.clientHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  };
-  ajustar();
-  const obs = new ResizeObserver(ajustar);
-  obs.observe(heroi);
-  const total = w < 600 ? 28 : 54;
-  const ps = Array.from({ length: total }, () => ({
-    x: Math.random() * w, y: Math.random() * h, r: 0.6 + Math.random() * 1.8,
-    v: 8 + Math.random() * 22, fase: Math.random() * Math.PI * 2, brilho: 0.25 + Math.random() * 0.55,
-  }));
-  let t = 0;
-  const parar = laco(heroi, (dt) => {
-    t += dt;
-    ctx.clearRect(0, 0, w, h);
-    for (const p of ps) {
-      p.y -= p.v * dt;
-      p.x += Math.sin(t * 0.8 + p.fase) * 6 * dt;
-      if (p.y < -6) { p.y = h + 6; p.x = Math.random() * w; }
-      const a = p.brilho * (0.6 + 0.4 * Math.sin(t * 2 + p.fase));
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-      g.addColorStop(0, `rgba(255, 236, 170, ${a})`);
-      g.addColorStop(0.4, `rgba(232, 199, 102, ${a * 0.6})`);
-      g.addColorStop(1, "rgba(201, 165, 75, 0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
-  return () => { parar(); obs.disconnect(); canvas.remove(); };
 }
 
 /* ---------- Luxo Técnico ---------- */
