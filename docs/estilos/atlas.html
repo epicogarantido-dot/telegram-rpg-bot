@@ -186,6 +186,25 @@ dd { margin: 0; color: var(--apagado); }
 .e10 .acao { background: #b02e26; color: #f2e3c2; border-radius: 999px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 14px; }
 .e10 .fotos i { border-radius: 50% 50% 8px 8px; border: 2px solid #e1b54b; background: linear-gradient(180deg, #b02e26, #5e1712); }
 
+.plano { grid-column: 1 / -1; display: grid; gap: 12px; border-top: 1px solid var(--linha); padding-top: 18px; }
+.medidor { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.medidor-rotulo { font: 12px var(--f-mono); color: var(--apagado); letter-spacing: .04em; text-transform: uppercase; }
+.pontos { display: inline-flex; gap: 5px; }
+.pontos i { width: 26px; height: 8px; border-radius: 4px; background: var(--linha); }
+.pontos i.on { background: var(--marca); }
+.movimento, .assinatura { margin: 0; max-width: 75ch; }
+.assinatura { color: var(--apagado); }
+.assinatura strong { color: var(--tinta); }
+details summary { cursor: pointer; font-weight: 700; color: var(--marca); padding: 6px 0; }
+.plano-grade { display: grid; gap: 18px 28px; margin-top: 10px; }
+@media (min-width: 760px) { .plano-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.plano-grade h4 { margin: 0 0 4px; font-size: 15px; }
+.plano-grade p, .plano-grade ul, .plano-grade ol { margin: 0; color: var(--apagado); font-size: 15px; }
+.plano-grade ul, .plano-grade ol { padding-left: 18px; display: grid; gap: 3px; }
+.escolha { font-size: 1.05rem; }
+.indice a.escolhido { border-color: var(--marca); font-weight: 700; }
+.reserva { margin-top: 24px; }
+.reserva h2 { font-size: 1.6rem; }
 .fecho { display: grid; gap: 10px; background: var(--papel); border: 1px solid var(--linha); border-radius: 18px; padding: 24px; }
 .fecho h2 { font-size: 1.5rem; }
 .fecho ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
@@ -195,11 +214,12 @@ dd { margin: 0; color: var(--apagado); }
 <main class="pagina">
   <header class="intro">
     <h1>Atlas de Estilos</h1>
+    <p class="escolha">Seis escolhidos, cada um com o plano completo do site e um medidor de quanto efeito ele usa: do Luxo Silencioso, quase parado, à Extravagância, no máximo.</p>
     <p>Dez sensações de luxo pros sites das barbearias. Cada estilo captura a essência de como uma grande marca faz a pessoa se sentir, como a extravagância da Versace ou o luxo silencioso da Prada, e traduz isso em regras de design: cor, letra, espaço e movimento.</p>
     <p class="nota">A marca aparece só como referência. O que levamos é a atitude; logos, nomes e desenhos delas ficam de fora. Fontes gratuitas, desenhos nossos.</p>
     <nav class="indice" aria-label="Estilos">
-      <a href="#barroco">Extravagância</a><a href="#milanes">Luxo Silencioso</a><a href="#alpino">Luxo Técnico</a>
-      <a href="#pista">Potência</a><a href="#atelier">Cerimônia</a><a href="#parisiense">Elegância Atemporal</a>
+      <a class="escolhido" href="#barroco">Extravagância</a><a class="escolhido" href="#milanes">Luxo Silencioso</a><a class="escolhido" href="#alpino">Luxo Técnico</a>
+      <a class="escolhido" href="#pista">Potência</a><a class="escolhido" href="#atelier">Cerimônia</a><a class="escolhido" href="#parisiense">Elegância Atemporal</a>
       <a href="#sela">Artesanal</a><a href="#engenharia">Precisão</a><a href="#boticario">Ritual Sensorial</a><a href="#retro">Maximalismo Retrô</a>
     </nav>
   </header>
@@ -234,6 +254,27 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Pra quem</dt><dd>Barbearia clássica premium, barba com toalha quente</dd>
       </dl>
     </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 5 de 5, Máximo">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><strong>Máximo</strong>
+      </div>
+      <p class="movimento">Muito e com brilho. Pode tudo, desde que seja dourado e teatral: entradas de palco, reflexos, partículas. Mesmo aqui, uma coisa por vez na tela.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Um título em letras douradas que acende como metal polido ao entrar, dentro de uma moldura ornamental que se desenha sozinha.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia clássica premium: barba com toalha quente, cliente que gosta de ser tratado como rei.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Abertura com moldura ornamental e título com reflexo dourado</li><li>Faixa de serviços em cartões com borda dourada e preço em destaque</li><li>Galeria dos trabalhos em mosaico com moldura em cada foto</li><li>O barbeiro: retrato grande com citação em itálico</li><li>Horários e endereço em placa ornamental</li><li>Chamada final: &quot;Reserve sua cadeira&quot;</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Brilho que atravessa o título (tipo Shiny Text do React Bits, ou gradiente animado em CSS)</li><li>Moldura que se desenha ao rolar (linha SVG animada pela rolagem)</li><li>Partículas douradas bem suaves no fundo da abertura (canvas leve, pausa fora da tela)</li><li>Fotos da galeria entram com zoom lento e brilho na borda</li><li>Botão com borda de luz girando (tipo Star Border)</li><li>Parallax forte entre moldura, fundo e texto</li></ul></div>
+          <div><h4>Fotos</h4><p>Fundo escuro, luz quente de lado, detalhes dourados (tesoura, navalha, frascos). Preto e dourado combinam com qualquer corte.</p></div>
+          <div><h4>Tom dos textos</h4><p>Solene e generoso. Ex.: &quot;A arte da navalha, desde 1998&quot; · botão &quot;Reservar minha cadeira&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Etapas como cartões com borda dourada; horário escolhido acende em ouro.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Ouro amarelado demais (fica brega), letra decorativa no texto corrido, efeitos brigando entre si.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Até ~120 KB de JavaScript de efeitos; partículas desligam no celular fraco e com &quot;reduzir movimento&quot;.</p></div>
+        </div>
+      </details>
+    </div>
   </section>
 
   <!-- 2 -->
@@ -265,6 +306,27 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Movimento</dt><dd>Quase nenhum; troca de foto em corte seco</dd>
         <dt>Pra quem</dt><dd>Barbearia de bairro nobre, estética "menos é mais"</dd>
       </dl>
+    </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 1 de 5, Mínimo">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><strong>Mínimo</strong>
+      </div>
+      <p class="movimento">Quase nenhum. Só o que responde a um toque: trocar foto, abrir menu. Nada se move sozinho.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Uma foto enorme de um corte perfeito, quase sem texto em volta. O espaço vazio é o luxo.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia de bairro nobre, uma ou duas cadeiras, cliente que não quer barulho.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Uma foto em tela cheia, nome pequeno no canto</li><li>Uma frase curta e o botão &quot;Agendar&quot;</li><li>Grade editorial assimétrica de trabalhos (uma grande, duas pequenas)</li><li>Serviços em lista simples: nome, tempo, preço, alinhados</li><li>Endereço e horário em duas linhas</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Troca de foto em corte seco, sem deslizar</li><li>Sublinhado fino que cresce ao passar o dedo nos links</li><li>Fotos carregam com esmaecimento de 200 ms, e só isso</li></ul></div>
+          <div><h4>Fotos</h4><p>Fundo claro e liso, luz natural e difusa, enquadramento centrado. Poucas fotos, todas excelentes.</p></div>
+          <div><h4>Tom dos textos</h4><p>Mínimo e seguro. Ex.: &quot;Corte preciso. Nada além.&quot; · botão &quot;Agendar&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Lista limpa, sem cartões; o horário escolhido fica sublinhado em preto.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Ícones, emojis, cores extras, banner, carrossel automático. Qualquer enfeite quebra o clima.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Praticamente zero JavaScript de efeito: é o site mais rápido dos seis.</p></div>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -298,6 +360,27 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Pra quem</dt><dd>Barbearia moderna, público jovem e família</dd>
       </dl>
     </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 3 de 5, Médio">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><strong>Médio</strong>
+      </div>
+      <p class="movimento">Médio e macio. Tudo desliza devagar, como neve caindo; nada pula nem pisca.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Uma faixa acolchoada (textura de costura de jaqueta) que acompanha a rolagem, com cartões macios por cima.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia moderna e confortável: público jovem, famílias, ambiente climatizado com café.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Abertura clara com título leve e botão em pílula</li><li>Cartões de serviço arredondados com ícones finos</li><li>Galeria em carrossel arrastável com cantos bem arredondados</li><li>&quot;Por que aqui&quot;: conforto, café, Wi-Fi, estacionamento</li><li>Horários em blocos arredondados</li><li>Chamada final sobre fundo azul-marinho</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Parallax suave na textura acolchoada</li><li>Cartões que afundam de leve ao tocar, como almofada</li><li>Neve muito sutil na abertura, só no inverno (opcional)</li><li>Contadores que sobem: anos de casa, cortes feitos (tipo Count Up)</li></ul></div>
+          <div><h4>Fotos</h4><p>Ambiente claro, tons frios, gente sorrindo. Bom pra mostrar o espaço e o conforto, não só o corte.</p></div>
+          <div><h4>Tom dos textos</h4><p>Acolhedor e prático. Ex.: &quot;Frio lá fora. Corte em dia.&quot; · botão &quot;Marcar horário&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Etapas em pílulas arredondadas; calendário macio com dias em círculos.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Cantos retos, preto puro, letras pesadas: deixam o site duro.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Até ~60 KB de efeitos; quase tudo em CSS.</p></div>
+        </div>
+      </details>
+    </div>
   </section>
 
   <!-- 4 -->
@@ -329,6 +412,27 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Movimento</dt><dd>Título entra deslizando, como carro na reta</dd>
         <dt>Pra quem</dt><dd>Barbearia de degradê e freestyle, público jovem</dd>
       </dl>
+    </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 4 de 5, Forte">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><strong>Forte</strong>
+      </div>
+      <p class="movimento">Muito, rápido e direto. Entradas velozes, texto que corre de lado, tudo com sensação de arrancada. Sem brilho delicado.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Um título gigante e inclinado que entra rasgando a tela, com uma faixa de neon que corre por baixo, como linha de chegada.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia de degradê, freestyle e pigmentação: público jovem, ligado em futebol, carro e música.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Abertura escura com vídeo curto de corte em câmera lenta e título gigante</li><li>Faixa de texto correndo: &quot;DEGRADÊ · NAVALHADO · FREESTYLE&quot;</li><li>Galeria com cantos cortados em ângulo, efeito antes e depois</li><li>Serviços como &quot;ficha de corrida&quot; (tempo e preço em números grandes)</li><li>Equipe em cartões com foto em preto e branco que ganha cor ao tocar</li><li>Chamada final com botão neon</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Título que entra letra por letra, rápido (tipo Split Text)</li><li>Faixa de texto infinita que acelera com a rolagem (tipo Scroll Velocity)</li><li>Antes e depois arrastável nas fotos</li><li>Botão neon que puxa levemente pro dedo (tipo Magnet)</li><li>Faíscas ao tocar no botão de agendar (tipo Click Spark)</li></ul></div>
+          <div><h4>Fotos</h4><p>Fundo escuro, luz forte e dura de lado, close no acabamento do degradê. Vídeos curtos verticais funcionam muito bem.</p></div>
+          <div><h4>Tom dos textos</h4><p>Direto e cheio de energia. Ex.: &quot;Degradê em alta velocidade&quot; · botão &quot;Agendar já&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Tudo em blocos com canto cortado; horário escolhido acende em neon.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Serifas, tons pastel, animação lenta: tiram a força.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Até ~100 KB de efeitos; vídeo da abertura curto, sem som e leve (menos de 2 MB).</p></div>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -362,6 +466,27 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Pra quem</dt><dd>Barbearia exclusiva, preço alto, hora marcada</dd>
       </dl>
     </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 2 de 5, Sutil">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span><strong>Sutil</strong>
+      </div>
+      <p class="movimento">Pouco e lento. O movimento é do vídeo; o resto da página fica parado e calmo.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Um vídeo lento e escuro de detalhes (espuma, navalha, toalha), com uma única frase centralizada em letras finas e espaçadas.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia exclusiva, atendimento só com hora marcada, preço alto, uma hora inteira por cliente.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Vídeo em tela cheia com uma frase e o botão branco em pílula</li><li>&quot;A experiência&quot;: as etapas do atendimento, em texto curto</li><li>Galeria em tela cheia, uma foto por vez</li><li>O mestre barbeiro: retrato e trajetória</li><li>Convite final: &quot;Atendimento sob reserva&quot;</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Vídeo de fundo lento, sem cortes bruscos</li><li>Texto que surge desfocando devagar (tipo Blur Text), só na abertura</li><li>Passagem lenta entre fotos da galeria</li></ul></div>
+          <div><h4>Fotos</h4><p>Pouca luz, contraste alto, closes de mãos e ferramentas. Nada de fotos de grupo ou de salão cheio.</p></div>
+          <div><h4>Tom dos textos</h4><p>Calmo e cerimonioso. Ex.: &quot;Uma hora inteira, só sua&quot; · botão &quot;Reservar&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Poucos horários por dia, mostrados com destaque, como convite.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Preço em destaque, promoções, cores vivas, muitas fotos juntas.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Efeitos quase todos em CSS; o peso está no vídeo (versão leve no celular).</p></div>
+        </div>
+      </details>
+    </div>
   </section>
 
   <!-- 6 -->
@@ -393,7 +518,33 @@ dd { margin: 0; color: var(--apagado); }
         <dt>Pra quem</dt><dd>Barbearia atemporal, terno e gravata, casamentos</dd>
       </dl>
     </div>
+  
+    <div class="plano">
+      <div class="medidor" role="img" aria-label="Efeitos: nível 2 de 5, Sutil">
+        <span class="medidor-rotulo">Efeitos</span><span class="pontos" aria-hidden="true"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span><strong>Sutil</strong>
+      </div>
+      <p class="movimento">Pouco e preciso. Só transições que revelam algo: a cor da foto, o bloco seguinte.</p>
+      <p class="assinatura"><strong>A marca registrada do site:</strong> Fotos em preto e branco que ganham cor quando o dedo passa por cima.</p>
+      <details>
+        <summary>Plano completo do site</summary>
+        <div class="plano-grade">
+          <div><h4>Pra quem</h4><p>Barbearia clássica e atemporal: noivos, terno e gravata, eventos, cliente de muitos anos.</p></div>
+          <div><h4>Página inicial, de cima pra baixo</h4><ol><li>Abertura em bloco preto sólido com título em serifa clássica</li><li>Alternância de blocos preto e branco: serviços, galeria, história</li><li>Galeria em preto e branco que ganha cor ao tocar</li><li>&quot;Dia do noivo&quot;: pacote especial em destaque</li><li>Endereço e horário em tipografia clássica</li></ol></div>
+          <div><h4>Efeitos e onde entram</h4><ul><li>Foto de preto e branco pra cor ao tocar ou passar o mouse</li><li>Linha fina que se desenha entre as seções</li><li>Troca de blocos preto e branco marcada pela rolagem, sem animar o texto</li></ul></div>
+          <div><h4>Fotos</h4><p>Em preto e branco de verdade, com bom contraste; retratos e detalhes de terno, gravata e barba.</p></div>
+          <div><h4>Tom dos textos</h4><p>Clássico e seguro. Ex.: &quot;O clássico nunca sai de moda&quot; · botão &quot;Agendar&quot;</p></div>
+          <div><h4>Tela de agendamento</h4><p>Fundo branco, letras pretas, horário escolhido vira bloco preto.</p></div>
+          <div><h4>Pra não perder o clima, evitar</h4><p>Qualquer terceira cor, cantos arredondados, emojis.</p></div>
+          <div><h4>Peso e velocidade</h4><p>Quase sem JavaScript; o efeito da cor é CSS puro.</p></div>
+        </div>
+      </details>
+    </div>
   </section>
+
+  <header class="intro reserva">
+    <h2>Na reserva</h2>
+    <p>Ficam guardados pra depois. Mesma ideia: cada um vai ganhar o próprio plano quando entrar.</p>
+  </header>
 
   <!-- 7 -->
   <section class="prancha" id="sela" aria-labelledby="t7">
@@ -524,11 +675,13 @@ dd { margin: 0; color: var(--apagado); }
   </section>
 
   <section class="fecho" aria-labelledby="tf">
-    <h2 id="tf">Como isso vira produto</h2>
-    <ol>
-      <li>Cada estilo vira um <strong>tema</strong> no site das barbearias: o barbeiro escolhe um na hora do cadastro e troca quando quiser.</li>
-      <li>O tema muda só cores, fontes, formas e movimento. Fotos, serviços e agenda são os mesmos em todos.</li>
-      <li>Começamos com 3 temas bem diferentes entre si e liberamos os outros aos poucos (ou como vantagem do plano pago).</li>
-    </ol>
+    <h2 id="tf">O que os seis sites têm em comum</h2>
+    <p>Todos são o mesmo site por baixo: o barbeiro escolhe o tema e troca quando quiser. Muda o visual e a quantidade de efeitos; páginas, fotos, serviços e agenda continuam iguais.</p>
+    <div class="plano-grade">
+      <div><h4>Páginas</h4><ul><li>Início (cada tema muda a ordem e o clima das seções)</li><li>Trabalhos: galeria completa com filtros (degradê, barba, infantil...)</li><li>Serviços e preços</li><li>Agendar: o fluxo que já existe (/b/nome-da-barbearia), vestido com o tema</li><li>Sobre e contato: equipe, endereço, horário, link pro mapa e pro Instagram</li></ul></div>
+      <div><h4>Em todos os temas</h4><ul><li>Botão &quot;Agendar&quot; fixo no rodapé do celular, em todos os temas</li><li>Botão de WhatsApp da barbearia</li><li>Ficha pro Google (dados estruturados de barbearia: nome, endereço, horário, preços) pra aparecer melhor nas buscas da cidade</li><li>Imagem de compartilhamento bonita quando o link vai pro WhatsApp</li><li>Fotos enviadas pelo barbeiro, otimizadas automaticamente</li></ul></div>
+      <div><h4>Regras dos efeitos</h4><ul><li>Todo tema respeita o &quot;reduzir movimento&quot; do celular: o nível de efeitos cai pra 1</li><li>Efeito nunca esconde conteúdo: a página está completa mesmo parada</li><li>Teto de peso por tema e página carregando em menos de 2,5 s no 4G</li><li>Tudo grátis: fontes embutidas, efeitos em CSS ou componentes gratuitos (React Bits, Uiverse)</li></ul></div>
+      <div><h4>Ordem de construção</h4><ol><li>Base do site 2: estrutura das páginas, upload de fotos e o motor de temas</li><li>Luxo Silencioso primeiro: o mais simples, valida a estrutura</li><li>Potência: o primeiro tema com bastante efeito</li><li>Extravagância: o mais pesado, testa o teto de efeitos</li><li>Elegância Atemporal, Cerimônia e Luxo Técnico, reaproveitando o que já existe</li></ol></div>
+    </div>
   </section>
 </main>

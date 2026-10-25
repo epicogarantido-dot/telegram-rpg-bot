@@ -1,5 +1,7 @@
 # Atlas de Estilos (temas dos sites das barbearias)
 
+Plano completo dos 6 temas escolhidos: **`plano.md`** (com nível de efeitos de cada um).
+
 Visual completo: `atlas.html` (abrir no navegador) · publicado em https://claude.ai/artifact/8mwJLupAGBJ91ix2gMFybz
 
 **A ideia:** capturar a **essência** de como cada marca faz a pessoa se sentir (a extravagância da
