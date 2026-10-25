@@ -94,6 +94,8 @@ async function main() {
     }
     const capa = banco.fotos(b.id).find((f) => f.arquivo === arquivoPorId.get(perfil.capa));
     if (capa) banco.definirCapa(b.id, capa.id);
+    // Box 7 atende com agenda e também por ordem de chegada (mostra a fila no site).
+    if (tema.id === "potencia") banco.atualizarFuncionamento(b.id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "ambos" });
     // Um par de antes e depois (aparece na Potência e na página de trabalhos).
     const antes = banco.fotos(b.id).find((f) => f.arquivo === arquivoPorId.get(PAR_ANTES_DEPOIS.antes));
     const depois = arquivoPorId.get(PAR_ANTES_DEPOIS.depois);

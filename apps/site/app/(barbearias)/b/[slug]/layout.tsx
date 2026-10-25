@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, MessageCircle } from "lucide-react";
+import { CalendarCheck, MessageCircle, Navigation } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
-import { nivelEfeitos } from "@/lib/barbearias";
+import { linkMapa, nivelEfeitos } from "@/lib/barbearias";
 import { Efeitos } from "@/componentes/barbearia/Efeitos";
 
 /**
@@ -16,6 +16,8 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   if (!b) notFound();
   const ativo = banco.acessoAtivo(b);
   const base = `/b/${b.slug}`;
+  const agenda = b.atendimento !== "chegada";
+  const mapa = linkMapa(b);
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
 
   return (
@@ -28,7 +30,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
             <Link href={`${base}#servicos`}>Serviços</Link>
             <Link href={`${base}#equipe`}>Equipe</Link>
             <Link href={`${base}#contato`}>Contato</Link>
-            <Link href={`${base}/agendar`} className="b-botao b-botao-pequeno">Agendar</Link>
+            {agenda && <Link href={`${base}/agendar`} className="b-botao b-botao-pequeno">Agendar</Link>}
           </nav>
         )}
       </header>
@@ -48,7 +50,9 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
       {ativo && <Efeitos tema={b.tema} />}
       {ativo && (
         <nav className="b-barra-celular" aria-label="Ações rápidas">
-          <Link href={`${base}/agendar`} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar</Link>
+          {agenda
+            ? <Link href={`${base}/agendar`} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar</Link>
+            : mapa && <a href={mapa} className="b-botao" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
           <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer" aria-label="Chamar no WhatsApp">
             <MessageCircle size={20} aria-hidden />
           </a>

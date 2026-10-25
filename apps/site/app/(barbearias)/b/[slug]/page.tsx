@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, AtSign, Clock, MapPin, MessageCircle, Navigation, Phone, Users } from "lucide-react";
 import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { obterAgenda, reais } from "@/lib/agenda";
@@ -50,6 +50,9 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const expedientes = banco.expedientes(b.id);
   const agora = situacaoAgora(b, expedientes);
   const mapa = linkMapa(b);
+  const agenda = b.atendimento !== "chegada";
+  // Fila só faz sentido com a barbearia aberta e informada há pouco.
+  const fila = agora.aberto ? banco.filaAgora(b) : undefined;
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
   const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
   const vagas = servicos[0] ? proximasVagas(banco, b.id, servicos[0].id, equipe.map((p) => p.id), hoje.slice(0, 10)) : null;
@@ -92,12 +95,24 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             </h1>
           ) : <h1>{b.nome}</h1>}
           {b.bio && <p className="b-bio">{b.bio}</p>}
+          {fila && (
+            <p className="b-fila">
+              <Users size={18} aria-hidden />
+              <span>
+                <strong>{fila.pessoas === 0 ? "Sem fila agora" : `${fila.pessoas} ${fila.pessoas === 1 ? "pessoa" : "pessoas"} na fila · espera de ~${fila.esperaMin} min`}</strong>
+                <small>atualizado {fila.haMin < 1 ? "agora" : `há ${fila.haMin} min`}</small>
+              </span>
+            </p>
+          )}
+          {!agenda && <p className="b-chegada">Atendimento por ordem de chegada.</p>}
           <div className="b-acoes">
-            <Link href={`${base}/agendar`} className="b-botao">Agendar horário</Link>
+            {agenda
+              ? <Link href={`${base}/agendar`} className="b-botao">Agendar horário</Link>
+              : mapa && <a href={mapa} className="b-botao" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
             <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>
           </div>
           <ul className="b-info-rapida">
-            <li className={agora.aberto ? "aberto" : ""}><Clock size={16} aria-hidden /> {agora.texto}</li>
+            <li className={`b-estado ${agora.aberto ? "aberto" : ""}`}><Clock size={16} aria-hidden /> {agora.texto}</li>
             {b.endereco && <li><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</li>}
             <li><Phone size={16} aria-hidden /> <a href={`tel:+${b.telefone}`}>{telefoneBonito}</a></li>
           </ul>
@@ -175,8 +190,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <li key={s.id}>
               <span className="b-servico-nome">{s.nome}</span>
               <span className="b-servico-tempo">{s.duracaoMin} min</span>
-              <span className="b-servico-preco">{reais(s.precoCentavos)}</span>
-              <Link href={`${base}/agendar?servico=${s.id}`} className="b-servico-acao" aria-label={`Agendar ${s.nome}`}>Agendar</Link>
+              {b.mostrarPrecos && <span className="b-servico-preco">{reais(s.precoCentavos)}</span>}
+              {agenda && <Link href={`${base}/agendar?servico=${s.id}`} className="b-servico-acao" aria-label={`Agendar ${s.nome}`}>Agendar</Link>}
             </li>
           ))}
         </ul>
@@ -194,7 +209,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
                   : <div className="b-pessoa-inicial" aria-hidden="true">{p.nome[0]}</div>}
                 <h3>{p.nome}</h3>
                 {p.especialidade && <p>{p.especialidade}</p>}
-                <Link href={`${base}/agendar?profissional=${p.id}`} className="b-botao-sec">Agendar com {primeiroNome(p.nome)}</Link>
+                {agenda && <Link href={`${base}/agendar?profissional=${p.id}`} className="b-botao-sec">Agendar com {primeiroNome(p.nome)}</Link>}
               </article>
             ))}
           </div>

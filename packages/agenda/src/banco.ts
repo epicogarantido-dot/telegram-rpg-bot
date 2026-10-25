@@ -30,7 +30,23 @@ export interface Barbearia {
   oferta?: string;
   /** Ano de abertura (vira "X anos de casa" no site). */
   desde?: number;
+  /** Mostrar os preços dos serviços no site. */
+  mostrarPrecos: boolean;
+  /** De quantos em quantos minutos começam os horários (30, 60, 90 ou 120). */
+  intervaloMin: number;
+  /** Como atende: só com horário marcado, só por ordem de chegada, ou os dois. */
+  atendimento: Atendimento;
+  /** Dia (no fuso da barbearia) em que o dono fechou a barbearia de última hora. */
+  fechadoEm?: Data;
+  /** Pessoas esperando na fila (ordem de chegada) e quando o dono informou. */
+  filaPessoas?: number;
+  filaAtualizadaEm?: string;
 }
+
+export type Atendimento = "agenda" | "chegada" | "ambos";
+export const INTERVALOS = [30, 60, 90, 120] as const;
+/** Fila informada há mais tempo que isso não aparece no site (pode estar errada). */
+export const FILA_VALIDA_MIN = 180;
 
 export interface Foto {
   id: number;
@@ -94,7 +110,16 @@ export function planoDoAmbiente(): Plano {
   };
 }
 
-const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde";
+const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
+  "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm";
+
+/** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
+function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
+  if (!linha) return undefined;
+  const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1 } as Record<string, unknown>;
+  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde"]) if (b[k] === null) b[k] = undefined;
+  return b as Barbearia & T;
+}
 const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
 const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbearia, p.txid, p.valor_centavos AS valorCentavos,
   p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
@@ -115,6 +140,18 @@ function caminhoPadrao(): string {
 export function gerarSlug(nome: string): string {
   return nome.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "barbearia";
+}
+
+function nomeValido(nome: string, oque: string): string {
+  const n = nome.trim().replace(/\s+/g, " ");
+  if (n.length < 2 || n.length > 40) throw new ErroAgenda(`Informe ${oque} (2 a 40 letras).`);
+  return n;
+}
+
+function servicoValido(s: { nome: string; duracaoMin: number; precoCentavos: number }) {
+  if (!(s.duracaoMin >= 5 && s.duracaoMin <= 480)) throw new ErroAgenda("Duração entre 5 e 480 minutos.");
+  if (!(s.precoCentavos >= 0 && s.precoCentavos <= 10_000_00)) throw new ErroAgenda("Preço inválido.");
+  return { nome: nomeValido(s.nome, "o nome do serviço"), duracaoMin: Math.round(s.duracaoMin), precoCentavos: Math.round(s.precoCentavos) };
 }
 
 export class BancoAgenda {
@@ -177,6 +214,11 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "tema", `TEXT NOT NULL DEFAULT '${TEMA_PADRAO}'`);
     for (const c of ["bio", "cidade", "instagram", "oferta"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "desde", "INTEGER");
+    this.garantirColuna("barbearias", "mostrar_precos", "INTEGER NOT NULL DEFAULT 1");
+    this.garantirColuna("barbearias", "intervalo_min", "INTEGER NOT NULL DEFAULT 30");
+    this.garantirColuna("barbearias", "atendimento", "TEXT NOT NULL DEFAULT 'agenda'");
+    for (const c of ["fechado_em", "fila_atualizada_em"]) this.garantirColuna("barbearias", c, "TEXT");
+    this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.db.exec(`
@@ -270,11 +312,11 @@ export class BancoAgenda {
   // ---------- barbearia ----------
 
   barbeariaPorId(id: number): Barbearia | undefined {
-    return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE id = ?`).get(id) as Barbearia | undefined;
+    return paraBarbearia(this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE id = ?`).get(id) as Record<string, unknown> | undefined);
   }
 
   barbeariaPorSlug(slug: string): Barbearia | undefined {
-    return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE slug = ?`).get(slug) as Barbearia | undefined;
+    return paraBarbearia(this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE slug = ?`).get(slug) as Record<string, unknown> | undefined);
   }
 
   atualizarBarbearia(id: number, dados: { nome: string; telefone: string; endereco?: string }): void {
@@ -302,15 +344,18 @@ export class BancoAgenda {
       .all(barbeariaId) as unknown as Profissional[];
   }
 
-  atualizarProfissional(barbeariaId: number, id: number, dados: { especialidade?: string; fotoArquivo?: string | null }): void {
+  atualizarProfissional(barbeariaId: number, id: number, dados: { nome?: string; especialidade?: string; fotoArquivo?: string | null }): void {
     if (dados.fotoArquivo && !this.fotoDaBarbearia(barbeariaId, dados.fotoArquivo)) throw new ErroAgenda("Foto inválida.");
+    if (dados.nome !== undefined) {
+      this.db.prepare("UPDATE profissionais SET nome = ? WHERE id = ? AND barbearia_id = ?").run(nomeValido(dados.nome, "o nome do profissional"), id, barbeariaId);
+    }
     this.db.prepare(`UPDATE profissionais SET especialidade = COALESCE(?, especialidade),
         foto_arquivo = CASE WHEN ? THEN ? ELSE foto_arquivo END WHERE id = ? AND barbearia_id = ?`)
       .run(dados.especialidade?.trim().slice(0, 60) ?? null, dados.fotoArquivo !== undefined ? 1 : 0, dados.fotoArquivo ?? null, id, barbeariaId);
   }
 
   adicionarProfissional(barbeariaId: number, nome: string): void {
-    this.db.prepare("INSERT INTO profissionais (barbearia_id, nome) VALUES (?, ?)").run(barbeariaId, nome.trim());
+    this.db.prepare("INSERT INTO profissionais (barbearia_id, nome) VALUES (?, ?)").run(barbeariaId, nomeValido(nome, "o nome do profissional"));
   }
 
   alternarProfissional(barbeariaId: number, id: number): void {
@@ -323,10 +368,52 @@ export class BancoAgenda {
   }
 
   adicionarServico(barbeariaId: number, s: { nome: string; duracaoMin: number; precoCentavos: number }): void {
-    if (!(s.duracaoMin >= 5 && s.duracaoMin <= 480)) throw new ErroAgenda("Duração entre 5 e 480 minutos.");
-    if (!(s.precoCentavos >= 0)) throw new ErroAgenda("Preço inválido.");
+    const v = servicoValido(s);
     this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos) VALUES (?, ?, ?, ?)")
-      .run(barbeariaId, s.nome.trim(), Math.round(s.duracaoMin), Math.round(s.precoCentavos));
+      .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos);
+  }
+
+  /** Muda nome, duração e preço. Horários já marcados continuam como foram marcados. */
+  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number }): void {
+    const v = servicoValido(s);
+    this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ? WHERE id = ? AND barbearia_id = ?")
+      .run(v.nome, v.duracaoMin, v.precoCentavos, id, barbeariaId);
+  }
+
+  // ---------- funcionamento: preços, intervalo, atendimento, fila, fechar hoje ----------
+
+  atualizarFuncionamento(id: number, dados: { mostrarPrecos: boolean; intervaloMin: number; atendimento: string }): void {
+    if (!(INTERVALOS as readonly number[]).includes(dados.intervaloMin)) throw new ErroAgenda("Intervalo inválido.");
+    if (!["agenda", "chegada", "ambos"].includes(dados.atendimento)) throw new ErroAgenda("Forma de atendimento inválida.");
+    this.db.prepare("UPDATE barbearias SET mostrar_precos = ?, intervalo_min = ?, atendimento = ? WHERE id = ?")
+      .run(dados.mostrarPrecos ? 1 : 0, dados.intervaloMin, dados.atendimento, id);
+  }
+
+  /** Fecha (ou reabre) a barbearia hoje: o site mostra "Fechado hoje" e não oferece horários do dia. */
+  fecharHoje(id: number, fechar: boolean, agora?: Date): void {
+    const b = this.barbeariaPorId(id);
+    if (!b) return;
+    this.db.prepare("UPDATE barbearias SET fechado_em = ? WHERE id = ?").run(fechar ? agoraNoFuso(b.fuso, agora).slice(0, 10) : null, id);
+  }
+
+  fechadoHoje(b: Barbearia, agora?: Date): boolean {
+    return !!b.fechadoEm && b.fechadoEm === agoraNoFuso(b.fuso, agora).slice(0, 10);
+  }
+
+  definirFila(id: number, pessoas: number, agora = new Date()): void {
+    if (!Number.isInteger(pessoas) || pessoas < 0 || pessoas > 50) throw new ErroAgenda("Fila entre 0 e 50 pessoas.");
+    this.db.prepare("UPDATE barbearias SET fila_pessoas = ?, fila_atualizada_em = ? WHERE id = ?").run(pessoas, agora.toISOString(), id);
+  }
+
+  /** Fila pro site: só se foi informada há pouco (FILA_VALIDA_MIN). Espera estimada pela média dos serviços e pela equipe. */
+  filaAgora(b: Barbearia, agora = new Date()): { pessoas: number; esperaMin: number; haMin: number } | undefined {
+    if (b.atendimento === "agenda" || b.filaPessoas === undefined || !b.filaAtualizadaEm) return undefined;
+    const haMin = Math.floor((agora.getTime() - new Date(b.filaAtualizadaEm).getTime()) / 60_000);
+    if (haMin < 0 || haMin > FILA_VALIDA_MIN) return undefined;
+    const servicos = this.servicos(b.id, true);
+    const media = servicos.length ? servicos.reduce((t, s) => t + s.duracaoMin, 0) / servicos.length : 30;
+    const cadeiras = Math.max(1, this.profissionais(b.id, true).length);
+    return { pessoas: b.filaPessoas, esperaMin: Math.round((b.filaPessoas * media) / cadeiras / 5) * 5, haMin };
   }
 
   alternarServico(barbeariaId: number, id: number): void {
@@ -365,7 +452,8 @@ export class BancoAgenda {
   horariosLivres(barbeariaId: number, profissionalId: number, servicoId: number, data: Data, agora?: Date): string[] {
     const b = this.barbeariaPorId(barbeariaId);
     const servico = this.servicos(barbeariaId, true).find((s) => s.id === servicoId);
-    if (!b || !servico) return [];
+    if (!b || !servico || b.atendimento === "chegada") return [];
+    if (b.fechadoEm === data) return [];
     const ocupados = this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado");
     return horariosLivres({
       data,
@@ -373,6 +461,7 @@ export class BancoAgenda {
       duracao: servico.duracaoMin,
       ocupados,
       agora: agoraNoFuso(b.fuso, agora),
+      passo: b.intervaloMin,
     });
   }
 
@@ -493,7 +582,7 @@ export class BancoAgenda {
   todasBarbearias(): (Barbearia & { email: string })[] {
     return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA.split(", ").map((c) => `b.${c}`).join(", ")},
       (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id ORDER BY u.id LIMIT 1) AS email
-      FROM barbearias b ORDER BY b.acesso_ate`).all() as unknown as (Barbearia & { email: string })[];
+      FROM barbearias b ORDER BY b.acesso_ate`).all().map((l) => paraBarbearia(l as Record<string, unknown>)) as unknown as (Barbearia & { email: string })[];
   }
 
   /** Bloqueio manual imediato (ex.: estorno, fraude). */

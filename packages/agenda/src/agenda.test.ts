@@ -275,7 +275,7 @@ describe("efeitos: ano de abertura e antes/depois", () => {
     expect(b.barbeariaPorId(barbearia.id)!.desde).toBe(2015);
     expect(() => b.atualizarSite(barbearia.id, { tema: "tecnico", desde: 3000 })).toThrow(/Ano/);
     b.atualizarSite(barbearia.id, { tema: "tecnico", desde: null });
-    expect(b.barbeariaPorId(barbearia.id)!.desde).toBeNull();
+    expect(b.barbeariaPorId(barbearia.id)!.desde).toBeUndefined();
   });
 
   it("pares de antes e depois: só da mesma barbearia, somem ao apagar", () => {
@@ -348,5 +348,89 @@ describe("avisos no celular do barbeiro", () => {
     b.definirConfiguracao("x", "1");
     b.definirConfiguracao("x", "2");
     expect(b.configuracao("x")).toBe("2");
+  });
+});
+
+describe("funcionamento: preços, intervalo, atendimento, fila e fechar hoje", () => {
+  function conta() {
+    const b = new BancoAgenda(":memory:");
+    const { barbearia } = b.criarConta({ nomeBarbearia: "Navalha", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
+    return { b, id: barbearia.id };
+  }
+  // Próximo dia aberto (a conta nova abre de terça a sábado).
+  function proximoDiaAberto(b: BancoAgenda, id: number, agora: Date) {
+    const hoje = agoraNoFuso("America/Sao_Paulo", agora).slice(0, 10);
+    for (let i = 1; i <= 7; i++) { const d = somarDias(hoje, i); if (b.expedientes(id).has(diaDaSemana(d))) return d; }
+    throw new Error("sem dia aberto");
+  }
+
+  it("padrões: mostra preço, 30 min, só agenda", () => {
+    const { b, id } = conta();
+    expect(b.barbeariaPorId(id)).toMatchObject({ mostrarPrecos: true, intervaloMin: 30, atendimento: "agenda" });
+  });
+
+  it("intervalo muda os horários oferecidos", () => {
+    const { b, id } = conta();
+    const agora = new Date();
+    const dia = proximoDiaAberto(b, id, agora);
+    const [s] = b.servicos(id, true);
+    const [p] = b.profissionais(id, true);
+    const de30 = b.horariosLivres(id, p!.id, s!.id, dia, agora);
+    b.atualizarFuncionamento(id, { mostrarPrecos: false, intervaloMin: 60, atendimento: "agenda" });
+    const de60 = b.horariosLivres(id, p!.id, s!.id, dia, agora);
+    expect(de60.length).toBeLessThan(de30.length);
+    expect(de60.every((h) => h.endsWith(":00"))).toBe(true);
+    expect(b.barbeariaPorId(id)!.mostrarPrecos).toBe(false);
+    expect(() => b.atualizarFuncionamento(id, { mostrarPrecos: true, intervaloMin: 45, atendimento: "agenda" })).toThrow(ErroAgenda);
+    expect(() => b.atualizarFuncionamento(id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "festa" })).toThrow(ErroAgenda);
+  });
+
+  it("só ordem de chegada não oferece horários", () => {
+    const { b, id } = conta();
+    const agora = new Date();
+    const dia = proximoDiaAberto(b, id, agora);
+    const [s] = b.servicos(id, true);
+    const [p] = b.profissionais(id, true);
+    b.atualizarFuncionamento(id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "chegada" });
+    expect(b.horariosLivres(id, p!.id, s!.id, dia, agora)).toEqual([]);
+  });
+
+  it("fechar hoje vale só pro dia de hoje e reabre", () => {
+    const { b, id } = conta();
+    b.fecharHoje(id, true);
+    expect(b.fechadoHoje(b.barbeariaPorId(id)!)).toBe(true);
+    expect(b.fechadoHoje(b.barbeariaPorId(id)!, new Date(Date.now() + 86_400_000))).toBe(false);
+    b.fecharHoje(id, false);
+    expect(b.fechadoHoje(b.barbeariaPorId(id)!)).toBe(false);
+  });
+
+  it("fila: aparece só em quem atende por chegada e some quando fica velha", () => {
+    const { b, id } = conta();
+    const agora = new Date("2026-10-27T15:00:00Z");
+    b.definirFila(id, 3, agora);
+    expect(b.filaAgora(b.barbeariaPorId(id)!, agora)).toBeUndefined();
+    b.atualizarFuncionamento(id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "ambos" });
+    const fila = b.filaAgora(b.barbeariaPorId(id)!, new Date(agora.getTime() + 10 * 60_000))!;
+    expect(fila).toMatchObject({ pessoas: 3, haMin: 10 });
+    expect(fila.esperaMin).toBeGreaterThan(0);
+    expect(b.filaAgora(b.barbeariaPorId(id)!, new Date(agora.getTime() + 4 * 3_600_000))).toBeUndefined();
+    expect(() => b.definirFila(id, -1)).toThrow(ErroAgenda);
+    expect(() => b.definirFila(id, 1.5)).toThrow(ErroAgenda);
+  });
+
+  it("edita serviço e nome do profissional, só da própria barbearia", () => {
+    const { b, id } = conta();
+    const outra = b.criarConta({ nomeBarbearia: "Outra", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const [s] = b.servicos(id);
+    const [p] = b.profissionais(id);
+    b.atualizarServico(id, s!.id, { nome: " Corte  social ", duracaoMin: 40, precoCentavos: 5000 });
+    expect(b.servicos(id)[0]).toMatchObject({ nome: "Corte social", duracaoMin: 40, precoCentavos: 5000 });
+    b.atualizarServico(outra.id, s!.id, { nome: "Invasão", duracaoMin: 40, precoCentavos: 1 });
+    expect(b.servicos(id)[0]!.nome).toBe("Corte social");
+    expect(() => b.atualizarServico(id, s!.id, { nome: "", duracaoMin: 40, precoCentavos: 1 })).toThrow(ErroAgenda);
+    b.atualizarProfissional(id, p!.id, { nome: "Rafa" });
+    b.atualizarProfissional(outra.id, p!.id, { nome: "Invasor" });
+    expect(b.profissionais(id)[0]!.nome).toBe("Rafa");
+    expect(() => b.adicionarProfissional(id, " ")).toThrow(ErroAgenda);
   });
 });

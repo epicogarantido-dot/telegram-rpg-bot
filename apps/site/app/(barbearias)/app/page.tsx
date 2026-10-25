@@ -7,6 +7,7 @@ import { MessageCircle } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
+import { situacaoAgora } from "@/lib/barbearias";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -41,6 +42,24 @@ async function testarAviso(): Promise<number> {
   "use server";
   const { barbearia } = await exigirAcessoAtivo();
   return avisoDeTeste(barbearia.id);
+}
+
+async function alternarFechadoHoje(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  obterAgenda().fecharHoje(barbearia.id, form.get("fechar") === "1");
+  revalidatePath("/app");
+}
+
+/** Fila: + e − mudam de 1 em 1; "Sem fila" zera. Cada toque renova o "atualizado agora" do site. */
+async function mudarFila(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const atual = obterAgenda().barbeariaPorId(barbearia.id)!.filaPessoas ?? 0;
+  const acao = String(form.get("acao"));
+  const nova = acao === "zerar" ? 0 : Math.min(50, Math.max(0, atual + (acao === "mais" ? 1 : -1)));
+  obterAgenda().definirFila(barbearia.id, nova);
+  revalidatePath("/app");
 }
 
 async function sair() {
@@ -82,6 +101,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {" · "}<Link href="/app/assinatura">Assinatura</Link>
       </p>
 
+      <Hoje barbeariaId={barbearia.id} />
+
       <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
 
       <nav className="navegacao">
@@ -114,5 +135,42 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </div>
       ))}
     </>
+  );
+}
+
+function Hoje({ barbeariaId }: { barbeariaId: number }) {
+  const banco = obterAgenda();
+  const b = banco.barbeariaPorId(barbeariaId)!;
+  const estado = situacaoAgora(b, banco.expedientes(b.id));
+  const fechadoHoje = banco.fechadoHoje(b);
+  const fila = b.atendimento !== "agenda" ? banco.filaAgora(b) : undefined;
+  return (
+    <section className="hoje-painel" aria-label="Hoje">
+      <div className="hoje-linha">
+        <p className={`selo-estado ${estado.aberto ? "aberto" : ""}`}>{estado.texto}</p>
+        <form action={alternarFechadoHoje}>
+          <input type="hidden" name="fechar" value={fechadoHoje ? "0" : "1"} />
+          <button className="botao-sec">{fechadoHoje ? "Reabrir hoje" : "Fechar hoje"}</button>
+        </form>
+      </div>
+      {fechadoHoje && <p className="suave pequeno">O site mostra &quot;Fechado hoje&quot; e não oferece horários pra hoje.</p>}
+      {b.atendimento !== "agenda" && (
+        <div className="hoje-linha">
+          <div>
+            <strong>Fila agora</strong>
+            <p className="suave pequeno">
+              {fila ? `No site: ${fila.pessoas === 0 ? "sem fila" : `${fila.pessoas} na fila, espera de ~${fila.esperaMin} min`} · atualizado ${fila.haMin < 1 ? "agora" : `há ${fila.haMin} min`}`
+                : "Não aparece no site até você atualizar (some depois de 3 horas sem atualizar)."}
+            </p>
+          </div>
+          <div className="fila-controle">
+            <form action={mudarFila}><input type="hidden" name="acao" value="menos" /><button className="botao-sec" aria-label="Uma pessoa a menos na fila">−</button></form>
+            <span className="fila-numero" aria-live="polite">{b.filaPessoas ?? 0}<small>na fila</small></span>
+            <form action={mudarFila}><input type="hidden" name="acao" value="mais" /><button className="botao" aria-label="Uma pessoa a mais na fila">+</button></form>
+            <form action={mudarFila}><input type="hidden" name="acao" value="zerar" /><button className="botao-sec fila-zerar">Sem fila</button></form>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

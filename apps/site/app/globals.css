@@ -400,3 +400,42 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 /* Horário aberto pelo aviso: destaca o cartão. */
 .lead:target { border-color: var(--destaque); box-shadow: 0 0 0 3px var(--destaque-claro); }
 .lead { scroll-margin-top: 90px; }
+
+/* ---------- configurações da barbearia ---------- */
+.escolhas { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.escolhas legend { font-size: 14px; color: var(--suave); margin-bottom: 6px; }
+.formulario label.escolha {
+  display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; cursor: pointer;
+  border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao);
+}
+.formulario label.escolha:has(input:checked) { border-color: var(--destaque); background: var(--destaque-claro); }
+.formulario .escolha input[type="radio"] { flex: none; width: 20px; height: 20px; margin: 2px 0 0; padding: 0; border: 0; box-shadow: none; accent-color: var(--destaque); }
+.escolha span { display: grid; gap: 2px; color: var(--texto); }
+.escolha small { color: var(--suave); font-size: 14px; }
+.formulario label.marcar { display: flex; gap: 10px; align-items: center; color: var(--texto); font-size: 15px; }
+.marcar input { width: 20px; height: 20px; accent-color: var(--destaque); }
+.config-servico {
+  display: grid; grid-template-columns: minmax(0, 2fr) 90px 120px auto; gap: 10px; align-items: end;
+  padding: 12px 0; border-bottom: 1px solid var(--borda);
+}
+.config-servico label { display: grid; gap: 4px; font-size: 13px; color: var(--suave); }
+.config-servico input { padding: 9px 10px; font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); min-width: 0; }
+@media (max-width: 640px) {
+  .config-servico { grid-template-columns: 1fr 1fr; }
+  .config-servico label:first-of-type, .config-servico .acoes { grid-column: 1 / -1; }
+}
+.desativado { opacity: 0.55; }
+
+/* ---------- hoje: aberto/fechado e fila (painel) ---------- */
+.hoje-painel { display: grid; gap: 14px; margin: 20px 0; padding: 16px 18px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
+.hoje-linha { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.hoje-linha p { margin: 0; }
+.selo-estado { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.selo-estado::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #b42318; }
+.selo-estado.aberto::before { background: #12924f; }
+.fila-controle { display: flex; align-items: center; gap: 10px; }
+.fila-controle form { display: contents; }
+.fila-controle button { width: 52px; height: 52px; font-size: 1.5rem; border-radius: 50%; display: grid; place-items: center; padding: 0; }
+.fila-numero { min-width: 64px; text-align: center; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.fila-numero small { display: block; font-size: 12px; font-weight: 500; color: var(--suave); }
+.fila-controle .fila-zerar { width: auto; height: 44px; border-radius: var(--raio-p); font-size: 14px; padding: 0 14px; }

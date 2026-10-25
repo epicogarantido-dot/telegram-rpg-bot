@@ -26,6 +26,20 @@ export function situacaoAgora(b: Barbearia, expedientes: Map<number, Expediente>
   const hoje = agora.slice(0, 10);
   const min = paraMinutos(agora.slice(11));
   const e = expedientes.get(diaDaSemana(hoje));
+  const proximaAbertura = () => {
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(`${hoje}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + i);
+      const prox = expedientes.get(d.getUTCDay());
+      if (prox) return `abre ${i === 1 ? "amanhã" : nomeDia(d.getUTCDay())} às ${prox.abre}`;
+    }
+    return undefined;
+  };
+  // O dono fechou hoje pelo painel (feriado, imprevisto): vale mais que o horário de funcionamento.
+  if (b.fechadoEm === hoje) {
+    const prox = proximaAbertura();
+    return { aberto: false, texto: prox ? `Fechado hoje · ${prox}` : "Fechado hoje" };
+  }
   if (e && min >= paraMinutos(e.abre) && min < paraMinutos(e.fecha)) {
     const pausa = e.pausaInicio && e.pausaFim && min >= paraMinutos(e.pausaInicio) && min < paraMinutos(e.pausaFim);
     return pausa
@@ -33,13 +47,8 @@ export function situacaoAgora(b: Barbearia, expedientes: Map<number, Expediente>
       : { aberto: true, texto: `Aberto agora · fecha às ${e.fecha}` };
   }
   if (e && min < paraMinutos(e.abre)) return { aberto: false, texto: `Fechado · abre hoje às ${e.abre}` };
-  for (let i = 1; i <= 7; i++) {
-    const d = new Date(`${hoje}T12:00:00Z`);
-    d.setUTCDate(d.getUTCDate() + i);
-    const prox = expedientes.get(d.getUTCDay());
-    if (prox) return { aberto: false, texto: `Fechado · abre ${i === 1 ? "amanhã" : nomeDia(d.getUTCDay())} às ${prox.abre}` };
-  }
-  return { aberto: false, texto: "Horários a confirmar" };
+  const prox = proximaAbertura();
+  return { aberto: false, texto: prox ? `Fechado · ${prox}` : "Horários a confirmar" };
 }
 
 const DIAS_SCHEMA = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -62,7 +71,9 @@ export function dadosEstruturados(b: Barbearia, ctx: {
     ...(b.endereco && { address: { "@type": "PostalAddress", streetAddress: b.endereco, addressLocality: b.cidade, addressCountry: "BR" } }),
     openingHoursSpecification: horario,
     makesOffer: ctx.servicos.map((s) => ({
-      "@type": "Offer", price: (s.precoCentavos / 100).toFixed(2), priceCurrency: "BRL",
+      "@type": "Offer",
+      // Preço só vai pro Google se o dono quis mostrar no site.
+      ...(b.mostrarPrecos && { price: (s.precoCentavos / 100).toFixed(2), priceCurrency: "BRL" }),
       itemOffered: { "@type": "Service", name: s.nome },
     })),
   };

@@ -76,6 +76,16 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     );
   }
 
+  if (b.atendimento === "chegada") {
+    return (
+      <section className="b-secao b-indisponivel b-agendar">
+        <h1>Atendimento por ordem de chegada</h1>
+        <p>A {b.nome} não marca horário: é só chegar. Veja se está aberto e o tamanho da fila na página inicial.</p>
+        <Link className="b-botao" href={`/b/${slug}`}>Ver se está aberto</Link>
+      </section>
+    );
+  }
+
   const servicos = banco.servicos(b.id, true);
   const profissionais = banco.profissionais(b.id, true);
   const servico = servicos.length === 1 ? servicos[0] : servicos.find((s) => String(s.id) === sp.servico);
@@ -101,7 +111,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
               <Link href={link({ servico: String(s.id), data: undefined })}>
                 <span className="b-lista-nome">{s.nome}</span>
                 <span className="b-lista-info">{s.duracaoMin} min</span>
-                <span className="b-lista-preco">{reais(s.precoCentavos)}</span>
+                {b.mostrarPrecos && <span className="b-lista-preco">{reais(s.precoCentavos)}</span>}
                 <ChevronRight size={18} aria-hidden />
               </Link>
             </li>
@@ -124,7 +134,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
         {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
-          <p>{servico.nome} com {com.nome} · {reais(servico.precoCentavos)}</p>
+          <p>{servico.nome} com {com.nome}{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}</p>
           <Link href={link({ hora: undefined, com: undefined, data })}>Trocar horário</Link>
         </div>
         <form action={confirmar} className="formulario b-form-agendar">
@@ -157,7 +167,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       <Cabeca nome={b.nome} passo={2} titulo="Escolha o horário" />
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       <p className="b-escolhido">
-        {servico.nome} · {servico.duracaoMin} min · {reais(servico.precoCentavos)}
+        {servico.nome} · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
         {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
       </p>
 

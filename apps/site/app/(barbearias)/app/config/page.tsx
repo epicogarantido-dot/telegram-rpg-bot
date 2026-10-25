@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { ErroAgenda, nomeDia } from "@aprenda/agenda";
+import { ErroAgenda, INTERVALOS, nomeDia } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
@@ -34,7 +34,31 @@ async function novoServico(form: FormData) {
   await executar((id) => obterAgenda().adicionarServico(id, {
     nome: String(form.get("nome")),
     duracaoMin: Number(form.get("duracao")),
-    precoCentavos: Math.round(Number(String(form.get("preco")).replace(",", ".")) * 100),
+    precoCentavos: lerPreco(String(form.get("preco") ?? "")),
+  }));
+}
+
+/** "45", "45,5", "45,50" ou "R$ 45,00" → centavos. */
+function lerPreco(texto: string): number {
+  const limpo = texto.replace(/[^\d,.]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
+  return Math.round(Number(limpo) * 100);
+}
+
+async function editarServico(form: FormData) {
+  "use server";
+  await executar((id) => obterAgenda().atualizarServico(id, Number(form.get("id")), {
+    nome: String(form.get("nome") ?? ""),
+    duracaoMin: Number(form.get("duracao")),
+    precoCentavos: lerPreco(String(form.get("preco") ?? "")),
+  }));
+}
+
+async function salvarFuncionamento(form: FormData) {
+  "use server";
+  await executar((id) => obterAgenda().atualizarFuncionamento(id, {
+    mostrarPrecos: form.get("mostrarPrecos") === "on",
+    intervaloMin: Number(form.get("intervalo")),
+    atendimento: String(form.get("atendimento")),
   }));
 }
 
@@ -57,6 +81,7 @@ async function editarProfissional(form: FormData) {
   "use server";
   const foto = String(form.get("foto") ?? "");
   await executar((id) => obterAgenda().atualizarProfissional(id, Number(form.get("id")), {
+    nome: String(form.get("nome") ?? ""),
     especialidade: String(form.get("especialidade") ?? ""),
     fotoArquivo: foto || null,
   }));
@@ -92,20 +117,55 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
 
       <h2>Barbearia</h2>
       <form action={salvarDados} className="formulario">
-        <input name="nome" defaultValue={barbearia.nome} required maxLength={60} aria-label="Nome" />
-        <input name="telefone" defaultValue={barbearia.telefone} required aria-label="WhatsApp" />
-        <input name="endereco" defaultValue={barbearia.endereco ?? ""} placeholder="Endereço" aria-label="Endereço" />
+        <label htmlFor="cfg-nome">Nome da barbearia</label>
+        <input id="cfg-nome" name="nome" defaultValue={barbearia.nome} required maxLength={60} />
+        <label htmlFor="cfg-telefone">WhatsApp da barbearia</label>
+        <input id="cfg-telefone" name="telefone" defaultValue={barbearia.telefone} required inputMode="tel" />
+        <label htmlFor="cfg-endereco">Endereço</label>
+        <input id="cfg-endereco" name="endereco" defaultValue={barbearia.endereco ?? ""} placeholder="Rua, número, bairro" />
+        <button>Salvar</button>
+      </form>
+
+      <h2>Como você atende</h2>
+      <form action={salvarFuncionamento} className="formulario">
+        <fieldset className="escolhas">
+          <legend>Forma de atendimento</legend>
+          {([
+            ["agenda", "Só com horário marcado", "O cliente escolhe o horário pelo site."],
+            ["chegada", "Só por ordem de chegada", "O site mostra se está aberto e o tamanho da fila. Sem agendamento."],
+            ["ambos", "Os dois", "Agenda pelo site e também atende quem chega, mostrando a fila."],
+          ] as const).map(([valor, titulo, dica]) => (
+            <label key={valor} className="escolha">
+              <input type="radio" name="atendimento" value={valor} defaultChecked={barbearia.atendimento === valor} />
+              <span><strong>{titulo}</strong><small>{dica}</small></span>
+            </label>
+          ))}
+        </fieldset>
+        <label htmlFor="cfg-intervalo">Horários a cada</label>
+        <select id="cfg-intervalo" name="intervalo" defaultValue={barbearia.intervaloMin}>
+          {INTERVALOS.map((m) => <option key={m} value={m}>{m < 60 ? `${m} minutos` : m === 60 ? "1 hora" : m === 90 ? "1 hora e meia" : "2 horas"}</option>)}
+        </select>
+        <label className="marcar">
+          <input type="checkbox" name="mostrarPrecos" defaultChecked={barbearia.mostrarPrecos} /> Mostrar os preços dos serviços no site
+        </label>
         <button>Salvar</button>
       </form>
 
       <h2>Serviços</h2>
+      <p className="suave pequeno">Mude nome, tempo e preço e toque em Salvar. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
       {servicos.map((s) => (
-        <form key={s.id} action={alternarServico} className="item-config">
+        <form key={s.id} action={editarServico} className={`config-servico ${s.ativo ? "" : "desativado"}`}>
           <input type="hidden" name="id" value={s.id} />
-          <span className={s.ativo ? "" : "inativo"}>{s.nome} · {s.duracaoMin} min · {reais(s.precoCentavos)}</span>
-          <button className="botao-sec">{s.ativo ? "Desativar" : "Ativar"}</button>
+          <label>Serviço<input name="nome" defaultValue={s.nome} required maxLength={40} /></label>
+          <label>Minutos<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required /></label>
+          <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
+          <div className="acoes">
+            <button className="botao-sec">Salvar</button>
+            <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>
+          </div>
         </form>
       ))}
+      <h3>Novo serviço</h3>
       <form action={novoServico} className="formulario linha">
         <input name="nome" placeholder="Novo serviço" required maxLength={40} />
         <input name="duracao" type="number" min={5} max={480} step={5} placeholder="Minutos" required />
@@ -113,23 +173,20 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <button>Adicionar</button>
       </form>
 
-      <h2>Profissionais</h2>
+      <h2>Profissionais <small className="suave">({profissionais.filter((p) => p.ativo).length} atendendo)</small></h2>
       <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…".</p>
       {profissionais.map((p) => (
-        <div key={p.id} className="equipe-item">
-          <form action={alternarProfissional}>
-            <input type="hidden" name="id" value={p.id} />
-            <strong className={p.ativo ? "" : "inativo"}>{p.nome}</strong>
-            <button className="botao-sec">{p.ativo ? "Desativar" : "Ativar"}</button>
-          </form>
+        <div key={p.id} className={`equipe-item ${p.ativo ? "" : "desativado"}`}>
           <form action={editarProfissional}>
             <input type="hidden" name="id" value={p.id} />
+            <input name="nome" defaultValue={p.nome} required maxLength={40} aria-label="Nome do profissional" />
             <input name="especialidade" defaultValue={p.especialidade ?? ""} placeholder="Especialidade (ex.: degradê)" maxLength={60} aria-label={`Especialidade de ${p.nome}`} />
             <select name="foto" defaultValue={p.fotoArquivo ?? ""} aria-label={`Foto de ${p.nome}`}>
               <option value="">Sem foto</option>
               {fotosEquipe.map((f, i) => <option key={f.arquivo} value={f.arquivo}>{f.legenda || `Foto da equipe ${i + 1}`}</option>)}
             </select>
             <button className="botao-sec">Salvar</button>
+            <button className="botao-sec" formAction={alternarProfissional} formNoValidate>{p.ativo ? "Desativar" : "Ativar"}</button>
           </form>
         </div>
       ))}
