@@ -72,3 +72,18 @@ Próximos:
 2. Lembrete no dia pelo bot (o cliente pediu ao agendar; volume baixo e esperado, diferente de prospecção).
 3. Bloqueio de horário avulso (folga, médico).
 4. Perfil público com fotos de cortes — semente da rede social de barbeiros.
+
+### Site da barbearia como área de venda
+
+Sem afiliados no site da barbearia (decisão do dono): o site vende o serviço do barbeiro e, no rodapé, o nosso.
+
+| # | Conteúdo | Situação |
+|---|---|---|
+| 1 | Vagas dos próximos dias (horários reais, um toque leva à confirmação) | feito |
+| 2 | Plano mensal do cliente (Pix pro barbeiro, ele confirma) | a fazer |
+| 3 | Vale-presente (Pix, código usado ao agendar) | a fazer |
+| 4 | Vitrine de produtos (reservar e retirar no próximo corte) | a fazer |
+| 5 | Depoimentos reais pós-atendimento, aprovados pelo barbeiro | a fazer |
+| 6 | Fidelidade (a cada 10 cortes, 1 grátis, pelo WhatsApp do cliente) | a fazer |
+| 7 | Perguntas frequentes | a fazer |
+| 8 | Rodapé "Você é barbeiro? Tenha um site assim" → `/barbeiros` | feito |

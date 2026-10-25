@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_FOTO, nomeDia } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
+import { DesenhoOficio } from "@/componentes/barbearia/DesenhoOficio";
 import { obterAgenda, reais } from "@/lib/agenda";
 import { dadosEstruturados, linkMapa, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
@@ -52,6 +53,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const mapa = linkMapa(b);
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
   const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
+  const vagas = servicos[0] ? proximasVagas(banco, b.id, servicos[0].id, equipe.map((p) => p.id), hoje.slice(0, 10)) : null;
   const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
 
   return (
@@ -111,6 +113,20 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
+      {vagas && servicos[0] && (
+        <section className="b-vagas" aria-labelledby="vagas-titulo">
+          <h2 id="vagas-titulo">Vagas {vagas.quando} pra {servicos[0].nome.toLowerCase()}</h2>
+          <ul>
+            {vagas.itens.map((v) => (
+              <li key={v.hora}>
+                <Link href={`${base}/agendar?servico=${servicos[0]!.id}&profissional=${v.profissionalId}&data=${vagas.data}&hora=${v.hora}`}>{v.hora}</Link>
+              </li>
+            ))}
+          </ul>
+          <Link href={`${base}/agendar`} className="b-vagas-mais">Outros dias e serviços</Link>
+        </section>
+      )}
+
       {numeros.length > 0 && (
         <section className="b-numeros" aria-label="A barbearia em números">
           {numeros.map((n) => (
@@ -152,6 +168,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           </div>
         </section>
       )}
+
+      <DesenhoOficio />
 
       <section className="b-secao" id="servicos">
         <h2>Serviços</h2>
@@ -217,4 +235,25 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 function palavrasComLetras(nome: string): { c: string; i: number }[][] {
   let i = 0;
   return nome.split(/\s+/).filter(Boolean).map((p) => [...p].map((c) => ({ c, i: i++ })));
+}
+
+/**
+ * Primeiros horários livres a partir de hoje (o primeiro dia com vaga, até 7 dias) somando
+ * todos os profissionais. Cada horário já leva quem está livre nele.
+ */
+function proximasVagas(banco: BancoAgenda, barbeariaId: number, servicoId: number, profissionais: number[], hoje: Data) {
+  for (let i = 0; i < 7; i++) {
+    const data = somarDias(hoje, i);
+    const dia = diaDaSemana(data);
+    const quando = i === 0 ? "hoje" : i === 1 ? "amanhã" : `${dia === 0 || dia === 6 ? "no" : "na"} ${nomeDia(dia).toLowerCase()}`;
+    const livres = new Map<string, number>();
+    for (const p of profissionais) {
+      for (const h of banco.horariosLivres(barbeariaId, p, servicoId, data)) if (!livres.has(h)) livres.set(h, p);
+    }
+    if (livres.size > 0) {
+      const itens = [...livres].sort(([a], [b]) => a.localeCompare(b)).slice(0, 6).map(([hora, profissionalId]) => ({ hora, profissionalId }));
+      return { quando, data, itens };
+    }
+  }
+  return null;
 }
