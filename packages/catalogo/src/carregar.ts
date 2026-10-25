@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { Curso } from "./schema.ts";
+import { Artigo, Curso } from "./schema.ts";
 
 /**
  * Acha data/cursos subindo a partir do diretório atual. Não dá pra usar
@@ -36,4 +36,20 @@ export async function carregarCursos(pasta = PASTA_CURSOS): Promise<Curso[]> {
 
 export async function carregarCurso(slug: string, pasta = PASTA_CURSOS): Promise<Curso | undefined> {
   return (await carregarCursos(pasta)).find((c) => c.slug === slug);
+}
+
+/** data/artigos fica ao lado de data/cursos. */
+export const PASTA_ARTIGOS = join(dirname(PASTA_CURSOS), "artigos");
+
+/** Artigos da revista, do mais novo pro mais antigo. Arquivo inválido derruba o build. */
+export async function carregarArtigos(pasta = PASTA_ARTIGOS): Promise<Artigo[]> {
+  if (!existsSync(/*turbopackIgnore: true*/ pasta)) return [];
+  const arquivos = (await readdir(/*turbopackIgnore: true*/ pasta)).filter((a) => a.endsWith(".json"));
+  const artigos: Artigo[] = [];
+  for (const arquivo of arquivos) {
+    const r = Artigo.safeParse(JSON.parse(await readFile(/*turbopackIgnore: true*/ join(pasta, arquivo), "utf8")));
+    if (!r.success) throw new Error(`Artigo inválido em ${arquivo}:\n${r.error.message}`);
+    artigos.push(r.data);
+  }
+  return artigos.sort((a, b) => b.publicadoEm.localeCompare(a.publicadoEm) || a.slug.localeCompare(b.slug));
 }

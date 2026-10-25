@@ -1,0 +1,76 @@
+{
+  "slug": "seu-dinheiro-em-ordem",
+  "titulo": "Seu dinheiro em ordem",
+  "resumo": "Finanças pessoais pra quem vive de barbearia: separar contas, orçamento com renda que varia, reserva, dívidas, MEI e investir com segurança.",
+  "area": "Finanças",
+  "nivel": "iniciante",
+  "tags": [
+    "barbearia",
+    "finanças pessoais",
+    "MEI",
+    "dinheiro"
+  ],
+  "idiomaOriginal": "pt",
+  "traducao": "original",
+  "autoria": "propria",
+  "modulos": [
+    {
+      "id": "organizar",
+      "titulo": "Organizar",
+      "licoes": [
+        {
+          "id": "separar-o-dinheiro",
+          "titulo": "Separe o dinheiro da barbearia do seu",
+          "conteudo": "O erro mais comum de quem trabalha por conta própria: **o dinheiro da barbearia e o dinheiro da casa ficam misturados**. O cliente paga, o dinheiro vai pro bolso, e no fim do mês ninguém sabe se a barbearia deu lucro ou se você gastou demais.\n\n### Por que separar\n\n- Você só sabe se o negócio vai bem se enxergar o dinheiro **dele**.\n- Na hora de comprar uma máquina, pagar o aluguel ou o DAS, o dinheiro **precisa estar lá**.\n- Fica mais fácil pedir crédito, falar com o contador e planejar.\n\n### Como fazer na prática\n\n1. **Duas contas:** uma da barbearia (pode ser uma conta digital só pra isso; MEI pode abrir conta no CNPJ) e uma sua.\n2. **Tudo que o cliente paga entra na conta da barbearia** — Pix, cartão e dinheiro vivo (deposite).\n3. **Defina uma retirada fixa pra você** (o \"pró-labore\"): um valor por semana ou por mês que sai da conta da barbearia pra sua. É o seu \"salário\".\n4. **Despesas da barbearia saem só da conta da barbearia.** Despesas da casa, só da sua.\n5. **Sobrou dinheiro na barbearia?** Primeiro reserva do negócio, depois investimento (uma máquina, uma cadeira), e só então uma retirada extra.\n\n### Quanto retirar\n\nComece olhando os **3 meses mais fracos** do último ano. A retirada fixa deve caber **mesmo num mês fraco**, depois de pagar as despesas da barbearia. Nos meses bons, a sobra vai pra reserva.\n\n### Na prática\n\n| Semana | Entrou (barbearia) | Despesas | Retirada | Sobrou na barbearia |\n|---|---:|---:|---:|---:|\n| 1 | 2.100 | 600 | 900 | 600 |\n| 2 | 1.700 | 350 | 900 | 450 |\n\n*Valores de exemplo.*\n\n### Para pensar\n\n- Hoje você sabe quanto a barbearia lucrou no mês passado?\n- Qual retirada fixa caberia até num mês fraco?"
+        },
+        {
+          "id": "pra-onde-vai-o-dinheiro",
+          "titulo": "Pra onde vai o seu dinheiro",
+          "conteudo": "Antes de cortar gastos ou investir, é preciso **saber pra onde o dinheiro vai**. Isso se chama orçamento, e não precisa de planilha complicada.\n\n### Passo 1: anote tudo por 30 dias\n\nCada gasto, do aluguel ao café. Pode ser no bloco de notas do celular, num caderno ou numa planilha simples. No fim do mês, junte por grupo:\n\n| Grupo | Exemplos |\n|---|---|\n| **Fixos** | aluguel, luz, água, internet, escola, plano de celular |\n| **Variáveis essenciais** | mercado, transporte, remédio |\n| **Variáveis \"dá pra mexer\"** | delivery, saídas, assinaturas, compras por impulso |\n| **Dívidas** | parcelas, cartão |\n| **Futuro** | reserva, investimento |\n\n### Passo 2: renda que varia pede cuidado extra\n\nBarbeiro não tem salário igual todo mês: tem mês de festa (dezembro é cheio) e mês fraco (depois das férias, por exemplo). Por isso:\n\n- **Monte o orçamento pela renda dos meses fracos**, não pela dos meses bons.\n- **No mês bom, guarde a diferença** pra cobrir o mês fraco.\n- Preveja as **contas do começo do ano** (matrícula, material escolar, IPVA, IPTU) e vá guardando um pouco por mês.\n\n### Passo 3: uma regra simples pra começar\n\nUma divisão muito usada como ponto de partida é separar a renda em **necessidades**, **desejos** e **futuro** — por exemplo, 50% / 30% / 20%. Não é lei: é uma referência. Se hoje sobra 0% pro futuro, comece com 5% e vá subindo.\n\n### Passo 4: corte o que não faz falta\n\nOlhe o grupo \"dá pra mexer\". Assinaturas esquecidas e pequenas compras diárias somam muito no mês. **R$ 15 por dia são R$ 450 por mês.**\n\n### Para pensar\n\n- Qual grupo te surpreendeu depois de 30 dias anotando?\n- Qual é a sua renda num mês fraco?"
+        }
+      ]
+    },
+    {
+      "id": "proteger",
+      "titulo": "Proteger",
+      "licoes": [
+        {
+          "id": "reserva-de-emergencia",
+          "titulo": "Reserva de emergência: o seu colchão",
+          "conteudo": "Barbeiro que se machuca na mão, máquina que queima, mês de movimento fraco, problema na família. Pra quem trabalha por conta própria, **um imprevisto pode virar dívida** se não houver dinheiro guardado.\n\n**Reserva de emergência** é um dinheiro separado **só pra imprevistos**. Não é pra viagem, nem pra comprar a máquina nova que lançou.\n\n### Quanto guardar\n\nUma referência muito usada é guardar o equivalente a **3 a 6 meses dos seus gastos essenciais**. Pra quem tem renda que varia (como barbeiro autônomo), vale mirar no lado mais alto, porque um mês sem trabalhar pesa mais.\n\nExemplo: gastos essenciais de R$ 2.500 por mês → reserva entre **R$ 7.500 e R$ 15.000**.\n\nParece muito? Ninguém junta isso de uma vez. **Comece pela primeira meta: um mês de gastos.**\n\n### Onde guardar\n\nA reserva precisa ser:\n\n- **Segura:** baixo risco de perder dinheiro.\n- **Fácil de tirar:** você precisa conseguir sacar no mesmo dia (liquidez diária).\n- **Separada:** fora da conta do dia a dia, pra não gastar sem perceber.\n\nPor isso, a reserva **não** vai pra ações, criptomoeda ou \"investimento que rende muito\". **Desconfie de qualquer promessa de rendimento alto e garantido** — é o caminho mais comum dos golpes.\n\n### Como juntar\n\n1. **Pague-se primeiro:** no dia em que fizer a sua retirada, transfira um valor fixo pra reserva antes de gastar.\n2. **Use os meses bons:** dezembro cheio, semana de feriado, um combo que vendeu muito.\n3. **Usou? Reponha** antes de voltar a investir em outra coisa.\n\n### Para pensar\n\n- Se você ficasse 30 dias sem poder trabalhar, como pagaria as contas?\n- Qual valor dá pra separar por semana a partir de agora?"
+        },
+        {
+          "id": "dividas",
+          "titulo": "Saindo das dívidas",
+          "conteudo": "Dívida não é vergonha; o problema é **dívida cara sem plano**. Os juros de **cartão de crédito rotativo** e **cheque especial** estão entre os mais altos do mercado: uma dívida pequena pode dobrar rápido.\n\n### Passo 1: coloque tudo no papel\n\nPra cada dívida: com quem é, quanto falta, valor da parcela e **juros por mês** (está no contrato ou no aplicativo do banco).\n\n| Dívida | Falta pagar | Parcela | Juros/mês |\n|---|---:|---:|---:|\n| Cartão (rotativo) | | | |\n| Empréstimo | | | |\n| Máquina parcelada | | | |\n\n### Passo 2: pare de aumentar\n\n- Corte o uso do cartão até a situação melhorar.\n- Não pague uma dívida fazendo outra mais cara.\n\n### Passo 3: ataque a mais cara primeiro\n\nPague o mínimo em todas e **jogue todo o dinheiro extra na de juros mais alto**. Quando ela acabar, vá pra próxima. Matematicamente, é o jeito de pagar menos juros no total.\n\n### Passo 4: negocie\n\n- Ligue ou use o aplicativo do banco e **peça pra trocar a dívida cara por uma mais barata** (um empréstimo pessoal com juros menores pra quitar o rotativo, por exemplo).\n- Bancos e lojas fazem **mutirões e feirões de renegociação**; fique de olho.\n- **Leia o novo contrato:** veja o custo total, não só o valor da parcela.\n\n### Dívida do MEI\n\nSe você é MEI e ficou com o DAS atrasado, procure regularizar: o DAS é o que garante sua cobertura no INSS. Em outubro de 2026, a **Lei Complementar nº 238/2026** trouxe perdão de alguns débitos do MEI com a União, com condições; **confirme com seu contador** se o seu caso se encaixa.\n\n### Para pensar\n\n- Qual das suas dívidas tem os juros mais altos?\n- Quanto extra por mês dá pra jogar nela?"
+        },
+        {
+          "id": "mei-o-que-paga-o-que-garante",
+          "titulo": "MEI: o que você paga e o que ganha com isso",
+          "conteudo": "Barbeiro e cabeleireiro podem se formalizar como **MEI (Microempreendedor Individual)**. É o jeito mais simples de ter CNPJ, emitir nota e contribuir pro INSS.\n\n### Quanto custa por mês (2026)\n\nO MEI paga um boleto mensal fixo, o **DAS**. Segundo a Receita Federal, em 2026 ele é:\n\n| Parte | Valor |\n|---|---:|\n| INSS (5% do salário mínimo de R$ 1.621,00) | R$ 81,05 |\n| ISS (pra quem presta serviço, como barbeiro) | R$ 5,00 |\n| **Total pra serviços** | **R$ 86,05** |\n\n*O valor muda quando o salário mínimo muda.*\n\n### Até quanto pode faturar\n\n- **2026: até R$ 81 mil por ano** (Lei Complementar nº 123/2006).\n- **2027: até R$ 110 mil por ano** e **a partir de 2028: até R$ 140 mil por ano** (Lei Complementar nº 238, de 21 de outubro de 2026).\n\nQuem abre o MEI no meio do ano tem um limite proporcional aos meses. Passou do limite? **Fale com um contador antes do fim do ano**: as regras pra quem ultrapassa mudam conforme o tamanho do excesso.\n\nA mesma lei de 2026 também muda regras sobre **quantos empregados o MEI pode ter, a partir de 2027**. Confirme com o contador antes de contratar.\n\n### O que o DAS garante\n\nPagando o DAS em dia, você contribui pro INSS e passa a ter acesso a benefícios da Previdência, como **aposentadoria por idade**, **auxílio por incapacidade temporária** (afastamento por doença), **salário-maternidade** e **pensão por morte** pra família, cumprindo os prazos mínimos de contribuição de cada um.\n\nPra um barbeiro, que depende das mãos, ter cobertura em caso de afastamento faz muita diferença.\n\n### Obrigações que não podem faltar\n\n- **Pagar o DAS todo mês** (gerado no portal do Simples Nacional, o PGMEI).\n- **Entregar a declaração anual do MEI** (DASN-SIMEI).\n- **Guardar** o registro do que faturou no mês.\n\n### Para pensar\n\n- Você está em dia com o DAS?\n- Seu faturamento está perto do limite? Se a barbearia cresce, quando vai valer a pena virar ME?"
+        }
+      ]
+    },
+    {
+      "id": "crescer",
+      "titulo": "Crescer",
+      "licoes": [
+        {
+          "id": "fazer-o-dinheiro-trabalhar",
+          "titulo": "Fazer o dinheiro trabalhar",
+          "conteudo": "Com a casa arrumada (dinheiro separado, orçamento, reserva e sem dívida cara), dá pra pensar em **fazer o dinheiro render**.\n\n### A ordem certa\n\n1. **Reserva de emergência completa.**\n2. **Investir no próprio negócio, com conta feita:** uma cadeira a mais rende quanto por mês? Em quanto tempo se paga? (Veja o curso [Preço e lucro na barbearia](/cursos/preco-e-lucro-na-barbearia).)\n3. **Aposentadoria:** o INSS do MEI garante o básico. Pra viver melhor lá na frente, é preciso guardar mais por conta própria.\n4. **Metas com prazo:** reforma, carro, casa. Cada meta com seu valor e sua data.\n\n### Princípios que protegem você\n\n- **Prazo define o investimento.** Dinheiro que você vai usar logo deve ficar onde não oscila. Dinheiro pra daqui a muitos anos pode aceitar mais risco.\n- **Entenda antes de investir.** Se você não consegue explicar em uma frase como aquilo gera dinheiro, não invista.\n- **Desconfie de rendimento alto garantido**, de \"oportunidade única\" e de quem pede pra trazer amigos. Pirâmide financeira e golpes usam exatamente isso.\n- **Diversifique:** não coloque tudo num lugar só.\n- **Custos importam:** taxas altas comem o rendimento ao longo dos anos.\n\n### O hábito que mais importa\n\nMais do que escolher o \"melhor investimento\", o que faz diferença é **guardar todo mês, sem falhar**. Um valor pequeno guardado por anos, rendendo juros sobre juros, vira muito.\n\nExemplo de hábito: **todo dia de retirada, 10% vão direto pra uma conta de investimento**, antes de qualquer gasto.\n\n### Para pensar\n\n- Qual a sua primeira meta com prazo? Quanto precisa guardar por mês pra chegar lá?\n- Que oferta de \"investimento\" já chegou até você e parecia boa demais?"
+        }
+      ]
+    }
+  ],
+  "fonte": {
+    "nome": "Aprenda Livre",
+    "tituloOriginal": "Seu dinheiro em ordem",
+    "autores": [
+      "Aprenda Livre"
+    ],
+    "licenca": "CC-BY-4.0",
+    "atribuicao": "Conteúdo original do Aprenda Livre, escrito em português, sob licença CC BY 4.0. Valores e regras oficiais citados nas lições foram conferidos em outubro de 2026 e podem mudar."
+  },
+  "atualizadoEm": "2026-10-25"
+}

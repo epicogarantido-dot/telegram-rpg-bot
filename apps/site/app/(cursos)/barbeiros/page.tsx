@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, BellRing, CalendarCheck, CalendarClock, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
-import { carregarCursos } from "@aprenda/catalogo";
+import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "@/lib/painel";
 import { reais } from "@/lib/agenda";
@@ -76,6 +76,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   // Sem contratação configurada, o primeiro pagamento é a própria mensalidade.
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
   const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
+  const artigos = (await carregarArtigos()).slice(0, 3);
 
   return (
     <div className="venda">
@@ -150,7 +151,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
       {cursos.length > 0 && (
         <section className="venda-cursos" aria-labelledby="cursos-titulo">
           <h2 id="cursos-titulo">Cursos grátis pra quem tem barbearia</h2>
-          <p className="suave">Preço, atendimento e divulgação, em lições curtas pra ler no intervalo.</p>
+          <p className="suave">Preço, atendimento, equipe, divulgação e o seu dinheiro, em lições curtas pra ler no intervalo.</p>
           <ul>
             {cursos.map((c) => (
               <li key={c.slug}>
@@ -158,6 +159,23 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
                   <strong>{c.titulo}</strong>
                   <span>{c.resumo}</span>
                   <small>{c.modulos.reduce((n, m) => n + m.licoes.length, 0)} lições · {c.area}</small>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {artigos.length > 0 && (
+        <section className="venda-cursos" aria-labelledby="revista-titulo">
+          <h2 id="revista-titulo">Da revista</h2>
+          <p className="suave">O que acontece no mercado e como trabalham as barbearias de outros países. <Link href="/revista">Ver tudo</Link></p>
+          <ul>
+            {artigos.map((a) => (
+              <li key={a.slug}>
+                <Link href={`/revista/${a.slug}`}>
+                  <strong>{a.titulo}</strong>
+                  <span>{a.resumo}</span>
                 </Link>
               </li>
             ))}

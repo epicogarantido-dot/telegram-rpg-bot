@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, BookOpen, Code2, GraduationCap, Languages, Layers } from "lucide-react";
+import { BarChart3, BookOpen, Code2, GraduationCap, HandCoins, Languages, Layers, Megaphone, Smile, Users } from "lucide-react";
 import type { Curso } from "@aprenda/catalogo";
 
 const NIVEL = { iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado" } as const;
@@ -9,6 +9,11 @@ const ICONE_AREA: Record<string, typeof BookOpen> = {
   "Programação": Code2,
   "Idiomas": Languages,
   "Negócios": BarChart3,
+  "Gestão": BarChart3,
+  "Atendimento": Smile,
+  "Marketing": Megaphone,
+  "Liderança": Users,
+  "Finanças": HandCoins,
 };
 
 export function CartaoCurso({ curso }: { curso: Curso }) {
@@ -25,7 +30,7 @@ export function CartaoCurso({ curso }: { curso: Curso }) {
       <div className="rodape-cartao">
         <span><GraduationCap className="icone" aria-hidden />{NIVEL[curso.nivel]}</span>
         <span><Layers className="icone" aria-hidden />{licoes} lições</span>
-        <span>via {curso.fonte.nome}</span>
+        <span>{curso.autoria === "propria" ? "Aprenda Livre" : `via ${curso.fonte.nome}`}</span>
       </div>
     </Link>
   );
@@ -34,10 +39,10 @@ export function CartaoCurso({ curso }: { curso: Curso }) {
 export function Atribuicao({ curso }: { curso: Curso }) {
   return (
     <aside className="atribuicao">
-      {curso.fonte.atribuicao}{" "}
-      <a href={curso.fonte.url} target="_blank" rel="noopener noreferrer">Ver original</a>.
-      {curso.traducao === "automatica" && " Tradução automática, ainda não revisada por humanos."}
-      {curso.traducao === "original" && " Ainda não traduzido: exibindo o texto original."}
+      {curso.fonte.atribuicao}
+      {curso.fonte.url && <>{" "}<a href={curso.fonte.url} target="_blank" rel="noopener noreferrer">Ver original</a>.</>}
+      {curso.autoria === "traducao" && curso.traducao === "automatica" && " Tradução automática, ainda não revisada por humanos."}
+      {curso.autoria === "traducao" && curso.traducao === "original" && " Ainda não traduzido: exibindo o texto original."}
     </aside>
   );
 }

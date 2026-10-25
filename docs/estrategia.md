@@ -4,6 +4,10 @@
 
 1. **Site de cursos (este, `apps/site`)** — porta de entrada e captação: cursos grátis, conta com
    WhatsApp + senha (lead confirmado e com consentimento), vitrine do produto pros barbeiros.
+   Conteúdo que traz o barbeiro de volta: cursos de gestão (preço, cliente, divulgação, liderança,
+   finanças, marketing) e a **Revista** (`/revista`): notícias do mercado, a série *Barbearias pelo
+   mundo* (um país por episódio; próximos: Japão, Turquia, EUA, Itália) e guias de onde aprender
+   cortes de graça. Cada artigo termina com um convite pra `/barbeiros`.
 2. **Site dos barbeiros (`app/(barbearias)`)** — o "book" de cada barbearia (fotos dos trabalhos,
    equipe, serviços, horários) com um dos 6 temas + agenda online + assinatura por Pix. Base pronta;
    próximos: efeitos completos de cada tema (docs/estilos/plano.md), vale-presente, plano mensal,

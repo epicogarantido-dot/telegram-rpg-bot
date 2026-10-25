@@ -76,6 +76,7 @@ export async function traduzirCurso(bruto: CursoBruto, opcoes: OpcoesTraducao = 
     ...bruto,
     modulos,
     traducao: cliente ? "automatica" : "original",
+    autoria: "traducao",
     atualizadoEm: new Date().toISOString().slice(0, 10),
   };
 }

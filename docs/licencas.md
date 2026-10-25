@@ -23,7 +23,7 @@ Antes de traduzir, veja se já existe versão oficial em português — se exist
 |---|---|---|---|---|
 | The Odin Project | Desenvolvimento web completo | CC BY-NC-SA 4.0 | Markdown no GitHub | ✅ |
 | Microsoft "*-For-Beginners" (Web Dev, ML, Data Science, IA, IoT) | Programação, dados, IA | MIT | Markdown no GitHub | 🔎 (alguns já têm pasta `translations/pt`) |
-| OpenStax — *Introduction to Business* (1ª ed.) | Preço, marketing, atendimento, finanças de pequeno negócio | **CC BY 4.0** (conferido na API em 2026-10-25) | API do archive (JSON/HTML) | ✅ base dos 3 cursos pra barbeiros |
+| OpenStax — *Introduction to Business* (1ª ed.) | Preço, marketing, atendimento, finanças de pequeno negócio | **CC BY 4.0** (conferido na API em 2026-10-25) | API do archive (JSON/HTML) | ✅ base dos 4 cursos pra barbeiros (preço, cliente, divulgação, liderança) |
 | OpenStax — demais livros de negócios (*Introduction to Business 2e*, *Principles of Marketing*, *Entrepreneurship*, *Principles of Management*, *Principles of Finance*…) | Negócios | **CC BY-NC-SA 4.0** — não servem como isca do SaaS (uso comercial) | — | ⚠️ |
 | OpenStax — física, biologia, cálculo etc. | Livros universitários | maioria CC BY 4.0 (conferir livro a livro) | API + HTML/PDF | 🔎 |
 | MIT OpenCourseWare | 2.500+ cursos do MIT | CC BY-NC-SA 4.0 | HTML + PDF por curso | 🔎 |
@@ -32,3 +32,8 @@ Antes de traduzir, veja se já existe versão oficial em português — se exist
 | Wikibooks / Wikiversity | Livros e cursos colaborativos | CC BY-SA 4.0 | API MediaWiki | 🔎 |
 | freeCodeCamp | Programação | BSD-3-Clause | Markdown no GitHub | 🔎 (já tem versão oficial em português) |
 | Khan Academy | Matemática, ciências | CC BY-NC-SA (só parte do conteúdo) | — | 🔎 (já tem versão oficial em português) |
+
+## Conteúdo próprio e Revista
+
+- Cursos com `autoria: "propria"` (ex.: *Seu dinheiro em ordem*, *Marketing pra barbearia*) são escritos aqui e publicados sob CC BY 4.0. Valores oficiais citados (DAS-MEI, limite do MEI) têm data de conferência na lição.
+- Artigos da Revista são texto nosso. Fatos e números vêm de fontes listadas no fim de cada artigo; não copiamos texto nem imagem dessas fontes. Vídeos de terceiros (YouTube) só por link, nunca baixados ou reenviados.

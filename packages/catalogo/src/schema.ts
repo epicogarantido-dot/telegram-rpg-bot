@@ -41,10 +41,13 @@ export const Curso = z.object({
   tags: z.array(z.string()).default([]),
   idiomaOriginal: z.string(),
   traducao: z.enum(["original", "automatica", "revisada"]),
+  /** "propria": escrito pelo Aprenda Livre em português (não é tradução). */
+  autoria: z.enum(["traducao", "propria"]).default("traducao"),
   modulos: z.array(Modulo),
   fonte: z.object({
     nome: z.string(),
-    url: z.url(),
+    /** Link do original (não existe em conteúdo próprio). */
+    url: z.url().optional(),
     tituloOriginal: z.string(),
     autores: z.array(z.string()).default([]),
     licenca: Licenca,
@@ -59,3 +62,21 @@ export type Curso = z.infer<typeof Curso>;
 export function permiteUsoComercial(l: Licenca): boolean {
   return !l.includes("-NC");
 }
+
+/**
+ * Artigo da revista (notícias, séries, guias). Sempre conteúdo próprio, escrito
+ * em português; fatos e números vêm das `fontes`, que aparecem no fim do artigo.
+ */
+export const Artigo = z.object({
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  titulo: z.string(),
+  resumo: z.string(),
+  tipo: z.enum(["noticia", "serie", "guia"]),
+  /** Artigos de uma série ("Barbearias pelo mundo") com o número do episódio. */
+  serie: z.object({ nome: z.string(), episodio: z.number().int().positive() }).optional(),
+  publicadoEm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  conteudo: z.string(),
+  fontes: z.array(z.object({ titulo: z.string(), url: z.url() })).min(1),
+  tags: z.array(z.string()).default([]),
+});
+export type Artigo = z.infer<typeof Artigo>;

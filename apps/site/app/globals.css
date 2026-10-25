@@ -539,3 +539,19 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 }
 .venda-valores { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-bottom: 12px; }
 .venda-valores .venda-valor { margin: 0; }
+
+/* ---------- revista ---------- */
+.revista-cabeca { margin: 32px 0 8px; max-width: 720px; }
+.revista-cabeca h1 { margin: 0 0 8px; }
+.revista-lista { list-style: none; margin: 24px 0 0; padding: 0; border-top: 1px solid var(--borda); max-width: 820px; }
+.revista-lista a { display: grid; gap: 4px; padding: 20px 4px; border-bottom: 1px solid var(--borda); text-decoration: none; color: var(--texto); }
+.revista-lista a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.revista-lista strong { font-size: 1.25rem; line-height: 1.25; }
+.revista-lista time { font-size: 13px; color: var(--suave); }
+.revista-tipo { font-size: 13px; font-weight: 600; color: var(--destaque); }
+.artigo-resumo { font-size: 1.15rem; color: var(--suave); }
+.artigo-fontes { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--borda); font-size: 15px; }
+.artigo-fontes h2, .artigo-serie h2 { font-size: 1.1rem; }
+.artigo-fontes ol { padding-left: 20px; display: grid; gap: 4px; word-break: break-word; }
+.artigo-serie { margin-top: 24px; padding: 16px 20px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
+.artigo-cta { margin-top: 32px; font-weight: 600; }

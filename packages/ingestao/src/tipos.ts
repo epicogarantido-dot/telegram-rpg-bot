@@ -18,6 +18,6 @@ export interface ModuloBruto {
  * O que um adaptador de fonte devolve: o curso inteiro no idioma original,
  * com metadados de licença já preenchidos. A tradução é um passo separado.
  */
-export type CursoBruto = Omit<Curso, "modulos" | "traducao" | "atualizadoEm"> & {
+export type CursoBruto = Omit<Curso, "modulos" | "traducao" | "atualizadoEm" | "autoria"> & {
   modulos: ModuloBruto[];
 };

@@ -27,6 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
             <nav aria-label="Principal">
               <Link href="/cursos">Cursos</Link>
+              <Link href="/revista">Revista</Link>
               <Link href="/barbeiros">Barbeiros</Link>
               <Link href="/minha-area" className="nav-destaque">Entrar</Link>
             </nav>
@@ -34,7 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <main>{children}</main>
         <footer className="rodape">
-          Conteúdo traduzido de fontes abertas, sempre com crédito e licença originais.{" "}
+          Cursos traduzidos de fontes abertas, com crédito e licença originais, e cursos escritos aqui.{" "}
           <Link href="/licencas">Licenças e créditos</Link>.
         </footer>
       </body>

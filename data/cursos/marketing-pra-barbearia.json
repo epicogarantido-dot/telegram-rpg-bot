@@ -1,0 +1,71 @@
+{
+  "slug": "marketing-pra-barbearia",
+  "titulo": "Marketing pra barbearia",
+  "resumo": "Google e mapa, avaliações, Instagram que vira agendamento, WhatsApp sem spam, indicação e parcerias no bairro.",
+  "area": "Marketing",
+  "nivel": "iniciante",
+  "tags": [
+    "barbearia",
+    "marketing",
+    "instagram",
+    "google"
+  ],
+  "idiomaOriginal": "pt",
+  "traducao": "original",
+  "autoria": "propria",
+  "modulos": [
+    {
+      "id": "ser-encontrado",
+      "titulo": "Ser encontrado",
+      "licoes": [
+        {
+          "id": "seja-encontrado",
+          "titulo": "Seja encontrado: Google e mapa",
+          "conteudo": "Quando alguém procura \"barbearia perto de mim\", quem aparece **no mapa** leva a maior parte dos clientes novos. Por isso, o primeiro passo do marketing de uma barbearia é ser **encontrada**.\n\n### Perfil da Empresa no Google\n\nO Google oferece de graça o **Perfil da Empresa** (o cartão que aparece na busca e no Google Maps). Mantenha completo:\n\n- **Nome** igual ao da placa (sem encher de palavras-chave).\n- **Endereço** certinho e o pino no lugar certo do mapa.\n- **Horário de funcionamento**, incluindo feriados.\n- **Telefone/WhatsApp** e **link do seu site ou de agendamento**.\n- **Categoria** (barbearia) e **serviços** com preço, se você mostra preço.\n- **Fotos de verdade:** fachada (pra pessoa reconhecer na rua), ambiente, equipe e muitos cortes. Atualize sempre.\n\n### Fachada também é marketing\n\nA placa, a vitrine e a porta são vistas todo dia por quem passa. Uma fachada limpa, iluminada e com o nome legível de longe trabalha por você de graça. Coloque o **horário** e o **@ do Instagram** na porta.\n\n### Site com agenda\n\nUm site seu (não só rede social) passa confiança, aparece no Google e deixa o cliente **marcar sozinho a qualquer hora**. Coloque o link no Perfil da Empresa, na bio do Instagram e no WhatsApp.\n\n### Para pensar\n\n- Pesquise \"barbearia\" no mapa do seu bairro. Você aparece? Como estão as suas fotos comparadas às dos concorrentes?\n- Seu horário no Google está certo?"
+        },
+        {
+          "id": "avaliacoes",
+          "titulo": "Avaliações: peça, responda e aprenda",
+          "conteudo": "Antes de ir a uma barbearia nova, a maioria das pessoas olha **as avaliações**. Nota alta ajuda, mas **quantidade e avaliações recentes** pesam tanto quanto.\n\n### Como conseguir mais avaliações\n\n- **Peça sempre, no mesmo momento:** no fim do corte, quando o cliente se olha no espelho e gosta. \"Se curtiu, deixa uma avaliação pra gente no Google? Ajuda demais.\"\n- **Facilite:** tenha o link (ou um QR code) da página de avaliação no balcão e pronto pra mandar no WhatsApp.\n- **Nunca compre avaliação nem invente.** Além de antiético, as plataformas removem e podem punir o perfil.\n- **Não ofereça desconto em troca de nota boa.** Peça avaliação sincera.\n\n### Como responder\n\n- **Responda todas**, boas e ruins. Mostra que tem alguém cuidando.\n- **Elogio:** agradeça pelo nome e cite algo do atendimento.\n- **Reclamação:** responda com calma, sem brigar. Reconheça, explique o que vai melhorar e chame pra resolver no privado. Quem lê a resposta é o próximo cliente — e ele vai julgar **como você trata quem reclama**.\n\nExemplo: *\"Oi, Carlos. Sentimos muito pela espera de sábado. Estamos ajustando a agenda pra não acontecer de novo. Chama a gente no WhatsApp que queremos te atender do jeito certo.\"*\n\n### Aprenda com elas\n\nLeia as avaliações a cada mês. Se três pessoas reclamam da mesma coisa (espera, limpeza, preço), é um recado.\n\n### Para pensar\n\n- Quantas avaliações você ganhou no último mês?\n- Qual foi a última reclamação? Ela foi respondida?"
+        }
+      ]
+    },
+    {
+      "id": "redes",
+      "titulo": "Redes e conversas",
+      "licoes": [
+        {
+          "id": "instagram-que-agenda",
+          "titulo": "Instagram que vira agendamento",
+          "conteudo": "O Instagram é a **vitrine** da barbearia. Mas seguidor não paga conta: o objetivo é **transformar quem vê em quem marca**.\n\n### Perfil\n\n- **Foto:** logo ou a fachada, legível pequenininha.\n- **Bio em 3 linhas:** o que você faz, onde fica e como marcar. Ex.: *\"Degradê e barba · Centro de Campinas · Marque pelo link 👇\"*\n- **Link na bio:** direto pro agendamento (o seu site com agenda).\n- **Destaques:** Cortes, Barba, Preços (se mostra), Como chegar, Avaliações.\n\n### O que postar\n\n- **Antes e depois:** o conteúdo que mais mostra o seu trabalho. Peça autorização do cliente.\n- **Vídeo curto do processo:** degradê sendo feito, toalha quente, acabamento na navalha.\n- **Dica rápida:** como pentear, como cuidar da barba entre os cortes.\n- **Bastidores e equipe:** o cliente escolhe o barbeiro; mostre quem são.\n- **Avisos úteis:** horários livres hoje, feriado, serviço novo.\n\n### Frequência e qualidade\n\n- Melhor **poucas vezes por semana com constância** do que um mês todo dia e depois sumir.\n- **Luz boa e fundo limpo** valem mais que câmera cara. Reserve um cantinho da barbearia pra fotos.\n- **Mesmo estilo nas fotos** ajuda o perfil a ter cara própria.\n\n### Sempre com um próximo passo\n\nTermine os posts com um convite: *\"Marque pelo link da bio\"*, *\"Tem horário amanhã às 10h\"*. Quem gostou precisa saber **o que fazer agora**.\n\n### Para pensar\n\n- Quem entra no seu perfil hoje sabe, em 5 segundos, onde fica e como marcar?\n- Qual foi o seu post que mais trouxe gente? Por quê?"
+        },
+        {
+          "id": "whatsapp-sem-spam",
+          "titulo": "WhatsApp sem virar spam",
+          "conteudo": "O WhatsApp é onde o cliente da barbearia conversa. Usado bem, aproxima. Usado mal (mensagem em massa, todo dia, pra quem não pediu), **irrita e queima a marca** — e ainda pode levar ao bloqueio do número.\n\n### WhatsApp Business\n\nO aplicativo gratuito **WhatsApp Business** tem recursos úteis:\n\n- **Perfil comercial:** endereço, horário, descrição e link do site.\n- **Respostas rápidas:** textos prontos pras perguntas de sempre (preço, endereço, como marcar).\n- **Mensagem de ausência:** resposta automática fora do horário, com o link de agendamento.\n- **Etiquetas:** organizar conversas (novo cliente, retorno, aniversário).\n- **Catálogo:** serviços com foto e descrição.\n\n### Regras de ouro\n\n1. **Só mande pra quem pediu ou é cliente e aceitou receber.** E respeite quem pedir pra parar.\n2. **Mensagem pessoal vale mais que mensagem em massa:** \"Fala, Marcos! Faz 3 semanas do seu corte, quer que eu deixe um horário pra sexta?\"\n3. **Poucas mensagens, todas úteis:** lembrete, horário vago, novidade de verdade.\n4. **Lista de transmissão** (recurso do próprio WhatsApp) só chega em quem **salvou o seu número**; use pra avisos importantes, com moderação.\n5. **Status** é um bom lugar pra mostrar cortes do dia sem incomodar ninguém.\n\n### LGPD em uma frase\n\nO telefone do cliente foi dado pra marcar horário; **pra usar em promoção, peça autorização** e guarde esses dados com cuidado.\n\n### Para pensar\n\n- Quais são as 5 perguntas que você mais responde? Elas já viraram respostas rápidas?\n- Quantas mensagens por mês um cliente seu recebe de você?"
+        }
+      ]
+    },
+    {
+      "id": "bairro",
+      "titulo": "No bairro",
+      "licoes": [
+        {
+          "id": "indicacao-e-parcerias",
+          "titulo": "Indicação e parcerias no bairro",
+          "conteudo": "Cliente que vem por **indicação** já chega confiando, costuma ficar mais e indica outros. E parcerias com negócios do bairro trazem gente que **já está perto**.\n\n### Programa de indicação simples\n\n- **Indique um amigo:** quando o amigo vem pela primeira vez, **os dois ganham** algo (acabamento, sobrancelha, desconto no próximo corte).\n- **Combine regras claras:** vale só pra cliente novo, um benefício por amigo.\n- **Lembre o cliente** no fim do corte e coloque um cartão no balcão.\n\n### Parcerias que fazem sentido\n\nPense em quem atende o **mesmo público**:\n\n- **Academias:** desconto pros alunos; um cartaz no mural.\n- **Lojas de roupa masculina:** quem compra roupa pra uma festa também quer cortar o cabelo.\n- **Fotógrafos e cerimoniais de casamento:** pacote \"dia do noivo\".\n- **Escolas e times do bairro:** corte infantil, apoio ao time de várzea.\n- **Tatuadores e lojas de barba e cosméticos.**\n\nUma boa parceria é **boa pros dois lados**: ofereça algo pro cliente do parceiro e peça o mesmo.\n\n### Eventos e presença\n\n- **Corte solidário** num evento do bairro.\n- **Dia especial** (Dia dos Pais, volta às aulas) com horários extras.\n- **Participação em feiras** e encontros de barbeiros: você aprende e aparece.\n\n### Medir\n\nPergunte **\"como nos achou?\"** pra todo cliente novo e anote. Em poucos meses você sabe quais parcerias e canais trazem gente de verdade, e onde vale investir mais.\n\n### Para pensar\n\n- Quais 3 negócios do seu bairro atendem o mesmo público que você?\n- Que benefício de indicação caberia no seu preço?"
+        }
+      ]
+    }
+  ],
+  "fonte": {
+    "nome": "Aprenda Livre",
+    "tituloOriginal": "Marketing pra barbearia",
+    "autores": [
+      "Aprenda Livre"
+    ],
+    "licenca": "CC-BY-4.0",
+    "atribuicao": "Conteúdo original do Aprenda Livre, escrito em português, sob licença CC BY 4.0. Valores e regras oficiais citados nas lições foram conferidos em outubro de 2026 e podem mudar."
+  },
+  "atualizadoEm": "2026-10-25"
+}

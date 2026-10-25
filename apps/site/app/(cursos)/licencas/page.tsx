@@ -17,7 +17,7 @@ export default async function Licencas() {
           <li key={c.slug}>
             <strong>{c.titulo}</strong> — {c.fonte.atribuicao}{" "}
             {!permiteUsoComercial(c.fonte.licenca) && <em>(uso não comercial)</em>}{" "}
-            <a href={c.fonte.url} target="_blank" rel="noopener noreferrer">original</a>
+            {c.fonte.url && <a href={c.fonte.url} target="_blank" rel="noopener noreferrer">original</a>}
           </li>
         ))}
       </ul>
