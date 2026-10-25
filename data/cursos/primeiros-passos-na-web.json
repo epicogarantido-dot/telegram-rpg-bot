@@ -1,0 +1,46 @@
+{
+  "slug": "primeiros-passos-na-web",
+  "titulo": "Primeiros Passos na Web",
+  "resumo": "Curso relâmpago: o que acontece quando você abre um site e qual editor de texto usar para começar a programar.",
+  "area": "Programação",
+  "nivel": "iniciante",
+  "tags": [
+    "web",
+    "internet",
+    "ferramentas"
+  ],
+  "idiomaOriginal": "en",
+  "traducao": "automatica",
+  "modulos": [
+    {
+      "id": "preparacao",
+      "titulo": "Preparação",
+      "licoes": [
+        {
+          "id": "how_does_the_web_work",
+          "titulo": "Como a web funciona?",
+          "conteudo": "### Introdução\n\nAntes de entender como programar para a web, você precisa de uma compreensão mais rigorosa da própria web do que provavelmente tem agora. Estes conceitos dão uma visão mais completa do ecossistema em que você vai trabalhar e vão permitir que você converse com propriedade com outros desenvolvedores sobre o seu trabalho.\n\n### Visão geral da lição\n\nEsta seção traz um panorama dos tópicos que você vai aprender nesta lição.\n\n- Descrever o que é a internet.\n- Descrever o que são pacotes e como eles são usados para transferir dados.\n- Entender a diferença entre página web, servidor web, navegador e mecanismo de busca.\n- Explicar brevemente o que é um cliente.\n- Explicar brevemente o que é um servidor.\n- Explicar o que são endereços IP.\n- Explicar o que são servidores DNS.\n\n### Tarefa\n\n<div class=\"lesson-content__panel\" markdown=\"1\">\n\n  1. Assista a este curta da BBC para ter uma [visão geral de como a internet funciona](https://www.youtube.com/watch?v=eHp1l73ztB8).\n  1. Leia este [artigo da Mozilla sobre \"Como a internet funciona?\"](https://developer.mozilla.org/en-US/Learn/Common_questions/How_does_the_Internet_work).\n  1. Assista a [How the Internet Works in 5 Minutes](https://youtu.be/7_LPdttKXPc?t=46s) (\"Como a internet funciona em 5 minutos\").\n  1. Leia sobre as [diferenças entre página web, servidor web e mecanismo de busca](https://developer.mozilla.org/en-US/Learn/Common_questions/Pages_sites_servers_and_search_engines).\n  1. Assista a este [curta do Google explicando o que é um navegador](https://youtu.be/BrXPcaRlBqo). Depois, use este site para [descobrir qual navegador e versão você está usando](https://www.whatsmybrowser.org/).\n  1. Leia sobre [como as diferentes partes da web interagem entre si](https://developer.mozilla.org/en-US/Learn/Getting_started_with_the_web/How_the_Web_works#clients_and_servers) e leia este [artigo da MDN sobre como funciona uma requisição DNS](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_domain_name#how_does_a_dns_request_work). Se preferir, aqui está um [vídeo sobre como funciona uma requisição DNS](https://www.youtube.com/watch?v=72snZctFFtA&t=45s).\n\n</div>\n",
+          "urlOriginal": "https://github.com/TheOdinProject/curriculum/blob/main/foundations/installations/how_does_the_web_work.md"
+        },
+        {
+          "id": "text_editors",
+          "titulo": "Editores de texto",
+          "conteudo": "### Introdução\n\nO editor de texto é, de longe, a ferramenta mais usada por quem programa, não importa que tipo de desenvolvedor você seja. Um bom editor ajuda você a escrever código melhor, com verificação do código em tempo real, destaque de sintaxe e formatação automática.\n\n### Visão geral da lição\n\nEsta seção traz um panorama dos tópicos que você vai aprender nesta lição.\n\n- O que são editores de código.\n- Por que editores de código são tão úteis para o desenvolvimento.\n- Como instalar o Visual Studio Code (VSCode).\n\n### Por que não posso usar o Microsoft Word?\n\nEditores de texto rico, como o Microsoft Word e o LibreOffice Writer, são ótimos para escrever um trabalho, mas os recursos que os tornam bons para criar documentos bem formatados também os tornam inadequados para escrever código. Um documento criado nesses editores guarda mais do que apenas texto no arquivo: ele também contém informações sobre como exibir o texto na tela e dados sobre como exibir os gráficos incorporados ao documento. Já os editores de texto puro, como o VSCode e o Sublime, não salvam nenhuma informação extra. Salvar apenas o texto permite que outros programas, como o interpretador do Ruby, leiam o arquivo e o executem como código.\n\n### Editores de código\n\nPense nos editores de código como ferramentas especializadas para desenvolvimento web. Eles são altamente personalizáveis e oferecem muitos recursos que vão facilitar a sua vida. Não há nada pior do que passar duas horas tentando descobrir por que seu programa não funciona, só para perceber que faltou fechar um colchete. Plugins, destaque de sintaxe, fechamento automático de colchetes e chaves e *linting* (análise automática que aponta erros e problemas de estilo) são só alguns dos benefícios de usar um editor de código. Existem muitos editores para escolher, mas sugerimos começar pelo Visual Studio Code.\n\nO **Visual Studio Code**, ou simplesmente VSCode, como costuma ser chamado, é um excelente editor de código gratuito. Ele tem um suporte excepcional a extensões e ótima integração com o Git. O VSCode é o editor mais popular entre os alunos e moderadores do Odin, então é fácil encontrar ajuda na comunidade.\n\nQual editor usar costuma ser questão de preferência, mas, para este curso, vamos assumir que você está usando o VSCode, porque ele é gratuito, fácil de usar e funciona praticamente igual em qualquer sistema operacional. Lembre-se de que isso significa que você não vai conseguir ajuda se usar outro editor de texto que não o VSCode durante o currículo.\n\nLembrete: se você estiver usando uma **máquina virtual**, instale o VSCode **na sua VM**. Você também pode instalá-lo no seu sistema hospedeiro (ou seja, o seu Windows principal), mas garanta que essa ferramenta essencial esteja dentro da VM.\n\n### Tarefa\n\n<div class=\"lesson-content__panel\" markdown=\"1\">\n\n1. De acordo com o sistema operacional que você usa, siga o guia de instalação do VSCode correspondente abaixo (em inglês):\n\n   - [Linux](https://github.com/TheOdinProject/curriculum/blob/main/foundations/installations/installation_guides/text_editors/linux.md \"Instalação do VSCode no Linux\")\n   - [macOS](https://github.com/TheOdinProject/curriculum/blob/main/foundations/installations/installation_guides/text_editors/macos.md \"Instalação do VSCode no macOS\")\n   - [WSL2](https://github.com/TheOdinProject/curriculum/blob/main/foundations/installations/installation_guides/text_editors/wsl2.md \"Instalação do VSCode no WSL2\")\n\n   Daqui em diante, se tiver qualquer problema com o VSCode ou quiser saber mais sobre algum recurso, consulte a [documentação do VSCode](https://code.visualstudio.com/docs). Também existem muitos atalhos de teclado no VSCode; alguns podem ser específicos do seu sistema operacional, e você pode procurá-los quando precisar.\n1. Conhecer bem o VSCode vai fazer você economizar tempo e ser mais produtivo. Assistindo a este [vídeo tutorial de VSCode para iniciantes](https://youtu.be/ORrELERGIHs?t=103), você vai ter uma ideia de todos os recursos que o VSCode oferece. Não se preocupe em programar junto; apenas observe como o VSCode é usado ao longo do vídeo.\n1. Desative o recurso de autocompletar código por IA do Copilot, que vem ativado por padrão no Visual Studio Code. No VSCode, abra as configurações (`File > Preferences > Settings`), procure por \"Disable AI Features\" e marque a caixa com esse mesmo título. Para entender por que o The Odin Project acha que você deve desativar esse recurso, revisite a seção [A note on AI code generation](https://www.theodinproject.com/lessons/foundations-motivation-and-mindset#a-note-on-ai-code-generation) (\"Uma observação sobre geração de código por IA\") da lição Motivation and Mindset.\n\n</div>\n",
+          "urlOriginal": "https://github.com/TheOdinProject/curriculum/blob/main/foundations/installations/text_editors.md"
+        }
+      ]
+    }
+  ],
+  "fonte": {
+    "nome": "The Odin Project",
+    "url": "https://www.theodinproject.com/paths/foundations/courses/foundations",
+    "tituloOriginal": "Foundations",
+    "autores": [
+      "The Odin Project",
+      "Erik Trautman"
+    ],
+    "licenca": "CC-BY-NC-SA-4.0",
+    "atribuicao": "Traduzido e adaptado de “Foundations”, de The Odin Project (autor original: Erik Trautman), licenciado sob CC BY-NC-SA 4.0. Esta tradução é distribuída sob a mesma licença."
+  },
+  "atualizadoEm": "2026-10-25"
+}
