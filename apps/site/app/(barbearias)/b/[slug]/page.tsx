@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
-import { CATEGORIAS_FOTO, nomeDia } from "@aprenda/agenda";
+import { ArrowLeft, ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
+import { agoraNoFuso, CATEGORIAS_FOTO, nomeDia } from "@aprenda/agenda";
+import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { obterAgenda, reais } from "@/lib/agenda";
 import { dadosEstruturados, linkMapa, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
@@ -32,7 +33,18 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const base = `/b/${b.slug}`;
   const fotos = banco.fotos(b.id);
   const capa = fotos.find((f) => f.capa) ?? fotos.find((f) => f.categoria === "ambiente") ?? fotos[0];
-  const trabalhos = fotos.filter((f) => f.categoria !== "equipe" && f.arquivo !== capa?.arquivo).slice(0, 6);
+  // Foto de "antes" só aparece no comparador, nunca sozinha na galeria.
+  const trabalhos = fotos.filter((f) => f.categoria !== "equipe" && !f.antesDe && f.arquivo !== capa?.arquivo).slice(0, 6);
+  const pares = banco.paresAntesDepois(b.id);
+  const tema = b.tema;
+  const hoje = agoraNoFuso(b.fuso);
+  // Neve só no inverno do Brasil (junho a agosto), e só no Luxo Técnico.
+  const inverno = ["06", "07", "08"].includes(hoje.slice(5, 7));
+  const numeros = tema === "tecnico" ? [
+    ...(b.desde ? [{ valor: Number(hoje.slice(0, 4)) - b.desde, rotulo: "anos de casa" }] : []),
+    { valor: banco.profissionais(b.id, true).length, rotulo: "profissionais" },
+    ...((() => { const n = banco.totalAtendimentos(b.id); return n >= 20 ? [{ valor: n, rotulo: "horários marcados pelo site" }] : []; })()),
+  ].filter((n) => n.valor > 0) : [];
   const servicos = banco.servicos(b.id, true);
   const equipe = banco.profissionais(b.id, true);
   const expedientes = banco.expedientes(b.id);
@@ -55,9 +67,29 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img src={urlFoto(capa.arquivo)} alt={capa.legenda ?? `Ambiente da ${b.nome}`} width={capa.largura} height={capa.altura} fetchPriority="high" />
           </div>
         )}
+        {tema === "extravagancia" && (
+          // Tamanho e posição dos retângulos vêm do CSS (em px), pra linha não esticar.
+          <svg className="b-moldura" aria-hidden="true">
+            <rect pathLength="1" />
+            <rect pathLength="1" className="interna" />
+          </svg>
+        )}
+        {tema === "tecnico" && inverno && <div className="b-neve" aria-hidden="true" />}
         <div className="b-heroi-texto">
           {b.cidade && <p className="b-sobretitulo">{b.cidade}</p>}
-          <h1>{b.nome}</h1>
+          {tema === "potencia" ? (
+            // Letra por letra pra entrar "rasgando"; leitor de tela lê o nome inteiro.
+            <h1 className="b-dividido">
+              <span className="b-so-leitor">{b.nome}</span>
+              {palavrasComLetras(b.nome).map((palavra, p) => (
+                <span key={p} className="b-palavra" aria-hidden="true">
+                  {palavra.map(({ c, i }) => (
+                    <span key={i} className="b-letra" style={{ "--i": i } as React.CSSProperties}>{c}</span>
+                  ))}
+                </span>
+              ))}
+            </h1>
+          ) : <h1>{b.nome}</h1>}
           {b.bio && <p className="b-bio">{b.bio}</p>}
           <div className="b-acoes">
             <Link href={`${base}/agendar`} className="b-botao">Agendar horário</Link>
@@ -79,11 +111,24 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
+      {numeros.length > 0 && (
+        <section className="b-numeros" aria-label="A barbearia em números">
+          {numeros.map((n) => (
+            <p key={n.rotulo}><strong data-contar={n.valor}>{n.valor}</strong> <span>{n.rotulo}</span></p>
+          ))}
+        </section>
+      )}
+
       {trabalhos.length > 0 && (
         <section className="b-secao" id="trabalhos">
           <div className="b-secao-cabeca">
             <h2>Trabalhos</h2>
-            <Link href={`${base}/trabalhos`}>Ver todos <ArrowRight size={16} aria-hidden /></Link>
+            {tema === "cerimonia" ? (
+              <div className="b-galeria-setas">
+                <button type="button" data-galeria="anterior" aria-label="Foto anterior"><ArrowLeft size={18} aria-hidden /></button>
+                <button type="button" data-galeria="proxima" aria-label="Próxima foto"><ArrowRight size={18} aria-hidden /></button>
+              </div>
+            ) : <Link href={`${base}/trabalhos`}>Ver todos <ArrowRight size={16} aria-hidden /></Link>}
           </div>
           <div className="b-galeria">
             {trabalhos.map((f) => (
@@ -92,6 +137,17 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
                 <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? CATEGORIAS_FOTO.find((c) => c.id === f.categoria)?.nome ?? "Trabalho"} loading="lazy" width={f.largura} height={f.altura} />
                 {f.legenda && <figcaption>{f.legenda}</figcaption>}
               </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {tema === "potencia" && pares.length > 0 && (
+        <section className="b-secao" id="antes-depois">
+          <h2>Antes e depois</h2>
+          <div className="b-comparadores">
+            {pares.slice(0, 2).map((p) => (
+              <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
             ))}
           </div>
         </section>
@@ -155,4 +211,10 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       </section>
     </>
   );
+}
+
+/** Separa o nome em palavras (pra quebrar linha só entre elas) com o índice global de cada letra. */
+function palavrasComLetras(nome: string): { c: string; i: number }[][] {
+  let i = 0;
+  return nome.split(/\s+/).filter(Boolean).map((p) => [...p].map((c) => ({ c, i: i++ })));
 }

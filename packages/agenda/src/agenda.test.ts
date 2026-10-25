@@ -266,3 +266,33 @@ describe("site da barbearia", () => {
     expect(nomeValido("3f2b8c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f-p.webp")).toBe(true);
   });
 });
+
+describe("efeitos: ano de abertura e antes/depois", () => {
+  it("valida o ano e guarda", () => {
+    const b = new BancoAgenda(":memory:");
+    const { barbearia } = b.criarConta({ nomeBarbearia: "B", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
+    b.atualizarSite(barbearia.id, { tema: "tecnico", desde: 2015 });
+    expect(b.barbeariaPorId(barbearia.id)!.desde).toBe(2015);
+    expect(() => b.atualizarSite(barbearia.id, { tema: "tecnico", desde: 3000 })).toThrow(/Ano/);
+    b.atualizarSite(barbearia.id, { tema: "tecnico", desde: null });
+    expect(b.barbeariaPorId(barbearia.id)!.desde).toBeNull();
+  });
+
+  it("pares de antes e depois: só da mesma barbearia, somem ao apagar", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const antes = b.registrarFoto(a.id, { categoria: "corte", largura: 800, altura: 1000 });
+    const depois = b.registrarFoto(a.id, { categoria: "degrade", largura: 800, altura: 1000 });
+    const deOutra = b.registrarFoto(o.id, { categoria: "degrade", largura: 800, altura: 1000 });
+    const idAntes = b.fotos(a.id).find((f) => f.arquivo === antes)!.id;
+    expect(() => b.definirAntes(a.id, idAntes, deOutra)).toThrow(ErroAgenda);
+    expect(() => b.definirAntes(a.id, idAntes, antes)).toThrow(ErroAgenda);
+    expect(() => b.definirAntes(o.id, idAntes, deOutra)).toThrow(/não encontrada/);
+    b.definirAntes(a.id, idAntes, depois);
+    expect(b.paresAntesDepois(a.id).map((p) => [p.antes.arquivo, p.depois.arquivo])).toEqual([[antes, depois]]);
+    b.removerFoto(a.id, b.fotos(a.id).find((f) => f.arquivo === depois)!.id);
+    expect(b.paresAntesDepois(a.id)).toEqual([]);
+    expect(b.fotos(a.id)[0]!.antesDe).toBeNull();
+  });
+});

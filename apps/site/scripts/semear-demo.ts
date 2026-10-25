@@ -34,13 +34,15 @@ const FOTOS: { id: string; categoria: string; legenda?: string }[] = [
   { id: "1605497788044-5a32c7078486", categoria: "equipe", legenda: "Bruno" },
 ];
 
-const PERFIS: Record<string, { nome: string; bio: string; oferta?: string; capa: string }> = {
+const PAR_ANTES_DEPOIS = { antes: "1605497788044-5a32c7078486", depois: "1593702275687-f8b402bf1fb5" };
+
+const PERFIS: Record<string, { nome: string; bio: string; oferta?: string; capa: string; desde?: number }> = {
   silencioso: { nome: "Norte Barbearia", bio: "Corte preciso. Uma cadeira, horário marcado.", capa: "1512690459411-b9245aed614b" },
   atemporal: { nome: "Maison Lâmina", bio: "O clássico nunca sai de moda. Cortes sociais, barba e dia do noivo.", capa: "1503951914875-452162b0f3f1" },
   cerimonia: { nome: "Salão Imperial", bio: "Atendimento sob reserva. Uma hora inteira, só sua.", capa: "1592647420148-bfcc177e2117" },
-  tecnico: { nome: "Cume Barbearia", bio: "Ambiente climatizado, café e corte em dia. Pra você e pros pequenos.", oferta: "10% de desconto na primeira visita", capa: "1585747860715-2ba37e788b70" },
+  tecnico: { nome: "Cume Barbearia", bio: "Ambiente climatizado, café e corte em dia. Pra você e pros pequenos.", oferta: "10% de desconto na primeira visita", capa: "1585747860715-2ba37e788b70", desde: 2016 },
   potencia: { nome: "Box 7", bio: "Degradê, navalhado e freestyle. Sem enrolação.", oferta: "Corte + barba por R$ 60 de terça a quinta", capa: "1622286342621-4bd786c2447c" },
-  extravagancia: { nome: "Casa Aurum", bio: "A arte da navalha, desde 1998.", capa: "1596728325488-58c87691e9af" },
+  extravagancia: { nome: "Casa Aurum", bio: "A arte da navalha, desde 1998.", capa: "1596728325488-58c87691e9af", desde: 1998 },
 };
 
 const EQUIPE = [
@@ -75,7 +77,7 @@ async function main() {
     }
     const { barbearia: b } = banco.criarConta({ nomeBarbearia: perfil.nome, telefone: "5519900000000", nome: EQUIPE[0]!.nome, email, senha: "demonstracao" });
     banco.atualizarBarbearia(b.id, { nome: perfil.nome, telefone: "5519900000000", endereco: "Rua Exemplo, 123 - Centro" });
-    banco.atualizarSite(b.id, { tema: tema.id, bio: perfil.bio, cidade: "Campinas", instagram: "suabarbearia", oferta: perfil.oferta });
+    banco.atualizarSite(b.id, { tema: tema.id, bio: perfil.bio, cidade: "Campinas", instagram: "suabarbearia", oferta: perfil.oferta, desde: perfil.desde ?? null });
     for (const p of EQUIPE.slice(1)) banco.adicionarProfissional(b.id, p.nome);
 
     const arquivoPorId = new Map<string, string>();
@@ -92,6 +94,10 @@ async function main() {
     }
     const capa = banco.fotos(b.id).find((f) => f.arquivo === arquivoPorId.get(perfil.capa));
     if (capa) banco.definirCapa(b.id, capa.id);
+    // Um par de antes e depois (aparece na Potência e na página de trabalhos).
+    const antes = banco.fotos(b.id).find((f) => f.arquivo === arquivoPorId.get(PAR_ANTES_DEPOIS.antes));
+    const depois = arquivoPorId.get(PAR_ANTES_DEPOIS.depois);
+    if (antes && depois) banco.definirAntes(b.id, antes.id, depois);
     console.log(`✓ ${perfil.nome} (${tema.nome}) → /b/${b.slug}`);
   }
 }

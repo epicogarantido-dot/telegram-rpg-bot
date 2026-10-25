@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CATEGORIAS_FOTO, categoriaValida } from "@aprenda/agenda";
 import { obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
+import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,8 @@ export default async function Trabalhos({ params, searchParams }: {
   if (!b) notFound();
   const { categoria } = await searchParams;
   const filtro = categoria && categoriaValida(categoria) ? categoria : undefined;
-  const todas = banco.fotos(b.id).filter((f) => f.categoria !== "equipe");
+  const todas = banco.fotos(b.id).filter((f) => f.categoria !== "equipe" && !f.antesDe);
+  const pares = filtro ? [] : banco.paresAntesDepois(b.id);
   const fotos = filtro ? todas.filter((f) => f.categoria === filtro) : todas;
   const categorias = CATEGORIAS_FOTO.filter((c) => todas.some((f) => f.categoria === c.id));
   const base = `/b/${b.slug}`;
@@ -34,6 +36,13 @@ export default async function Trabalhos({ params, searchParams }: {
             <Link key={c.id} href={`${base}/trabalhos?categoria=${c.id}`} aria-current={filtro === c.id ? "page" : undefined}>{c.nome}</Link>
           ))}
         </nav>
+      )}
+      {pares.length > 0 && (
+        <div className="b-comparadores b-comparadores-topo">
+          {pares.map((p) => (
+            <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
+          ))}
+        </div>
       )}
       {fotos.length === 0 ? <p>Ainda não há fotos aqui.</p> : (
         <div className="b-mural">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CalendarCheck, MessageCircle } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 import { nivelEfeitos } from "@/lib/barbearias";
+import { Efeitos } from "@/componentes/barbearia/Efeitos";
 
 /**
  * Casca do site de cada barbearia: aplica o tema escolhido (data-tema) e o
@@ -44,6 +45,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
         <span>{b.nome}{b.cidade ? ` · ${b.cidade}` : ""}</span>
         <span className="b-assinatura">Site e agenda online</span>
       </footer>
+      {ativo && <Efeitos tema={b.tema} />}
       {ativo && (
         <nav className="b-barra-celular" aria-label="Ações rápidas">
           <Link href={`${base}/agendar`} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar</Link>

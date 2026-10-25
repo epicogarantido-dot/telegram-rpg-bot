@@ -28,6 +28,8 @@ export interface Barbearia {
   instagram?: string;
   /** Faixa de oferta no site, ex.: "10% off na primeira visita". */
   oferta?: string;
+  /** Ano de abertura (vira "X anos de casa" no site). */
+  desde?: number;
 }
 
 export interface Foto {
@@ -39,6 +41,8 @@ export interface Foto {
   largura: number;
   altura: number;
   capa: number;
+  /** Se esta foto é o "antes" de outra, o arquivo da foto "depois". */
+  antesDe?: string;
 }
 
 export type StatusPagamento = "aberto" | "informado" | "confirmado" | "recusado";
@@ -90,7 +94,8 @@ export function planoDoAmbiente(): Plano {
   };
 }
 
-const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta";
+const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde";
+const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
 const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbearia, p.txid, p.valor_centavos AS valorCentavos,
   p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
 
@@ -171,6 +176,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "acesso_ate", "TEXT NOT NULL DEFAULT '1970-01-01'");
     this.garantirColuna("barbearias", "tema", `TEXT NOT NULL DEFAULT '${TEMA_PADRAO}'`);
     for (const c of ["bio", "cidade", "instagram", "oferta"]) this.garantirColuna("barbearias", c, "TEXT");
+    this.garantirColuna("barbearias", "desde", "INTEGER");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.db.exec(`
@@ -183,6 +189,7 @@ export class BancoAgenda {
       );
       CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria);
     `);
+    this.garantirColuna("fotos", "antes_de", "TEXT");
   }
 
   private garantirColuna(tabela: string, coluna: string, definicao: string): void {
@@ -268,13 +275,17 @@ export class BancoAgenda {
   }
 
   /** Dados do site público (tema e textos). O resto (nome, telefone, endereço) fica em atualizarBarbearia. */
-  atualizarSite(id: number, dados: { tema: string; bio?: string; cidade?: string; instagram?: string; oferta?: string }): void {
+  atualizarSite(id: number, dados: { tema: string; bio?: string; cidade?: string; instagram?: string; oferta?: string; desde?: number | null }): void {
     if (!temaValido(dados.tema)) throw new ErroAgenda("Tema inválido.");
+    const anoAtual = new Date().getFullYear();
+    if (dados.desde != null && !(Number.isInteger(dados.desde) && dados.desde >= 1900 && dados.desde <= anoAtual)) {
+      throw new ErroAgenda(`Ano de abertura entre 1900 e ${anoAtual}.`);
+    }
     const limpar = (v: string | undefined, max: number) => v?.trim().slice(0, max) || null;
     const insta = dados.instagram?.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
     if (insta && !/^[A-Za-z0-9._]{1,30}$/.test(insta)) throw new ErroAgenda("Instagram inválido. Use só o @ do perfil.");
-    this.db.prepare("UPDATE barbearias SET tema = ?, bio = ?, cidade = ?, instagram = ?, oferta = ? WHERE id = ?")
-      .run(dados.tema, limpar(dados.bio, 400), limpar(dados.cidade, 60), insta || null, limpar(dados.oferta, 80), id);
+    this.db.prepare("UPDATE barbearias SET tema = ?, bio = ?, cidade = ?, instagram = ?, oferta = ?, desde = ? WHERE id = ?")
+      .run(dados.tema, limpar(dados.bio, 400), limpar(dados.cidade, 60), insta || null, limpar(dados.oferta, 80), dados.desde ?? null, id);
   }
 
   profissionais(barbeariaId: number, soAtivos = false): Profissional[] {
@@ -492,13 +503,13 @@ export class BancoAgenda {
   // ---------- fotos (portfólio) ----------
 
   fotos(barbeariaId: number, categoria?: CategoriaFoto): Foto[] {
-    return this.db.prepare(`SELECT id, arquivo, categoria, legenda, largura, altura, capa FROM fotos
+    return this.db.prepare(`SELECT ${COLUNAS_FOTO} FROM fotos
       WHERE barbearia_id = ? ${categoria ? "AND categoria = ?" : ""} ORDER BY capa DESC, id DESC`)
       .all(barbeariaId, ...(categoria ? [categoria] : [])) as unknown as Foto[];
   }
 
   fotoDaBarbearia(barbeariaId: number, arquivo: string): Foto | undefined {
-    return this.db.prepare("SELECT id, arquivo, categoria, legenda, largura, altura, capa FROM fotos WHERE barbearia_id = ? AND arquivo = ?")
+    return this.db.prepare(`SELECT ${COLUNAS_FOTO} FROM fotos WHERE barbearia_id = ? AND arquivo = ?`)
       .get(barbeariaId, arquivo) as Foto | undefined;
   }
 
@@ -537,8 +548,36 @@ export class BancoAgenda {
     const f = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
     if (!f) return undefined;
     this.db.prepare("UPDATE profissionais SET foto_arquivo = NULL WHERE barbearia_id = ? AND foto_arquivo = ?").run(barbeariaId, f.arquivo);
+    this.db.prepare("UPDATE fotos SET antes_de = NULL WHERE barbearia_id = ? AND antes_de = ?").run(barbeariaId, f.arquivo);
     this.db.prepare("DELETE FROM fotos WHERE id = ?").run(id);
     return f.arquivo;
+  }
+
+  /**
+   * Marca a foto `id` como o "antes" da foto `arquivoDepois` (mesma barbearia).
+   * null desfaz. Vira o comparador arrastável de antes e depois no site.
+   */
+  definirAntes(barbeariaId: number, id: number, arquivoDepois: string | null): void {
+    const antes = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
+    if (!antes) throw new ErroAgenda("Foto não encontrada.");
+    if (arquivoDepois) {
+      if (arquivoDepois === antes.arquivo || !this.fotoDaBarbearia(barbeariaId, arquivoDepois)) throw new ErroAgenda("Escolha outra foto como \"depois\".");
+    }
+    this.db.prepare("UPDATE fotos SET antes_de = ? WHERE id = ?").run(arquivoDepois, id);
+  }
+
+  paresAntesDepois(barbeariaId: number): { antes: Foto; depois: Foto }[] {
+    const fotos = this.fotos(barbeariaId);
+    const porArquivo = new Map(fotos.map((f) => [f.arquivo, f]));
+    return fotos.flatMap((f) => {
+      const depois = f.antesDe ? porArquivo.get(f.antesDe) : undefined;
+      return depois ? [{ antes: f, depois }] : [];
+    });
+  }
+
+  /** Atendimentos confirmados pelo site (vira contador no tema Luxo Técnico). */
+  totalAtendimentos(barbeariaId: number): number {
+    return (this.db.prepare("SELECT COUNT(*) AS n FROM agendamentos WHERE barbearia_id = ? AND status = 'confirmado'").get(barbeariaId) as { n: number }).n;
   }
 
   /** A rota pública de imagem só entrega arquivo que está registrado no banco. */

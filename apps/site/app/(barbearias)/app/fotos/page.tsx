@@ -47,7 +47,10 @@ async function editar(form: FormData) {
     else if (acao === "apagar") {
       const arquivo = banco.removerFoto(barbearia.id, id);
       if (arquivo) apagarFoto(arquivo);
-    } else banco.editarFoto(barbearia.id, id, { categoria: String(form.get("categoria")), legenda: String(form.get("legenda") ?? "") });
+    } else {
+      banco.editarFoto(barbearia.id, id, { categoria: String(form.get("categoria")), legenda: String(form.get("legenda") ?? "") });
+      banco.definirAntes(barbearia.id, id, String(form.get("antesDe") ?? "") || null);
+    }
   } catch (e) {
     redirect(`/app/fotos?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
@@ -63,7 +66,7 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
   return (
     <>
       <h1>Fotos</h1>
-      <p className="suave">Fotos dos seus cortes, da barba, do ambiente e da equipe. A marcada com estrela vira a capa do site. {fotos.length}/{MAX_FOTOS}</p>
+      <p className="suave">Fotos dos seus cortes, da barba, do ambiente e da equipe. A marcada com estrela vira a capa do site. Pra mostrar um antes e depois, escolha na foto do "antes" qual é a do "depois". {fotos.length}/{MAX_FOTOS}</p>
       {sp.enviadas && Number(sp.enviadas) > 0 && <p className="atribuicao" role="status">{sp.enviadas} foto(s) enviada(s).</p>}
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
 
@@ -92,6 +95,12 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
                 {CATEGORIAS_FOTO.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
               <input name="legenda" defaultValue={f.legenda ?? ""} maxLength={80} placeholder="Legenda" aria-label="Legenda" />
+              <select name="antesDe" defaultValue={f.antesDe ?? ""} aria-label="Esta foto é o antes de qual foto?">
+                <option value="">Não é foto de "antes"</option>
+                {fotos.filter((o) => o.id !== f.id && o.categoria !== "equipe").map((o, i) => (
+                  <option key={o.arquivo} value={o.arquivo}>Antes de: {o.legenda || `foto ${fotos.length - i}`}</option>
+                ))}
+              </select>
               <div className="acoes">
                 <button className="botao-sec" name="acao" value="salvar">Salvar</button>
                 <button className="botao-sec" name="acao" value="capa" disabled={!!f.capa}><Star size={16} aria-hidden /> {f.capa ? "É a capa" : "Usar de capa"}</button>

@@ -26,6 +26,7 @@ async function salvar(form: FormData) {
   try {
     obterAgenda().atualizarSite(barbearia.id, {
       tema: campo("tema"), bio: campo("bio"), cidade: campo("cidade"), instagram: campo("instagram"), oferta: campo("oferta"),
+      desde: campo("desde") ? Number(campo("desde")) : null,
     });
   } catch (e) {
     redirect(`/app/site?erro=${encodeURIComponent(mensagemDeErro(e))}`);
@@ -69,6 +70,10 @@ export default async function MeuSite({ searchParams }: { searchParams: Promise<
           <textarea name="bio" rows={3} maxLength={400} defaultValue={b.bio ?? ""} placeholder="Ex.: Degradê na régua e barba com toalha quente desde 2015." />
         </label>
         <label>Cidade<input name="cidade" maxLength={60} defaultValue={b.cidade ?? ""} placeholder="Ex.: Campinas" /></label>
+        <label>Ano de abertura (opcional)
+          <input name="desde" type="number" inputMode="numeric" min={1900} max={new Date().getFullYear()} defaultValue={b.desde ?? ""} placeholder="Ex.: 2015" />
+          <small>Vira "X anos de casa" no site.</small>
+        </label>
         <label>Instagram<input name="instagram" maxLength={60} defaultValue={b.instagram ?? ""} placeholder="@suabarbearia" /></label>
         <label>Oferta em destaque (opcional)
           <input name="oferta" maxLength={80} defaultValue={b.oferta ?? ""} placeholder="Ex.: 10% de desconto na primeira visita" />

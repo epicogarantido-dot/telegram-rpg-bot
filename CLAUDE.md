@@ -47,5 +47,5 @@ npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
 - Foto enviada nunca é servida como veio: sempre passa por `processarFoto` (valida, redimensiona, remove metadados).
 - Toda consulta do SaaS recebe `barbeariaId` da sessão (`exigirBarbeiro`), nunca do formulário.
 - O bot nunca envia mensagem primeiro, nem pra código de login: a pessoa manda o código pra ele.
-- Visual: o dono prefere o estilo limpo (sem 3D/confete). Antes de mexer no design, use as skills `frontend-design` e `diretrizes-interface`; animação só em resposta a uma ação da pessoa e sempre respeitando `prefers-reduced-motion`.
+- Visual: o dono prefere o estilo limpo (sem 3D/confete). Antes de mexer no design, use as skills `frontend-design` e `diretrizes-interface`; animação só em resposta a uma ação da pessoa e sempre respeitando `prefers-reduced-motion`. No site de cursos vale à risca; nos sites das barbearias cada tema segue o próprio nível de efeitos (`docs/estilos/plano.md`, efeitos em `temas.css` e `componentes/barbearia/Efeitos.tsx`), e com movimento reduzido o site fica parado e completo.
 - Código e textos em português; identificadores também.
