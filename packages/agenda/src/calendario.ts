@@ -49,15 +49,10 @@ function dobrar(linha: string): string {
   return partes.join("\r\n ");
 }
 
-export function gerarIcs(e: EventoAgenda, agora = new Date()): string {
+function linhasEvento(e: EventoAgenda, agora: Date): string[] {
   const inicio = paraUtc(e.inicio, e.fuso);
   const fim = new Date(inicio.getTime() + e.duracaoMin * 60_000);
-  const linhas = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Aprenda Livre//Agenda da barbearia//PT-BR",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+  return [
     "BEGIN:VEVENT",
     `UID:${e.uid}`,
     `DTSTAMP:${carimbo(agora)}`,
@@ -72,9 +67,31 @@ export function gerarIcs(e: EventoAgenda, agora = new Date()): string {
     `TRIGGER:-PT${e.lembreteMin}M`,
     "END:VALARM",
     "END:VEVENT",
-    "END:VCALENDAR",
   ];
+}
+
+function montar(corpo: string[], cabecalho: string[] = []): string {
+  const linhas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Aprenda Livre//Agenda da barbearia//PT-BR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", ...cabecalho, ...corpo, "END:VCALENDAR"];
   return linhas.map(dobrar).join("\r\n") + "\r\n";
+}
+
+/** Um horário só (o cliente adiciona à agenda dele). */
+export function gerarIcs(e: EventoAgenda, agora = new Date()): string {
+  return montar(linhasEvento(e, agora));
+}
+
+/**
+ * Calendário assinável (o barbeiro cola o link uma vez no iPhone ou no Google
+ * Agenda). O app do celular busca de novo de tempos em tempos: horário novo
+ * aparece, horário cancelado some.
+ */
+export function gerarCalendario(nome: string, eventos: EventoAgenda[], agora = new Date()): string {
+  return montar(eventos.flatMap((e) => linhasEvento(e, agora)), [
+    `X-WR-CALNAME:${escaparIcs(nome)}`,
+    // Pede pro app atualizar a cada 15 min (o iPhone respeita; o Google decide sozinho).
+    "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
+    "X-PUBLISHED-TTL:PT15M",
+  ]);
 }
 
 /** Link de "novo evento" do Google Agenda (o lembrete fica o padrão da agenda da pessoa). */

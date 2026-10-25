@@ -491,3 +491,46 @@ describe("link do cliente: cancelar e remarcar", () => {
     expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: dias[0]!, hora }, depois)).toThrow(/começou/);
   });
 });
+
+describe("calendário do barbeiro", () => {
+  it("link da barbearia e de cada profissional; renovar invalida o antigo", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const [p] = b.profissionais(a.id);
+    const todos = b.tokenAgenda(a.id);
+    expect(b.tokenAgenda(a.id)).toBe(todos);
+    const doRafa = b.tokenAgenda(a.id, p!.id);
+    expect(doRafa).not.toBe(todos);
+    expect(b.donoDoTokenAgenda(todos)).toEqual({ barbeariaId: a.id });
+    expect(b.donoDoTokenAgenda(doRafa)).toEqual({ barbeariaId: a.id, profissionalId: p!.id });
+    // Profissional de outra barbearia não gera link.
+    expect(() => b.tokenAgenda(o.id, p!.id)).toThrow(ErroAgenda);
+    const novo = b.tokenAgenda(a.id, undefined, true);
+    expect(b.donoDoTokenAgenda(todos)).toBeUndefined();
+    expect(b.donoDoTokenAgenda(novo)).toEqual({ barbeariaId: a.id });
+    expect(b.donoDoTokenAgenda("x' OR '1'='1")).toBeUndefined();
+  });
+
+  it("lista só confirmados no intervalo e filtra por profissional", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    b.adicionarProfissional(a.id, "Beto");
+    const [p1, p2] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    const agora = new Date();
+    const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
+    const dia = Array.from({ length: 10 }, (_, i) => somarDias(hoje, i + 1)).find((d) => b.expedientes(a.id).has(diaDaSemana(d)))!;
+    const marcar = (p: number, nome: string) => {
+      const hora = b.horariosLivres(a.id, p, s!.id, dia, agora)[0]!;
+      return b.agendar({ barbeariaId: a.id, profissionalId: p, servicoId: s!.id, data: dia, hora, clienteNome: nome, clienteTelefone: "5519998765432", agora });
+    };
+    marcar(p1!.id, "Um");
+    const cancelado = marcar(p1!.id, "Dois");
+    marcar(p2!.id, "Três");
+    b.cancelar(a.id, cancelado);
+    expect(b.agendamentosEntre(a.id, hoje, somarDias(hoje, 30)).map((x) => x.clienteNome)).toEqual(["Um", "Três"]);
+    expect(b.agendamentosEntre(a.id, hoje, somarDias(hoje, 30), p2!.id).map((x) => x.clienteNome)).toEqual(["Três"]);
+    expect(b.agendamentosEntre(a.id, somarDias(dia, 1), somarDias(dia, 30))).toEqual([]);
+  });
+});

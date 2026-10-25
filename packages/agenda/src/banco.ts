@@ -241,6 +241,9 @@ export class BancoAgenda {
     // Link do cliente: o banco guarda só o hash do token (como nas sessões).
     this.garantirColuna("agendamentos", "token_cliente", "TEXT");
     this.db.exec("CREATE INDEX IF NOT EXISTS agendamentos_token ON agendamentos(token_cliente)");
+    // Link do calendário do barbeiro (assinado no celular): um da barbearia toda e um por profissional.
+    this.garantirColuna("barbearias", "token_agenda", "TEXT");
+    this.garantirColuna("profissionais", "token_agenda", "TEXT");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS avisos_inscricoes (
         endpoint TEXT PRIMARY KEY,
@@ -519,6 +522,45 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  // ---------- calendário do barbeiro (link secreto assinado no celular) ----------
+
+  /**
+   * Link do calendário: da barbearia toda (sem profissionalId) ou de um profissional.
+   * Fica guardado como veio (o painel precisa mostrar de novo); "renovar" invalida o antigo.
+   */
+  tokenAgenda(barbeariaId: number, profissionalId?: number, renovar = false): string {
+    const tabela = profissionalId === undefined ? "barbearias" : "profissionais";
+    const where = profissionalId === undefined ? "id = ?" : "id = ? AND barbearia_id = ?";
+    const args = profissionalId === undefined ? [barbeariaId] : [profissionalId, barbeariaId];
+    const atual = this.db.prepare(`SELECT token_agenda AS t FROM ${tabela} WHERE ${where}`).get(...args) as { t: string | null } | undefined;
+    if (!atual) throw new ErroAgenda("Profissional não encontrado.");
+    if (atual.t && !renovar) return atual.t;
+    const token = randomBytes(24).toString("base64url");
+    this.db.prepare(`UPDATE ${tabela} SET token_agenda = ? WHERE ${where}`).run(token, ...args);
+    return token;
+  }
+
+  /** De quem é o link do calendário (ou undefined se não existe / foi renovado). */
+  donoDoTokenAgenda(token: string): { barbeariaId: number; profissionalId?: number } | undefined {
+    if (!/^[A-Za-z0-9_-]{30,40}$/.test(token)) return undefined;
+    const b = this.db.prepare("SELECT id FROM barbearias WHERE token_agenda = ?").get(token) as { id: number } | undefined;
+    if (b) return { barbeariaId: b.id };
+    const p = this.db.prepare("SELECT id, barbearia_id AS b FROM profissionais WHERE token_agenda = ?").get(token) as { id: number; b: number } | undefined;
+    return p && { barbeariaId: p.b, profissionalId: p.id };
+  }
+
+  /** Horários confirmados num intervalo de datas (pro calendário do barbeiro). */
+  agendamentosEntre(barbeariaId: number, desde: Data, ate: Data, profissionalId?: number): (Agendamento & { duracaoMin: number })[] {
+    return this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, s.duracao_min AS duracaoMin,
+        a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome,
+        a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
+      WHERE a.barbearia_id = ? AND a.status = 'confirmado' AND a.inicio >= ? AND a.inicio < ?
+        ${profissionalId ? "AND a.profissional_id = ?" : ""}
+      ORDER BY a.inicio`)
+      .all(barbeariaId, desde, `${ate}T99`, ...(profissionalId ? [profissionalId] : [])) as unknown as (Agendamento & { duracaoMin: number })[];
   }
 
   // ---------- link do cliente: ver, cancelar e remarcar sem login ----------

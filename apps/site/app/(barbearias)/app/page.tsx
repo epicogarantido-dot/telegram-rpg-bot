@@ -105,6 +105,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
       <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
 
+      <p className="pequeno"><Link href="/app/calendario">Ver a agenda no calendário do celular (iPhone ou Google Agenda)</Link></p>
+
       <nav className="navegacao">
         <Link href={`/app?data=${somarDias(data, -1)}`}>← dia anterior</Link>
         <strong>{data === hoje ? "Hoje — " : ""}{formatarData(data)}</strong>

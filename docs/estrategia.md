@@ -77,7 +77,7 @@ Próximos:
 - ✅ Avisos no celular do barbeiro (painel instalável + Web Push), com botão que abre o WhatsApp dele pra confirmar com o cliente.
 - ✅ "Adicionar à minha agenda" na confirmação: o celular do cliente lembra 1 h antes (.ics) ou Google Agenda.
 - ✅ Cliente remarca ou cancela pelo link secreto do horário (também dentro do evento da agenda); barbeiro recebe aviso.
-- Próximos: feed de calendário do barbeiro.
+- ✅ Agenda do barbeiro no calendário do celular (iPhone/Google), geral e por profissional, com lembrete 15 min antes e WhatsApp do cliente.
 4. Perfil público com fotos de cortes — semente da rede social de barbeiros.
 
 ### Site da barbearia como área de venda

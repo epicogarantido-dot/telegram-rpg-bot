@@ -439,3 +439,11 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .fila-numero { min-width: 64px; text-align: center; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
 .fila-numero small { display: block; font-size: 12px; font-weight: 500; color: var(--suave); }
 .fila-controle .fila-zerar { width: auto; height: 44px; border-radius: var(--raio-p); font-size: 14px; padding: 0 14px; }
+
+/* ---------- agenda no celular (painel) ---------- */
+.calendario-item { display: grid; gap: 10px; margin: 16px 0; }
+.calendario-item h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.2rem; }
+.calendario-item details { font-size: 14px; color: var(--suave); }
+.calendario-item summary { cursor: pointer; }
+.calendario-item details form { display: grid; gap: 8px; justify-items: start; margin-top: 8px; }
+.lista-dicas { display: grid; gap: 10px; padding-left: 20px; }

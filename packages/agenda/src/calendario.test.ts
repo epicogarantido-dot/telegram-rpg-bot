@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gerarIcs, linkGoogleAgenda, paraUtc } from "./calendario.ts";
+import { gerarCalendario, gerarIcs, linkGoogleAgenda, paraUtc } from "./calendario.ts";
 
 const evento = {
   uid: "ag-42@box-7",
@@ -36,5 +36,21 @@ describe("adicionar à agenda", () => {
     expect(url.hostname).toBe("calendar.google.com");
     expect(url.searchParams.get("dates")).toBe("20261027T173000Z/20261027T180000Z");
     expect(url.searchParams.get("text")).toBe("Corte na Box 7");
+  });
+});
+
+describe("calendário assinável do barbeiro", () => {
+  it("junta vários horários, com nome e pedido de atualização", () => {
+    const ics = gerarCalendario("Agenda · Box 7", [evento, { ...evento, uid: "ag-43@box-7", inicio: "2026-10-27T15:00" }], new Date("2026-10-25T12:00:00Z"));
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    expect(ics).toContain("X-WR-CALNAME:Agenda · Box 7");
+    expect(ics).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT15M");
+    expect(ics).toContain("DTSTART:20261027T180000Z");
+  });
+
+  it("calendário vazio continua válido (o app apaga o que sumiu)", () => {
+    const ics = gerarCalendario("Vazia", []);
+    expect(ics).toContain("BEGIN:VCALENDAR");
+    expect(ics).not.toContain("BEGIN:VEVENT");
   });
 });
