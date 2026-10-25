@@ -33,6 +33,8 @@ Fontes e licenças: **[docs/licencas.md](docs/licencas.md)**.
 
 Prospecção de nichos (leads do Google Maps, painel, comunidade, SaaS): **[docs/estrategia.md](docs/estrategia.md)**.
 
+Publicar: **[docs/deploy-square.md](docs/deploy-square.md)** · Regras de custo: **[docs/custo-zero.md](docs/custo-zero.md)**.
+
 ## Histórico
 
 Este repositório antes guardava o RPG de Telegram *Isekairpg*. Esse código continua

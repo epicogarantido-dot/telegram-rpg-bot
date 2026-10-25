@@ -33,6 +33,21 @@ export async function exigirBarbeiro(): Promise<{ usuario: Usuario; barbearia: B
   return { usuario, barbearia: obterAgenda().barbeariaPorId(usuario.barbeariaId)! };
 }
 
+/** Como exigirBarbeiro, mas manda pra tela de pagamento se o acesso venceu. */
+export async function exigirAcessoAtivo(): Promise<{ usuario: Usuario; barbearia: Barbearia }> {
+  const sessao = await exigirBarbeiro();
+  if (!obterAgenda().acessoAtivo(sessao.barbearia)) redirect("/app/assinatura");
+  return sessao;
+}
+
+export const configPix = {
+  chave: process.env.PIX_CHAVE ?? "",
+  nome: process.env.PIX_NOME ?? "",
+  cidade: process.env.PIX_CIDADE ?? "",
+  /** WhatsApp do admin (só dígitos com DDI) pra receber comprovantes. */
+  whatsappAdmin: process.env.ADMIN_WHATSAPP ?? "",
+};
+
 /** Mensagem de erro amigável pra exibir; erros inesperados não vazam detalhes. */
 export function mensagemDeErro(e: unknown): string {
   if (e instanceof ErroAgenda) return e.message;

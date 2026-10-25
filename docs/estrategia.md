@@ -13,7 +13,8 @@ Google Places ──► leads (painel) ──► convite 1 a 1 ──► grupo/c
 
 ## 1. Leads — `npm run prospectar`
 
-- Usa a **Places API oficial**. Raspar o Google Maps viola os termos do Google (bloqueio
+- Padrão: **OpenStreetMap** (grátis, sem chave). Menos telefones que o Google, mas custo zero.
+- Opcional: **Places API oficial** do Google (`--fonte google`, exige conta com cartão). Raspar o Google Maps viola os termos do Google (bloqueio
   da conta/IP) e quebra a cada mudança de layout.
 - Pelos termos da Google Maps Platform, o que pode ser guardado por tempo indefinido é
   o `place_id`; os outros campos devem ser atualizados periodicamente (rode `buscar`
@@ -48,6 +49,7 @@ cartão com QR na barbearia). Essas inscrições aparecem no topo do painel.
 ## 4. SaaS de agendamento (`packages/agenda` + `/app`, `/b/<slug>`)
 
 Pronto (MVP, SQLite local):
+- ✅ Cobrança por Pix estático: QR + copia e cola, "já paguei", admin confirma em `/painel/assinaturas`; vencido = painel e página pública bloqueados.
 - ✅ Cadastro/login do barbeiro (senha com scrypt, sessão por cookie httpOnly).
 - ✅ Configurações: dados da barbearia, serviços (duração e preço), profissionais, horário por dia com pausa.
 - ✅ Página pública `/b/<slug>`: serviço → profissional → dia → horário → nome e WhatsApp.
@@ -55,9 +57,7 @@ Pronto (MVP, SQLite local):
 - ✅ Agenda do dia no painel, cancelar, botão de WhatsApp pro cliente.
 
 Próximos:
-1. Migrar o banco pro Supabase (Postgres + RLS por `barbearia_id`) — necessário pra rodar em Vercel.
-2. Cliente cancelar/remarcar pelo link (token único por agendamento).
-3. Lembrete automático no dia (cliente pediu ao agendar → pode via API oficial do WhatsApp).
-4. Bloqueio de horário avulso (folga, médico).
-5. Cobrança da assinatura (Mercado Pago / Stripe) e plano grátis limitado.
-6. Perfil público com fotos de cortes — semente da rede social de barbeiros.
+1. Cliente cancelar/remarcar pelo link (token único por agendamento).
+2. Lembrete no dia pelo bot (o cliente pediu ao agendar; volume baixo e esperado, diferente de prospecção).
+3. Bloqueio de horário avulso (folga, médico).
+4. Perfil público com fotos de cortes — semente da rede social de barbeiros.

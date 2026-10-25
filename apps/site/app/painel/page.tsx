@@ -36,6 +36,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
   return (
     <>
+      <p><strong>Leads</strong> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
       <p>
         Contatos hoje: <strong>{hoje}/{config.limiteDiario}</strong>

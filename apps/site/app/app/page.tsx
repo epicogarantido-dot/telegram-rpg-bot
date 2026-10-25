@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { encerrarSessaoAgenda, exigirBarbeiro, obterAgenda } from "../../lib/agenda";
+import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda } from "../../lib/agenda";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 async function cancelar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirBarbeiro();
+  const { barbearia } = await exigirAcessoAtivo();
   obterAgenda().cancelar(barbearia.id, Number(form.get("id")));
   revalidatePath("/app");
 }
@@ -22,12 +22,13 @@ async function sair() {
 }
 
 export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string }> }) {
-  const { barbearia, usuario } = await exigirBarbeiro();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const sp = await searchParams;
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
   const data = sp.data && dataValida(sp.data) ? sp.data : hoje;
   const agenda = obterAgenda().agendamentosDoDia(barbearia.id, data);
   const linkPublico = `${process.env.SITE_URL ?? ""}/b/${barbearia.slug}`;
+  const diasRestantes = obterAgenda().diasRestantes(barbearia);
 
   return (
     <>
@@ -41,9 +42,16 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           Ajuste em <Link href="/app/config">Configurações</Link> e mande o link abaixo pros clientes.
         </aside>
       )}
+      {diasRestantes <= 3 && (
+        <aside className="atribuicao">
+          ⏳ Seu acesso vence {diasRestantes === 1 ? "hoje" : `em ${diasRestantes} dias`}.{" "}
+          <Link href="/app/assinatura">Renovar com Pix</Link> pra não bloquear sua agenda.
+        </aside>
+      )}
       <p>
         Link de agendamento: <a href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkPublico}</a>
         {" · "}<Link href="/app/config">Configurações</Link>
+        {" · "}<Link href="/app/assinatura">Assinatura</Link>
       </p>
 
       <nav className="navegacao">

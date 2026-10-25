@@ -3,6 +3,7 @@ import { BancoAgenda, ErroAgenda, gerarSlug } from "./banco.ts";
 import { horariosLivres } from "./disponibilidade.ts";
 import { agoraNoFuso, diaDaSemana, somarDias } from "./tempo.ts";
 import { conferirSenha, hashSenha } from "./senha.ts";
+import { crc16, gerarPixCopiaECola } from "./pix.ts";
 
 describe("tempo", () => {
   it("converte o agora para o fuso da barbearia", () => {
@@ -52,9 +53,9 @@ describe("BancoAgenda", () => {
   const agora = new Date("2026-10-27T13:00:00Z");
 
   function novo() {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", { valorCentavos: 2990, dias: 30, testeDias: 7 });
     const { barbearia, token } = b.criarConta({
-      nomeBarbearia: "Barbearia São João", telefone: "5519900000001", nome: "Zé", email: "Ze@Exemplo.com", senha: "segredo123",
+      nomeBarbearia: "Barbearia São João", telefone: "5519900000001", nome: "Zé", email: "Ze@Exemplo.com", senha: "segredo123", agora,
     });
     return { b, barbearia, token };
   }
@@ -88,7 +89,7 @@ describe("BancoAgenda", () => {
 
   it("isola barbearias", () => {
     const { b, barbearia } = novo();
-    const outra = b.criarConta({ nomeBarbearia: "Outra", telefone: "5519900000009", nome: "Ana", email: "ana@x.com", senha: "segredo123" });
+    const outra = b.criarConta({ nomeBarbearia: "Outra", telefone: "5519900000009", nome: "Ana", email: "ana@x.com", senha: "segredo123", agora });
     const prof = b.profissionais(barbearia.id)[0]!;
     const corte = b.servicos(barbearia.id)[0]!;
     // Profissional/serviço de outra barbearia não podem ser usados.
@@ -107,5 +108,98 @@ describe("BancoAgenda", () => {
 
   it("gera slug sem acento", () => {
     expect(gerarSlug("  Barbearia do Zé & Filhos!! ")).toBe("barbearia-do-ze-filhos");
+  });
+});
+
+describe("Pix", () => {
+  it("CRC16-CCITT bate com o vetor de referência", () => {
+    expect(crc16("123456789")).toBe("29B1");
+  });
+
+  it("reproduz o exemplo do manual do BR Code do Banco Central", () => {
+    expect(gerarPixCopiaECola({
+      chave: "123e4567-e12b-12d1-a456-426655440000", nome: "Fulano de Tal", cidade: "BRASILIA", valorCentavos: 0, txid: "***",
+    })).toBe("00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D");
+  });
+
+  it("inclui valor, limpa acentos e limita tamanhos", () => {
+    const p = gerarPixCopiaECola({ chave: "a@b.com", nome: "José da Conceição Ferreira Júnior", cidade: "São José dos Campos", valorCentavos: 2990, txid: "AG1X-AB" });
+    expect(p).toContain("540529.90");
+    expect(p).toContain("5925Jose da Conceicao Ferreir6015");
+    expect(p).toContain("6015Sao Jose dos Ca");
+    expect(p).toContain("62100506AG1XAB");
+    expect(p.slice(-4)).toBe(crc16(p.slice(0, -4)));
+  });
+});
+
+describe("assinatura", () => {
+  const dia = (d: string) => new Date(`${d}T15:00:00Z`); // meio-dia em SP
+
+  function conta(testeDias: number) {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 2990, dias: 30, testeDias });
+    const { barbearia } = b.criarConta({ nomeBarbearia: "B", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123", agora: dia("2026-10-27") });
+    return { b, id: barbearia.id };
+  }
+
+  it("teste grátis acaba e bloqueia, inclusive a página pública", () => {
+    const { b, id } = conta(7);
+    const barb = () => b.barbeariaPorId(id)!;
+    expect(barb().acessoAte).toBe("2026-11-02");
+    expect(b.diasRestantes(barb(), dia("2026-10-27"))).toBe(7);
+    expect(b.acessoAtivo(barb(), dia("2026-11-02"))).toBe(true);
+    expect(b.acessoAtivo(barb(), dia("2026-11-03"))).toBe(false);
+    const prof = b.profissionais(id)[0]!;
+    const serv = b.servicos(id)[0]!;
+    expect(() => b.agendar({ barbeariaId: id, profissionalId: prof.id, servicoId: serv.id, data: "2026-11-04", hora: "09:00",
+      clienteNome: "Cliente", clienteTelefone: "5519988887777", agora: dia("2026-11-03") })).toThrow(/indisponível/);
+  });
+
+  it("sem teste, nasce bloqueado; 'já paguei' não libera; só o admin libera", () => {
+    const { b, id } = conta(0);
+    const barb = () => b.barbeariaPorId(id)!;
+    expect(b.acessoAtivo(barb(), dia("2026-10-27"))).toBe(false);
+
+    const p = b.pagamentoAberto(id);
+    expect(b.pagamentoAberto(id).id).toBe(p.id); // não duplica
+    b.informarPagamento(id, p.id, "José Silva");
+    expect(b.acessoAtivo(barb(), dia("2026-10-27"))).toBe(false);
+    expect(b.pagamentosPendentes()[0]!.status).toBe("informado");
+
+    b.confirmarPagamento(p.id, dia("2026-10-27"));
+    expect(barb().acessoAte).toBe("2026-11-25");
+    expect(() => b.confirmarPagamento(p.id)).toThrow(ErroAgenda);
+    expect(b.pagamentoAberto(id).id).not.toBe(p.id);
+  });
+
+  it("renovação antecipada soma ao fim do período atual", () => {
+    const { b, id } = conta(7); // até 02/11
+    b.confirmarPagamento(b.pagamentoAberto(id).id, dia("2026-10-30"));
+    expect(b.barbeariaPorId(id)!.acessoAte).toBe("2026-12-02");
+  });
+
+  it("barbearia não informa pagamento de outra; recusa e bloqueio manual", () => {
+    const { b, id } = conta(7);
+    const outra = b.criarConta({ nomeBarbearia: "C", telefone: "5519900000002", nome: "Ana", email: "a@x.com", senha: "segredo123" });
+    const p = b.pagamentoAberto(id);
+    expect(() => b.informarPagamento(outra.barbearia.id, p.id, "x")).toThrow(ErroAgenda);
+    b.recusarPagamento(p.id);
+    expect(b.pagamentosDaBarbearia(id)[0]!.status).toBe("recusado");
+    b.bloquear(id, dia("2026-10-28"));
+    expect(b.acessoAtivo(b.barbeariaPorId(id)!, dia("2026-10-28"))).toBe(false);
+  });
+
+  it("migra banco antigo sem a coluna acesso_ate", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const { DatabaseSync } = await import("node:sqlite");
+    const arq = join(mkdtempSync(join(tmpdir(), "agenda-")), "velho.db");
+    const velho = new DatabaseSync(arq);
+    velho.exec(`CREATE TABLE barbearias (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL UNIQUE, nome TEXT NOT NULL,
+      telefone TEXT NOT NULL, endereco TEXT, fuso TEXT NOT NULL DEFAULT 'America/Sao_Paulo', criado_em TEXT NOT NULL);
+      INSERT INTO barbearias (slug, nome, telefone, criado_em) VALUES ('x', 'X', '5519900000001', '2026-01-01');`);
+    velho.close();
+    const b = new BancoAgenda(arq);
+    expect(b.barbeariaPorSlug("x")!.acessoAte).toBe("1970-01-01");
   });
 });

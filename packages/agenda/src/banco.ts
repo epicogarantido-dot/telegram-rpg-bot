@@ -3,7 +3,8 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { horariosLivres, type Expediente } from "./disponibilidade.ts";
 import { conferirSenha, hashSenha, hashToken, novoToken } from "./senha.ts";
-import { agoraNoFuso, deMinutos, diaDaSemana, paraMinutos, type Data, type DataHora } from "./tempo.ts";
+import { randomBytes } from "node:crypto";
+import { agoraNoFuso, deMinutos, diaDaSemana, paraMinutos, somarDias, type Data, type DataHora } from "./tempo.ts";
 
 /**
  * Banco do SaaS de agendamento (SQLite local). Tudo é isolado por
@@ -18,6 +19,22 @@ export interface Barbearia {
   telefone: string;
   endereco?: string;
   fuso: string;
+  /** Último dia (inclusive) com acesso liberado. Depois disso, tudo bloqueia até o admin confirmar um Pix. */
+  acessoAte: Data;
+}
+
+export type StatusPagamento = "aberto" | "informado" | "confirmado" | "recusado";
+export interface Pagamento {
+  id: number;
+  barbeariaId: number;
+  barbearia: string;
+  txid: string;
+  valorCentavos: number;
+  dias: number;
+  status: StatusPagamento;
+  pagador?: string;
+  criadoEm: string;
+  decididoEm?: string;
 }
 export interface Profissional { id: number; nome: string; ativo: number }
 export interface Servico { id: number; nome: string; duracaoMin: number; precoCentavos: number; ativo: number }
@@ -36,6 +53,25 @@ export interface Agendamento {
 export interface Usuario { id: number; barbeariaId: number; nome: string; email: string }
 
 export class ErroAgenda extends Error {}
+
+export interface Plano {
+  valorCentavos: number;
+  dias: number;
+  /** Dias grátis na criação da conta. 0 = precisa pagar antes de usar. */
+  testeDias: number;
+}
+
+export function planoDoAmbiente(): Plano {
+  return {
+    valorCentavos: Math.round(Number(process.env.PLANO_VALOR ?? "29.90") * 100),
+    dias: Number(process.env.PLANO_DIAS ?? 30),
+    testeDias: Number(process.env.PLANO_TESTE_DIAS ?? 7),
+  };
+}
+
+const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte";
+const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbearia, p.txid, p.valor_centavos AS valorCentavos,
+  p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
 
 const DURACAO_SESSAO_DIAS = 30;
 
@@ -58,7 +94,7 @@ export function gerarSlug(nome: string): string {
 export class BancoAgenda {
   readonly db: DatabaseSync;
 
-  constructor(caminho = caminhoPadrao()) {
+  constructor(caminho = caminhoPadrao(), readonly plano: Plano = planoDoAmbiente()) {
     if (caminho !== ":memory:") mkdirSync(/*turbopackIgnore: true*/ dirname(caminho), { recursive: true });
     this.db = new DatabaseSync(caminho);
     this.db.exec(`
@@ -102,12 +138,24 @@ export class BancoAgenda {
         status TEXT NOT NULL DEFAULT 'confirmado', criado_em TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS agendamentos_dia ON agendamentos(barbearia_id, profissional_id, inicio);
+      CREATE TABLE IF NOT EXISTS pagamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        txid TEXT NOT NULL UNIQUE, valor_centavos INTEGER NOT NULL, dias INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'aberto', pagador TEXT,
+        criado_em TEXT NOT NULL, decidido_em TEXT
+      );
     `);
+    // Migração: bancos criados antes da cobrança não têm acesso_ate.
+    const colunas = this.db.prepare("PRAGMA table_info(barbearias)").all() as { name: string }[];
+    if (!colunas.some((c) => c.name === "acesso_ate")) {
+      this.db.exec("ALTER TABLE barbearias ADD COLUMN acesso_ate TEXT NOT NULL DEFAULT '1970-01-01'");
+    }
   }
 
   // ---------- conta ----------
 
-  criarConta(dados: { nomeBarbearia: string; telefone: string; nome: string; email: string; senha: string }): { barbearia: Barbearia; token: string } {
+  criarConta(dados: { nomeBarbearia: string; telefone: string; nome: string; email: string; senha: string; agora?: Date }): { barbearia: Barbearia; token: string } {
     const email = dados.email.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new ErroAgenda("E-mail inválido.");
     if (dados.senha.length < 8) throw new ErroAgenda("A senha precisa ter pelo menos 8 caracteres.");
@@ -119,8 +167,10 @@ export class BancoAgenda {
 
     this.db.exec("BEGIN");
     try {
-      const b = this.db.prepare("INSERT INTO barbearias (slug, nome, telefone, criado_em) VALUES (?, ?, ?, ?)")
-        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora);
+      // acesso_ate = último dia liberado; teste de N dias inclui o dia de hoje.
+      const acessoAte = somarDias(agoraNoFuso("America/Sao_Paulo", dados.agora).slice(0, 10), this.plano.testeDias - 1);
+      const b = this.db.prepare("INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate) VALUES (?, ?, ?, ?, ?)")
+        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora, acessoAte);
       const barbeariaId = Number(b.lastInsertRowid);
       const u = this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(barbeariaId, dados.nome.trim(), email, hashSenha(dados.senha), agora);
@@ -168,11 +218,11 @@ export class BancoAgenda {
   // ---------- barbearia ----------
 
   barbeariaPorId(id: number): Barbearia | undefined {
-    return this.db.prepare("SELECT id, slug, nome, telefone, endereco, fuso FROM barbearias WHERE id = ?").get(id) as Barbearia | undefined;
+    return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE id = ?`).get(id) as Barbearia | undefined;
   }
 
   barbeariaPorSlug(slug: string): Barbearia | undefined {
-    return this.db.prepare("SELECT id, slug, nome, telefone, endereco, fuso FROM barbearias WHERE slug = ?").get(slug) as Barbearia | undefined;
+    return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE slug = ?`).get(slug) as Barbearia | undefined;
   }
 
   atualizarBarbearia(id: number, dados: { nome: string; telefone: string; endereco?: string }): void {
@@ -263,6 +313,8 @@ export class BancoAgenda {
     const nome = dados.clienteNome.trim();
     if (nome.length < 2) throw new ErroAgenda("Informe seu nome.");
     if (!/^\d{12,13}$/.test(dados.clienteTelefone)) throw new ErroAgenda("WhatsApp inválido.");
+    const b = this.barbeariaPorId(dados.barbeariaId);
+    if (!b || !this.acessoAtivo(b, dados.agora)) throw new ErroAgenda("Agenda temporariamente indisponível.");
     const prof = this.profissionais(dados.barbeariaId, true).find((p) => p.id === dados.profissionalId);
     const servico = this.servicos(dados.barbeariaId, true).find((s) => s.id === dados.servicoId);
     if (!prof || !servico) throw new ErroAgenda("Serviço ou profissional indisponível.");
@@ -294,5 +346,91 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  // ---------- assinatura (Pix com confirmação manual) ----------
+
+  acessoAtivo(b: Barbearia, agora?: Date): boolean {
+    return agoraNoFuso(b.fuso, agora).slice(0, 10) <= b.acessoAte;
+  }
+
+  /** Dias restantes contando hoje (0 = bloqueado). */
+  diasRestantes(b: Barbearia, agora?: Date): number {
+    const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
+    if (hoje > b.acessoAte) return 0;
+    return Math.round((Date.parse(b.acessoAte) - Date.parse(hoje)) / 86_400_000) + 1;
+  }
+
+  /** Pagamento em aberto da barbearia; cria um se não houver. Evita uma pilha de cobranças repetidas. */
+  pagamentoAberto(barbeariaId: number): Pagamento {
+    const existente = this.db.prepare(`SELECT ${COLUNAS_PAGAMENTO} FROM pagamentos p JOIN barbearias b ON b.id = p.barbearia_id
+      WHERE p.barbearia_id = ? AND p.status IN ('aberto', 'informado') ORDER BY p.id DESC LIMIT 1`).get(barbeariaId) as Pagamento | undefined;
+    if (existente) return existente;
+    const txid = `AG${barbeariaId}X${randomBytes(4).toString("hex").toUpperCase()}`;
+    this.db.prepare(`INSERT INTO pagamentos (barbearia_id, txid, valor_centavos, dias, criado_em) VALUES (?, ?, ?, ?, ?)`)
+      .run(barbeariaId, txid, this.plano.valorCentavos, this.plano.dias, new Date().toISOString());
+    return this.pagamentoAberto(barbeariaId);
+  }
+
+  /** Barbeiro avisa que pagou. Não libera nada: só coloca na fila do admin. */
+  informarPagamento(barbeariaId: number, pagamentoId: number, pagador: string): void {
+    const r = this.db.prepare(`UPDATE pagamentos SET status = 'informado', pagador = ?
+      WHERE id = ? AND barbearia_id = ? AND status IN ('aberto', 'informado')`).run(pagador.trim().slice(0, 80) || null, pagamentoId, barbeariaId);
+    if (r.changes === 0) throw new ErroAgenda("Pagamento não encontrado.");
+  }
+
+  pagamentosDaBarbearia(barbeariaId: number): Pagamento[] {
+    return this.db.prepare(`SELECT ${COLUNAS_PAGAMENTO} FROM pagamentos p JOIN barbearias b ON b.id = p.barbearia_id
+      WHERE p.barbearia_id = ? ORDER BY p.id DESC`).all(barbeariaId) as unknown as Pagamento[];
+  }
+
+  // ---------- admin ----------
+
+  pagamentosPendentes(): Pagamento[] {
+    return this.db.prepare(`SELECT ${COLUNAS_PAGAMENTO} FROM pagamentos p JOIN barbearias b ON b.id = p.barbearia_id
+      WHERE p.status IN ('informado', 'aberto') ORDER BY CASE p.status WHEN 'informado' THEN 0 ELSE 1 END, p.id`)
+      .all() as unknown as Pagamento[];
+  }
+
+  /** Admin conferiu o extrato: soma os dias a partir de hoje ou do fim do acesso atual, o que for maior. */
+  confirmarPagamento(pagamentoId: number, agora?: Date): void {
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const p = this.db.prepare("SELECT barbearia_id AS barbeariaId, dias, status FROM pagamentos WHERE id = ?").get(pagamentoId) as
+        { barbeariaId: number; dias: number; status: StatusPagamento } | undefined;
+      if (!p || (p.status !== "aberto" && p.status !== "informado")) throw new ErroAgenda("Pagamento já decidido ou inexistente.");
+      const b = this.barbeariaPorId(p.barbeariaId)!;
+      const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
+      const base = b.acessoAte >= hoje ? somarDias(b.acessoAte, 1) : hoje;
+      this.db.prepare("UPDATE barbearias SET acesso_ate = ? WHERE id = ?").run(somarDias(base, p.dias - 1), b.id);
+      this.db.prepare("UPDATE pagamentos SET status = 'confirmado', decidido_em = ? WHERE id = ?").run(new Date().toISOString(), pagamentoId);
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
+  recusarPagamento(pagamentoId: number): void {
+    this.db.prepare("UPDATE pagamentos SET status = 'recusado', decidido_em = ? WHERE id = ? AND status IN ('aberto', 'informado')")
+      .run(new Date().toISOString(), pagamentoId);
+  }
+
+  todasBarbearias(): (Barbearia & { email: string })[] {
+    return this.db.prepare(`SELECT b.id, b.slug, b.nome, b.telefone, b.endereco, b.fuso, b.acesso_ate AS acessoAte,
+      (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id ORDER BY u.id LIMIT 1) AS email
+      FROM barbearias b ORDER BY b.acesso_ate`).all() as unknown as (Barbearia & { email: string })[];
+  }
+
+  /** Bloqueio manual imediato (ex.: estorno, fraude). */
+  bloquear(barbeariaId: number, agora?: Date): void {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) return;
+    this.db.prepare("UPDATE barbearias SET acesso_ate = ? WHERE id = ?").run(somarDias(agoraNoFuso(b.fuso, agora).slice(0, 10), -1), barbeariaId);
+  }
+
+  /** Cópia consistente do banco inteiro, pra backup. */
+  copiarPara(destino: string): void {
+    this.db.prepare("VACUUM INTO ?").run(destino);
   }
 }

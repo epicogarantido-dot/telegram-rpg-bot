@@ -3,13 +3,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ErroAgenda, nomeDia } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
-import { exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "../../../lib/agenda";
+import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "../../../lib/agenda";
 
 export const metadata = { title: "Configurações", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 async function executar(acao: (barbeariaId: number) => void) {
-  const { barbearia } = await exigirBarbeiro();
+  const { barbearia } = await exigirAcessoAtivo();
   try {
     acao(barbearia.id);
   } catch (e) {
@@ -67,7 +67,7 @@ async function salvarExpediente(form: FormData) {
 }
 
 export default async function Config({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const { barbearia } = await exigirBarbeiro();
+  const { barbearia } = await exigirAcessoAtivo();
   const { erro } = await searchParams;
   const banco = obterAgenda();
   const servicos = banco.servicos(barbearia.id);

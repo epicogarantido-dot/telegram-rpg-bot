@@ -1,8 +1,12 @@
 import { BancoProspeccao, STATUS, type Status } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
+import { buscarNoOSM } from "./openstreetmap.ts";
 
 const USO = `Uso:
-  npm run prospectar -- buscar <nicho> <cidade> [--paginas N]   ex.: buscar barbearia "Campinas SP"
+  npm run prospectar -- buscar <nicho> <cidade> [--fonte osm|google] [--paginas N]
+      ex.: buscar barbearia Campinas
+      osm (padrão, grátis): cidade = nome exato do município; nichos em FILTROS_OSM
+      google (precisa de GOOGLE_MAPS_API_KEY e conta com cartão): cidade livre, ex. "Campinas SP"
   npm run prospectar -- listar [status]
   npm run prospectar -- marcar <place_id> <${STATUS.join("|")}>
   npm run prospectar -- resumo`;
@@ -13,13 +17,21 @@ async function main() {
 
   switch (comando) {
     case "buscar": {
-      const [nicho, cidade] = args.filter((a) => !a.startsWith("--"));
+      // Posicionais = tudo que não é "--flag" nem o valor logo depois dela.
+      const [nicho, cidade] = args.filter((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--"));
       if (!nicho || !cidade) return sair(USO);
-      const chave = process.env.GOOGLE_MAPS_API_KEY;
-      if (!chave) return sair("Defina GOOGLE_MAPS_API_KEY (Places API (New) ativada no Google Cloud).");
-      const i = args.indexOf("--paginas");
-      const maxPaginas = i >= 0 ? Number(args[i + 1]) : 3;
-      const achados = await buscarEstabelecimentos(`${nicho} em ${cidade}`, { chave, maxPaginas });
+      const fi = args.indexOf("--fonte");
+      const fonte = fi >= 0 ? args[fi + 1] : "osm";
+      let achados;
+      if (fonte === "google") {
+        const chave = process.env.GOOGLE_MAPS_API_KEY;
+        if (!chave) return sair("Defina GOOGLE_MAPS_API_KEY (Places API (New) ativada no Google Cloud).");
+        const i = args.indexOf("--paginas");
+        const maxPaginas = i >= 0 ? Number(args[i + 1]) : 3;
+        achados = await buscarEstabelecimentos(`${nicho} em ${cidade}`, { chave, maxPaginas });
+      } else {
+        achados = await buscarNoOSM(nicho, cidade);
+      }
       const novos = banco.salvarEstabelecimentos(achados, nicho, cidade);
       const comTel = achados.filter((a) => a.telefone).length;
       console.log(`🔎 ${achados.length} encontrados (${comTel} com telefone), ${novos} novos no banco.`);

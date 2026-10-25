@@ -108,3 +108,15 @@ main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
 .expediente label { min-width: 100px; text-transform: capitalize; }
 .expediente input[type="time"] { padding: 6px; border-radius: 6px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); }
 .expediente .botao { justify-self: start; font-size: 16px; padding: 12px 18px; }
+.pix { display: grid; gap: 16px; }
+@media (min-width: 720px) { .pix { grid-template-columns: 260px 1fr; align-items: start; } }
+.qr { background: #fff; padding: 10px; border-radius: 12px; border: 1px solid var(--borda); width: 260px; max-width: 100%; }
+.qr svg { display: block; width: 100%; height: auto; }
+.pix textarea {
+  width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 8px;
+  border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); word-break: break-all;
+}
+@media (max-width: 520px) {
+  .topo { flex-wrap: wrap; row-gap: 6px; }
+  .topo nav { gap: 14px; font-size: 15px; flex-wrap: wrap; }
+}

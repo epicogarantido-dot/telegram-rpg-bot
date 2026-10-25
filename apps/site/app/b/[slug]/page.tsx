@@ -44,6 +44,15 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   const banco = obterAgenda();
   const b = banco.barbeariaPorSlug(slug);
   if (!b) notFound();
+  if (!banco.acessoAtivo(b)) {
+    return (
+      <section className="heroi">
+        <h1>{b.nome}</h1>
+        <p>A agenda online está temporariamente indisponível. Fale direto com a barbearia:</p>
+        <p><a className="botao" href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">WhatsApp da barbearia</a></p>
+      </section>
+    );
+  }
 
   const servicos = banco.servicos(b.id, true);
   const profissionais = banco.profissionais(b.id, true);

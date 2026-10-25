@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BancoProspeccao } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
 import { mensagemConvite } from "./mensagem.ts";
+import { buscarNoOSM, montarConsulta } from "./openstreetmap.ts";
 import { ehCelularBR, linkWhatsapp, normalizarTelefone } from "./telefone.ts";
 
 describe("telefone", () => {
@@ -66,5 +67,29 @@ describe("mensagem", () => {
     expect(m).toContain("4,8");
     expect(m).toContain("https://chat.whatsapp.com/x");
     expect(m).toContain("SAIR");
+  });
+});
+
+describe("OpenStreetMap", () => {
+  it("monta consulta por município e escapa aspas", () => {
+    const q = montarConsulta("barbearia", 'São "Paulo"');
+    expect(q).toContain('["name"="São \\"Paulo\\""]');
+    expect(q).toContain('nwr["shop"="barber"](area.cidade);');
+    expect(() => montarConsulta("astronauta", "X")).toThrow(/sem filtro/);
+  });
+
+  it("converte elementos, prefere WhatsApp e ignora sem nome/duplicados", async () => {
+    const falso = (async () => new Response(JSON.stringify({ elements: [
+      { type: "node", id: 1, tags: { name: "Barbearia Um", phone: "+55 19 3232-1010", "contact:whatsapp": "+55 19 98888-0000", "addr:street": "Rua A", "addr:housenumber": "10" } },
+      { type: "node", id: 1, tags: { name: "Barbearia Um" } },
+      { type: "way", id: 2, tags: { name: "Dois", phone: "+55 19 99999-1111;+55 19 3333-2222" } },
+      { type: "node", id: 3, tags: { shop: "barber" } },
+    ] }))) as unknown as typeof fetch;
+    const r = await buscarNoOSM("barbearia", "Campinas", { fetch: falso });
+    expect(r.map((e) => e.placeId)).toEqual(["osm:node/1", "osm:way/2"]);
+    expect(r[0]!.telefone).toBe("5519988880000");
+    expect(r[0]!.endereco).toBe("Rua A, 10");
+    expect(r[1]!.telefone).toBe("5519999991111");
+    expect(r[1]!.mapsUrl).toBe("https://www.openstreetmap.org/way/2");
   });
 });
