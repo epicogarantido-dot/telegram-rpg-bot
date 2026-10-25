@@ -1,5 +1,6 @@
 import type { Barbearia, Expediente } from "@aprenda/agenda";
-import { agoraNoFuso, diaDaSemana, nomeDia, paraMinutos, TEMAS } from "@aprenda/agenda";
+import { agoraNoFuso, dataValida, diaDaSemana, nomeDia, paraMinutos, TEMAS } from "@aprenda/agenda";
+import { obterAgenda } from "@/lib/agenda";
 
 /** URL pública da foto (miniatura ou grande). Servida por app/f/[nome]/route.ts. */
 export function urlFoto(arquivo: string, tamanho: "p" | "g" = "g"): string {
@@ -79,4 +80,33 @@ export function dadosEstruturados(b: Barbearia, ctx: {
   };
   // Escapa "<" pra o JSON nunca fechar a tag <script> (dado vem do barbeiro).
   return JSON.stringify(dados).replace(/</g, "\\u003c");
+}
+
+/**
+ * Evento de calendário de um horário marcado, a partir do que vem na URL da
+ * confirmação (serviço, profissional, data e hora). Só usa dados públicos da
+ * barbearia: não lê nem expõe agendamentos de ninguém.
+ */
+export function eventoDoHorario(b: Barbearia, sp: { servico?: string; profissional?: string; data?: string; hora?: string }) {
+  const banco = obterAgenda();
+  const servico = banco.servicos(b.id).find((s) => String(s.id) === sp.servico);
+  const prof = banco.profissionais(b.id).find((p) => String(p.id) === sp.profissional);
+  if (!servico || !prof || !sp.data || !dataValida(sp.data) || !sp.hora || !/^([01]\d|2[0-3]):[0-5]\d$/.test(sp.hora)) return undefined;
+  const local = [b.endereco, b.cidade].filter(Boolean).join(", ") || undefined;
+  const site = urlAbsoluta(`/b/${b.slug}`);
+  const evento = {
+    uid: `${b.slug}-${sp.data}-${sp.hora.replace(":", "")}-${prof.id}@agenda`,
+    titulo: `${servico.nome} na ${b.nome}`,
+    descricao: [
+      `${servico.nome} com ${prof.nome}.`,
+      `Precisa remarcar ou cancelar? WhatsApp da barbearia: https://wa.me/${b.telefone}`,
+      ...(site.startsWith("http") ? [site] : []),
+    ].join("\n"),
+    local,
+    inicio: `${sp.data}T${sp.hora}`,
+    duracaoMin: servico.duracaoMin,
+    fuso: b.fuso,
+    lembreteMin: 60,
+  };
+  return { evento, servico, prof };
 }

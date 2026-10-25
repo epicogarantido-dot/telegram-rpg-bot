@@ -707,3 +707,15 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 @keyframes respirar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 @keyframes cor-no-centro { 0%, 30% { filter: grayscale(1); } 45%, 55% { filter: grayscale(0); } 70%, 100% { filter: grayscale(1); } }
 @keyframes traco { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Confirmação: resumo, "Adicionar à minha agenda" e ajuda. */
+.b-confirmado { max-width: 560px; }
+.site-b[data-tema] .b-confirmado h1 { font-size: clamp(2.2rem, 7vw, 3.2rem); margin: 0; }
+.b-resumo-local { display: flex; align-items: center; gap: 6px; color: var(--suave); }
+.b-resumo-local a { color: inherit; text-underline-offset: 4px; }
+.b-lembrete { display: grid; gap: 8px; margin: 28px 0; justify-items: start; }
+.b-lembrete .b-botao { width: 100%; min-height: 52px; }
+.b-lembrete p { margin: 0; color: var(--suave); font-size: 15px; }
+.b-lembrete-outro { font-size: 14px; color: var(--texto); text-underline-offset: 4px; }
+.b-confirmado-ajuda { color: var(--suave); font-size: 15px; border-top: 1px solid var(--borda); padding-top: 20px; }
+.b-confirmado-ajuda a { display: inline-flex; align-items: center; gap: 6px; color: var(--texto); text-underline-offset: 4px; }
