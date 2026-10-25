@@ -1,0 +1,485 @@
+<title>Atlas de Estilos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Barlow+Condensed:ital,wght@0,600;0,800;1,800&family=Bodoni+Moda:ital,wght@0,500;0,800;1,500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Fraunces:ital,wght@0,400;0,800;1,400&family=Jost:wght@300;400;600&family=Libre+Caslon+Text:ital,wght@0,400;1,400&family=Manrope:wght@400;600;800&family=Space+Mono&display=swap">
+<style>
+/* Layout: galeria vertical — cada estilo é uma "prancha": miniatura viva à esquerda, ficha técnica à direita; empilha no celular. */
+:root {
+  --fundo: #f3f2ee;
+  --papel: #ffffff;
+  --tinta: #1c1c1a;
+  --apagado: #66645e;
+  --linha: #dcd9d1;
+  --marca: #1d6b4e;
+  --aviso: #8a2b1c;
+  --aviso-fundo: #fbeee9;
+  --f-titulo: "Fraunces", Georgia, serif;
+  --f-texto: "Manrope", system-ui, sans-serif;
+  --f-mono: "Space Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #161614; --papel: #1f1f1c; --tinta: #ecebe6; --apagado: #a29f97; --linha: #34332f;
+    --marca: #6fcf9f; --aviso: #f3a08f; --aviso-fundo: #2c1813; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fundo: #161614; --papel: #1f1f1c; --tinta: #ecebe6; --apagado: #a29f97; --linha: #34332f;
+  --marca: #6fcf9f; --aviso: #f3a08f; --aviso-fundo: #2c1813; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--fundo); color: var(--tinta); font: 16px/1.6 var(--f-texto);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.pagina { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--f-titulo); font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05; }
+.intro { display: grid; gap: 14px; max-width: 760px; }
+.intro p { margin: 0; color: var(--apagado); font-size: 1.05rem; }
+.regra {
+  display: grid; gap: 6px; padding: 16px 18px; border-radius: 12px;
+  background: var(--aviso-fundo); color: var(--aviso); font-size: 15px;
+}
+.regra strong { font-weight: 800; }
+.indice { display: flex; flex-wrap: wrap; gap: 8px; }
+.indice a {
+  text-decoration: none; color: var(--tinta); font-size: 14px; padding: 6px 12px;
+  border: 1px solid var(--linha); border-radius: 999px; background: var(--papel);
+}
+.indice a:hover, .indice a:focus-visible { border-color: var(--marca); color: var(--marca); }
+:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+
+.prancha {
+  display: grid; gap: 24px; background: var(--papel); border: 1px solid var(--linha);
+  border-radius: 18px; padding: 20px; scroll-margin-top: 16px;
+}
+@media (min-width: 860px) { .prancha { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); padding: 28px; } }
+.ficha { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.ficha h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); }
+.origem { font: 12px var(--f-mono); color: var(--apagado); letter-spacing: 0.04em; }
+.clima { margin: 0; font-size: 1.02rem; }
+.paleta { display: flex; gap: 6px; flex-wrap: wrap; }
+.cor { display: grid; gap: 4px; justify-items: center; font: 11px var(--f-mono); color: var(--apagado); }
+.cor span:first-child { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--linha); }
+dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 15px; }
+dt { font-weight: 700; }
+dd { margin: 0; color: var(--apagado); }
+.nao { font-size: 14px; color: var(--aviso); margin: 0; }
+
+/* ---------- miniaturas: cada uma tem o próprio mundo de cores ---------- */
+.mini {
+  position: relative; overflow: hidden; border-radius: 12px; min-height: 380px;
+  display: flex; flex-direction: column; container-type: inline-size;
+}
+.mini nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 18px; font-size: 11px; }
+.mini .heroi { flex: 1; display: grid; align-content: center; gap: 10px; padding: 12px 22px 18px; }
+.mini h3 { margin: 0; line-height: 1; text-wrap: balance; }
+.mini p { margin: 0; font-size: 13px; max-width: 34ch; }
+.mini .acao { justify-self: start; font-size: 12px; padding: 9px 16px; text-decoration: none; display: inline-block; }
+.fotos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 0 18px 18px; }
+.fotos i { display: block; aspect-ratio: 3 / 4; }
+.preco { font-size: 12px; }
+
+/* 1. Barroco Dourado (Versace) */
+.e1 { background: #0c0b09; color: #f3e6c4; font-family: "Cormorant Garamond", serif; }
+.e1::before { /* moldura ornamental própria: losangos, não a faixa grega */
+  content: ""; position: absolute; inset: 8px; pointer-events: none; border: 1px solid #c9a54b;
+  -webkit-mask: none;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6px, rgb(201 165 75 / .35) 6px 7px) top / 100% 8px no-repeat,
+    repeating-linear-gradient(45deg, transparent 0 6px, rgb(201 165 75 / .35) 6px 7px) bottom / 100% 8px no-repeat;
+}
+.e1 nav { font-family: "Bodoni Moda", serif; letter-spacing: .3em; text-transform: uppercase; color: #c9a54b; justify-content: center; }
+.e1 .heroi { justify-items: center; text-align: center; }
+.e1 h3 { font-family: "Bodoni Moda", serif; font-weight: 800; font-style: italic; font-size: clamp(2rem, 9cqi, 3rem); color: #e8c766; }
+.e1 .acao { background: linear-gradient(180deg, #e8c766, #a8822c); color: #0c0b09; font-family: "Bodoni Moda", serif; letter-spacing: .2em; text-transform: uppercase; }
+.e1 .fotos i { border: 1px solid #c9a54b; background: radial-gradient(circle at 50% 35%, #4a3a1c, #120f09); }
+
+/* 2. Minimal Milanês (Prada) */
+.e2 { background: #ffffff; color: #111; font-family: "Archivo", sans-serif; }
+.e2 nav { border-bottom: 1px solid #111; font-weight: 600; letter-spacing: .02em; }
+.e2 .heroi { align-content: end; }
+.e2 h3 { font-weight: 400; font-size: clamp(1.6rem, 7cqi, 2.4rem); letter-spacing: -.03em; }
+.e2 p { color: #555; }
+.e2 .acao { border: 1px solid #111; color: #111; background: #fff; font-weight: 600; }
+.e2 .fotos { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+.e2 .fotos i:not(:first-child) { aspect-ratio: 3 / 5; }
+.e2 .fotos i:first-child { aspect-ratio: auto; height: 100%; }
+.e2 .fotos i { background: #e7e5e0; }
+.e2 .fotos i:first-child { background: #cfcac0; }
+
+/* 3. Alpino (Moncler) */
+.e3 { background: #f7f8fa; color: #0f1d3a; font-family: "Jost", sans-serif; }
+.e3 .heroi {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 26px, rgb(15 29 58 / .07) 26px 27px),
+    radial-gradient(120% 60% at 50% 0%, #ffffff, #e6eaf1);
+}
+.e3 nav { font-weight: 600; letter-spacing: .25em; text-transform: uppercase; }
+.e3 h3 { font-weight: 300; font-size: clamp(1.9rem, 8.5cqi, 2.8rem); letter-spacing: .02em; }
+.e3 .acao { background: #0f1d3a; color: #fff; border-radius: 999px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
+.e3 .fotos i { border-radius: 16px; background: linear-gradient(160deg, #dfe5ef, #9aa9c4); }
+
+/* 4. Pista (Lamborghini) */
+.e4 { background: #0a0a0a; color: #f4f4f4; font-family: "Barlow Condensed", sans-serif; }
+.e4 nav { text-transform: uppercase; font-weight: 600; letter-spacing: .08em; font-size: 13px; }
+.e4 h3 { font-weight: 800; font-style: italic; text-transform: uppercase; font-size: clamp(2.6rem, 13cqi, 4rem); letter-spacing: -.01em; }
+.e4 p { color: #a8a8a8; font-family: "Manrope", sans-serif; }
+.e4 .acao {
+  background: #d7ff1e; color: #0a0a0a; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 13px;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+.e4 .fotos i { clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%); background: linear-gradient(200deg, #2a2a2a, #111); }
+
+/* 5. Atelier Real (Rolls-Royce) */
+.e5 { background: radial-gradient(90% 70% at 50% 30%, #3b2342, #120b14); color: #f5f0f6; font-family: "Jost", sans-serif; }
+.e5 nav { letter-spacing: .3em; text-transform: uppercase; font-weight: 300; border-bottom: 1px solid rgb(255 255 255 / .25); }
+.e5 .heroi { justify-items: center; text-align: center; }
+.e5 h3 { font-weight: 300; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(1.4rem, 6.5cqi, 2.1rem); }
+.e5 .acao { background: #fff; color: #120b14; border-radius: 999px; letter-spacing: .25em; text-transform: uppercase; padding: 10px 26px; }
+.e5 .fotos i { background: linear-gradient(180deg, rgb(255 255 255 / .1), rgb(255 255 255 / .02)); border: 1px solid rgb(255 255 255 / .18); }
+
+/* 6. Preto e Branco Parisiense (Chanel) */
+.e6 { background: #fff; color: #000; font-family: "Libre Caslon Text", serif; }
+.e6 nav { justify-content: center; font-family: "Jost", sans-serif; letter-spacing: .4em; font-weight: 600; text-transform: uppercase; }
+.e6 .heroi { background: #000; color: #fff; justify-items: center; text-align: center; margin: 0 18px 14px; }
+.e6 h3 { font-weight: 400; font-size: clamp(1.7rem, 7.5cqi, 2.5rem); }
+.e6 h3 em { font-style: italic; }
+.e6 .acao { border: 1px solid #fff; color: #fff; font-family: "Jost", sans-serif; letter-spacing: .3em; text-transform: uppercase; }
+.e6 .fotos i { background: #ececec; outline: 1px solid #000; outline-offset: -6px; }
+
+/* 7. Couro e Sela (Hermès) */
+.e7 { background: #f4ead9; color: #3a2414; font-family: "Fraunces", serif; }
+.e7 nav { font-family: "Manrope", sans-serif; font-weight: 600; }
+.e7 h3 { font-weight: 800; font-size: clamp(1.9rem, 8.5cqi, 2.8rem); color: #c2531b; }
+.e7 .acao { background: #c2531b; color: #fff8ee; border-radius: 6px; font-family: "Manrope", sans-serif; font-weight: 800; }
+.e7 .fotos i { border-radius: 4px; background: linear-gradient(135deg, #8a4a24, #c98a52); box-shadow: inset 0 0 0 2px #f4ead9, inset 0 0 0 3px rgb(58 36 20 / .35); }
+
+/* 8. Engenharia (Porsche) */
+.e8 { background: #eeeff0; color: #101215; font-family: "Manrope", sans-serif; }
+.e8 nav { font-family: "Space Mono", monospace; font-size: 10px; text-transform: uppercase; }
+.e8 .heroi { grid-template-columns: 1fr; border-top: 1px solid #c8cbd0; border-bottom: 1px solid #c8cbd0; margin: 0 18px 14px; padding-inline: 0; }
+.e8 h3 { font-weight: 800; font-size: clamp(1.8rem, 8cqi, 2.6rem); letter-spacing: -.035em; }
+.e8 .acao { background: #101215; color: #fff; border-radius: 4px; font-weight: 600; }
+.e8 .fotos i { border-radius: 4px; background: linear-gradient(180deg, #c9ccd1, #8e939b); }
+.e8 .preco { font-family: "Space Mono", monospace; }
+
+/* 9. Boticário (Aesop) */
+.e9 { background: #e8e3d6; color: #2b2a22; font-family: "Libre Caslon Text", serif; }
+.e9 nav { font-family: "Manrope", sans-serif; font-size: 12px; }
+.e9 h3 { font-weight: 400; font-size: clamp(1.5rem, 6.5cqi, 2.1rem); line-height: 1.15; }
+.e9 p { font-family: "Manrope", sans-serif; color: #5d5a4c; }
+.e9 .acao { border-bottom: 1px solid #2b2a22; padding: 4px 0; color: #2b2a22; font-family: "Manrope", sans-serif; font-weight: 600; }
+.e9 .fotos i { background: linear-gradient(180deg, #6f6a4d, #3e3b2a); border-radius: 2px 2px 40% 40% / 2px 2px 14% 14%; }
+
+/* 10. Retrô Eclético (Gucci) */
+.e10 { background: #12392b; color: #f2e3c2; font-family: "Fraunces", serif; }
+.e10 nav { font-family: "Barlow Condensed", sans-serif; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; color: #e1b54b; }
+.e10 .heroi { background: radial-gradient(circle at 80% 30%, rgb(176 46 38 / .55), transparent 55%); }
+.e10 h3 { font-weight: 800; font-style: italic; font-size: clamp(2rem, 9cqi, 3rem); color: #e1b54b; }
+.e10 .acao { background: #b02e26; color: #f2e3c2; border-radius: 999px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 14px; }
+.e10 .fotos i { border-radius: 50% 50% 8px 8px; border: 2px solid #e1b54b; background: linear-gradient(180deg, #b02e26, #5e1712); }
+
+.fecho { display: grid; gap: 10px; background: var(--papel); border: 1px solid var(--linha); border-radius: 18px; padding: 24px; }
+.fecho h2 { font-size: 1.5rem; }
+.fecho ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .indice a { transition: border-color .15s, color .15s; } }
+</style>
+
+<main class="pagina">
+  <header class="intro">
+    <h1>Atlas de Estilos</h1>
+    <p>Dez direções visuais pros sites das barbearias, cada uma inspirada no jeito de uma grande marca se apresentar: cor, tipografia, ritmo e clima. Todas as fontes são gratuitas (Google Fonts) e todos os desenhos são nossos.</p>
+    <div class="regra">
+      <strong>Copiamos o clima, nunca o símbolo.</strong>
+      <span>Logo, nome, monograma e padrões registrados (faixa grega e Medusa da Versace, triângulo da Prada, touro da Lamborghini, "RR" e a estatueta da Rolls-Royce, listra verde-vermelha da Gucci, o laranja com a caixa da Hermès) são marcas registradas. No site de um cliente, isso vira processo.</span>
+    </div>
+    <nav class="indice" aria-label="Estilos">
+      <a href="#barroco">Barroco Dourado</a><a href="#milanes">Minimal Milanês</a><a href="#alpino">Alpino</a>
+      <a href="#pista">Pista</a><a href="#atelier">Atelier Real</a><a href="#parisiense">Preto e Branco</a>
+      <a href="#sela">Couro e Sela</a><a href="#engenharia">Engenharia</a><a href="#boticario">Boticário</a><a href="#retro">Retrô Eclético</a>
+    </nav>
+  </header>
+
+  <!-- 1 -->
+  <section class="prancha" id="barroco" aria-labelledby="t1">
+    <div class="mini e1" aria-hidden="true">
+      <nav>Casa Aurum · Barbearia</nav>
+      <div class="heroi"><h3>A arte da navalha</h3><p>Barba quente, toalha e acabamento à mão desde 1998.</p><span class="acao">Reservar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: VERSACE</span>
+      <h2 id="t1">Barroco Dourado</h2>
+      <p class="clima">Opulência sem medo: preto profundo, ouro, serifa de alto contraste e molduras ornamentais.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#0c0b09"></span><span>#0C0B09</span></span>
+        <span class="cor"><span style="background:#c9a54b"></span><span>#C9A54B</span></span>
+        <span class="cor"><span style="background:#e8c766"></span><span>#E8C766</span></span>
+        <span class="cor"><span style="background:#f3e6c4"></span><span>#F3E6C4</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Bodoni Moda (títulos), Cormorant Garamond (texto)</dd>
+        <dt>Layout</dt><dd>Centralizado, simétrico, molduras e cantoneiras</dd>
+        <dt>Movimento</dt><dd>Brilho dourado que passa pelo título ao carregar</dd>
+        <dt>Combina com</dt><dd>Barbearia clássica premium, barba com toalha quente</dd>
+      </dl>
+      <p class="nao">Não usar: faixa grega, Medusa, nome. A moldura aqui é um padrão de losangos nosso.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="prancha" id="milanes" aria-labelledby="t2">
+    <div class="mini e2" aria-hidden="true">
+      <nav><span>NORTE</span><span>Cortes&nbsp;&nbsp;Agenda&nbsp;&nbsp;Sobre</span></nav>
+      <div class="heroi"><h3>Corte preciso. Nada além.</h3><p>Uma cadeira, um barbeiro, horário marcado.</p><span class="acao">Agendar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: PRADA</span>
+      <h2 id="t2">Minimal Milanês</h2>
+      <p class="clima">Silêncio intelectual: branco, preto, muito espaço vazio e fotos grandes que fazem o trabalho.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#ffffff"></span><span>#FFFFFF</span></span>
+        <span class="cor"><span style="background:#111111"></span><span>#111111</span></span>
+        <span class="cor"><span style="background:#e7e5e0"></span><span>#E7E5E0</span></span>
+        <span class="cor"><span style="background:#555555"></span><span>#555555</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Archivo (tudo, variando só o peso)</dd>
+        <dt>Layout</dt><dd>Grade editorial assimétrica, texto pequeno alinhado à esquerda</dd>
+        <dt>Movimento</dt><dd>Quase nenhum; troca de foto em corte seco</dd>
+        <dt>Combina com</dt><dd>Barbearia de bairro nobre, estética "menos é mais"</dd>
+      </dl>
+      <p class="nao">Não usar: triângulo metálico, nome.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="prancha" id="alpino" aria-labelledby="t3">
+    <div class="mini e3" aria-hidden="true">
+      <nav><span>Cume</span><span>Agendar</span></nav>
+      <div class="heroi"><h3>Frio lá fora. Corte em dia.</h3><p>Ambiente climatizado, café e barba aparada no capricho.</p><span class="acao">Marcar horário</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: MONCLER</span>
+      <h2 id="t3">Alpino</h2>
+      <p class="clima">Luxo técnico e limpo: branco neve, azul-marinho, texturas acolchoadas e formas arredondadas.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#f7f8fa"></span><span>#F7F8FA</span></span>
+        <span class="cor"><span style="background:#0f1d3a"></span><span>#0F1D3A</span></span>
+        <span class="cor"><span style="background:#9aa9c4"></span><span>#9AA9C4</span></span>
+        <span class="cor"><span style="background:#dfe5ef"></span><span>#DFE5EF</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Jost (geométrica, parente gratuita da Futura)</dd>
+        <dt>Layout</dt><dd>Faixas horizontais com textura de costura, botões em pílula</dd>
+        <dt>Movimento</dt><dd>Parallax suave nas fotos</dd>
+        <dt>Combina com</dt><dd>Barbearia moderna, público jovem e família</dd>
+      </dl>
+      <p class="nao">Não usar: escudo com galo, nome.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="prancha" id="pista" aria-labelledby="t4">
+    <div class="mini e4" aria-hidden="true">
+      <nav><span>Box 7</span><span>Menu ☰</span></nav>
+      <div class="heroi"><h3>Degradê em alta velocidade</h3><p>Navalhado, freestyle e pigmentação. Sem enrolação.</p><span class="acao">Agendar já</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: LAMBORGHINI</span>
+      <h2 id="t4">Pista</h2>
+      <p class="clima">Agressivo e esportivo: preto, letras condensadas enormes em itálico, cortes em ângulo e uma cor de neon.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#0a0a0a"></span><span>#0A0A0A</span></span>
+        <span class="cor"><span style="background:#d7ff1e"></span><span>#D7FF1E</span></span>
+        <span class="cor"><span style="background:#2a2a2a"></span><span>#2A2A2A</span></span>
+        <span class="cor"><span style="background:#f4f4f4"></span><span>#F4F4F4</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Barlow Condensed (títulos), Manrope (texto)</dd>
+        <dt>Layout</dt><dd>Herói de tela cheia com vídeo, botões e fotos com cantos cortados</dd>
+        <dt>Movimento</dt><dd>Título entra deslizando, como carro na reta</dd>
+        <dt>Combina com</dt><dd>Barbearia de degradê e freestyle, público jovem</dd>
+      </dl>
+      <p class="nao">Não usar: touro, escudo, nome. Hexágonos e ângulos são formas genéricas, podem.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="prancha" id="atelier" aria-labelledby="t5">
+    <div class="mini e5" aria-hidden="true">
+      <nav><span>☰ Menu</span><span>Salão Imperial</span><span>Contato</span></nav>
+      <div class="heroi"><h3>Atendimento sob reserva</h3><p>Uma hora inteira só sua, com o mesmo barbeiro de sempre.</p><span class="acao">Reservar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: ROLLS-ROYCE</span>
+      <h2 id="t5">Atelier Real</h2>
+      <p class="clima">Silêncio e cerimônia: roxo-noite, letras finas bem espaçadas, tudo centralizado e cinematográfico.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#120b14"></span><span>#120B14</span></span>
+        <span class="cor"><span style="background:#3b2342"></span><span>#3B2342</span></span>
+        <span class="cor"><span style="background:#f5f0f6"></span><span>#F5F0F6</span></span>
+        <span class="cor"><span style="background:#ffffff"></span><span>#FFFFFF</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Jost Light (títulos espaçados), Jost (texto)</dd>
+        <dt>Layout</dt><dd>Vídeo em tela cheia, texto central, botão branco em pílula</dd>
+        <dt>Movimento</dt><dd>Vídeo lento de detalhe (tesoura, espuma, navalha)</dd>
+        <dt>Combina com</dt><dd>Barbearia exclusiva, preço alto, hora marcada</dd>
+      </dl>
+      <p class="nao">Não usar: monograma "RR", estatueta, nome.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="prancha" id="parisiense" aria-labelledby="t6">
+    <div class="mini e6" aria-hidden="true">
+      <nav>Maison Lâmina</nav>
+      <div class="heroi"><h3>O clássico <em>nunca</em> sai de moda</h3><span class="acao">Agendar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: CHANEL</span>
+      <h2 id="t6">Preto e Branco Parisiense</h2>
+      <p class="clima">Elegância absoluta em duas cores: serifa clássica, blocos pretos sólidos e muito contraste.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#000000"></span><span>#000000</span></span>
+        <span class="cor"><span style="background:#ffffff"></span><span>#FFFFFF</span></span>
+        <span class="cor"><span style="background:#ececec"></span><span>#ECECEC</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Libre Caslon (títulos), Jost espaçada (menus e botões)</dd>
+        <dt>Layout</dt><dd>Blocos alternados preto/branco, fotos em preto e branco</dd>
+        <dt>Movimento</dt><dd>Fotos ganham cor só quando o dedo passa</dd>
+        <dt>Combina com</dt><dd>Barbearia atemporal, terno e gravata, casamentos</dd>
+      </dl>
+      <p class="nao">Não usar: dois "C" entrelaçados, matelassê com corrente, nome.</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="prancha" id="sela" aria-labelledby="t7">
+    <div class="mini e7" aria-hidden="true">
+      <nav><span>Oficina do Corte</span><span>Agenda</span></nav>
+      <div class="heroi"><h3>Feito à mão, como antigamente</h3><p>Couro, madeira e tesoura afiada. Cada corte é uma peça única.</p><span class="acao">Agendar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: HERMÈS</span>
+      <h2 id="t7">Couro e Sela</h2>
+      <p class="clima">Artesanal e quente: tons de couro, laranja queimado, costuras aparentes e serifa calorosa.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#f4ead9"></span><span>#F4EAD9</span></span>
+        <span class="cor"><span style="background:#c2531b"></span><span>#C2531B</span></span>
+        <span class="cor"><span style="background:#8a4a24"></span><span>#8A4A24</span></span>
+        <span class="cor"><span style="background:#3a2414"></span><span>#3A2414</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Fraunces (títulos), Manrope (texto)</dd>
+        <dt>Layout</dt><dd>Cartões com borda de costura, ilustrações de ferramentas</dd>
+        <dt>Movimento</dt><dd>Linha de costura que se desenha ao rolar</dd>
+        <dt>Combina com</dt><dd>Barbearia vintage, cadeira de couro, ambiente rústico</dd>
+      </dl>
+      <p class="nao">Não usar: carruagem com cavalo, a caixa laranja característica, nome.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="prancha" id="engenharia" aria-labelledby="t8">
+    <div class="mini e8" aria-hidden="true">
+      <nav><span>CORTE/911</span><span>AGENDA · PREÇOS</span></nav>
+      <div class="heroi"><h3>Precisão em cada milímetro</h3><p>Máquina calibrada, tempo medido, resultado repetível.</p><span class="acao">Agendar horário</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: PORSCHE</span>
+      <h2 id="t8">Engenharia</h2>
+      <p class="clima">Precisão alemã: cinzas metálicos, grade rígida, números técnicos e nada fora do lugar.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#eeeff0"></span><span>#EEEFF0</span></span>
+        <span class="cor"><span style="background:#101215"></span><span>#101215</span></span>
+        <span class="cor"><span style="background:#8e939b"></span><span>#8E939B</span></span>
+        <span class="cor"><span style="background:#c9ccd1"></span><span>#C9CCD1</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Manrope (tudo), Space Mono (números e ficha técnica)</dd>
+        <dt>Layout</dt><dd>Grade com linhas finas, "ficha técnica" de cada serviço (tempo, máquina, altura)</dd>
+        <dt>Movimento</dt><dd>Contadores que sobem: anos de casa, cortes feitos</dd>
+        <dt>Combina com</dt><dd>Barbearia moderna e organizada, cliente executivo</dd>
+      </dl>
+      <p class="nao">Não usar: brasão, escrita do nome, silhueta do carro.</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="prancha" id="boticario" aria-labelledby="t9">
+    <div class="mini e9" aria-hidden="true">
+      <nav><span>Erva &amp; Navalha</span><span>Rituais · Agenda</span></nav>
+      <div class="heroi"><h3>Barba, pele e um momento de calma</h3><p>Óleos naturais, toalha quente e conversa boa.</p><span class="acao">Agendar um ritual</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: AESOP</span>
+      <h2 id="t9">Boticário</h2>
+      <p class="clima">Calmo e sensorial: tons de terra, serifa pequena, fotos de produtos e ingredientes, frases curtas.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#e8e3d6"></span><span>#E8E3D6</span></span>
+        <span class="cor"><span style="background:#2b2a22"></span><span>#2B2A22</span></span>
+        <span class="cor"><span style="background:#6f6a4d"></span><span>#6F6A4D</span></span>
+        <span class="cor"><span style="background:#5d5a4c"></span><span>#5D5A4C</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Libre Caslon (títulos), Manrope (texto)</dd>
+        <dt>Layout</dt><dd>Muito espaço, colunas estreitas, serviços como "rituais"</dd>
+        <dt>Movimento</dt><dd>Esmaecimento lento entre fotos</dd>
+        <dt>Combina com</dt><dd>Barbearia com spa, cuidado de barba e pele, venda de produtos</dd>
+      </dl>
+      <p class="nao">Não usar: nome, rótulos dos frascos.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="prancha" id="retro" aria-labelledby="t10">
+    <div class="mini e10" aria-hidden="true">
+      <nav><span>Barbearia Rubi</span><span>Agenda</span></nav>
+      <div class="heroi"><h3>Estilo com personalidade</h3><p>Do clássico ao ousado, com trilha de vinil tocando.</p><span class="acao">Agendar</span></div>
+      <div class="fotos"><i></i><i></i><i></i></div>
+    </div>
+    <div class="ficha">
+      <span class="origem">INSPIRAÇÃO: GUCCI</span>
+      <h2 id="t10">Retrô Eclético</h2>
+      <p class="clima">Maximalismo anos 70: verde-garrafa, vermelho, dourado, itálicos e formas em arco.</p>
+      <div class="paleta">
+        <span class="cor"><span style="background:#12392b"></span><span>#12392B</span></span>
+        <span class="cor"><span style="background:#b02e26"></span><span>#B02E26</span></span>
+        <span class="cor"><span style="background:#e1b54b"></span><span>#E1B54B</span></span>
+        <span class="cor"><span style="background:#f2e3c2"></span><span>#F2E3C2</span></span>
+      </div>
+      <dl>
+        <dt>Fontes</dt><dd>Fraunces itálica (títulos), Barlow Condensed (menus)</dd>
+        <dt>Layout</dt><dd>Fotos em arco, mistura de texturas, colagem</dd>
+        <dt>Movimento</dt><dd>Fotos em arco que trocam como slides de vitrine</dd>
+        <dt>Combina com</dt><dd>Barbearia criativa e colorida, com música e bar</dd>
+      </dl>
+      <p class="nao">Não usar: listra verde-vermelha-verde, "GG", nome. O verde e o vermelho sozinhos, em tons nossos, podem.</p>
+    </div>
+  </section>
+
+  <section class="fecho" aria-labelledby="tf">
+    <h2 id="tf">Como isso vira produto</h2>
+    <ol>
+      <li>Cada estilo vira um <strong>tema</strong> no site das barbearias: o barbeiro escolhe um na hora do cadastro e troca quando quiser.</li>
+      <li>O tema muda só cores, fontes, formas e movimento. Fotos, serviços e agenda são os mesmos em todos.</li>
+      <li>Começamos com 3 temas bem diferentes entre si e liberamos os outros aos poucos (ou como vantagem do plano pago).</li>
+    </ol>
+  </section>
+</main>
