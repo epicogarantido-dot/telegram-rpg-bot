@@ -69,7 +69,7 @@ Pronto (MVP, SQLite local):
 
 Próximos:
 1. Cliente cancelar/remarcar pelo link (token único por agendamento).
-2. Lembrete no dia pelo bot (o cliente pediu ao agendar; volume baixo e esperado, diferente de prospecção).
+2. Agendar pelo bot e lembrete 1 h antes (plano em `docs/bot-barbearias.md`).
 3. Bloqueio de horário avulso (folga, médico).
 4. Perfil público com fotos de cortes — semente da rede social de barbeiros.
 
