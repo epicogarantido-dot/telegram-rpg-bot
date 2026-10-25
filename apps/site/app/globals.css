@@ -314,3 +314,43 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 @media (prefers-reduced-motion: reduce) {
   .pulso, .girando { animation: none; }
 }
+
+/* ---------- parallax (CSS puro, sem JavaScript) ----------
+   As camadas andam em velocidades diferentes conforme a rolagem: o brilho
+   do topo fica pra trás, o texto sobe um pouco mais rápido e o celular da
+   vitrine atravessa a seção mais devagar que o texto ao lado. Navegador sem
+   suporte a animação por rolagem simplesmente mostra tudo parado. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .heroi::before {
+      animation: parallax-fundo linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 700px;
+    }
+    .heroi > * {
+      animation: parallax-texto linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 600px;
+    }
+    .demo-palco .celular {
+      animation: parallax-celular linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+    .demo-grade .demo-foto:nth-child(odd) {
+      animation: parallax-fotos linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+@keyframes parallax-fundo { to { transform: translateY(220px) scale(1.15); } }
+@keyframes parallax-texto { to { transform: translateY(-48px); } }
+@keyframes parallax-celular {
+  from { transform: translateY(90px) rotate(-5deg); }
+  to { transform: translateY(-90px) rotate(4deg); }
+}
+@keyframes parallax-fotos {
+  from { transform: translateY(6px); }
+  to { transform: translateY(-6px); }
+}
