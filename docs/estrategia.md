@@ -70,7 +70,7 @@ Pronto (MVP, SQLite local):
 Próximos:
 1. ~~Cliente cancelar/remarcar pelo link~~ — feito.
 2. ~~Agendar pelo bot e lembrete 1 h antes~~ — engavetado: o produto das barbearias não usa WhatsApp (`docs/bot-barbearias.md`).
-3. Bloqueio de horário avulso (folga, médico).
+3. ~~Bloqueio de horário avulso (folga, médico)~~ — feito: "Bloquear um horário" no painel.
 - ✅ Agendar em 3 passos, com "qualquer um" e vagas somando a equipe.
 - ✅ Dono edita serviços (nome, tempo, preço) e profissionais; escolhe intervalo dos horários e se mostra preços.
 - ✅ Ordem de chegada: site mostra aberto/fechado e a fila com espera estimada; "Fechar hoje" no painel.

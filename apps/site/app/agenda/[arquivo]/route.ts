@@ -33,6 +33,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ arquivo
     fuso: b.fuso,
     lembreteMin: 15,
   }));
+  // Folgas também aparecem, pra ninguém marcar compromisso por cima sem querer.
+  for (const f of banco.bloqueiosEntre(b.id, somarDias(hoje, -30), somarDias(hoje, 90), dono.profissionalId)) {
+    const min = (h: string) => Number(h.slice(11, 13)) * 60 + Number(h.slice(14, 16));
+    eventos.push({
+      uid: `folga-${f.id}@${b.slug}`,
+      titulo: `Folga${f.profissional && !prof ? ` · ${f.profissional.split(" ")[0]}` : ""}${f.motivo ? ` (${f.motivo})` : ""}`,
+      descricao: "Bloqueado no painel: o site não oferece horários nesse período.",
+      inicio: f.inicio,
+      duracaoMin: Math.max(1, min(f.fim) - min(f.inicio)),
+      fuso: b.fuso,
+      lembreteMin: 0,
+    });
+  }
   const nome = prof ? `${prof.nome.split(" ")[0]} · ${b.nome}` : `Agenda · ${b.nome}`;
   return new Response(gerarCalendario(nome, eventos), {
     headers: {

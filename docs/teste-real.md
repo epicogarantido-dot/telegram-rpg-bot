@@ -24,6 +24,7 @@ um seu, como **barbeiro**, e outro (de alguém da família) como **cliente**.
 12. Cancelar um horário pelo painel e usar "Avisar no WhatsApp".
 13. Se atende por ordem de chegada: mexer na fila (+/−) e ver no site do outro celular.
 14. "Fechar hoje" e ver o site mostrar "Fechado hoje".
+15. "Bloquear um horário" (ex.: 14h–16h de um profissional) e conferir que some do site só pra ele.
 
 ## Anote
 - O que demorou, confundiu ou deu erro (tire print).

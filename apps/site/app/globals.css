@@ -458,3 +458,16 @@ details.confirmar p { margin: 0; }
 /* Horário cancelado: só os dados ficam apagados; o aviso pra avisar o cliente fica legível. */
 .lead.cancelado { opacity: 1; }
 .lead.cancelado > :first-child { opacity: 0.55; }
+
+/* ---------- folgas (painel) ---------- */
+.folgas { display: grid; gap: 10px; margin: 8px 0 20px; }
+.folga { display: grid; gap: 10px; border-left: 4px solid var(--suave); }
+.folga p { margin: 0; }
+.folga svg { vertical-align: -2px; }
+.folga-conflitos { padding: 10px 12px; border-radius: var(--raio-p); background: var(--erro-fundo); border: 1px solid var(--erro-borda); font-size: 15px; }
+.folga-conflitos ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 6px; }
+details.bloquear-horario > summary { list-style: none; display: inline-flex; }
+details.bloquear-horario > summary::-webkit-details-marker { display: none; }
+details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
+.linha-horas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bloquear-horario:has(input[name="diaTodo"]:checked) .linha-horas { display: none; }

@@ -99,6 +99,16 @@ export interface HorarioCliente extends Agendamento {
   /** Já começou ou passou: não dá mais pra cancelar nem remarcar pelo link. */
   passou: boolean;
 }
+/** Folga em parte do dia (médico, compromisso): some do site como se estivesse ocupado. */
+export interface Bloqueio {
+  id: number;
+  /** Sem profissional = vale pra barbearia toda. */
+  profissionalId?: number;
+  profissional?: string;
+  inicio: DataHora;
+  fim: DataHora;
+  motivo?: string;
+}
 export interface Usuario { id: number; barbeariaId: number; nome: string; email: string }
 
 export class ErroAgenda extends Error {}
@@ -250,6 +260,13 @@ export class BancoAgenda {
       -- Limites contra abuso (agendar em massa, chutar senha). Chave já vem com o tipo e um hash do IP/e-mail.
       CREATE TABLE IF NOT EXISTS tentativas (chave TEXT NOT NULL, em TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS tentativas_chave ON tentativas(chave, em);
+      CREATE TABLE IF NOT EXISTS bloqueios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        profissional_id INTEGER REFERENCES profissionais(id),
+        inicio TEXT NOT NULL, fim TEXT NOT NULL, motivo TEXT, criado_em TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS bloqueios_dia ON bloqueios(barbearia_id, inicio);
       -- Números que o barbeiro bloqueou (trote, quem marca e não vem).
       CREATE TABLE IF NOT EXISTS telefones_bloqueados (
         barbearia_id INTEGER NOT NULL REFERENCES barbearias(id), telefone TEXT NOT NULL, em TEXT NOT NULL,
@@ -479,7 +496,11 @@ export class BancoAgenda {
     const servico = this.servicos(barbeariaId, true).find((s) => s.id === servicoId);
     if (!b || !servico || b.atendimento === "chegada") return [];
     if (b.fechadoEm === data) return [];
-    const ocupados = this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado" && a.id !== ignorarId);
+    const ocupados = [
+      ...this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado" && a.id !== ignorarId),
+      // Folgas: as da barbearia toda e as deste profissional.
+      ...this.bloqueiosDoDia(barbeariaId, data).filter((x) => x.profissionalId === undefined || x.profissionalId === profissionalId),
+    ];
     return horariosLivres({
       data,
       expediente: this.expedientes(barbeariaId).get(diaDaSemana(data)),
@@ -551,6 +572,49 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  // ---------- folga em parte do dia ----------
+
+  bloqueiosDoDia(barbeariaId: number, data: Data): Bloqueio[] {
+    const linhas = this.db.prepare(`SELECT x.id, x.profissional_id AS profissionalId, p.nome AS profissional, x.inicio, x.fim, x.motivo
+      FROM bloqueios x LEFT JOIN profissionais p ON p.id = x.profissional_id
+      WHERE x.barbearia_id = ? AND x.inicio LIKE ? ORDER BY x.inicio`).all(barbeariaId, `${data}%`) as Record<string, unknown>[];
+    return linhas.map((l) => ({ ...l, profissionalId: l.profissionalId ?? undefined, profissional: l.profissional ?? undefined, motivo: l.motivo ?? undefined })) as Bloqueio[];
+  }
+
+  /**
+   * Bloqueia um período de um dia (pra todos ou um profissional). Não cancela
+   * ninguém: devolve os horários já marcados nesse período pro barbeiro decidir.
+   */
+  bloquearPeriodo(barbeariaId: number, dados: { data: Data; de: string; ate: string; profissionalId?: number; motivo?: string }): { id: number; conflitos: Agendamento[] } {
+    const hora = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.data) || !hora.test(dados.de) || !hora.test(dados.ate)) throw new ErroAgenda("Dia ou horário inválido.");
+    if (paraMinutos(dados.de) >= paraMinutos(dados.ate)) throw new ErroAgenda("O fim precisa ser depois do começo.");
+    if (dados.profissionalId !== undefined && !this.profissionais(barbeariaId).some((p) => p.id === dados.profissionalId)) {
+      throw new ErroAgenda("Profissional não encontrado.");
+    }
+    const inicio = `${dados.data}T${dados.de}`;
+    const fim = `${dados.data}T${dados.ate}`;
+    const r = this.db.prepare("INSERT INTO bloqueios (barbearia_id, profissional_id, inicio, fim, motivo, criado_em) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(barbeariaId, dados.profissionalId ?? null, inicio, fim, dados.motivo?.trim().slice(0, 60) || null, new Date().toISOString());
+    const conflitos = this.agendamentosDoDia(barbeariaId, dados.data, dados.profissionalId)
+      .filter((a) => a.status === "confirmado" && a.inicio < fim && a.fim > inicio);
+    return { id: Number(r.lastInsertRowid), conflitos };
+  }
+
+  removerBloqueio(barbeariaId: number, id: number): void {
+    this.db.prepare("DELETE FROM bloqueios WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  /** Folgas num intervalo (pro calendário do barbeiro). */
+  bloqueiosEntre(barbeariaId: number, desde: Data, ate: Data, profissionalId?: number): Bloqueio[] {
+    const linhas = this.db.prepare(`SELECT x.id, x.profissional_id AS profissionalId, p.nome AS profissional, x.inicio, x.fim, x.motivo
+      FROM bloqueios x LEFT JOIN profissionais p ON p.id = x.profissional_id
+      WHERE x.barbearia_id = ? AND x.inicio >= ? AND x.inicio < ?
+        ${profissionalId ? "AND (x.profissional_id IS NULL OR x.profissional_id = ?)" : ""}
+      ORDER BY x.inicio`).all(barbeariaId, desde, `${ate}T99`, ...(profissionalId ? [profissionalId] : [])) as Record<string, unknown>[];
+    return linhas.map((l) => ({ ...l, profissionalId: l.profissionalId ?? undefined, profissional: l.profissional ?? undefined, motivo: l.motivo ?? undefined })) as Bloqueio[];
   }
 
   // ---------- travas contra abuso ----------

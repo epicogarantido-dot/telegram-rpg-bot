@@ -580,3 +580,57 @@ describe("travas contra abuso", () => {
     expect(b.contarTentativas("outra", 60)).toBe(0);
   });
 });
+
+describe("folga em parte do dia", () => {
+  function cenario() {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    b.adicionarProfissional(a.id, "Beto");
+    const [p1, p2] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    const agora = new Date();
+    const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
+    const dia = Array.from({ length: 10 }, (_, i) => somarDias(hoje, i + 1)).find((d) => b.expedientes(a.id).has(diaDaSemana(d)))!;
+    const livres = (p: number) => b.horariosLivres(a.id, p, s!.id, dia, agora);
+    return { b, a, o, p1: p1!, p2: p2!, s: s!, dia, agora, livres };
+  }
+
+  it("folga de um profissional some só da agenda dele", () => {
+    const { b, a, p1, p2, dia, livres } = cenario();
+    expect(livres(p1.id)).toContain("14:00");
+    b.bloquearPeriodo(a.id, { data: dia, de: "13:00", ate: "15:00", profissionalId: p1.id, motivo: "Médico" });
+    expect(livres(p1.id)).not.toContain("14:00");
+    expect(livres(p1.id)).not.toContain("13:00");
+    expect(livres(p1.id)).toContain("15:00");
+    expect(livres(p2.id)).toContain("14:00");
+    expect(b.bloqueiosDoDia(a.id, dia)).toMatchObject([{ motivo: "Médico", profissional: p1.nome, inicio: `${dia}T13:00`, fim: `${dia}T15:00` }]);
+  });
+
+  it("folga da barbearia toda vale pra todos; remover devolve os horários", () => {
+    const { b, a, p1, p2, dia, livres } = cenario();
+    const { id } = b.bloquearPeriodo(a.id, { data: dia, de: "00:00", ate: "23:59" });
+    expect(livres(p1.id)).toEqual([]);
+    expect(livres(p2.id)).toEqual([]);
+    b.removerBloqueio(a.id, id);
+    expect(livres(p1.id).length).toBeGreaterThan(0);
+  });
+
+  it("avisa quem já estava marcado no período, sem cancelar", () => {
+    const { b, a, p1, s, dia, agora } = cenario();
+    b.agendar({ barbeariaId: a.id, profissionalId: p1.id, servicoId: s.id, data: dia, hora: "14:30", clienteNome: "Lucas", clienteTelefone: "5519998765432", agora });
+    const { conflitos } = b.bloquearPeriodo(a.id, { data: dia, de: "14:00", ate: "16:00", profissionalId: p1.id });
+    expect(conflitos.map((c) => c.clienteNome)).toEqual(["Lucas"]);
+    expect(conflitos[0]!.status).toBe("confirmado");
+  });
+
+  it("valida horário e isola barbearias", () => {
+    const { b, a, o, p1, dia } = cenario();
+    expect(() => b.bloquearPeriodo(a.id, { data: dia, de: "15:00", ate: "14:00" })).toThrow(/depois/);
+    expect(() => b.bloquearPeriodo(a.id, { data: dia, de: "25:00", ate: "26:00" })).toThrow(ErroAgenda);
+    expect(() => b.bloquearPeriodo(o.id, { data: dia, de: "10:00", ate: "11:00", profissionalId: p1.id })).toThrow(/Profissional/);
+    const { id } = b.bloquearPeriodo(a.id, { data: dia, de: "10:00", ate: "11:00" });
+    b.removerBloqueio(o.id, id);
+    expect(b.bloqueiosDoDia(a.id, dia)).toHaveLength(1);
+  });
+});
