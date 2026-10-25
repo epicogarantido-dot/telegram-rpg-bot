@@ -1,80 +1,194 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CalendarCheck, GraduationCap, MessagesSquare, Scissors } from "lucide-react";
+import { ArrowRight, BellRing, CalendarCheck, CalendarClock, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
+import { carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "@/lib/painel";
-import { DemoBarbearia } from "@/componentes/DemoBarbearia";
+import { reais } from "@/lib/agenda";
 
 export const metadata = {
-  title: "Comunidade para barbeiros",
-  description: "Comunidade gratuita para barbeiros: dicas para lotar a agenda, cursos gratuitos e app de agendamento.",
+  title: "Site e agenda online para barbearias",
+  description: "Seu cliente vê seus cortes, vê os horários livres e marca sozinho. Seis estilos de site, avisos no celular, ordem de chegada. Teste grátis, pagamento por Pix.",
 };
 
 async function inscrever(form: FormData) {
   "use server";
   const telefone = normalizarTelefone(String(form.get("telefone") ?? ""));
   const nome = String(form.get("nome") ?? "").trim();
-  if (!telefone || !nome || form.get("consentimento") !== "sim") redirect("/barbeiros?erro=1#inscricao");
+  if (!telefone || !nome || form.get("consentimento") !== "sim") redirect("/barbeiros?erro=1#comunidade");
   obterBanco().inscrever({
     nome: nome.slice(0, 100),
     telefone,
     negocio: String(form.get("negocio") ?? "").slice(0, 100) || undefined,
     cidade: String(form.get("cidade") ?? "").slice(0, 100) || undefined,
-    interesse: String(form.get("interesse") ?? "comunidade"),
+    interesse: "comunidade",
   });
   redirect("/barbeiros/obrigado");
 }
 
+/** O que o sistema faz, em grupos que o barbeiro reconhece no dia a dia. */
+const RECURSOS = [
+  {
+    icone: CalendarCheck, titulo: "O cliente marca sozinho",
+    itens: [
+      "Escolhe o serviço, vê os horários livres e marca em 3 toques, a qualquer hora.",
+      "\"Qualquer barbeiro\" mostra todas as vagas da equipe de uma vez.",
+      "Recebe um link pra pôr na agenda do celular, trocar o horário ou cancelar sem te ligar.",
+    ],
+  },
+  {
+    icone: BellRing, titulo: "Você fica sabendo na hora",
+    itens: [
+      "Aviso no celular a cada horário novo, com botão pra confirmar com o cliente no seu WhatsApp.",
+      "Sua agenda aparece no calendário do iPhone ou do Google, com lembrete antes de cada cliente.",
+      "Aviso quando o cliente remarca ou cancela; o horário volta a ficar livre no site.",
+    ],
+  },
+  {
+    icone: Users, titulo: "Do seu jeito",
+    itens: [
+      "Atende por ordem de chegada? O site mostra se está aberto e o tamanho da fila.",
+      "Folga em parte do dia, \"fechar hoje\", horários de 30 min a 2 h, preços visíveis ou não.",
+      "Serviços, preços e equipe você muda pelo celular, quando quiser.",
+    ],
+  },
+  {
+    icone: ShieldCheck, titulo: "Protegido contra trote",
+    itens: [
+      "Limites por número e por aparelho seguram quem tenta encher sua agenda.",
+      "Bloqueie um número com um toque: os horários dele são cancelados.",
+    ],
+  },
+] as const;
+
+const PERGUNTAS = [
+  ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
+  ["Precisa de cartão de crédito?", "Não. Você testa grátis e, se gostar, paga por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
+  ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
+  ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Quem marca e some você pode bloquear."],
+  ["Posso trocar o estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem agendamentos."],
+] as const;
+
 export default async function Barbeiros({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const { erro } = await searchParams;
+  const plano = planoDoAmbiente();
+  const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
+
   return (
-    <>
-      <section className="heroi vitrine">
-        <div>
-          <span className="selo"><Scissors className="icone" aria-hidden /> Grátis para barbeiros</span>
-          <h1>Agenda cheia, <em>cadeira girando.</em></h1>
+    <div className="venda">
+      <section className="venda-heroi">
+        <div className="venda-heroi-texto">
+          <h1>Seu site e sua agenda, prontos hoje.</h1>
           <p>
-            Uma comunidade no WhatsApp só de barbeiros: dicas para atrair e fidelizar clientes, cursos gratuitos
-            de gestão e marketing, e acesso antecipado ao nosso app de agendamento online.
+            O cliente vê seus cortes, vê os horários livres e marca sozinho. Você para de responder
+            &quot;tem horário?&quot; no meio do corte.
+          </p>
+          <div className="acoes">
+            <Link href="/app/cadastro" className="botao">Criar minha agenda grátis <ArrowRight size={18} aria-hidden /></Link>
+            <a href="#estilos" className="botao-sec">Ver os estilos</a>
+          </div>
+          <p className="venda-preco-curto">
+            {plano.testeDias} dias grátis. Depois, {reais(plano.valorCentavos)} a cada {plano.dias} dias no Pix. Sem cartão, sem fidelidade.
           </p>
         </div>
-        <DemoBarbearia />
+        <figure className="venda-celular" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/barbeiros/potencia.webp" alt="" width={390} height={780} />
+        </figure>
       </section>
 
-      <div className="grade">
-        <div className="cartao">
-          <span className="chip-icone"><MessagesSquare size={20} aria-hidden /></span>
-          <h3>Comunidade</h3><p>Troque experiência com barbeiros do Brasil todo. Sem spam, sem corrente.</p>
-        </div>
-        <div className="cartao">
-          <span className="chip-icone acento"><GraduationCap size={20} aria-hidden /></span>
-          <h3>Cursos gratuitos</h3><p>Gestão, redes sociais, atendimento e precificação, em português.</p>
-        </div>
-        <a href="/app/cadastro" className="cartao">
-          <span className="chip-icone"><CalendarCheck size={20} aria-hidden /></span>
-          <h3>Agendamento online</h3>
-          <p>Seu cliente marca horário pelo link, você vê a agenda no celular. Teste grátis.</p>
-          <div className="rodape-cartao"><span style={{ color: "var(--destaque)", fontWeight: 600 }}>Criar minha agenda <ArrowRight className="icone" aria-hidden /></span></div>
-        </a>
-      </div>
+      <section id="estilos" className="venda-estilos" aria-labelledby="estilos-titulo">
+        <h2 id="estilos-titulo">Escolha a cara da sua barbearia</h2>
+        <p className="suave">Seis estilos prontos, com suas fotos e seus serviços. Dá pra trocar quando quiser.</p>
+        <ul className="venda-faixa">
+          {TEMAS.map((t) => (
+            <li key={t.id}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
+              <strong>{t.nome}</strong>
+              <span>{t.resumo}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <h2 id="inscricao">Quero participar</h2>
-      {erro && <p style={{ color: "crimson" }}>Preencha nome, WhatsApp e marque a autorização.</p>}
-      <form action={inscrever} className="formulario">
-        <input name="nome" placeholder="Seu nome" required maxLength={100} />
-        <input name="telefone" placeholder="WhatsApp com DDD" required inputMode="tel" />
-        <input name="negocio" placeholder="Nome da barbearia (opcional)" maxLength={100} />
-        <input name="cidade" placeholder="Cidade (opcional)" maxLength={100} />
-        <select name="interesse" defaultValue="ambos">
-          <option value="ambos">Comunidade + app de agendamento</option>
-          <option value="comunidade">Só a comunidade</option>
-          <option value="agendamento">Só o app de agendamento</option>
-        </select>
-        <label>
-          <input type="checkbox" name="consentimento" value="sim" required /> Autorizo receber mensagens pelo
-          WhatsApp sobre a comunidade e o app. Posso sair quando quiser respondendo SAIR.
-        </label>
-        <button type="submit">Quero entrar</button>
-      </form>
-    </>
+      <section className="venda-recursos" aria-labelledby="recursos-titulo">
+        <h2 id="recursos-titulo">O que muda no seu dia</h2>
+        <div className="venda-recursos-grade">
+          {RECURSOS.map(({ icone: Icone, titulo, itens }) => (
+            <div key={titulo} className="venda-recurso">
+              <h3><Icone size={20} aria-hidden /> {titulo}</h3>
+              <ul>{itens.map((i) => <li key={i}>{i}</li>)}</ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="venda-plano" aria-labelledby="plano-titulo">
+        <div>
+          <h2 id="plano-titulo">Quanto custa</h2>
+          <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> a cada {plano.dias} dias</p>
+          <ul>
+            <li>{plano.testeDias} dias grátis pra testar com seus clientes de verdade.</li>
+            <li>Pagamento por Pix, sem cartão. Sem fidelidade.</li>
+            <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
+          </ul>
+        </div>
+        <div className="venda-plano-acao">
+          <Link href="/app/cadastro" className="botao">Criar minha agenda grátis <ArrowRight size={18} aria-hidden /></Link>
+          <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva uns 5 minutos, pelo celular.</p>
+        </div>
+      </section>
+
+      {cursos.length > 0 && (
+        <section className="venda-cursos" aria-labelledby="cursos-titulo">
+          <h2 id="cursos-titulo">Cursos grátis pra quem tem barbearia</h2>
+          <p className="suave">Preço, atendimento e divulgação, em lições curtas pra ler no intervalo.</p>
+          <ul>
+            {cursos.map((c) => (
+              <li key={c.slug}>
+                <Link href={`/cursos/${c.slug}`}>
+                  <strong>{c.titulo}</strong>
+                  <span>{c.resumo}</span>
+                  <small>{c.modulos.reduce((n, m) => n + m.licoes.length, 0)} lições · {c.area}</small>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="venda-perguntas" aria-labelledby="perguntas-titulo">
+        <h2 id="perguntas-titulo">Perguntas</h2>
+        {PERGUNTAS.map(([p, r]) => (
+          <details key={p}>
+            <summary>{p}</summary>
+            <p>{r}</p>
+          </details>
+        ))}
+      </section>
+
+      <section id="comunidade" className="venda-comunidade" aria-labelledby="comunidade-titulo">
+        <div>
+          <h2 id="comunidade-titulo">Comunidade de barbeiros no WhatsApp</h2>
+          <p className="suave">
+            Dicas pra lotar a agenda, novos cursos e novidades do sistema. Sem spam e sem corrente; sai quando quiser.
+          </p>
+        </div>
+        <form action={inscrever} className="formulario">
+          {erro && <p className="erro" role="alert">Preencha nome e WhatsApp e marque a autorização.</p>}
+          <label>Seu nome<input name="nome" required maxLength={100} autoComplete="name" /></label>
+          <label>WhatsApp com DDD<input name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" /></label>
+          <label>Barbearia <small>(opcional)</small><input name="negocio" maxLength={100} /></label>
+          <label>Cidade <small>(opcional)</small><input name="cidade" maxLength={100} /></label>
+          <label className="check">
+            <input type="checkbox" name="consentimento" value="sim" required />
+            <span>Autorizo receber mensagens pelo WhatsApp sobre a comunidade e o sistema. Posso sair quando quiser respondendo SAIR.</span>
+          </label>
+          <button type="submit">Entrar na comunidade</button>
+        </form>
+      </section>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CalendarCheck, MapPin, Star } from "lucide-react";
+import { CalendarCheck, MapPin } from "lucide-react";
 
 /**
  * Vitrine do produto: um celular mostrando como fica o "book" de uma
@@ -16,7 +16,7 @@ export function DemoBarbearia() {
             <div className="demo-avatar">✂️</div>
             <div>
               <strong>Navalha de Ouro</strong>
-              <span><Star size={12} aria-hidden /> 4,9 · <MapPin size={12} aria-hidden /> Centro</span>
+              <span><MapPin size={12} aria-hidden /> Centro</span>
             </div>
           </div>
           <p className="demo-titulo">Trabalhos</p>

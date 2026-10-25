@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { config } from "@/lib/painel";
 
 export const metadata = { title: "Bem-vindo!" };
@@ -8,8 +9,9 @@ export default function Obrigado() {
   return (
     <section className="heroi">
       <h1>Tudo certo! 🎉</h1>
-      <p>Entre agora na comunidade pelo botão abaixo. Quando o app de agendamento abrir, você fica sabendo primeiro.</p>
+      <p>Entre agora na comunidade pelo botão abaixo.</p>
       <p><a className="botao" href={config.linkComunidade} target="_blank" rel="noopener noreferrer">Entrar no grupo do WhatsApp</a></p>
+      <p className="suave">Enquanto isso: <Link href="/app/cadastro">crie o site e a agenda da sua barbearia</Link> (grátis pra testar) ou comece um dos <Link href="/barbeiros#cursos-titulo">cursos pra barbeiros</Link>.</p>
     </section>
   );
 }

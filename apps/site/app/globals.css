@@ -193,6 +193,12 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .licao img { max-width: 100%; height: auto; border-radius: var(--raio-p); }
 .licao pre { overflow-x: auto; background: var(--fundo-2); border: 1px solid var(--borda); padding: 14px; border-radius: var(--raio-p); }
 .licao pre code { background: none; padding: 0; }
+/* Tabelas das lições: rolam de lado no celular em vez de quebrar a página. */
+.licao table { display: block; overflow-x: auto; border-collapse: collapse; margin: 16px 0; font-size: 15px; max-width: 100%; }
+.licao th, .licao td { border-bottom: 1px solid var(--borda); padding: 8px 12px; text-align: left; vertical-align: top; }
+.licao th { background: var(--fundo-2); font-weight: 600; }
+.licao blockquote { margin: 16px 0; padding: 12px 16px; border-left: 4px solid var(--destaque); background: var(--cartao); border-radius: 0 var(--raio-p) var(--raio-p) 0; }
+.licao blockquote p { margin: 0; }
 .navegacao { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 32px 0 16px; flex-wrap: wrap; }
 
 /* ---------- painéis ---------- */
@@ -471,3 +477,63 @@ details.bloquear-horario > summary::-webkit-details-marker { display: none; }
 details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
 .linha-horas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bloquear-horario:has(input[name="diaTodo"]:checked) .linha-horas { display: none; }
+
+/* ---------- /barbeiros: página de venda do SaaS ---------- */
+.venda { display: grid; gap: 72px; padding-bottom: 40px; }
+.venda > * { min-width: 0; }
+.venda h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0 0 8px; }
+.venda-heroi { display: grid; gap: 32px; align-items: center; padding-top: 32px; }
+@media (min-width: 860px) { .venda-heroi { grid-template-columns: 1.2fr 0.8fr; } }
+.venda-heroi h1 { font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1.02; margin: 0 0 16px; letter-spacing: -0.03em; }
+.venda-heroi-texto > p:first-of-type { font-size: clamp(1.1rem, 2.4vw, 1.3rem); color: var(--suave); max-width: 34ch; margin: 0 0 24px; }
+.venda-preco-curto { margin-top: 16px; font-size: 15px; color: var(--suave); }
+.venda-celular, .venda-faixa img {
+  border-radius: 28px; border: 8px solid #111; background: #111; overflow: hidden;
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.45);
+}
+.venda-celular { margin: 0 auto; width: min(300px, 80vw); aspect-ratio: 1 / 2; }
+.venda-celular img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+/* A faixa de estilos é a peça principal: rola de lado, um estilo por vez no celular. */
+.venda-faixa {
+  list-style: none; margin: 24px -16px 0; padding: 8px 16px 16px; display: flex; gap: 20px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px;
+}
+.venda-faixa li { flex: 0 0 min(230px, 62vw); scroll-snap-align: start; display: grid; gap: 6px; }
+.venda-faixa img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 2; object-fit: cover; object-position: top; margin-bottom: 8px; }
+.venda-faixa strong { font-size: 1.05rem; }
+.venda-faixa span { color: var(--suave); font-size: 14px; line-height: 1.45; }
+
+.venda-recursos-grade { display: grid; gap: 28px 40px; margin-top: 24px; }
+@media (min-width: 760px) { .venda-recursos-grade { grid-template-columns: 1fr 1fr; } }
+.venda-recurso h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 1.15rem; }
+.venda-recurso h3 svg { color: var(--destaque); flex: none; }
+.venda-recurso ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--suave); }
+
+.venda-plano {
+  display: grid; gap: 24px; align-items: center; padding: 28px; border-radius: var(--raio);
+  background: var(--cartao); border: 1px solid var(--borda);
+}
+@media (min-width: 760px) { .venda-plano { grid-template-columns: 1fr auto; } }
+.venda-valor { font-size: 1.1rem; margin: 0 0 12px; }
+.venda-valor strong { font-size: clamp(2rem, 6vw, 2.8rem); letter-spacing: -0.02em; }
+.venda-plano ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.venda-plano-acao { display: grid; gap: 8px; justify-items: start; }
+
+.venda-cursos ul { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--borda); }
+.venda-cursos a { display: grid; gap: 4px; padding: 16px 4px; border-bottom: 1px solid var(--borda); text-decoration: none; color: var(--texto); }
+.venda-cursos a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.venda-cursos span { color: var(--suave); }
+.venda-cursos small { color: var(--suave); }
+
+.venda-perguntas details { border-bottom: 1px solid var(--borda); padding: 14px 0; }
+.venda-perguntas summary { cursor: pointer; font-weight: 600; }
+.venda-perguntas details p { margin: 8px 0 0; color: var(--suave); }
+
+.venda-comunidade { display: grid; gap: 24px; }
+@media (min-width: 860px) { .venda-comunidade { grid-template-columns: 0.9fr 1.1fr; align-items: start; } }
+.venda-comunidade .formulario { max-width: none; }
+@media (min-width: 1000px) {
+  .venda-faixa { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
+  .venda-faixa img { border-width: 6px; border-radius: 20px; }
+}

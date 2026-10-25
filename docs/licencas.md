@@ -23,7 +23,9 @@ Antes de traduzir, veja se já existe versão oficial em português — se exist
 |---|---|---|---|---|
 | The Odin Project | Desenvolvimento web completo | CC BY-NC-SA 4.0 | Markdown no GitHub | ✅ |
 | Microsoft "*-For-Beginners" (Web Dev, ML, Data Science, IA, IoT) | Programação, dados, IA | MIT | Markdown no GitHub | 🔎 (alguns já têm pasta `translations/pt`) |
-| OpenStax | Livros universitários (física, biologia, cálculo, economia…) | CC BY 4.0 | API + HTML/PDF | 🔎 |
+| OpenStax — *Introduction to Business* (1ª ed.) | Preço, marketing, atendimento, finanças de pequeno negócio | **CC BY 4.0** (conferido na API em 2026-10-25) | API do archive (JSON/HTML) | ✅ base dos 3 cursos pra barbeiros |
+| OpenStax — demais livros de negócios (*Introduction to Business 2e*, *Principles of Marketing*, *Entrepreneurship*, *Principles of Management*, *Principles of Finance*…) | Negócios | **CC BY-NC-SA 4.0** — não servem como isca do SaaS (uso comercial) | — | ⚠️ |
+| OpenStax — física, biologia, cálculo etc. | Livros universitários | maioria CC BY 4.0 (conferir livro a livro) | API + HTML/PDF | 🔎 |
 | MIT OpenCourseWare | 2.500+ cursos do MIT | CC BY-NC-SA 4.0 | HTML + PDF por curso | 🔎 |
 | CS50 (Harvard) | Ciência da computação | CC BY-NC-SA 4.0 | HTML, vídeos | 🔎 |
 | Saylor Academy | Cursos universitários | CC BY (maioria) | HTML/PDF | 🔎 |
