@@ -10,6 +10,7 @@
     "typecheck": "tsc -p . --noEmit"
   },
   "dependencies": {
+    "@aprenda/agenda": "*",
     "@aprenda/catalogo": "*",
     "@aprenda/prospeccao": "*",
     "marked": "^18.1.1",

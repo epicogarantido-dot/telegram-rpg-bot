@@ -45,10 +45,19 @@ cartão com QR na barbearia). Essas inscrições aparecem no topo do painel.
 | **SaaS de agendamento** | Validar com a lista de espera | É a receita recorrente de verdade. Construir quando ~30 barbearias pedirem. |
 | Rede social de barbeiros | Depois do SaaS | Rede social precisa de massa crítica; comece com perfil público da barbearia dentro do SaaS (vitrine + portfólio). |
 
-## 4. Roadmap técnico do SaaS
+## 4. SaaS de agendamento (`packages/agenda` + `/app`, `/b/<slug>`)
 
-1. Banco no Postgres (Supabase): barbearias, profissionais, serviços, horários, agendamentos, clientes.
-2. Página pública `/b/<barbearia>`: cliente escolhe serviço, profissional e horário.
-3. Painel do barbeiro: agenda do dia, bloqueio de horários, cadastro de serviços.
-4. Lembrete automático pro cliente (aqui sim, mensagem que o cliente pediu — melhor via API oficial do WhatsApp).
-5. Cobrança da assinatura (Mercado Pago / Stripe), plano grátis limitado.
+Pronto (MVP, SQLite local):
+- ✅ Cadastro/login do barbeiro (senha com scrypt, sessão por cookie httpOnly).
+- ✅ Configurações: dados da barbearia, serviços (duração e preço), profissionais, horário por dia com pausa.
+- ✅ Página pública `/b/<slug>`: serviço → profissional → dia → horário → nome e WhatsApp.
+- ✅ Sem encaixe duplo (revalida dentro da transação) e isolamento total entre barbearias.
+- ✅ Agenda do dia no painel, cancelar, botão de WhatsApp pro cliente.
+
+Próximos:
+1. Migrar o banco pro Supabase (Postgres + RLS por `barbearia_id`) — necessário pra rodar em Vercel.
+2. Cliente cancelar/remarcar pelo link (token único por agendamento).
+3. Lembrete automático no dia (cliente pediu ao agendar → pode via API oficial do WhatsApp).
+4. Bloqueio de horário avulso (folga, médico).
+5. Cobrança da assinatura (Mercado Pago / Stripe) e plano grátis limitado.
+6. Perfil público com fotos de cortes — semente da rede social de barbeiros.

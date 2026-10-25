@@ -15,7 +15,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Link href="/" className="marca">📚 Aprenda Livre</Link>
           <nav>
             <Link href="/cursos">Cursos</Link>
-            <Link href="/licencas">Licenças</Link>
+            <Link href="/barbeiros">Barbeiros</Link>
+            <Link href="/app">Minha agenda</Link>
           </nav>
         </header>
         <main>{children}</main>

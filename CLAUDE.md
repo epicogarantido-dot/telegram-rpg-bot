@@ -9,7 +9,8 @@ num site e num bot de WhatsApp. Tudo em TypeScript, monorepo com npm workspaces.
 - `packages/catalogo` — schema, carregamento e busca. Usado pelo site e pelo bot.
 - `packages/ingestao` — coleta de fontes (`fontes/`), receitas (`receitas.ts`) e tradução com a API do Claude (`traduzir.ts`).
 - `packages/prospeccao` — leads por nicho via Google Places API, SQLite em `data/privado/` (fora do git), mensagem de convite, opt-out.
-- `apps/site` — Next.js (App Router). Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
+- `packages/agenda` — SaaS de agendamento: contas, serviços, profissionais, expediente, disponibilidade (`horariosLivres`, pura) e agendamentos. SQLite em `data/privado/agenda.db`; tudo filtrado por `barbearia_id`.
+- `apps/site` — Next.js (App Router). `/app` (painel do barbeiro), `/b/<slug>` (cliente agenda). Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
 - `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte.
 - `docs/` — licenças/fontes, riscos do WhatsApp e `estrategia.md` (funil e roadmap do SaaS).
 
@@ -34,4 +35,5 @@ npm run prospectar -- buscar barbearia "Campinas SP" | listar | resumo
 - Todo convite identifica o remetente e oferece SAIR; opt-out é permanente (`bloqueados`).
 - Dados de Maps só pela Places API oficial; nunca raspar o site do Google Maps.
 - Nunca commitar `.env` nem `apps/bot/auth/`.
+- Toda consulta do SaaS recebe `barbeariaId` da sessão (`exigirBarbeiro`), nunca do formulário.
 - Código e textos em português; identificadores também.

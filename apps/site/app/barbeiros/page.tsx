@@ -38,7 +38,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
       <div className="grade">
         <div className="cartao"><h3>💬 Comunidade</h3><p>Troque experiência com barbeiros do Brasil todo. Sem spam, sem corrente.</p></div>
         <div className="cartao"><h3>🎓 Cursos gratuitos</h3><p>Gestão, redes sociais, atendimento e precificação, em português.</p></div>
-        <div className="cartao"><h3>📅 Agendamento online</h3><p>Seu cliente marca horário pelo link, você recebe no celular. Em breve — entre na lista.</p></div>
+        <a href="/app/cadastro" className="cartao"><h3>📅 Agendamento online</h3><p>Seu cliente marca horário pelo link, você vê a agenda no celular. Grátis no período de teste — crie a sua agora →</p></a>
       </div>
 
       <h2 id="inscricao">Quero participar</h2>

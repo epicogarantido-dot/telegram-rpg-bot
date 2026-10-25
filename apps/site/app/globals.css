@@ -86,3 +86,25 @@ main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
   padding: 12px 18px; border: 0; border-radius: 10px; background: var(--destaque); color: var(--fundo);
   font-size: 16px; cursor: pointer;
 }
+.erro { color: #b42318; background: #fef3f2; border: 1px solid #fecdca; padding: 10px 14px; border-radius: 8px; }
+.opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.opcao {
+  display: inline-block; min-width: 88px; text-align: center; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); text-decoration: none;
+}
+.opcao:hover { border-color: var(--destaque); }
+.opcao.escolhida { border-color: var(--destaque); background: var(--destaque-claro); color: var(--destaque); }
+.linha-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cancelado { opacity: 0.55; }
+.item-config { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.inativo { text-decoration: line-through; color: var(--suave); }
+.formulario.linha { grid-template-columns: 1fr; margin-top: 12px; }
+@media (min-width: 640px) { .formulario.linha { grid-template-columns: 2fr 1fr 1fr auto; max-width: none; } }
+.expediente { display: grid; gap: 8px; }
+.expediente fieldset {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px solid var(--borda);
+  border-radius: 10px; padding: 10px 12px; margin: 0;
+}
+.expediente label { min-width: 100px; text-transform: capitalize; }
+.expediente input[type="time"] { padding: 6px; border-radius: 6px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); }
+.expediente .botao { justify-self: start; font-size: 16px; padding: 12px 18px; }
