@@ -1,14 +1,29 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ErroAgenda } from "@aprenda/agenda";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { chaveDoAparelho, chaveDoEmail } from "@/lib/protecao";
 
 export const metadata = { title: "Entrar — Agenda" };
 
+const MUITAS = "Muitas tentativas. Espere 15 minutos e tente de novo.";
+
+/** Senha errada conta: 5 por e-mail e 20 por aparelho a cada 15 min. Acertar zera o do e-mail. */
 async function entrar(form: FormData) {
   "use server";
+  const email = String(form.get("email") ?? "");
+  const banco = obterAgenda();
+  const chaves = [`login:email:${chaveDoEmail(email)}`, `login:ip:${await chaveDoAparelho()}`];
   let token: string;
   try {
-    token = obterAgenda().entrar(String(form.get("email") ?? ""), String(form.get("senha") ?? ""));
+    if (banco.contarTentativas(chaves[0]!, 15) >= 5 || banco.contarTentativas(chaves[1]!, 15) >= 20) throw new ErroAgenda(MUITAS);
+    try {
+      token = banco.entrar(email, String(form.get("senha") ?? ""));
+    } catch (e) {
+      for (const c of chaves) banco.consumirLimite(c, Number.MAX_SAFE_INTEGER, 15, "");
+      throw e;
+    }
+    banco.limparTentativas(chaves[0]!);
   } catch (e) {
     redirect(`/app/entrar?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }

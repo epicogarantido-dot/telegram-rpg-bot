@@ -54,4 +54,5 @@ npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
 - Toda consulta do SaaS recebe `barbeariaId` da sessão (`exigirBarbeiro`), nunca do formulário.
 - O bot nunca envia mensagem primeiro, nem pra código de login: a pessoa manda o código pra ele.
 - Visual: o dono prefere o estilo limpo (sem 3D/confete). Antes de mexer no design, use as skills `frontend-design` e `diretrizes-interface`; animação só em resposta a uma ação da pessoa e sempre respeitando `prefers-reduced-motion`. No site de cursos vale à risca; nos sites das barbearias cada tema segue o próprio nível de efeitos (`docs/estilos/plano.md`, efeitos em `temas.css` e `componentes/barbearia/Efeitos.tsx`), e com movimento reduzido o site fica parado e completo.
+- Agendar pelo site sempre passa pelas travas (`lib/protecao.ts` + `agendar` sem `peloBarbeiro`): limite por número, por aparelho, rajada, campo isca, números bloqueados. Só o barbeiro logado da própria barbearia pula. IP/e-mail só como hash. Roteiro de teste real: `docs/teste-real.md`.
 - Código e textos em português; identificadores também.

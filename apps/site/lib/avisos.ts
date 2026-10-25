@@ -98,3 +98,13 @@ export async function avisarMudancaDoCliente(barbeariaId: number, m:
     tag: `ag-${m.id}`,
   });
 }
+
+/** Alguém está tentando encher a agenda: o barbeiro fica sabendo e pode bloquear números. */
+export async function avisarRajada(barbeariaId: number): Promise<void> {
+  await enviar(barbeariaId, {
+    titulo: "Muitos agendamentos de uma vez",
+    corpo: "Seguramos novos agendamentos por alguns minutos. Confira a agenda: se for trote, bloqueie o número no horário.",
+    url: "/app",
+    tag: "rajada",
+  });
+}

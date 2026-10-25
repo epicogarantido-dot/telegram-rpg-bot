@@ -447,3 +447,14 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .calendario-item summary { cursor: pointer; }
 .calendario-item details form { display: grid; gap: 8px; justify-items: start; margin-top: 8px; }
 .lista-dicas { display: grid; gap: 10px; padding-left: 20px; }
+
+/* Cancelar com confirmação (sem JavaScript: <details>). */
+details.confirmar > summary { list-style: none; }
+details.confirmar > summary::-webkit-details-marker { display: none; }
+details.confirmar[open] > summary { border-color: var(--destaque); }
+details.confirmar > div { display: grid; gap: 12px; margin-top: 10px; padding: 12px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--fundo); }
+details.confirmar form { display: grid; gap: 8px; justify-items: start; }
+details.confirmar p { margin: 0; }
+/* Horário cancelado: só os dados ficam apagados; o aviso pra avisar o cliente fica legível. */
+.lead.cancelado { opacity: 1; }
+.lead.cancelado > :first-child { opacity: 0.55; }

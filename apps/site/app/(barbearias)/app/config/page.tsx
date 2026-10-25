@@ -87,6 +87,11 @@ async function editarProfissional(form: FormData) {
   }));
 }
 
+async function desbloquear(form: FormData) {
+  "use server";
+  await executar((id) => obterAgenda().desbloquearTelefone(id, String(form.get("telefone"))));
+}
+
 async function salvarExpediente(form: FormData) {
   "use server";
   await executar((id) => {
@@ -108,6 +113,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
   const profissionais = banco.profissionais(barbearia.id);
   const expedientes = banco.expedientes(barbearia.id);
   const fotosEquipe = banco.fotos(barbearia.id, "equipe");
+  const bloqueados = banco.telefonesBloqueados(barbearia.id);
 
   return (
     <>
@@ -212,6 +218,17 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         })}
         <button className="botao">Salvar horários</button>
       </form>
+
+      <h2 id="bloqueados">Números bloqueados</h2>
+      {bloqueados.length === 0
+        ? <p className="suave pequeno">Nenhum. Pra bloquear um trote, abra o horário na agenda, toque em Cancelar e depois em &quot;Bloquear este número&quot;.</p>
+        : bloqueados.map((t) => (
+          <form key={t.telefone} action={desbloquear} className="item-config">
+            <input type="hidden" name="telefone" value={t.telefone} />
+            <span>+{t.telefone}</span>
+            <button className="botao-sec">Desbloquear</button>
+          </form>
+        ))}
     </>
   );
 }

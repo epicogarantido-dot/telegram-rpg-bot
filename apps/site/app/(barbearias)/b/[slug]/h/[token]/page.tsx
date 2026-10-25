@@ -9,6 +9,7 @@ import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { avisarMudancaDoCliente } from "@/lib/avisos";
 import { linkMapa, montarEvento, urlAbsoluta } from "@/lib/barbearias";
+import { ehOBarbeiro, protegerMudanca } from "@/lib/protecao";
 
 export const dynamic = "force-dynamic";
 // Link secreto: nunca vai pro Google nem pra outros sites.
@@ -23,6 +24,7 @@ async function cancelar(form: FormData) {
   const b = obterAgenda().barbeariaPorSlug(slug);
   if (!b) notFound();
   try {
+    await protegerMudanca();
     const h = obterAgenda().cancelarPeloCliente(b.id, token);
     after(() => avisarMudancaDoCliente(b.id, { tipo: "cancelou", id: h.id, cliente: h.clienteNome, servico: h.servico, inicio: h.inicio })
       .catch((e) => console.error("Aviso não enviado:", e)));
@@ -56,6 +58,10 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
   const mapa = linkMapa(b);
   const whats = linkWhatsapp(b.telefone, `Olá! Tenho horário de ${h.servico} com ${h.profissional}, ${quando}.`);
 
+  // O barbeiro marcou pelo próprio celular pro cliente: manda o link pra ele por WhatsApp.
+  const barbeiro = await ehOBarbeiro(b.id);
+  const linkCliente = urlAbsoluta(base);
+  const mandarLink = linkWhatsapp(h.clienteTelefone, `Olá, ${h.clienteNome.split(" ")[0]}! Seu horário na ${b.nome} está marcado: ${h.servico} com ${h.profissional}, ${quando}. Pra pôr na agenda, remarcar ou cancelar: ${linkCliente}`);
   const titulo = cancelado ? "Horário cancelado" : sp.novo ? "Agendado!" : sp.remarcado ? "Horário trocado!" : h.passou ? "Seu último horário" : "Seu horário";
 
   return (
@@ -63,6 +69,13 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
       <h1>{titulo}</h1>
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       {sp.cancelado && <p className="b-aviso-ok" role="status">Pronto, cancelamos. O horário ficou livre pra outra pessoa.</p>}
+
+      {barbeiro && podeMudar && (
+        <p className="b-aviso-ok">
+          Você está logado como barbeiro.{" "}
+          <a href={mandarLink} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} aria-hidden /> Mandar este link pra {h.clienteNome.split(" ")[0]} no WhatsApp</a>
+        </p>
+      )}
 
       <div className={`b-resumo ${cancelado ? "riscado" : ""}`}>
         <p className="b-resumo-quando">{quando}</p>

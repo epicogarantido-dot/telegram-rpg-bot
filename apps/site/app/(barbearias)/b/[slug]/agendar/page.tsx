@@ -6,7 +6,8 @@ import { agoraNoFuso, dataValida, diaDaSemana, formatarData, nomeDia, somarDias,
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { avisarMudancaDoCliente, avisarNovoAgendamento } from "@/lib/avisos";
+import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
+import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
 export const dynamic = "force-dynamic";
 const DIAS_A_FRENTE = 14;
@@ -36,18 +37,24 @@ async function confirmar(form: FormData) {
   };
   const voltar = new URLSearchParams(campos);
   let token = "";
+  // O barbeiro logado marcando pra um cliente não passa pelas travas do site.
+  const peloBarbeiro = await ehOBarbeiro(b.id);
   try {
     if (!dataValida(campos.data)) throw new Error("data");
+    const protecao = peloBarbeiro ? undefined : await protegerAgendamento(b.id, form);
     const telefone = normalizarTelefone(String(form.get("telefone") ?? ""));
     const id = obterAgenda().agendar({
       barbeariaId: b.id, profissionalId: Number(campos.com), servicoId: Number(campos.servico),
       data: campos.data, hora: campos.hora, clienteNome: String(form.get("nome") ?? ""), clienteTelefone: telefone ?? "",
+      peloBarbeiro,
     });
+    protecao?.registrar();
     // Link secreto do cliente (ver, cancelar, remarcar). Só o hash fica no banco.
     token = obterAgenda().criarLinkCliente(b.id, id);
     // Aviso no celular do barbeiro depois da resposta: o cliente não espera por ele.
     after(() => avisarNovoAgendamento(b.id, id).catch((e) => console.error("Aviso não enviado:", e)));
   } catch (e) {
+    if (e instanceof ErroRajada && primeiraRajadaDaHora(b.id)) after(() => avisarRajada(b.id).catch(() => {}));
     voltar.set("erro", mensagemDeErro(e));
     redirect(`/b/${slug}/agendar?${voltar}`);
   }
@@ -63,6 +70,7 @@ async function trocar(form: FormData) {
   const campos = { servico: String(form.get("servico")), data: String(form.get("data")), hora: String(form.get("hora")), com: String(form.get("com")), remarcar: token };
   try {
     if (!dataValida(campos.data)) throw new Error("data");
+    await protegerMudanca();
     const r = obterAgenda().remarcarPeloCliente(b.id, token, { profissionalId: Number(campos.com), data: campos.data, hora: campos.hora });
     const prof = obterAgenda().profissionais(b.id).find((p) => p.id === Number(campos.com))?.nome ?? r.antes.profissional;
     after(() => avisarMudancaDoCliente(b.id, { tipo: "remarcou", id: r.antes.id, cliente: r.antes.clienteNome, servico: r.antes.servico, inicio: r.antes.inicio, novoInicio: r.depois, profissional: prof })
@@ -199,6 +207,10 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <input type="hidden" name="com" value={com.id} />
           <input type="hidden" name="data" value={data} />
           <input type="hidden" name="hora" value={sp.hora} />
+          {/* Isca pra robô: ninguém vê nem alcança pelo teclado. */}
+          <div className="b-isca" aria-hidden="true">
+            <label>Empresa <input name={CAMPO_ISCA} tabIndex={-1} autoComplete="off" /></label>
+          </div>
           <label htmlFor="nome">Seu nome</label>
           <input id="nome" name="nome" required maxLength={80} autoComplete="name" />
           <label htmlFor="telefone">Seu WhatsApp com DDD</label>

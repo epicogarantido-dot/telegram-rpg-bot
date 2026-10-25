@@ -45,6 +45,8 @@ export interface Barbearia {
 
 export type Atendimento = "agenda" | "chegada" | "ambos";
 export const INTERVALOS = [30, 60, 90, 120] as const;
+/** Quantos horários futuros um mesmo número pode ter na mesma barbearia (marcando pelo site). */
+export const MAX_HORARIOS_POR_TELEFONE = 2;
 /** Fila informada há mais tempo que isso não aparece no site (pode estar errada). */
 export const FILA_VALIDA_MIN = 180;
 
@@ -244,6 +246,16 @@ export class BancoAgenda {
     // Link do calendário do barbeiro (assinado no celular): um da barbearia toda e um por profissional.
     this.garantirColuna("barbearias", "token_agenda", "TEXT");
     this.garantirColuna("profissionais", "token_agenda", "TEXT");
+    this.db.exec(`
+      -- Limites contra abuso (agendar em massa, chutar senha). Chave já vem com o tipo e um hash do IP/e-mail.
+      CREATE TABLE IF NOT EXISTS tentativas (chave TEXT NOT NULL, em TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS tentativas_chave ON tentativas(chave, em);
+      -- Números que o barbeiro bloqueou (trote, quem marca e não vem).
+      CREATE TABLE IF NOT EXISTS telefones_bloqueados (
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id), telefone TEXT NOT NULL, em TEXT NOT NULL,
+        PRIMARY KEY (barbearia_id, telefone)
+      );
+    `);
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS avisos_inscricoes (
         endpoint TEXT PRIMARY KEY,
@@ -482,13 +494,30 @@ export class BancoAgenda {
    * Marca um horário. Revalida a disponibilidade dentro da transação: dois
    * clientes clicando no mesmo horário ao mesmo tempo não viram encaixe duplo.
    */
+  /**
+   * `peloBarbeiro`: o próprio barbeiro marcando (logado no painel) não tem limite por número.
+   * Pelo site, cada número pode ter até MAX_HORARIOS_POR_TELEFONE horários futuros, e número bloqueado não marca.
+   */
   agendar(dados: {
     barbeariaId: number; profissionalId: number; servicoId: number; data: Data; hora: string;
-    clienteNome: string; clienteTelefone: string; agora?: Date;
+    clienteNome: string; clienteTelefone: string; agora?: Date; peloBarbeiro?: boolean;
   }): number {
-    const nome = dados.clienteNome.trim();
+    const nome = dados.clienteNome.trim().replace(/\s+/g, " ");
     if (nome.length < 2) throw new ErroAgenda("Informe seu nome.");
     if (!/^\d{12,13}$/.test(dados.clienteTelefone)) throw new ErroAgenda("WhatsApp inválido.");
+    if (!dados.peloBarbeiro) {
+      if (this.telefoneBloqueado(dados.barbeariaId, dados.clienteTelefone)) {
+        throw new ErroAgenda("Não foi possível agendar por aqui. Fale com a barbearia pelo WhatsApp.");
+      }
+      const b0 = this.barbeariaPorId(dados.barbeariaId);
+      const agoraLocal = b0 ? agoraNoFuso(b0.fuso, dados.agora) : "";
+      const futuros = (this.db.prepare(`SELECT COUNT(*) AS n FROM agendamentos
+        WHERE barbearia_id = ? AND cliente_telefone = ? AND status = 'confirmado' AND inicio > ?`)
+        .get(dados.barbeariaId, dados.clienteTelefone, agoraLocal) as { n: number }).n;
+      if (futuros >= MAX_HORARIOS_POR_TELEFONE) {
+        throw new ErroAgenda(`Esse número já tem ${futuros} horários marcados aqui. Pra marcar mais, fale com a barbearia.`);
+      }
+    }
     const b = this.barbeariaPorId(dados.barbeariaId);
     if (!b || !this.acessoAtivo(b, dados.agora)) throw new ErroAgenda("Agenda temporariamente indisponível.");
     const prof = this.profissionais(dados.barbeariaId, true).find((p) => p.id === dados.profissionalId);
@@ -522,6 +551,53 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  // ---------- travas contra abuso ----------
+
+  /**
+   * Conta uma tentativa e recusa se passou do limite na janela. A chave já vem
+   * pronta (ex.: "agendar:ip:<hash>:<barbearia>") — nunca o IP ou e-mail puro.
+   */
+  consumirLimite(chave: string, max: number, janelaMin: number, mensagem: string, agora = new Date()): void {
+    const desde = new Date(agora.getTime() - janelaMin * 60_000).toISOString();
+    const n = (this.db.prepare("SELECT COUNT(*) AS n FROM tentativas WHERE chave = ? AND em > ?").get(chave, desde) as { n: number }).n;
+    if (n >= max) throw new ErroAgenda(mensagem);
+    this.db.prepare("INSERT INTO tentativas (chave, em) VALUES (?, ?)").run(chave, agora.toISOString());
+    // Faxina de vez em quando: nada aqui precisa de mais de 2 dias.
+    if (Math.random() < 0.02) this.db.prepare("DELETE FROM tentativas WHERE em < ?").run(new Date(agora.getTime() - 2 * 86_400_000).toISOString());
+  }
+
+  /** Quantas tentativas na janela (sem contar uma nova). */
+  contarTentativas(chave: string, janelaMin: number, agora = new Date()): number {
+    const desde = new Date(agora.getTime() - janelaMin * 60_000).toISOString();
+    return (this.db.prepare("SELECT COUNT(*) AS n FROM tentativas WHERE chave = ? AND em > ?").get(chave, desde) as { n: number }).n;
+  }
+
+  limparTentativas(chave: string): void {
+    this.db.prepare("DELETE FROM tentativas WHERE chave = ?").run(chave);
+  }
+
+  telefoneBloqueado(barbeariaId: number, telefone: string): boolean {
+    return !!this.db.prepare("SELECT 1 FROM telefones_bloqueados WHERE barbearia_id = ? AND telefone = ?").get(barbeariaId, telefone);
+  }
+
+  /** Bloqueia o número e cancela os horários futuros dele. Devolve quantos cancelou. */
+  bloquearTelefone(barbeariaId: number, telefone: string, agora?: Date): number {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b || !/^\d{12,13}$/.test(telefone)) throw new ErroAgenda("Número inválido.");
+    this.db.prepare("INSERT OR IGNORE INTO telefones_bloqueados (barbearia_id, telefone, em) VALUES (?, ?, ?)").run(barbeariaId, telefone, new Date().toISOString());
+    return Number(this.db.prepare(`UPDATE agendamentos SET status = 'cancelado'
+      WHERE barbearia_id = ? AND cliente_telefone = ? AND status = 'confirmado' AND inicio > ?`)
+      .run(barbeariaId, telefone, agoraNoFuso(b.fuso, agora)).changes);
+  }
+
+  desbloquearTelefone(barbeariaId: number, telefone: string): void {
+    this.db.prepare("DELETE FROM telefones_bloqueados WHERE barbearia_id = ? AND telefone = ?").run(barbeariaId, telefone);
+  }
+
+  telefonesBloqueados(barbeariaId: number): { telefone: string; em: string }[] {
+    return this.db.prepare("SELECT telefone, em FROM telefones_bloqueados WHERE barbearia_id = ? ORDER BY em DESC").all(barbeariaId) as { telefone: string; em: string }[];
   }
 
   // ---------- calendário do barbeiro (link secreto assinado no celular) ----------

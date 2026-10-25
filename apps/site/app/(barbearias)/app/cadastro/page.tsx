@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ErroAgenda } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { chaveDoAparelho } from "@/lib/protecao";
 
 export const metadata = { title: "Criar conta — Agenda" };
 
@@ -12,10 +13,14 @@ async function cadastrar(form: FormData) {
   const telefone = normalizarTelefone(campo("telefone"));
   let token: string;
   try {
+    // Até 3 contas novas por aparelho por dia: segura quem tenta criar barbearia em massa.
+    const chave = `cadastro:ip:${await chaveDoAparelho()}`;
+    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Muitas contas criadas deste aparelho hoje. Tente amanhã ou fale com a gente.");
     if (!telefone) throw new ErroAgenda("WhatsApp inválido.");
     token = obterAgenda().criarConta({
       nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha"),
     }).token;
+    obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
   } catch (e) {
     redirect(`/app/cadastro?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }

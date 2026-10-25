@@ -729,3 +729,4 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-mudar p strong { color: var(--texto); }
 .b-mudar-confirmar { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
 .site-b .b-mudar-confirmar p { color: var(--texto); font-weight: 600; }
+.b-isca { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

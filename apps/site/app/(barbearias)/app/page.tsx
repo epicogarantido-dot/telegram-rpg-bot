@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { MessageCircle } from "lucide-react";
+import { CalendarPlus, MessageCircle } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
@@ -15,8 +15,18 @@ export const dynamic = "force-dynamic";
 async function cancelar(form: FormData) {
   "use server";
   const { barbearia } = await exigirAcessoAtivo();
-  obterAgenda().cancelar(barbearia.id, Number(form.get("id")));
-  revalidatePath("/app");
+  const id = Number(form.get("id"));
+  obterAgenda().cancelar(barbearia.id, id);
+  // Volta mostrando o botão de avisar o cliente (cancelar sem avisar = cliente aparece na porta).
+  redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}&cancelado=${id}#ag-${id}`);
+}
+
+/** Trote ou quem sempre marca e não vem: bloqueia o número e cancela os horários futuros dele. */
+async function bloquearNumero(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const n = obterAgenda().bloquearTelefone(barbearia.id, String(form.get("telefone")));
+  redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}&bloqueado=${n}`);
 }
 
 async function salvarAviso(inscricao: { endpoint: string; p256dh: string; auth: string }): Promise<string | null> {
@@ -68,7 +78,7 @@ async function sair() {
   redirect("/app/entrar");
 }
 
-export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string; cancelado?: string; bloqueado?: string }> }) {
   const { barbearia, usuario } = await exigirAcessoAtivo();
   const sp = await searchParams;
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
@@ -76,6 +86,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const agenda = obterAgenda().agendamentosDoDia(barbearia.id, data);
   const linkPublico = `${process.env.SITE_URL ?? ""}/b/${barbearia.slug}`;
   const diasRestantes = obterAgenda().diasRestantes(barbearia);
+  const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
 
   return (
     <>
@@ -114,6 +125,14 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       </nav>
 
       {agenda.length === 0 && <p>Nenhum agendamento neste dia.</p>}
+      <p><Link className="botao" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={18} aria-hidden /> Marcar horário pra um cliente</Link></p>
+      {sp.bloqueado !== undefined && (
+        <p className="atribuicao" role="status">
+          Número bloqueado{Number(sp.bloqueado) > 0 ? ` e ${sp.bloqueado} horário(s) futuro(s) cancelado(s)` : ""}. Ele não consegue mais marcar pelo site.
+          Desbloqueie em <Link href="/app/config#bloqueados">Configurações</Link>.
+        </p>
+      )}
+
       {agenda.map((a) => (
         <div key={a.id} id={`ag-${a.id}`} className={`cartao lead ${a.status === "cancelado" ? "cancelado" : ""}`}>
           <div>
@@ -128,11 +147,33 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
                 href={linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio }))}>
                 <MessageCircle size={16} aria-hidden /> Confirmar no WhatsApp
               </a>
-              <form action={cancelar}>
-                <input type="hidden" name="id" value={a.id} />
-                <button className="botao-sec">Cancelar</button>
-              </form>
+              <details className="confirmar">
+                <summary className="botao-sec">Cancelar</summary>
+                <div>
+                  <form action={cancelar}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <input type="hidden" name="data" value={data} />
+                    <p>Cancelar o horário de {a.clienteNome}?</p>
+                    <button className="botao">Sim, cancelar</button>
+                  </form>
+                  <form action={bloquearNumero}>
+                    <input type="hidden" name="telefone" value={a.clienteTelefone} />
+                    <input type="hidden" name="data" value={data} />
+                    <p className="suave pequeno">Foi trote? Bloquear o número cancela todos os horários futuros dele e impede novos pelo site.</p>
+                    <button className="botao-sec">Bloquear este número</button>
+                  </form>
+                </div>
+              </details>
             </div>
+          )}
+          {recemCancelado?.id === a.id && (
+            <p className="atribuicao" role="status">
+              Cancelado. Avise {a.clienteNome.split(" ")[0]} pra não vir à toa:{" "}
+              <a target="_blank" rel="noopener noreferrer" href={linkWhatsapp(a.clienteTelefone,
+                `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Precisamos cancelar seu horário de ${a.servico}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Desculpe! Pra marcar outro: ${linkPublico}`)}>
+                <MessageCircle size={16} aria-hidden /> Avisar no WhatsApp
+              </a>
+            </p>
           )}
         </div>
       ))}

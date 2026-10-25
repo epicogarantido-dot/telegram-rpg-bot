@@ -521,9 +521,10 @@ describe("calendário do barbeiro", () => {
     const agora = new Date();
     const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
     const dia = Array.from({ length: 10 }, (_, i) => somarDias(hoje, i + 1)).find((d) => b.expedientes(a.id).has(diaDaSemana(d)))!;
+    let n = 0;
     const marcar = (p: number, nome: string) => {
       const hora = b.horariosLivres(a.id, p, s!.id, dia, agora)[0]!;
-      return b.agendar({ barbeariaId: a.id, profissionalId: p, servicoId: s!.id, data: dia, hora, clienteNome: nome, clienteTelefone: "5519998765432", agora });
+      return b.agendar({ barbeariaId: a.id, profissionalId: p, servicoId: s!.id, data: dia, hora, clienteNome: nome, clienteTelefone: `551999876543${n++}`, agora });
     };
     marcar(p1!.id, "Um");
     const cancelado = marcar(p1!.id, "Dois");
@@ -532,5 +533,50 @@ describe("calendário do barbeiro", () => {
     expect(b.agendamentosEntre(a.id, hoje, somarDias(hoje, 30)).map((x) => x.clienteNome)).toEqual(["Um", "Três"]);
     expect(b.agendamentosEntre(a.id, hoje, somarDias(hoje, 30), p2!.id).map((x) => x.clienteNome)).toEqual(["Três"]);
     expect(b.agendamentosEntre(a.id, somarDias(dia, 1), somarDias(dia, 30))).toEqual([]);
+  });
+});
+
+describe("travas contra abuso", () => {
+  function cenario() {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const agora = new Date();
+    const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
+    const dia = Array.from({ length: 10 }, (_, i) => somarDias(hoje, i + 1)).find((d) => b.expedientes(a.id).has(diaDaSemana(d)))!;
+    const [s] = b.servicos(a.id, true);
+    const [p] = b.profissionais(a.id, true);
+    const marcar = (tel: string, extra: { peloBarbeiro?: boolean } = {}) => {
+      const hora = b.horariosLivres(a.id, p!.id, s!.id, dia, agora)[0]!;
+      return b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data: dia, hora, clienteNome: "Trote", clienteTelefone: tel, agora, ...extra });
+    };
+    return { b, a, marcar, agora };
+  }
+
+  it("um número não marca mais que 2 horários futuros pelo site; o barbeiro pode", () => {
+    const { marcar } = cenario();
+    marcar("5519911112222");
+    marcar("5519911112222");
+    expect(() => marcar("5519911112222")).toThrow(/já tem 2 horários/);
+    expect(() => marcar("5519911112222", { peloBarbeiro: true })).not.toThrow();
+  });
+
+  it("bloquear número cancela os futuros e impede novos", () => {
+    const { b, a, marcar } = cenario();
+    marcar("5519933334444");
+    marcar("5519933334444");
+    expect(b.bloquearTelefone(a.id, "5519933334444")).toBe(2);
+    expect(() => marcar("5519933334444")).toThrow(/Fale com a barbearia/);
+    expect(b.telefonesBloqueados(a.id).map((t) => t.telefone)).toEqual(["5519933334444"]);
+    b.desbloquearTelefone(a.id, "5519933334444");
+    expect(() => marcar("5519933334444")).not.toThrow();
+  });
+
+  it("limite por janela de tempo", () => {
+    const { b } = cenario();
+    const t0 = new Date("2026-10-27T12:00:00Z");
+    for (let i = 0; i < 3; i++) b.consumirLimite("x", 3, 60, "calma", new Date(t0.getTime() + i * 1000));
+    expect(() => b.consumirLimite("x", 3, 60, "calma", new Date(t0.getTime() + 5000))).toThrow(/calma/);
+    expect(() => b.consumirLimite("x", 3, 60, "calma", new Date(t0.getTime() + 61 * 60_000))).not.toThrow();
+    expect(b.contarTentativas("outra", 60)).toBe(0);
   });
 });
