@@ -6,7 +6,7 @@
 // dependências usadas, então a Square Cloud não precisa rodar npm install
 // nem build (menos memória, sobe mais rápido). Saída: dist/aprenda-livre-square.zip
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const raiz = new URL("..", import.meta.url).pathname;
@@ -24,6 +24,14 @@ rmSync(join(raiz, "dist"), { recursive: true, force: true });
 mkdirSync(destino, { recursive: true });
 
 cpSync(join(site, ".next/standalone"), destino, { recursive: true });
+// A Square Cloud descarta o node_modules da RAIZ do zip e roda npm install
+// no lugar (docs: runtimes/introduction). Movendo pra apps/node_modules, o
+// Node ainda acha os pacotes (sobe pastas a partir de apps/site/server.js)
+// e nada é baixado no servidor.
+renameSync(join(destino, "node_modules"), join(destino, "apps/node_modules"));
+// package.json na raiz é obrigatório (senão INVALID_DEPENDENCY); sem
+// dependências, o npm install do servidor não faz nada.
+writeFileSync(join(destino, "package.json"), JSON.stringify({ name: "aprenda-livre-site", private: true, dependencies: {} }, null, 2) + "\n");
 cpSync(join(site, ".next/static"), join(destino, "apps/site/.next/static"), { recursive: true });
 if (existsSync(join(site, "public"))) cpSync(join(site, "public"), join(destino, "apps/site/public"), { recursive: true });
 cpSync(join(raiz, "data/cursos"), join(destino, "data/cursos"), { recursive: true });

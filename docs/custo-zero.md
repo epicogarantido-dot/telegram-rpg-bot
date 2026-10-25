@@ -4,7 +4,7 @@ Regra do projeto: nada que exija pagar ou cadastrar cartão.
 
 | Necessidade | Solução grátis | Evitamos |
 |---|---|---|
-| Hospedagem | Square Cloud (plano do dono) — zip standalone, 512 MB | Vercel Pro, VPS paga |
+| Hospedagem | ⚠️ Square Cloud **não tem plano grátis** (Hobby R$ 12,49/mês). Grátis: PC/celular em casa + túnel Cloudflare | Vercel Pro, VPS paga |
 | Banco | SQLite embutido no Node (`node:sqlite`) + backup manual em `/painel/backup` | Postgres pago |
 | Cobrança | Pix estático (BR Code gerado no código) + confirmação manual do admin | Gateways com taxa (Mercado Pago, Stripe) |
 | Leads | OpenStreetMap / Overpass (`--fonte osm`, padrão) | Google Places (exige cartão) |

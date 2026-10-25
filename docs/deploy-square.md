@@ -21,18 +21,21 @@ rodar `npm install` nem `build`.
 
 Subdomínio e memória: `SQUARE_SUBDOMINIO=meusite SQUARE_MEMORIA=512 npm run pacote:square`.
 
-## ⚠️ Conferir no seu plano (não deu pra verificar daqui)
+## O que a documentação da Square Cloud confirma (lida em 25/10/2026)
 
-A rede desta sessão não acessa o site da Square Cloud. Confirme na documentação/painel:
+- **Não existe plano grátis.** O mais barato é o Hobby, a partir de R$ 12,49/mês (1 GB de RAM).
+  Site exige no mínimo 512 MB, então o Hobby de 1 GB comporta o site + o bot (256 MB).
+- Config: `squarecloud.app` ou `squarecloud.config`, ambos valem; tem que estar na raiz do zip.
+- Site escuta na porta 80 em `0.0.0.0` (a Square Cloud já define `PORT`/`HOST`; o `iniciar.cjs` respeita).
+- `package.json` na raiz é obrigatório; o `node_modules` da raiz é descartado e o servidor roda
+  `npm install`. Por isso o pacote leva as dependências em `apps/node_modules` e um `package.json`
+  vazio na raiz: nada é baixado e o site sobe direto.
+- Node.js `recommended` = 24.x (tem o `node:sqlite` que o banco usa).
+- O plano inclui o subdomínio `*.squareweb.app` e HTTPS.
 
-- **Seu plano permite site (subdomínio)?** Em alguns planos gratuitos só bots são permitidos.
-  Se não permitir, alternativas sem custo: rodar o mesmo zip em qualquer máquina com Node 22+
-  (`node iniciar.cjs`), ou os planos grátis de outras hospedagens Node.
-- **Porta:** o `iniciar.cjs` usa a porta 80 (padrão de sites na Square Cloud). Se a doc pedir
-  outra, defina `PORT` no `.env`.
-- **Nome do arquivo de config:** usamos `squarecloud.config` (o formato que você já usava).
-  Versões novas também aceitam `squarecloud.app` com os mesmos campos.
-- **Memória:** 512 MB devem bastar pro site. O bot de WhatsApp é outro app (outro processo).
+**Custo zero de verdade** (alternativa à Square Cloud): rodar o mesmo zip num PC ou celular Android
+antigo ligado em casa (`node iniciar.cjs`) e expor com um túnel gratuito da Cloudflare. Funciona,
+mas depende da máquina e da internet de casa ficarem ligadas.
 
 ## Dados e backup
 
