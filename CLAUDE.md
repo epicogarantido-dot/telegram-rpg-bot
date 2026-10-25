@@ -13,7 +13,7 @@ num site e num bot de WhatsApp. Tudo em TypeScript, monorepo com npm workspaces.
 - `packages/membros` — contas dos alunos: login = WhatsApp + senha; número provado mandando código ao bot (`confirmarPeloWhatsapp`), limite de tentativas, progresso, exclusão (LGPD). SQLite em `data/privado/membros.db`.
 - `apps/site` — Next.js (App Router). Alunos: `/cadastro`, `/confirmar`, `/entrar`, `/esqueci`, `/minha-area`; bot chama `/api/whatsapp/codigo` com `BOT_SEGREDO`. Celular de demonstração em `componentes/DemoBarbearia.tsx`; botões de formulário usam `BotaoEnviar` (estado de carregando). `/app` (painel do barbeiro; bloqueado → `/app/assinatura`), `/b/<slug>` (cliente agenda), `/painel/assinaturas` (admin confirma Pix), `/painel/backup`. Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
 - `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte.
-- `docs/estilos/` — Atlas de Estilos: 10 temas pros sites das barbearias (inspirados em marcas, sem símbolos registrados).
+- `docs/estilos/` — Atlas de Estilos: 10 temas pros sites das barbearias, cada um a essência de uma sensação de luxo (marca só como referência).
 - `docs/` — `seguranca.md`, licenças/fontes, riscos do WhatsApp e `estrategia.md` (funil e roadmap do SaaS).
 
 ## Comandos
