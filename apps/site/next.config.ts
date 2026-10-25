@@ -9,6 +9,8 @@ const config: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
   poweredByHeader: false,
+  // Envio de fotos dos barbeiros (várias de uma vez) passa por server action.
+  experimental: { serverActions: { bodySizeLimit: "40mb" } },
   async headers() {
     const seguranca = [
       // Não deixa outro site embutir o nosso num iframe (clickjacking).

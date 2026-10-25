@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { mesmaOrigem, obterMembros } from "../../../lib/membros";
+import { mesmaOrigem, obterMembros } from "@/lib/membros";
 
 export const dynamic = "force-dynamic";
 

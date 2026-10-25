@@ -3,7 +3,8 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { horariosLivres, type Expediente } from "./disponibilidade.ts";
 import { conferirSenha, hashSenha, hashToken, novoToken } from "./senha.ts";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
+import { categoriaValida, temaValido, TEMA_PADRAO, type CategoriaFoto, type IdTema } from "./temas.ts";
 import { agoraNoFuso, deMinutos, diaDaSemana, paraMinutos, somarDias, type Data, type DataHora } from "./tempo.ts";
 
 /**
@@ -21,6 +22,23 @@ export interface Barbearia {
   fuso: string;
   /** Último dia (inclusive) com acesso liberado. Depois disso, tudo bloqueia até o admin confirmar um Pix. */
   acessoAte: Data;
+  tema: IdTema;
+  bio?: string;
+  cidade?: string;
+  instagram?: string;
+  /** Faixa de oferta no site, ex.: "10% off na primeira visita". */
+  oferta?: string;
+}
+
+export interface Foto {
+  id: number;
+  /** Nome do arquivo no disco (uuid). A URL pública é /f/<arquivo>.webp */
+  arquivo: string;
+  categoria: CategoriaFoto;
+  legenda?: string;
+  largura: number;
+  altura: number;
+  capa: number;
 }
 
 export type StatusPagamento = "aberto" | "informado" | "confirmado" | "recusado";
@@ -36,7 +54,10 @@ export interface Pagamento {
   criadoEm: string;
   decididoEm?: string;
 }
-export interface Profissional { id: number; nome: string; ativo: number }
+export interface Profissional { id: number; nome: string; ativo: number; especialidade?: string; fotoArquivo?: string }
+
+/** Limite de fotos por barbearia: segura o disco do servidor. */
+export const MAX_FOTOS = 80;
 export interface Servico { id: number; nome: string; duracaoMin: number; precoCentavos: number; ativo: number }
 export interface Agendamento {
   id: number;
@@ -69,7 +90,7 @@ export function planoDoAmbiente(): Plano {
   };
 }
 
-const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte";
+const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta";
 const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbearia, p.txid, p.valor_centavos AS valorCentavos,
   p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
 
@@ -146,11 +167,27 @@ export class BancoAgenda {
         criado_em TEXT NOT NULL, decidido_em TEXT
       );
     `);
-    // Migração: bancos criados antes da cobrança não têm acesso_ate.
-    const colunas = this.db.prepare("PRAGMA table_info(barbearias)").all() as { name: string }[];
-    if (!colunas.some((c) => c.name === "acesso_ate")) {
-      this.db.exec("ALTER TABLE barbearias ADD COLUMN acesso_ate TEXT NOT NULL DEFAULT '1970-01-01'");
-    }
+    // Migrações: colunas que chegaram depois. Banco antigo ganha a coluna com valor padrão.
+    this.garantirColuna("barbearias", "acesso_ate", "TEXT NOT NULL DEFAULT '1970-01-01'");
+    this.garantirColuna("barbearias", "tema", `TEXT NOT NULL DEFAULT '${TEMA_PADRAO}'`);
+    for (const c of ["bio", "cidade", "instagram", "oferta"]) this.garantirColuna("barbearias", c, "TEXT");
+    this.garantirColuna("profissionais", "especialidade", "TEXT");
+    this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS fotos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        arquivo TEXT NOT NULL UNIQUE, categoria TEXT NOT NULL, legenda TEXT,
+        largura INTEGER NOT NULL, altura INTEGER NOT NULL, capa INTEGER NOT NULL DEFAULT 0,
+        criado_em TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria);
+    `);
+  }
+
+  private garantirColuna(tabela: string, coluna: string, definicao: string): void {
+    const colunas = this.db.prepare(`PRAGMA table_info(${tabela})`).all() as { name: string }[];
+    if (!colunas.some((c) => c.name === coluna)) this.db.exec(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${definicao}`);
   }
 
   // ---------- conta ----------
@@ -230,9 +267,27 @@ export class BancoAgenda {
       .run(dados.nome.trim(), dados.telefone, dados.endereco?.trim() || null, id);
   }
 
+  /** Dados do site público (tema e textos). O resto (nome, telefone, endereço) fica em atualizarBarbearia. */
+  atualizarSite(id: number, dados: { tema: string; bio?: string; cidade?: string; instagram?: string; oferta?: string }): void {
+    if (!temaValido(dados.tema)) throw new ErroAgenda("Tema inválido.");
+    const limpar = (v: string | undefined, max: number) => v?.trim().slice(0, max) || null;
+    const insta = dados.instagram?.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
+    if (insta && !/^[A-Za-z0-9._]{1,30}$/.test(insta)) throw new ErroAgenda("Instagram inválido. Use só o @ do perfil.");
+    this.db.prepare("UPDATE barbearias SET tema = ?, bio = ?, cidade = ?, instagram = ?, oferta = ? WHERE id = ?")
+      .run(dados.tema, limpar(dados.bio, 400), limpar(dados.cidade, 60), insta || null, limpar(dados.oferta, 80), id);
+  }
+
   profissionais(barbeariaId: number, soAtivos = false): Profissional[] {
-    return this.db.prepare(`SELECT id, nome, ativo FROM profissionais WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`)
+    return this.db.prepare(`SELECT id, nome, ativo, especialidade, foto_arquivo AS fotoArquivo FROM profissionais
+      WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`)
       .all(barbeariaId) as unknown as Profissional[];
+  }
+
+  atualizarProfissional(barbeariaId: number, id: number, dados: { especialidade?: string; fotoArquivo?: string | null }): void {
+    if (dados.fotoArquivo && !this.fotoDaBarbearia(barbeariaId, dados.fotoArquivo)) throw new ErroAgenda("Foto inválida.");
+    this.db.prepare(`UPDATE profissionais SET especialidade = COALESCE(?, especialidade),
+        foto_arquivo = CASE WHEN ? THEN ? ELSE foto_arquivo END WHERE id = ? AND barbearia_id = ?`)
+      .run(dados.especialidade?.trim().slice(0, 60) ?? null, dados.fotoArquivo !== undefined ? 1 : 0, dados.fotoArquivo ?? null, id, barbeariaId);
   }
 
   adicionarProfissional(barbeariaId: number, nome: string): void {
@@ -417,7 +472,7 @@ export class BancoAgenda {
   }
 
   todasBarbearias(): (Barbearia & { email: string })[] {
-    return this.db.prepare(`SELECT b.id, b.slug, b.nome, b.telefone, b.endereco, b.fuso, b.acesso_ate AS acessoAte,
+    return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA.split(", ").map((c) => `b.${c}`).join(", ")},
       (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id ORDER BY u.id LIMIT 1) AS email
       FROM barbearias b ORDER BY b.acesso_ate`).all() as unknown as (Barbearia & { email: string })[];
   }
@@ -432,5 +487,62 @@ export class BancoAgenda {
   /** Cópia consistente do banco inteiro, pra backup. */
   copiarPara(destino: string): void {
     this.db.prepare("VACUUM INTO ?").run(destino);
+  }
+
+  // ---------- fotos (portfólio) ----------
+
+  fotos(barbeariaId: number, categoria?: CategoriaFoto): Foto[] {
+    return this.db.prepare(`SELECT id, arquivo, categoria, legenda, largura, altura, capa FROM fotos
+      WHERE barbearia_id = ? ${categoria ? "AND categoria = ?" : ""} ORDER BY capa DESC, id DESC`)
+      .all(barbeariaId, ...(categoria ? [categoria] : [])) as unknown as Foto[];
+  }
+
+  fotoDaBarbearia(barbeariaId: number, arquivo: string): Foto | undefined {
+    return this.db.prepare("SELECT id, arquivo, categoria, legenda, largura, altura, capa FROM fotos WHERE barbearia_id = ? AND arquivo = ?")
+      .get(barbeariaId, arquivo) as Foto | undefined;
+  }
+
+  /** Reserva o nome do arquivo antes de gravar no disco; devolve o uuid. */
+  registrarFoto(barbeariaId: number, f: { categoria: string; legenda?: string; largura: number; altura: number }): string {
+    if (!categoriaValida(f.categoria)) throw new ErroAgenda("Categoria inválida.");
+    const { n } = this.db.prepare("SELECT COUNT(*) AS n FROM fotos WHERE barbearia_id = ?").get(barbeariaId) as { n: number };
+    if (n >= MAX_FOTOS) throw new ErroAgenda(`Limite de ${MAX_FOTOS} fotos. Apague algumas antes de enviar mais.`);
+    const arquivo = randomUUID();
+    this.db.prepare("INSERT INTO fotos (barbearia_id, arquivo, categoria, legenda, largura, altura, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(barbeariaId, arquivo, f.categoria, f.legenda?.trim().slice(0, 80) || null, f.largura, f.altura, new Date().toISOString());
+    return arquivo;
+  }
+
+  editarFoto(barbeariaId: number, id: number, dados: { categoria: string; legenda?: string }): void {
+    if (!categoriaValida(dados.categoria)) throw new ErroAgenda("Categoria inválida.");
+    this.db.prepare("UPDATE fotos SET categoria = ?, legenda = ? WHERE id = ? AND barbearia_id = ?")
+      .run(dados.categoria, dados.legenda?.trim().slice(0, 80) || null, id, barbeariaId);
+  }
+
+  /** A capa aparece no topo do site. Só uma por barbearia. */
+  definirCapa(barbeariaId: number, id: number): void {
+    this.db.exec("BEGIN");
+    try {
+      this.db.prepare("UPDATE fotos SET capa = 0 WHERE barbearia_id = ?").run(barbeariaId);
+      this.db.prepare("UPDATE fotos SET capa = 1 WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
+  /** Apaga o registro e devolve o arquivo pra quem chamou remover do disco. */
+  removerFoto(barbeariaId: number, id: number): string | undefined {
+    const f = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
+    if (!f) return undefined;
+    this.db.prepare("UPDATE profissionais SET foto_arquivo = NULL WHERE barbearia_id = ? AND foto_arquivo = ?").run(barbeariaId, f.arquivo);
+    this.db.prepare("DELETE FROM fotos WHERE id = ?").run(id);
+    return f.arquivo;
+  }
+
+  /** A rota pública de imagem só entrega arquivo que está registrado no banco. */
+  fotoExiste(arquivo: string): boolean {
+    return !!this.db.prepare("SELECT 1 FROM fotos WHERE arquivo = ?").get(arquivo);
   }
 }

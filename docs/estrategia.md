@@ -4,9 +4,10 @@
 
 1. **Site de cursos (este, `apps/site`)** — porta de entrada e captação: cursos grátis, conta com
    WhatsApp + senha (lead confirmado e com consentimento), vitrine do produto pros barbeiros.
-2. **Site dos barbeiros (próximo, `apps/barbearias`)** — o "book" de cada barbearia (fotos dos
-   trabalhos) + agenda online + assinatura por Pix. Hoje a agenda ainda mora em `apps/site`
-   (`/app`, `/b/<slug>`) e vai ser movida pra lá.
+2. **Site dos barbeiros (`app/(barbearias)`)** — o "book" de cada barbearia (fotos dos trabalhos,
+   equipe, serviços, horários) com um dos 6 temas + agenda online + assinatura por Pix. Base pronta;
+   próximos: efeitos completos de cada tema (docs/estilos/plano.md), vale-presente, plano mensal,
+   depoimentos.
 3. **Bot de WhatsApp** — responde dúvidas, confirma códigos de login, recebe SAIR.
 
 

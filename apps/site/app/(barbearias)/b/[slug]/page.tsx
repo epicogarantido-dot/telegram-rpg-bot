@@ -1,0 +1,158 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowRight, AtSign, Clock, MapPin, MessageCircle, Phone } from "lucide-react";
+import { CATEGORIAS_FOTO, nomeDia } from "@aprenda/agenda";
+import { obterAgenda, reais } from "@/lib/agenda";
+import { dadosEstruturados, linkMapa, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const banco = obterAgenda();
+  const b = banco.barbeariaPorSlug((await params).slug);
+  if (!b) return { title: "Barbearia não encontrada" };
+  const capa = banco.fotos(b.id).find((f) => f.capa) ?? banco.fotos(b.id)[0];
+  const descricao = b.bio ?? `Agende seu horário na ${b.nome}${b.cidade ? `, em ${b.cidade}` : ""}.`;
+  return {
+    title: `${b.nome}${b.cidade ? ` · ${b.cidade}` : ""}`,
+    description: descricao,
+    // Imagem que aparece quando o link é mandado no WhatsApp.
+    openGraph: { title: b.nome, description: descricao, type: "website", ...(capa && { images: [urlAbsoluta(urlFoto(capa.arquivo))] }) },
+  };
+}
+
+function primeiroNome(nome: string) {
+  return nome.split(" ")[0];
+}
+
+export default async function SiteBarbearia({ params }: { params: Promise<{ slug: string }> }) {
+  const banco = obterAgenda();
+  const b = banco.barbeariaPorSlug((await params).slug);
+  if (!b) notFound();
+  const base = `/b/${b.slug}`;
+  const fotos = banco.fotos(b.id);
+  const capa = fotos.find((f) => f.capa) ?? fotos.find((f) => f.categoria === "ambiente") ?? fotos[0];
+  const trabalhos = fotos.filter((f) => f.categoria !== "equipe" && f.arquivo !== capa?.arquivo).slice(0, 6);
+  const servicos = banco.servicos(b.id, true);
+  const equipe = banco.profissionais(b.id, true);
+  const expedientes = banco.expedientes(b.id);
+  const agora = situacaoAgora(b, expedientes);
+  const mapa = linkMapa(b);
+  const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
+  const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
+  const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{
+        __html: dadosEstruturados(b, { expedientes, servicos, capa: capa?.arquivo }),
+      }} />
+
+      <section className="b-heroi">
+        {capa && (
+          <div className="b-heroi-midia">
+            {/* eslint-disable-next-line @next/next/no-img-element -- imagem já otimizada no envio */}
+            <img src={urlFoto(capa.arquivo)} alt={capa.legenda ?? `Ambiente da ${b.nome}`} width={capa.largura} height={capa.altura} fetchPriority="high" />
+          </div>
+        )}
+        <div className="b-heroi-texto">
+          {b.cidade && <p className="b-sobretitulo">{b.cidade}</p>}
+          <h1>{b.nome}</h1>
+          {b.bio && <p className="b-bio">{b.bio}</p>}
+          <div className="b-acoes">
+            <Link href={`${base}/agendar`} className="b-botao">Agendar horário</Link>
+            <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>
+          </div>
+          <ul className="b-info-rapida">
+            <li className={agora.aberto ? "aberto" : ""}><Clock size={16} aria-hidden /> {agora.texto}</li>
+            {b.endereco && <li><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</li>}
+            <li><Phone size={16} aria-hidden /> <a href={`tel:+${b.telefone}`}>{telefoneBonito}</a></li>
+          </ul>
+        </div>
+      </section>
+
+      {categoriasUsadas.length > 0 && (
+        <div className="b-faixa" aria-hidden="true">
+          <div>{[...categoriasUsadas, ...categoriasUsadas, ...categoriasUsadas].map((c, i) => <span key={i}>{c.nome}</span>)}</div>
+        </div>
+      )}
+
+      {b.oferta && <p className="b-oferta">{b.oferta}</p>}
+
+      {trabalhos.length > 0 && (
+        <section className="b-secao" id="trabalhos">
+          <div className="b-secao-cabeca">
+            <h2>Trabalhos</h2>
+            <Link href={`${base}/trabalhos`}>Ver todos <ArrowRight size={16} aria-hidden /></Link>
+          </div>
+          <div className="b-galeria">
+            {trabalhos.map((f) => (
+              <figure key={f.id} className="b-foto">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? CATEGORIAS_FOTO.find((c) => c.id === f.categoria)?.nome ?? "Trabalho"} loading="lazy" width={f.largura} height={f.altura} />
+                {f.legenda && <figcaption>{f.legenda}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="b-secao" id="servicos">
+        <h2>Serviços</h2>
+        <ul className="b-servicos">
+          {servicos.map((s) => (
+            <li key={s.id}>
+              <span className="b-servico-nome">{s.nome}</span>
+              <span className="b-servico-tempo">{s.duracaoMin} min</span>
+              <span className="b-servico-preco">{reais(s.precoCentavos)}</span>
+              <Link href={`${base}/agendar?servico=${s.id}`} className="b-servico-acao" aria-label={`Agendar ${s.nome}`}>Agendar</Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {equipe.length > 0 && (
+        <section className="b-secao" id="equipe">
+          <h2>Equipe</h2>
+          <div className="b-equipe">
+            {equipe.map((p) => (
+              <article key={p.id} className="b-pessoa">
+                {p.fotoArquivo
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={urlFoto(p.fotoArquivo, "p")} alt={p.nome} loading="lazy" />
+                  : <div className="b-pessoa-inicial" aria-hidden="true">{p.nome[0]}</div>}
+                <h3>{p.nome}</h3>
+                {p.especialidade && <p>{p.especialidade}</p>}
+                <Link href={`${base}/agendar?profissional=${p.id}`} className="b-botao-sec">Agendar com {primeiroNome(p.nome)}</Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="b-secao" id="contato">
+        <h2>Horários e contato</h2>
+        <div className="b-contato">
+          <table className="b-horarios">
+            <tbody>
+              {[1, 2, 3, 4, 5, 6, 0].map((d) => {
+                const e = expedientes.get(d);
+                return (
+                  <tr key={d}>
+                    <th scope="row">{nomeDia(d)}</th>
+                    <td>{e ? `${e.abre}–${e.fecha}` : "Fechado"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <ul className="b-contatos">
+            {b.endereco && <li><MapPin size={18} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}{b.cidade ? `, ${b.cidade}` : ""}</a> : b.endereco}</li>}
+            <li><MessageCircle size={18} aria-hidden /> <a href={whats} target="_blank" rel="noopener noreferrer">{telefoneBonito}</a></li>
+            {b.instagram && <li><AtSign size={18} aria-hidden /> <a href={`https://instagram.com/${b.instagram}`} target="_blank" rel="noopener noreferrer">@{b.instagram}</a></li>}
+          </ul>
+        </div>
+      </section>
+    </>
+  );
+}

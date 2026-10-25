@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { obterMembros } from "../../../../lib/membros";
+import { obterMembros } from "@/lib/membros";
 
 /**
  * Chamado pelo bot de WhatsApp quando chega uma mensagem com código.

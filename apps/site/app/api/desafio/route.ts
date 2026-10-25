@@ -1,4 +1,4 @@
-import { lerDesafio, obterMembros } from "../../../lib/membros";
+import { lerDesafio, obterMembros } from "@/lib/membros";
 
 export const dynamic = "force-dynamic";
 

@@ -9,9 +9,12 @@ num site e num bot de WhatsApp. Tudo em TypeScript, monorepo com npm workspaces.
 - `packages/catalogo` — schema, carregamento e busca. Usado pelo site e pelo bot.
 - `packages/ingestao` — coleta de fontes (`fontes/`), receitas (`receitas.ts`) e tradução com a API do Claude (`traduzir.ts`).
 - `packages/prospeccao` — leads por nicho via Google Places API, SQLite em `data/privado/` (fora do git), mensagem de convite, opt-out.
-- `packages/agenda` — SaaS de agendamento: contas, assinatura (Pix estático `pix.ts`, acesso até `acesso_ate`, só o admin libera), serviços, profissionais, expediente, disponibilidade (`horariosLivres`, pura) e agendamentos. SQLite em `data/privado/agenda.db`; tudo filtrado por `barbearia_id`.
+- `packages/agenda` — SaaS das barbearias: temas (`temas.ts`), fotos do portfólio (`imagens.ts`: reprocessa, tira EXIF/GPS, WebP), equipe com foto, contas, assinatura (Pix estático `pix.ts`, acesso até `acesso_ate`, só o admin libera), serviços, profissionais, expediente, disponibilidade (`horariosLivres`, pura) e agendamentos. SQLite em `data/privado/agenda.db`; tudo filtrado por `barbearia_id`.
 - `packages/membros` — contas dos alunos: login = WhatsApp + senha; número provado mandando código ao bot (`confirmarPeloWhatsapp`), limite de tentativas, progresso, exclusão (LGPD). SQLite em `data/privado/membros.db`.
-- `apps/site` — Next.js (App Router). Alunos: `/cadastro`, `/confirmar`, `/entrar`, `/esqueci`, `/minha-area`; bot chama `/api/whatsapp/codigo` com `BOT_SEGREDO`. Celular de demonstração em `componentes/DemoBarbearia.tsx`; botões de formulário usam `BotaoEnviar` (estado de carregando). `/app` (painel do barbeiro; bloqueado → `/app/assinatura`), `/b/<slug>` (cliente agenda), `/painel/assinaturas` (admin confirma Pix), `/painel/backup`. Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
+- `apps/site` — Next.js (App Router) com DOIS sites em grupos de rota com layout raiz próprio: `app/(cursos)` (Aprenda Livre) e `app/(barbearias)` (site de cada barbearia `/b/<slug>`, `/b/<slug>/trabalhos`, `/b/<slug>/agendar`, e o painel `/app`, `/app/site`, `/app/fotos`). Visual dos temas: `app/(barbearias)/temas.css` (variáveis por `data-tema`, efeitos limitados por `data-efeitos`). Fotos servidas por `app/f/[nome]`. Imports com `@/` (raiz do app).
+- Mesmo processo pros dois sites só por causa da memória do plano da Square Cloud; separar quando o plano crescer.
+- Demo: `npm run semear:demo -w @aprenda/site` cria 6 barbearias (uma por tema) com fotos do Unsplash.
+- `apps/site` (cursos) — Alunos: `/cadastro`, `/confirmar`, `/entrar`, `/esqueci`, `/minha-area`; bot chama `/api/whatsapp/codigo` com `BOT_SEGREDO`. Celular de demonstração em `componentes/DemoBarbearia.tsx`; botões de formulário usam `BotaoEnviar` (estado de carregando). `/app` (painel do barbeiro; bloqueado → `/app/assinatura`), `/b/<slug>` (cliente agenda), `/painel/assinaturas` (admin confirma Pix), `/painel/backup`. Cursos (estático), `/barbeiros` (captação opt-in), `/painel` (leads, protegido por `PAINEL_SENHA`).
 - `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte.
 - `docs/estilos/` — `plano.md` (plano dos 6 temas escolhidos, com nível de efeitos 1–5 que o tema deve respeitar) e Atlas de Estilos: 10 temas pros sites das barbearias, cada um a essência de uma sensação de luxo (marca só como referência).
 - `docs/` — `seguranca.md`, licenças/fontes, riscos do WhatsApp e `estrategia.md` (funil e roadmap do SaaS).
@@ -41,6 +44,7 @@ npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
 - Dados de Maps só pela Places API oficial; nunca raspar o site do Google Maps.
 - Nunca commitar `.env` nem `apps/bot/auth/`.
 - Acesso vencido bloqueia o painel E a página pública; "já paguei" nunca libera sozinho — só `confirmarPagamento` (admin).
+- Foto enviada nunca é servida como veio: sempre passa por `processarFoto` (valida, redimensiona, remove metadados).
 - Toda consulta do SaaS recebe `barbeariaId` da sessão (`exigirBarbeiro`), nunca do formulário.
 - O bot nunca envia mensagem primeiro, nem pra código de login: a pessoa manda o código pra ele.
 - Visual: o dono prefere o estilo limpo (sem 3D/confete). Antes de mexer no design, use as skills `frontend-design` e `diretrizes-interface`; animação só em resposta a uma ação da pessoa e sempre respeitando `prefers-reduced-motion`.

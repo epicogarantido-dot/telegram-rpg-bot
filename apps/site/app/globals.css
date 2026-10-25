@@ -354,3 +354,36 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
   from { transform: translateY(6px); }
   to { transform: translateY(-6px); }
 }
+
+/* ---------- painel da barbearia ---------- */
+.formulario-largo { max-width: 720px; }
+.formulario textarea {
+  padding: 13px 15px; font: inherit; font-size: 16px; border-radius: var(--raio-p);
+  border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); resize: vertical;
+}
+.temas-escolha { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.temas-escolha legend { font-weight: 600; margin-bottom: 8px; }
+.tema-opcao {
+  display: grid !important; gap: 6px; padding: 14px; border: 2px solid var(--borda); border-radius: var(--raio);
+  background: var(--cartao); cursor: pointer; position: relative;
+}
+.tema-opcao:has(input:checked) { border-color: var(--destaque); box-shadow: 0 0 0 3px var(--destaque-claro); }
+.tema-opcao input { position: absolute; opacity: 0; }
+.tema-opcao:has(input:focus-visible) { outline: 3px solid var(--acento); outline-offset: 2px; }
+.tema-amostra { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid var(--borda); }
+.tema-amostra i { flex: 1; }
+.tema-resumo { font-size: 13px; color: var(--suave); font-weight: 400; }
+.tema-efeitos { display: flex; gap: 3px; }
+.tema-efeitos i { width: 18px; height: 6px; border-radius: 3px; background: var(--borda); }
+.tema-efeitos i.on { background: var(--destaque); }
+.envio-fotos { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); padding: 18px; margin: 16px 0 28px; }
+.grade-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.foto-item { padding: 0; overflow: hidden; }
+.foto-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.foto-item.capa { border-color: var(--acento); box-shadow: 0 0 0 2px var(--acento); }
+.foto-campos { display: grid; gap: 8px; padding: 10px; }
+.foto-campos select, .foto-campos input { padding: 8px 10px; font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--borda); background: var(--fundo); color: var(--texto); }
+.botao-sec.perigo { color: var(--erro); }
+.equipe-item { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--borda); }
+.equipe-item form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.equipe-item select, .equipe-item input { padding: 8px 10px; font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); }

@@ -203,3 +203,66 @@ describe("assinatura", () => {
     expect(b.barbeariaPorSlug("x")!.acessoAte).toBe("1970-01-01");
   });
 });
+
+describe("site da barbearia", () => {
+  async function imagem(largura: number, altura: number, comGps = false) {
+    const sharp = (await import("sharp")).default;
+    let img = sharp({ create: { width: largura, height: altura, channels: 3, background: { r: 120, g: 80, b: 40 } } }).jpeg();
+    if (comGps) img = img.withExif({ IFD0: { Make: "Celular" }, IFD3: { GPSLatitudeRef: "S", GPSLatitude: "23/1 33/1 0/1" } });
+    return img.toBuffer();
+  }
+
+  it("tema, textos e instagram validados", () => {
+    const b = new BancoAgenda(":memory:");
+    const { barbearia } = b.criarConta({ nomeBarbearia: "B", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
+    expect(barbearia.tema).toBe("silencioso");
+    b.atualizarSite(barbearia.id, { tema: "potencia", bio: " Degradê na régua ", instagram: "https://instagram.com/navalha.ouro/", oferta: "10% na 1ª visita" });
+    const x = b.barbeariaPorId(barbearia.id)!;
+    expect([x.tema, x.bio, x.instagram]).toEqual(["potencia", "Degradê na régua", "navalha.ouro"]);
+    expect(() => b.atualizarSite(barbearia.id, { tema: "rosa-choque" })).toThrow(ErroAgenda);
+    expect(() => b.atualizarSite(barbearia.id, { tema: "potencia", instagram: "<script>" })).toThrow(/Instagram/);
+  });
+
+  it("fotos: isoladas por barbearia, capa única, profissional com foto", () => {
+    const b = new BancoAgenda(":memory:");
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
+    const f1 = b.registrarFoto(a.id, { categoria: "degrade", largura: 800, altura: 1000 });
+    const f2 = b.registrarFoto(a.id, { categoria: "ambiente", largura: 1600, altura: 900 });
+    expect(() => b.registrarFoto(a.id, { categoria: "nudes", largura: 1, altura: 1 })).toThrow(ErroAgenda);
+    const [id2, id1] = b.fotos(a.id).map((f) => f.id);
+    b.definirCapa(a.id, id1!);
+    b.definirCapa(a.id, id2!);
+    expect(b.fotos(a.id).filter((f) => f.capa).map((f) => f.arquivo)).toEqual([f2]);
+    expect(b.fotos(a.id, "degrade").map((f) => f.arquivo)).toEqual([f1]);
+    // Outra barbearia não mexe nem usa a foto.
+    expect(b.removerFoto(o.id, id1!)).toBeUndefined();
+    const prof = b.profissionais(a.id)[0]!;
+    expect(() => b.atualizarProfissional(o.id, prof.id, { fotoArquivo: f1 })).toThrow(ErroAgenda);
+    b.atualizarProfissional(a.id, prof.id, { especialidade: "Degradê", fotoArquivo: f1 });
+    expect(b.profissionais(a.id)[0]).toMatchObject({ especialidade: "Degradê", fotoArquivo: f1 });
+    // Apagar a foto tira ela do profissional.
+    expect(b.removerFoto(a.id, id1!)).toBe(f1);
+    expect(b.profissionais(a.id)[0]!.fotoArquivo).toBeNull();
+    expect(b.fotoExiste(f1)).toBe(false);
+  });
+
+  it("processa imagem: redimensiona, vira WebP e tira o GPS", async () => {
+    const { processarFoto } = await import("./imagens.ts");
+    const sharp = (await import("sharp")).default;
+    const r = await processarFoto(await imagem(4000, 3000, true));
+    expect([r.largura, r.altura]).toEqual([1600, 1200]);
+    const meta = await sharp(r.grande).metadata();
+    expect(meta.format).toBe("webp");
+    expect(meta.exif).toBeUndefined();
+    expect((await sharp(r.pequena).metadata()).width).toBe(640);
+    await expect(processarFoto(Buffer.from("<?php echo 1; ?>"))).rejects.toThrow(/não é uma imagem/);
+  });
+
+  it("leitura do disco só aceita nomes no formato esperado", async () => {
+    const { lerFoto, nomeValido } = await import("./imagens.ts");
+    expect(nomeValido("../../etc/passwd")).toBe(false);
+    expect(lerFoto("../segredo.webp", "/tmp")).toBeUndefined();
+    expect(nomeValido("3f2b8c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f-p.webp")).toBe(true);
+  });
+});
