@@ -19,6 +19,15 @@ rodar `npm install` nem `build`.
 3. Em squarecloud.app → Upload, envie o zip.
 4. Acesse `/painel` com a senha.
 
+## Atualizar um site que já está no ar (commit)
+
+Use o mesmo zip como **commit** no app que já existe (painel do app → Commit, ou
+`squarecloud commit <ID> --restart` no CLI). O commit descompacta o zip por cima dos
+arquivos do app e **mantém** o resto: `data/privado/` (bancos e fotos) e o `.env` não
+estão no zip, então continuam como estavam. O commit **não reinicia** o app sozinho:
+reinicie depois. Não use "Upload" pra atualizar (cria um app novo, com outro ID e sem os dados).
+Antes, baixe o backup em `/painel/backup`.
+
 Subdomínio e memória: `SQUARE_SUBDOMINIO=meusite SQUARE_MEMORIA=512 npm run pacote:square`.
 
 ## O que a documentação da Square Cloud confirma (lida em 25/10/2026)
