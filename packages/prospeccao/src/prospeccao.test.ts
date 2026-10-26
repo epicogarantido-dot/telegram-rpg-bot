@@ -66,6 +66,7 @@ describe("mensagem", () => {
   it("arruma o nome em maiúsculas da Receita", () => {
     expect(nomeParaMensagem("BARBEARIA DO ZE - CENTRO")).toBe("Barbearia do Ze");
     expect(nomeParaMensagem("Barber Shop do Léo")).toBe("Barber Shop do Léo");
+    expect(nomeParaMensagem("3XR BARBEARIA E LANCHERIA")).toBe("3XR Barbearia e Lancheria");
   });
 
   it("1ª mensagem: quem é, por que esta barbearia, pergunta fácil, SAIR e nenhum link", () => {

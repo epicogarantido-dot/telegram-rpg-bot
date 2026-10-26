@@ -23,7 +23,8 @@ export function primeiroNome(nomeNegocio: string): string {
 export function nomeParaMensagem(nome: string): string {
   const curto = primeiroNome(nome);
   if (curto !== curto.toUpperCase()) return curto;
-  return curto.toLowerCase().replace(/(^|\s)(\p{L})/gu, (_, e: string, l: string) => e + l.toUpperCase())
+  // Palavra com número ("3XR", "B2") é sigla: fica como está.
+  return curto.split(" ").map((p) => /\d/.test(p) ? p : p.toLowerCase().replace(/^\p{L}/u, (l) => l.toUpperCase())).join(" ")
     .replace(/ (De|Da|Do|Das|Dos|E) /g, (m) => m.toLowerCase());
 }
 
@@ -66,7 +67,7 @@ export function mensagemDemonstracao(lead: Pick<Lead, "nome">, link: string): st
   return [
     `Olha como ficaria o site da ${nome}:`,
     link,
-    `O cliente vê os cortes, escolhe o horário e marca sozinho. As fotos são de exemplo; com as suas fica ainda melhor. Se gostar, é só tocar em "Quero este site" lá embaixo e em uns 5 minutos ele é seu.`,
+    `O cliente vê os cortes, escolhe o horário e marca sozinho. As fotos são de exemplo; com as suas fica ainda melhor. Se gostar, é só tocar em "Quero este site", no alto da página, e em uns 5 minutos ele é seu.`,
   ].join("\n\n");
 }
 

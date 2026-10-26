@@ -277,7 +277,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           </ul>
         </>
       ) : (
-        <p>Sem horários livres nos próximos {DIAS_A_FRENTE} dias. <a href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">Fale com a barbearia no WhatsApp</a>.</p>
+        <p>Sem horários livres nos próximos {DIAS_A_FRENTE} dias.{b.telefone && <> <a href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">Fale com a barbearia no WhatsApp</a>.</>}</p>
       )}
     </div>
   );

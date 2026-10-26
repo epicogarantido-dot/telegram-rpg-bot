@@ -40,7 +40,10 @@ export function obterBanco(): BancoProspeccao {
 }
 
 export const config = {
+  /** Quem assina a 1ª mensagem: "João, do Aprenda Livre". */
   remetente: process.env.REMETENTE ?? "a equipe do Aprenda Livre",
+  /** Número do bot, pro presente dos cursos grátis. */
+  botWhatsapp: process.env.BOT_WHATSAPP?.replace(/\D/g, "") || undefined,
   linkComunidade: process.env.COMUNIDADE_LINK ?? "https://chat.whatsapp.com/SEU-LINK",
   nichoPlural: process.env.NICHO_PLURAL ?? "barbeiros",
   /** Contatos manuais por dia. Passar disso em número novo é pedir banimento. */

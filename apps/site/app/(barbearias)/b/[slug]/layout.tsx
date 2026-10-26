@@ -1,9 +1,19 @@
+import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarCheck, MessageCircle, Navigation } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 import { linkMapa, nivelEfeitos } from "@/lib/barbearias";
 import { Efeitos } from "@/componentes/barbearia/Efeitos";
+import { QueroEsteSite } from "@/componentes/barbearia/QueroEsteSite";
+import { dataPorExtenso } from "@/lib/datas";
+
+/** Demonstração não vai pro Google (nem o site, nem as páginas internas). */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const b = obterAgenda().barbeariaPorSlug((await params).slug);
+  return b?.demoAte ? { robots: { index: false, follow: false } } : {};
+}
 
 /**
  * Casca do site de cada barbearia: aplica o tema escolhido (data-tema) e o
@@ -15,12 +25,24 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   const b = banco.barbeariaPorSlug(slug);
   if (!b) notFound();
   const ativo = banco.acessoAtivo(b);
+  // Demonstração vencida some de vez (não tem dono pra quem "falar direto").
+  if (b.demoAte && !ativo) notFound();
   const base = `/b/${b.slug}`;
   const agenda = b.atendimento !== "chegada";
   const mapa = linkMapa(b);
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
 
   return (
+    <>
+      {b.demoAte && (
+        <aside className="b-demo" aria-label="Aviso de demonstração">
+          <p>
+            <strong>Demonstração</strong> montada pelo Aprenda Livre pra mostrar como ficaria o site da {b.nome}.
+            Fotos de exemplo; a marcação está desligada. No ar até {dataPorExtenso(b.demoAte)}.
+          </p>
+          <Suspense><QueroEsteSite /></Suspense>
+        </aside>
+      )}
     <div className="site-b" data-tema={b.tema} data-efeitos={nivelEfeitos(b.tema)}>
       <header className="b-topo">
         <Link href={base} className="b-nome">{b.nome}</Link>
@@ -39,7 +61,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
           <section className="b-secao b-indisponivel">
             <h1>{b.nome}</h1>
             <p>O site está temporariamente indisponível. Fale direto com a barbearia:</p>
-            <a className="b-botao" href={whats} target="_blank" rel="noopener noreferrer">WhatsApp da barbearia</a>
+            {b.telefone && <a className="b-botao" href={whats} target="_blank" rel="noopener noreferrer">WhatsApp da barbearia</a>}
           </section>
         )}
       </main>
@@ -53,11 +75,14 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
           {agenda
             ? <Link href={`${base}/agendar`} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar</Link>
             : mapa && <a href={mapa} className="b-botao" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
-          <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer" aria-label="Chamar no WhatsApp">
-            <MessageCircle size={20} aria-hidden />
-          </a>
+          {b.telefone && (
+            <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer" aria-label="Chamar no WhatsApp">
+              <MessageCircle size={20} aria-hidden />
+            </a>
+          )}
         </nav>
       )}
     </div>
+    </>
   );
 }

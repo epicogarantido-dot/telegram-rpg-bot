@@ -109,12 +109,12 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             {agenda
               ? <Link href={`${base}/agendar`} className="b-botao">Agendar horário</Link>
               : mapa && <a href={mapa} className="b-botao" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
-            <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>
+            {b.telefone && <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>}
           </div>
           <ul className="b-info-rapida">
             <li className={`b-estado ${agora.aberto ? "aberto" : ""}`}><Clock size={16} aria-hidden /> {agora.texto}</li>
             {b.endereco && <li><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</li>}
-            <li><Phone size={16} aria-hidden /> <a href={`tel:+${b.telefone}`}>{telefoneBonito}</a></li>
+            {b.telefone && <li><Phone size={16} aria-hidden /> <a href={`tel:+${b.telefone}`}>{telefoneBonito}</a></li>}
           </ul>
         </div>
       </section>
@@ -234,7 +234,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           </table>
           <ul className="b-contatos">
             {b.endereco && <li><MapPin size={18} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}{b.cidade ? `, ${b.cidade}` : ""}</a> : b.endereco}</li>}
-            <li><MessageCircle size={18} aria-hidden /> <a href={whats} target="_blank" rel="noopener noreferrer">{telefoneBonito}</a></li>
+            {b.telefone && <li><MessageCircle size={18} aria-hidden /> <a href={whats} target="_blank" rel="noopener noreferrer">{telefoneBonito}</a></li>}
             {b.instagram && <li><AtSign size={18} aria-hidden /> <a href={`https://instagram.com/${b.instagram}`} target="_blank" rel="noopener noreferrer">@{b.instagram}</a></li>}
           </ul>
         </div>

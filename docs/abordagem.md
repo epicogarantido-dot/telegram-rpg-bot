@@ -1,4 +1,4 @@
-# Abordagem do primeiro contato (proposta, aguardando aprovação)
+# Abordagem do primeiro contato (aprovada e implementada no painel)
 
 Objetivo da primeira conversa: **ganhar uma resposta**, não vender. Quem responde vira conversa;
 quem não responde conta contra o seu número no WhatsApp (o WhatsApp está limitando mensagens
@@ -57,11 +57,30 @@ abriram em 2019"). Nada de elogio genérico. Se não achar nada, só o nome e a 
 - **Ir na barbearia**: em cidade de ~70 mil habitantes, 4-5 visitas por dia com um cartão com
   QR code do bot ("cursos grátis pra barbeiro") convertem mais do que qualquer mensagem.
 
-## O que precisa ser feito no sistema (depois da aprovação)
+## Como fica no painel (`/painel`)
 
-1. Trocar o texto do convite no painel por esta sequência (1ª mensagem, 2ª por resposta, lembrete).
-2. Botão **"Criar demonstração"** no lead: gera em segundos o site de exemplo com o nome da
-   barbearia (estilo à escolha, fotos de exemplo, aviso "demonstração", fora do Google, some em
-   14 dias). Na hora em que o barbeiro assina, vira o site dele de verdade.
-3. Status novos no painel: "demo enviada" e "lembrete enviado", e o lembrete aparecendo no dia certo.
-4. Cartão com QR code pra imprimir (visitas).
+Cada cartão de lead mostra só o próximo passo da etapa em que ele está. Os botões abrem o
+WhatsApp de quem está usando o painel com o texto pronto (`packages/prospeccao/src/mensagem.ts`)
+e já avançam a etapa; quem aperta "enviar" no WhatsApp é a pessoa.
+
+| Etapa | O que aparece |
+|---|---|
+| Novo | "Onde você viu" + "um detalhe real" → **Abrir 1ª mensagem** (conta no limite do dia) |
+| 1ª mensagem enviada | "Lembrete em N dias"; no 3º dia, **Mandar lembrete**; "Respondeu: marca pelo WhatsApp / ordem de chegada" (2ª mensagem) |
+| Lembrete enviado | 4 dias sem resposta → **Encerrar: sem resposta** (não volta pra fila) |
+| Respondeu | **Criar demonstração** (escolhe o estilo) → **Mandar demonstração** |
+| Demonstração enviada | Ver demonstração, mandar o link de novo, **Virou cliente** |
+| Qualquer etapa da conversa | **Presente: cursos grátis** (link do bot) e **Pediu SAIR** (bloqueio permanente) |
+
+No alto do painel: quantos lembretes e encerramentos vencem hoje, com filtro só pra eles.
+
+**Demonstração** (`criarDemonstracao` em `packages/agenda`): site em `/b/<slug>` com o nome da
+barbearia, o estilo escolhido e as fotos de exemplo de `data/demo-fotos/` (Unsplash). Aviso de
+demonstração no topo, fora do Google (noindex), sem telefone, marcação desligada, some em 14 dias.
+O link mandado leva `?convite=…`: só quem tem o convite vê **Quero este site**, que abre o
+cadastro já com o nome e transforma a demonstração no site dele (`assumirDemonstracao`: mesmo
+endereço e estilo; acesso liberado só depois do Pix confirmado, como qualquer conta).
+
+**Cartão pra visitas** (`/painel/cartao`): folha A4 com 10 cartões de 9 × 5 cm e QR code que abre o
+WhatsApp do bot com "Quero entrar no Aprenda Livre" escrito. Precisa de `BOT_WHATSAPP` no `.env`.
+Quem assina as mensagens: `REMETENTE` no `.env` ("João, do Aprenda Livre").
