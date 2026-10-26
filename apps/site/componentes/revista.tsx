@@ -57,7 +57,7 @@ export function PropagandaSaas() {
           <li>Seis estilos de site; você muda tudo pelo celular.</li>
         </ul>
         <p className="propaganda-preco">
-          {plano.testeDias > 0 && `${plano.testeDias} dias pra testar. `}{reais(adesao)} na contratação (já com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
+          {reais(adesao)} na contratação (já com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
         </p>
         <div className="acoes">
           <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>

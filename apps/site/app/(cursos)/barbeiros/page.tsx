@@ -187,7 +187,6 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
           </div>
           <ul>
-            {plano.testeDias > 0 && <li>{plano.testeDias} dias pra testar antes de contratar.</li>}
             <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
             <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
