@@ -803,3 +803,22 @@ describe("clientes que sumiram", () => {
     expect(b.clientesSumidos(a.id, new Date("2026-11-10T15:00:00Z")).map((c) => c.nome)).toContain("Ana");
   });
 });
+
+describe("cardápio de cortes: foto de referência ao marcar", () => {
+  it("aceita só foto de trabalho da própria barbearia", () => {
+    const antes = new Date("2026-10-01T12:00:00Z");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const degrade = b.registrarFoto(a.id, { categoria: "degrade", largura: 10, altura: 10 });
+    const ambiente = b.registrarFoto(a.id, { categoria: "ambiente", largura: 10, altura: 10 });
+    const deOutra = b.registrarFoto(o.id, { categoria: "corte", largura: 10, altura: 10 });
+    const [p] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    const m = (hora: string, referenciaFoto?: string) => b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data: "2026-10-20", hora, clienteNome: "Lucas", clienteTelefone: "5519998765432", agora: antes, peloBarbeiro: true, referenciaFoto });
+    m("10:00", degrade);
+    expect(() => m("11:00", ambiente)).toThrow(/referência/);
+    expect(() => m("11:00", deOutra)).toThrow(/referência/);
+    expect(b.agendamentosDoDia(a.id, "2026-10-20")[0]!.referenciaFoto).toBe(degrade);
+  });
+});

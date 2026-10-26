@@ -7,7 +7,7 @@ import { BarChart3, CalendarCheck, CalendarOff, CalendarPlus, Star, MessageCircl
 import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
-import { situacaoAgora } from "@/lib/barbearias";
+import { situacaoAgora, urlFoto } from "@/lib/barbearias";
 import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
@@ -302,6 +302,13 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             {a.status === "faltou" && <span className="etiqueta" style={{ marginLeft: 8 }}>faltou</span>}
             <br />
             {a.clienteNome}
+            {a.referenciaFoto && (
+              <a className="referencia-pedida" href={urlFoto(a.referenciaFoto)} target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={urlFoto(a.referenciaFoto, "p")} alt="Corte que o cliente escolheu" width={56} height={56} />
+                <span>Corte que o cliente escolheu</span>
+              </a>
+            )}
           </div>
           {a.status === "confirmado" && a.inicio <= agoraLocal && (
             <div className="acoes">

@@ -703,3 +703,5 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 }
 .lista-sumidos { list-style: none; padding: 0; display: grid; gap: 10px; }
 .lista-sumidos .cartao { margin: 0; }
+.referencia-pedida { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
+.referencia-pedida img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }

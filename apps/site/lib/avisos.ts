@@ -66,7 +66,7 @@ export async function avisarNovoAgendamento(barbeariaId: number, agendamentoId: 
   const data = a.inicio.slice(0, 10);
   await enviar(barbeariaId, {
     titulo: `Novo horário: ${a.clienteNome}`,
-    corpo: `${a.servico} com ${a.profissional} · ${formatarData(data)} às ${a.inicio.slice(11, 16)}`,
+    corpo: `${a.servico} com ${a.profissional} · ${formatarData(data)} às ${a.inicio.slice(11, 16)}${a.referenciaFoto ? " · escolheu o corte nas fotos" : ""}`,
     url: `/app?data=${data}#ag-${agendamentoId}`,
     whats: linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: b.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio })),
     tag: `ag-${agendamentoId}`,

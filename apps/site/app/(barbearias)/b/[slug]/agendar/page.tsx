@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { ChevronRight } from "lucide-react";
-import { agoraNoFuso, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_REFERENCIA, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { urlFoto } from "@/lib/barbearias";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
 import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
@@ -46,7 +47,7 @@ async function confirmar(form: FormData) {
     const id = obterAgenda().agendar({
       barbeariaId: b.id, profissionalId: Number(campos.com), servicoId: Number(campos.servico),
       data: campos.data, hora: campos.hora, clienteNome: String(form.get("nome") ?? ""), clienteTelefone: telefone ?? "",
-      peloBarbeiro,
+      peloBarbeiro, referenciaFoto: String(form.get("referencia") ?? "") || undefined,
     });
     protecao?.registrar();
     // Link secreto do cliente (ver, cancelar, remarcar). Só o hash fica no banco.
@@ -191,6 +192,8 @@ export default async function Agendar({ params, searchParams }: { params: Promis
 
   // ---------- Passo 3: nome e WhatsApp ----------
   if (horaValida && data && com && sp.hora) {
+    // Cardápio de cortes: até 12 fotos de trabalho, as mais recentes.
+    const referencias = banco.fotos(b.id).filter((f) => CATEGORIAS_REFERENCIA.includes(f.categoria)).slice(0, 12);
     return (
       <div className="b-secao b-agendar">
         <Cabeca rotulo={`Passo 3 de 3 · ${b.nome}`} titulo="Confirme seu horário" />
@@ -216,6 +219,25 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <label htmlFor="telefone">Seu WhatsApp com DDD</label>
           <input id="telefone" name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" aria-describedby="telefone-dica" />
           <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário.</small>
+          {referencias.length > 0 && (
+            <fieldset className="b-referencias">
+              <legend>Quer mostrar o corte? <small>(opcional)</small></legend>
+              <p className="b-dica">Toque na foto do trabalho que você quer. O barbeiro recebe junto com o horário.</p>
+              <div className="b-referencias-grade">
+                <label className="b-referencia b-referencia-nenhuma">
+                  <input type="radio" name="referencia" value="" defaultChecked />
+                  <span>Explico na hora</span>
+                </label>
+                {referencias.map((f) => (
+                  <label key={f.arquivo} className="b-referencia">
+                    <input type="radio" name="referencia" value={f.arquivo} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? "Foto de um trabalho da barbearia"} width={120} height={120} loading="lazy" />
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <BotaoEnviar className="b-botao" carregando="Confirmando…">Confirmar horário</BotaoEnviar>
         </form>
       </div>

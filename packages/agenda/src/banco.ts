@@ -52,6 +52,9 @@ export interface Barbearia {
   retornoDias: number;
 }
 
+/** Categorias de foto que o cliente pode escolher como "quero esse corte" ao marcar. */
+export const CATEGORIAS_REFERENCIA: string[] = ["degrade", "corte", "barba", "navalhado", "infantil"];
+
 /** Retorno padrão sugerido pra cliente sem histórico (dá pra mudar em Configurações). */
 export const RETORNO_PADRAO_DIAS = 21;
 
@@ -141,6 +144,8 @@ export interface Agendamento {
   /** Quando o barbeiro abriu o lembrete da véspera e o pedido de avaliação (pra não repetir). */
   lembreteEm?: string;
   avaliacaoEm?: string;
+  /** Foto do portfólio que o cliente escolheu ao marcar ("quero esse corte"). */
+  referenciaFoto?: string;
 }
 /** O que o cliente vê na página do próprio horário (link secreto). */
 export interface HorarioCliente extends Agendamento {
@@ -297,7 +302,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
     this.garantirColuna("servicos", "descricao", "TEXT");
     this.garantirColuna("barbearias", "retorno_dias", `INTEGER NOT NULL DEFAULT ${RETORNO_PADRAO_DIAS}`);
-    for (const c of ["lembrete_em", "avaliacao_em"]) this.garantirColuna("agendamentos", c, "TEXT");
+    for (const c of ["lembrete_em", "avaliacao_em", "referencia_foto"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.db.exec(`
@@ -626,12 +631,12 @@ export class BancoAgenda {
   agendamentosDoDia(barbeariaId: number, data: Data, profissionalId?: number): Agendamento[] {
     const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
-        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.referencia_foto AS referenciaFoto
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.inicio LIKE ? ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
-    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined }));
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined }));
   }
 
   /** `ignorarId`: ao remarcar, o horário antigo do próprio cliente não conta como ocupado. */
@@ -666,6 +671,8 @@ export class BancoAgenda {
   agendar(dados: {
     barbeariaId: number; profissionalId: number; servicoId: number; data: Data; hora: string;
     clienteNome: string; clienteTelefone: string; agora?: Date; peloBarbeiro?: boolean;
+    /** Foto do portfólio da própria barbearia (categorias de trabalho, nunca equipe/ambiente/produtos). */
+    referenciaFoto?: string;
   }): number {
     const nome = dados.clienteNome.trim().replace(/\s+/g, " ");
     if (nome.length < 2) throw new ErroAgenda("Informe seu nome.");
@@ -689,6 +696,8 @@ export class BancoAgenda {
     const prof = this.profissionais(dados.barbeariaId, true).find((p) => p.id === dados.profissionalId);
     const servico = this.servicos(dados.barbeariaId, true).find((s) => s.id === dados.servicoId);
     if (!prof || !servico) throw new ErroAgenda("Serviço ou profissional indisponível.");
+    const referencia = dados.referenciaFoto ? this.fotoDaBarbearia(dados.barbeariaId, dados.referenciaFoto) : undefined;
+    if (dados.referenciaFoto && (!referencia || !CATEGORIAS_REFERENCIA.includes(referencia.categoria))) throw new ErroAgenda("Foto de referência inválida.");
 
     this.db.exec("BEGIN IMMEDIATE");
     try {
@@ -696,10 +705,10 @@ export class BancoAgenda {
       if (!livres.includes(dados.hora)) throw new ErroAgenda("Esse horário acabou de ser ocupado. Escolha outro.");
       const fim = deMinutos(paraMinutos(dados.hora) + servico.duracaoMin);
       const r = this.db.prepare(`INSERT INTO agendamentos
-          (barbearia_id, servico_id, profissional_id, cliente_nome, cliente_telefone, inicio, fim, criado_em)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+          (barbearia_id, servico_id, profissional_id, cliente_nome, cliente_telefone, inicio, fim, criado_em, referencia_foto)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(dados.barbeariaId, servico.id, prof.id, nome.slice(0, 80), dados.clienteTelefone,
-          `${dados.data}T${dados.hora}`, `${dados.data}T${fim}`, new Date().toISOString());
+          `${dados.data}T${dados.hora}`, `${dados.data}T${fim}`, new Date().toISOString(), referencia?.arquivo ?? null);
       this.db.exec("COMMIT");
       return Number(r.lastInsertRowid);
     } catch (e) {
@@ -1277,9 +1286,9 @@ export class BancoAgenda {
   }
 
   /** Dados de um agendamento pra montar o aviso (só da própria barbearia). */
-  agendamentoParaAviso(barbeariaId: number, id: number): { clienteNome: string; clienteTelefone: string; inicio: string; servico: string; profissional: string } | undefined {
+  agendamentoParaAviso(barbeariaId: number, id: number): { clienteNome: string; clienteTelefone: string; inicio: string; servico: string; profissional: string; referenciaFoto: string | null } | undefined {
     return this.db.prepare(`SELECT a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio,
-        s.nome AS servico, p.nome AS profissional
+        s.nome AS servico, p.nome AS profissional, a.referencia_foto AS referenciaFoto
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.id = ? AND a.barbearia_id = ?`).get(id, barbeariaId) as ReturnType<BancoAgenda["agendamentoParaAviso"]>;
   }

@@ -747,3 +747,15 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 
 /* O que o serviço inclui, embaixo do nome. */
 .b-servico-desc { display: block; margin-top: 2px; font-weight: 400; font-size: 14px; line-height: 1.4; color: var(--suave); }
+
+/* Cardápio de cortes no passo 3: foto escolhida ganha borda; sem foto = "explico na hora". */
+.b-referencias { margin: 18px 0 6px; padding: 0; border: 0; }
+.b-referencias legend { font-weight: 600; padding: 0; }
+.b-referencias legend small { font-weight: 400; color: var(--suave); }
+.b-referencias-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; margin-top: 8px; }
+.b-referencia { position: relative; display: grid; place-items: center; aspect-ratio: 1; cursor: pointer; border: 2px solid var(--borda); border-radius: var(--raio-p); overflow: hidden; background: var(--fundo-2); }
+.b-referencia input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.b-referencia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.b-referencia-nenhuma span { padding: 6px; text-align: center; font-size: 13px; color: var(--suave); }
+.b-referencia:has(input:checked) { border-color: var(--destaque); box-shadow: 0 0 0 2px var(--destaque); }
+.b-referencia:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
