@@ -275,6 +275,22 @@
 .site-b[data-tema="tecnico"] .b-lista-servicos { border: 0; display: grid; gap: 10px; }
 .site-b[data-tema="tecnico"] .b-lista-servicos a { border: 0; background: var(--cartao); border-radius: 18px; padding: 12px 20px; box-shadow: var(--sombra); }
 
+/* Passo 1, parte 2: adicionais (barba, sobrancelha) marcados com um toque na linha toda. */
+.b-adicionais fieldset { margin: 20px 0 0; padding: 0; border: 0; border-top: 1px solid var(--borda); }
+.b-adicionais .b-dica { margin: 18px 0 0; }
+.b-adicional {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 14px;
+  min-height: 64px; padding: 12px 4px; border-bottom: 1px solid var(--borda); cursor: pointer;
+}
+.b-adicional input { width: 22px; height: 22px; margin: 0; accent-color: var(--destaque); }
+.b-adicional .b-lista-nome { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.b-adicional .b-lista-nome small { flex-basis: 100%; }
+.b-adicional:has(input:checked) .b-lista-nome { text-decoration: underline; text-underline-offset: 4px; }
+.b-adicional:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
+.b-adicionais .b-botao { margin-top: 22px; width: 100%; }
+.site-b[data-tema="tecnico"] .b-adicionais fieldset { border: 0; display: grid; gap: 10px; }
+.site-b[data-tema="tecnico"] .b-adicional { border: 0; background: var(--cartao); border-radius: 18px; padding: 12px 20px; box-shadow: var(--sombra); }
+
 /* Passo 2: profissional, dias e horários. */
 .b-escolhido { margin: 16px 0 0; color: var(--suave); }
 .b-escolhido a { color: var(--texto); text-underline-offset: 4px; }

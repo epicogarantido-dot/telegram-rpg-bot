@@ -34,6 +34,7 @@ const RECURSOS = [
     icone: CalendarCheck, titulo: "O cliente marca sozinho",
     itens: [
       "Escolhe o serviço, vê os horários livres e marca em 3 toques, a qualquer hora.",
+      "Junto com o corte, o cliente já soma barba, sobrancelha ou o que você oferecer: tempo e preço certos.",
       "\"Qualquer barbeiro\" mostra todas as vagas da equipe de uma vez.",
       "Recebe um link pra pôr na agenda do celular, trocar o horário ou cancelar sem te ligar.",
     ],

@@ -18,9 +18,15 @@ const DIAS_A_FRENTE = 14;
  * - `profissional` é só o filtro ("qualquer um" quando vazio);
  * - `com` é quem vai atender no horário escolhido (resolvido ao tocar no horário).
  * - `remarcar` é o token do link do cliente: mesmo fluxo, mas no fim troca o horário.
+ * - `extra` são os adicionais (barba, sobrancelha), repetido na URL; `ad=1` diz que o cliente já respondeu.
  * Tudo por link (funciona sem JavaScript) e cada passo é uma tela.
  */
-type Busca = { servico?: string; profissional?: string; data?: string; hora?: string; com?: string; remarcar?: string; erro?: string };
+type Busca = { servico?: string; profissional?: string; data?: string; hora?: string; com?: string; remarcar?: string; erro?: string; ad?: string; extra?: string | string[] };
+
+/** `extra` vem uma vez por adicional; vira lista de ids. */
+function lerExtras(extra: string | string[] | undefined): number[] {
+  return (Array.isArray(extra) ? extra : extra ? [extra] : []).map(Number).filter((n) => Number.isInteger(n) && n > 0);
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const b = obterAgenda().barbeariaPorSlug((await params).slug);
@@ -36,7 +42,10 @@ async function confirmar(form: FormData) {
     servico: String(form.get("servico")), profissional: String(form.get("profissional") ?? ""),
     data: String(form.get("data")), hora: String(form.get("hora")), com: String(form.get("com")),
   };
+  const extras = form.getAll("extra").map(String);
   const voltar = new URLSearchParams(campos);
+  voltar.set("ad", "1");
+  for (const x of extras) voltar.append("extra", x);
   let token = "";
   // O barbeiro logado marcando pra um cliente não passa pelas travas do site.
   const peloBarbeiro = await ehOBarbeiro(b.id);
@@ -49,6 +58,7 @@ async function confirmar(form: FormData) {
       data: campos.data, hora: campos.hora, clienteNome: String(form.get("nome") ?? ""), clienteTelefone: telefone ?? "",
       peloBarbeiro, referenciaFoto: String(form.get("referencia") ?? "") || undefined,
       enderecoCliente: String(form.get("endereco") ?? "") || undefined,
+      adicionais: lerExtras(extras),
     });
     protecao?.registrar();
     // Link secreto do cliente (ver, cancelar, remarcar). Só o hash fica no banco.
@@ -84,10 +94,11 @@ async function trocar(form: FormData) {
 }
 
 /** Horários livres do dia somando os profissionais escolhidos; cada horário leva o primeiro livre. */
-function vagasDoDia(banco: BancoAgenda, barbeariaId: number, servicoId: number, profissionais: number[], data: Data, ignorarId?: number) {
+function vagasDoDia(banco: BancoAgenda, barbeariaId: number, servicoId: number, profissionais: number[], data: Data, ignorarId: number | undefined,
+  extra: { adicionais?: number[]; duracaoMin?: number }) {
   const livres = new Map<string, number>();
   for (const p of profissionais) {
-    for (const h of banco.horariosLivres(barbeariaId, p, servicoId, data, undefined, ignorarId)) if (!livres.has(h)) livres.set(h, p);
+    for (const h of banco.horariosLivres(barbeariaId, p, servicoId, data, undefined, ignorarId, extra)) if (!livres.has(h)) livres.set(h, p);
   }
   return [...livres].sort(([a], [b]) => a.localeCompare(b));
 }
@@ -132,10 +143,22 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   const hoje = agoraNoFuso(b.fuso).slice(0, 10);
   const base = `/b/${slug}/agendar`;
 
+  // Adicionais: só os que valem pra esse serviço (ids estranhos na URL são ignorados).
+  const possiveis = servico && !remarcando ? banco.adicionaisPara(b.id, servico.id) : [];
+  const pedidos = lerExtras(sp.extra);
+  const adicionais = possiveis.filter((a) => pedidos.includes(a.id));
+  const respondeu = sp.ad === "1" || possiveis.length === 0;
+
   const link = (extra: Busca) => {
-    const tudo: Busca = { servico: servico && String(servico.id), profissional: filtro && String(filtro.id), data: sp.data, remarcar: remarcando && sp.remarcar, ...extra };
+    const tudo: Busca = {
+      servico: servico && String(servico.id), profissional: filtro && String(filtro.id), data: sp.data, remarcar: remarcando && sp.remarcar,
+      ad: possiveis.length && respondeu ? "1" : undefined, extra: adicionais.map((a) => String(a.id)), ...extra,
+    };
     const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(tudo)) if (v) q.set(k, v);
+    for (const [k, v] of Object.entries(tudo)) {
+      if (Array.isArray(v)) for (const x of v) q.append(k, x);
+      else if (v) q.set(k, v);
+    }
     return `${base}?${q}`;
   };
 
@@ -147,7 +170,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
         <ul className="b-lista-servicos">
           {servicos.map((s) => (
             <li key={s.id}>
-              <Link href={link({ servico: String(s.id), data: undefined })}>
+              <Link href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [] })}>
                 <span className="b-lista-nome">{s.nome}{s.emDomicilio && <small className="b-servico-domicilio">Vou até você</small>}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
                 <span className="b-lista-info">{s.duracaoMin} min</span>
                 {b.mostrarPrecos && <span className="b-lista-preco">{reais(s.precoCentavos)}</span>}
@@ -160,10 +183,46 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     );
   }
 
+  // ---------- Passo 1, parte 2: adicionais ----------
+  if (!respondeu) {
+    return (
+      <div className="b-secao b-agendar">
+        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Quer adicionar algo?" />
+        <p className="b-escolhido">
+          {servico.nome} · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
+          {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
+        </p>
+        <form method="get" action={base} className="b-adicionais">
+          <input type="hidden" name="servico" value={servico.id} />
+          {filtro && <input type="hidden" name="profissional" value={filtro.id} />}
+          <input type="hidden" name="ad" value="1" />
+          <p className="b-dica">Aproveite o horário: marque o que quiser fazer junto. Se não quiser nada, é só ver os horários.</p>
+          <fieldset>
+            <legend className="b-so-leitor">Adicionais</legend>
+            {possiveis.map((a) => (
+              <label key={a.id} className="b-adicional">
+                <input type="checkbox" name="extra" value={a.id} defaultChecked={pedidos.includes(a.id)} />
+                <span className="b-lista-nome">{a.nome}{a.descricao && <small className="b-servico-desc">{a.descricao}</small>}</span>
+                <span className="b-lista-info">+{a.duracaoMin} min</span>
+                {b.mostrarPrecos && <span className="b-lista-preco">+{reais(a.precoCentavos)}</span>}
+              </label>
+            ))}
+          </fieldset>
+          <button className="b-botao">Ver horários</button>
+        </form>
+      </div>
+    );
+  }
+
+  const tempoTotal = servico.duracaoMin + adicionais.reduce((t, a) => t + a.duracaoMin, 0);
+  const precoTotal = servico.precoCentavos + adicionais.reduce((t, a) => t + a.precoCentavos, 0);
+  const nomeTotal = [servico.nome, ...adicionais.map((a) => a.nome)].join(" + ");
+  // Remarcando: o tempo é o do horário já marcado (com os adicionais dele).
+  const duracao = remarcando ? { duracaoMin: remarcando.duracaoMin } : { adicionais: adicionais.map((a) => a.id) };
   const ids = filtro ? [filtro.id] : profissionais.map((p) => p.id);
   const com = profissionais.find((p) => String(p.id) === sp.com);
   const data = sp.data && dataValida(sp.data) && sp.data >= hoje ? sp.data : undefined;
-  const horaValida = !!(data && sp.hora && com && banco.horariosLivres(b.id, com.id, servico.id, data, undefined, remarcando?.id).includes(sp.hora));
+  const horaValida = !!(data && sp.hora && com && banco.horariosLivres(b.id, com.id, servico.id, data, undefined, remarcando?.id, duracao).includes(sp.hora));
   const quandoAtual = remarcando && `${formatarData(remarcando.inicio.slice(0, 10))} às ${remarcando.inicio.slice(11, 16)}`;
 
   // ---------- Remarcar, passo final: confirmar a troca ----------
@@ -175,7 +234,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
         <div className="b-resumo">
           <p className="b-resumo-antes">De: {quandoAtual}</p>
           <p className="b-resumo-quando">Para: {formatarData(data)} às {sp.hora}</p>
-          <p>{servico.nome} com {com.nome}</p>
+          <p>{remarcando.servico} com {com.nome}</p>
           <Link href={link({ hora: undefined, com: undefined, data })}>Escolher outro</Link>
         </div>
         <form action={trocar} className="formulario b-form-agendar">
@@ -201,7 +260,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
         {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
-          <p>{servico.nome} com {com.nome}{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}</p>
+          <p>{nomeTotal} com {com.nome} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}</p>
           <Link href={link({ hora: undefined, com: undefined, data })}>Trocar horário</Link>
         </div>
         <form action={confirmar} className="formulario b-form-agendar">
@@ -211,6 +270,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <input type="hidden" name="com" value={com.id} />
           <input type="hidden" name="data" value={data} />
           <input type="hidden" name="hora" value={sp.hora} />
+          {adicionais.map((a) => <input key={a.id} type="hidden" name="extra" value={a.id} />)}
           {/* Isca pra robô: ninguém vê nem alcança pelo teclado. */}
           <div className="b-isca" aria-hidden="true">
             <label>Empresa <input name={CAMPO_ISCA} tabIndex={-1} autoComplete="off" /></label>
@@ -254,7 +314,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
 
   // ---------- Passo 2: dia e horário ----------
   const dias = Array.from({ length: DIAS_A_FRENTE }, (_, i) => somarDias(hoje, i))
-    .map((d) => ({ d, vagas: vagasDoDia(banco, b.id, servico.id, ids, d, remarcando?.id), aberto: banco.expedientes(b.id).has(diaDaSemana(d)) }))
+    .map((d) => ({ d, vagas: vagasDoDia(banco, b.id, servico.id, ids, d, remarcando?.id, duracao), aberto: banco.expedientes(b.id).has(diaDaSemana(d)) }))
     .filter((x) => x.aberto);
   const escolhido = dias.find((x) => x.d === data) ?? dias.find((x) => x.vagas.length > 0);
   const rotuloDia = (d: Data) => (d === hoje ? "Hoje" : d === somarDias(hoje, 1) ? "Amanhã" : nomeDia(diaDaSemana(d)).slice(0, 3));
@@ -267,11 +327,12 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       {remarcando ? (
         <p className="b-escolhido">
-          {servico.nome} · horário atual: {quandoAtual} · <Link href={`/b/${slug}/h/${sp.remarcar}`}>Manter esse</Link>
+          {remarcando.servico} · horário atual: {quandoAtual} · <Link href={`/b/${slug}/h/${sp.remarcar}`}>Manter esse</Link>
         </p>
       ) : (
         <p className="b-escolhido">
-          {servico.nome} · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
+          {nomeTotal} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}
+          {possiveis.length > 0 && <> · <Link href={link({ ad: undefined, data: undefined })}>{adicionais.length ? "Mudar adicionais" : "Adicionar barba ou outro"}</Link></>}
           {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
         </p>
       )}

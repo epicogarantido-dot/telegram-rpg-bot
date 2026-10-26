@@ -90,7 +90,7 @@ describe("BancoAgenda", () => {
     const { b, barbearia, token } = novo();
     expect(barbearia.slug).toBe("barbearia-sao-joao");
     expect(b.usuarioDaSessao(token)?.email).toBe("ze@exemplo.com");
-    expect(b.servicos(barbearia.id)).toHaveLength(3);
+    expect(b.servicos(barbearia.id)).toHaveLength(4);
     expect(b.expedientes(barbearia.id).has(0)).toBe(false); // domingo fechado
     expect(() => b.criarConta({ nomeBarbearia: "X", telefone: "5519900000002", nome: "Y", email: "ze@exemplo.com", senha: "12345678" }))
       .toThrow(ErroAgenda);
@@ -939,5 +939,46 @@ describe("tempo de cada serviço e folga entre clientes", () => {
     expect(b.agendamentosEntre(a.id, "2026-10-20", "2026-10-20")[0]!.duracaoMin).toBe(45);
     // Mudar só o preço não mexe nos horários.
     expect(b.atualizarServico(a.id, corte.id, { nome: "Corte", duracaoMin: 45, precoCentavos: 4500 }, antes).ajustados).toBe(0);
+  });
+});
+
+describe("adicionais: barba, sobrancelha", () => {
+  const antes = new Date("2026-10-01T12:00:00Z");
+  function montar() {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const [p] = b.profissionais(a.id, true);
+    const porNome = (n: string) => b.servicos(a.id, true).find((s) => s.nome === n)!;
+    return { b, a, p: p!, corte: porNome("Corte"), barba: porNome("Barba"), sobrancelha: porNome("Sobrancelha"), combo: porNome("Corte + barba") };
+  }
+
+  it("conta nova já vem com barba e sobrancelha como adicionais", () => {
+    const { b, a, corte, barba, sobrancelha, combo } = montar();
+    expect(b.adicionaisPara(a.id, corte.id).map((s) => s.nome)).toEqual(["Barba", "Sobrancelha"]);
+    // "Corte + barba" já tem barba: só oferece sobrancelha.
+    expect(b.adicionaisPara(a.id, combo.id).map((s) => s.nome)).toEqual(["Sobrancelha"]);
+    expect(b.adicionaisPara(a.id, barba.id).map((s) => s.id)).toEqual([sobrancelha.id]);
+  });
+
+  it("adicionais somam tempo e preço, aparecem no nome e nos números", () => {
+    const { b, a, p, corte, barba, sobrancelha } = montar();
+    const marcar = (hora: string, adicionais: number[]) => b.agendar({ barbeariaId: a.id, profissionalId: p.id, servicoId: corte.id, data: "2026-10-20", hora, clienteNome: "Cliente", clienteTelefone: "5519998000001", agora: antes, adicionais });
+    const id = marcar("09:00", [barba.id, sobrancelha.id]);
+    const ag = b.agendamento(a.id, id)!;
+    expect(ag.fim).toBe("2026-10-20T10:10"); // 30 + 30 + 10
+    expect(ag.servico).toBe("Corte + Barba + Sobrancelha");
+    expect(ag.adicionais).toEqual([barba.id, sobrancelha.id]);
+    // O próximo horário livre respeita o tempo total.
+    expect(b.horariosLivres(a.id, p.id, corte.id, "2026-10-20", antes)[0]).toBe("10:10");
+    // Só com barba, 60 min: 10:10 cabe, e o combo cabe ali também.
+    expect(b.horariosLivres(a.id, p.id, corte.id, "2026-10-20", antes, undefined, { adicionais: [barba.id] })).toContain("10:10");
+    expect(() => marcar("11:00", [corte.id])).toThrow(/Adicional/);
+    expect(b.numerosDoMes(a.id, "2026-10", new Date("2026-10-31T12:00:00Z")).faturamentoCentavos).toBe(4000 + 3000 + 1500);
+  });
+
+  it("serviço deixa de ser adicional quando o barbeiro desmarca", () => {
+    const { b, a, corte, sobrancelha } = montar();
+    b.atualizarServico(a.id, sobrancelha.id, { nome: "Sobrancelha", duracaoMin: 15, precoCentavos: 2000, adicional: false });
+    expect(b.adicionaisPara(a.id, corte.id).map((s) => s.nome)).toEqual(["Barba"]);
   });
 });

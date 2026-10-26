@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
+import { agoraNoFuso, dataValida, formatarData, somarDias, type Agendamento } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { CalendarCheck, MessageCircle } from "lucide-react";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
@@ -28,7 +28,7 @@ async function marcar(form: FormData) {
     novo = banco.agendar({
       barbeariaId: barbearia.id, profissionalId: Number(form.get("profissional")), servicoId: origem.servicoId,
       data, hora: String(form.get("hora")), clienteNome: origem.clienteNome, clienteTelefone: origem.clienteTelefone,
-      peloBarbeiro: true, enderecoCliente: origem.enderecoCliente,
+      peloBarbeiro: true, enderecoCliente: origem.enderecoCliente, adicionais: adicionaisDe(barbearia.id, origem),
     });
   } catch (e) {
     redirect(`/app/retorno/${origem.id}?data=${encodeURIComponent(data)}&erro=${encodeURIComponent(mensagemDeErro(e))}`);
@@ -86,7 +86,7 @@ export default async function Retorno({ params, searchParams }: {
   const profissionais = banco.profissionais(barbearia.id, true);
   const profId = profissionais.some((p) => String(p.id) === sp.prof) ? Number(sp.prof)
     : profissionais.some((p) => p.id === origem.profissionalId) ? origem.profissionalId : profissionais[0]?.id;
-  const livres = profId ? banco.horariosLivres(barbearia.id, profId, origem.servicoId, data) : [];
+  const livres = profId ? banco.horariosLivres(barbearia.id, profId, origem.servicoId, data, undefined, undefined, { adicionais: adicionaisDe(barbearia.id, origem) }) : [];
   const ir = (d: string) => `/app/retorno/${origem.id}?data=${d}${profId ? `&prof=${profId}` : ""}`;
   const jaTem = banco.proximoDoCliente(barbearia.id, origem.clienteTelefone);
 
@@ -139,4 +139,9 @@ export default async function Retorno({ params, searchParams }: {
         )}
     </>
   );
+}
+
+/** O próximo vem com os mesmos adicionais (barba, sobrancelha) que ainda existirem no cardápio. */
+function adicionaisDe(barbeariaId: number, origem: Agendamento): number[] {
+  return obterAgenda().adicionaisPara(barbeariaId, origem.servicoId).filter((a) => origem.adicionais?.includes(a.id)).map((a) => a.id);
 }
