@@ -108,6 +108,8 @@ A QB House conta a própria origem no site. O fundador, o senhor Konishi, freque
 
 A primeira loja abriu em novembro de 1996, em Kanda, Tóquio, com a promessa de "10 minutos, 1.000 ienes". O jeito de trabalhar foi todo desenhado pra não perder tempo. O cliente paga antes, numa máquina de fichas na entrada, e o barbeiro nunca mexe com dinheiro. Na porta, uma espécie de semáforo mostra se a espera está curta, média ou longa, então ninguém precisa ligar pra perguntar. Não tem lavagem: um aspirador tira os fios cortados. E não tem agendamento nem escolha de barbeiro, é ordem de chegada.
 
+[[foto:japao-barbear-de-ritual-e-corte-de-10-minutos-2]]
+
 | | Japão | Fonte |
 |---|---|---|
 | Corte na QB House | ¥ 1.400 com imposto, só corte | site oficial, out/2026 |
@@ -349,6 +351,8 @@ Em 2011 abriram a Schorem, na Nieuwe Binnenweg. Durante a reforma, ninguém sabi
 ### Doze cortes, nenhum agendamento
 
 A editora resume a ideia: um lugar pra homem ficar à vontade, "uma segunda casa", onde dá pra escolher entre doze cortes. Os cortes viraram dois pôsteres, "Signature Haircuts" e "Barbershop Classics", que servem de inspiração e de guia pra barbeiros do mundo inteiro.
+
+[[foto:roterda-schorem-2]]
 
 Eles também nunca guardaram segredo. Os tutoriais de cortes clássicos estão no YouTube e, quando a procura por curso cresceu, abriram a Old School Barber Academy do outro lado da rua. Bertus diz que a Schorem sempre foi "um negócio transparente, sem segredos".
 

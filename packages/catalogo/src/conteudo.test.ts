@@ -22,9 +22,14 @@ const textos = [
   ...cursos.flatMap((c) => c.modulos.flatMap((m) => m.licoes.map((l) => ({ onde: `curso ${c.slug}/${m.id}/${l.id}`, texto: l.conteudo })))),
 ];
 
-/** Links em Markdown: [texto](destino). */
+/** Links em Markdown: [texto](destino). Imagens (![alt](src)) ficam de fora. */
 function links(texto: string): string[] {
-  return [...texto.matchAll(/\]\(([^)\s]+)\)/g)].map((m) => m[1]!);
+  return [...texto.matchAll(/(?<!!\[[^\]]*)\]\(([^)\s]+)[^)]*\)/g)].map((m) => m[1]!);
+}
+
+/** Imagens em Markdown: ![alt](src "legenda"). */
+function imagens(texto: string): { src: string; legenda?: string }[] {
+  return [...texto.matchAll(/!\[[^\]]*\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g)].map((m) => ({ src: m[1]!, legenda: m[2] }));
 }
 
 function repetidos(lista: string[]): string[] {
@@ -84,6 +89,16 @@ describe("conteúdo publicado", () => {
       expect(a.imagem!.licenca, a.slug).toMatch(abertas);
       expect(a.imagem!.credito.trim(), a.slug).not.toBe("");
       expect(existsSync(join(publico, a.imagem!.arquivo)), `${a.slug}: falta ${a.imagem!.arquivo}`).toBe(true);
+    }
+  });
+
+  it("foto no meio do texto: arquivo existe e a legenda dá o crédito", () => {
+    const publico = join(dirname(dirname(PASTA_CURSOS)), "apps", "site", "public");
+    for (const a of artigos) {
+      for (const f of imagens(a.conteudo)) {
+        expect(existsSync(join(publico, f.src)), `${a.slug}: falta ${f.src}`).toBe(true);
+        expect(f.legenda ?? "", `${a.slug}: ${f.src} sem crédito`).toMatch(/^Foto: .+\(.+\)$/);
+      }
     }
   });
 

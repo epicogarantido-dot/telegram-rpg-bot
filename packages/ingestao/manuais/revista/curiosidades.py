@@ -164,6 +164,8 @@ Os especialistas em metal do MIT disseram que era impossível. Gillette levou se
 
 O pulo do gato não foi só a lâmina. Pela primeira vez, lâminas eram vendidas em pacotes, e o cabo era comprado uma vez só. O cliente voltava pra loja toda vez que a lâmina acabava. É o modelo que até hoje se chama de "cabo e lâmina", copiado por impressora e cartucho, máquina de café e cápsula.
 
+[[foto:a-lamina-que-tirou-a-barba-da-barbearia-2]]
+
 ### A guerra que ensinou o homem a se barbear
 
 O empurrão final veio na Primeira Guerra Mundial. O exército americano distribuiu kits de barbear da Gillette aos soldados; o Museu Militar da Pensilvânia estima mais de três milhões de kits. O museu resume o efeito: o barbeador dava um barbear de qualidade profissional sem precisar ir ao barbeiro, e o hábito voltou pra casa com os soldados.
@@ -238,6 +240,8 @@ A história está no site do próprio Movember. Travis Garone e Luke Slattery de
 
 O convite foi por e-mail, com um título difícil de recusar: "Você é homem o bastante pra ser meu homem?". Trinta amigos toparam. No ano seguinte, em 2004, a ideia foi formalizada: Adam Garone abriu uma empresa e criou um site, e Justin Coghlan levou a campanha pra outros estados. O nome junta *moustache* (bigode) e *November* (novembro).
 
+[[foto:movember-e-novembro-azul-2]]
+
 ### O Novembro Azul brasileiro
 
 Por aqui, a campanha nasceu em 2008, com o Instituto Lado a Lado pela Vida, criado pela jornalista Marlene Oliveira com o incentivo do urologista Eric Roger Wroclawski. A primeira ação se chamava "Um Toque, Um Drible" e distribuía informação nas ruas e nas redes sociais. Em 2011 veio o nome Novembro Azul, inspirado em duas coisas: o sucesso do Outubro Rosa e a ideia australiana de usar o mês inteiro.
@@ -274,6 +278,8 @@ conteudo="""No museu The Ringling, em Sarasota, na Flórida, há uma cadeira de 
 Essa cadeira foi feita pela Koken Barbers' Supply, de St. Louis, nos Estados Unidos, empresa que funcionou de 1881 a 1969. Segundo o museu The Ringling, a Koken foi a primeira a desenhar uma cadeira de barbeiro com elevação hidráulica: o barbeiro bombeava um pedal e a cadeira subia, suave, até a altura certa.
 
 Pode parecer detalhe, mas mudou o trabalho. Numa cadeira fixa, é o barbeiro que se adapta, curvando as costas pra alcançar um cliente baixo ou esticando os braços pra um alto. Com a elevação, a cadeira passa a se adaptar ao barbeiro. Somada ao encosto que deita pra barba e à base que gira, ela permite alcançar todos os lados do cliente sem se torcer.
+
+[[foto:a-cadeira-hidraulica-de-barbeiro-2]]
 
 ### Por que isso importa hoje
 
