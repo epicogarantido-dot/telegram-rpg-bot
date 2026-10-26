@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import "../globals.css";
+import "./atemporal.css";
 
 export const metadata: Metadata = {
   title: { default: "Aprenda Livre", template: "%s · Aprenda Livre" },
@@ -10,15 +11,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f6f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#121412" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className="site-cursos">
         <div className="barra-topo">
           <header className="topo">
             <Link href="/" className="marca">

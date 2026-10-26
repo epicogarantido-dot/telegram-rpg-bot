@@ -1,0 +1,124 @@
+/* Site de cursos vestido com o tema "Elegância Atemporal" dos sites das barbearias
+   (temas.css): preto e branco, títulos em Libre Caslon, texto em Jost, faixas pretas
+   na abertura. Só vale dentro de body.site-cursos; o painel e os sites das barbearias
+   não carregam este arquivo. Sem movimento novo: o tema é parado. */
+@import "@fontsource/libre-caslon-text/400.css";
+@import "@fontsource/libre-caslon-text/400-italic.css";
+@import "@fontsource/libre-caslon-text/700.css";
+@import "@fontsource/jost/400.css";
+@import "@fontsource/jost/500.css";
+@import "@fontsource/jost/600.css";
+
+.site-cursos {
+  --fonte-titulo: "Libre Caslon Text", Georgia, serif;
+  --fonte-texto: "Jost", system-ui, sans-serif;
+  --fundo: #ffffff; --fundo-2: #f2f2f0; --cartao: #ffffff;
+  --texto: #000000; --suave: #4a4a4a; --borda: #d4d4d4; --linha: #000000;
+  --destaque: #000000; --destaque-forte: #333333; --destaque-claro: #ececec; --sobre-destaque: #ffffff;
+  --acento: #000000; --acento-claro: #f2f2f0;
+  --faixa: #000000; --faixa-texto: #ffffff; --faixa-suave: #c9c9c9;
+  --raio: 0px; --raio-p: 0px;
+  --sombra: none; --sombra-forte: none;
+}
+@media (prefers-color-scheme: dark) {
+  .site-cursos {
+    --fundo: #000000; --fundo-2: #161616; --cartao: #000000;
+    --texto: #ffffff; --suave: #b8b8b8; --borda: #333333; --linha: #ffffff;
+    --destaque: #ffffff; --destaque-forte: #d9d9d9; --destaque-claro: #222222; --sobre-destaque: #000000;
+    --acento: #ffffff; --acento-claro: #161616;
+    /* No escuro a faixa vira o contrário: branca com letra preta. */
+    --faixa: #ffffff; --faixa-texto: #000000; --faixa-suave: #444444;
+  }
+}
+
+.site-cursos { font-size: 18px; font-feature-settings: normal; }
+.site-cursos :is(h1, h2, h3) { font-weight: 400; letter-spacing: -0.01em; line-height: 1.15; }
+.site-cursos h3 { font-weight: 700; font-size: 1.1rem; }
+.site-cursos a { color: var(--texto); text-decoration-thickness: 1px; }
+.site-cursos a:hover { color: var(--suave); }
+/* .site-cursos a pesa mais que .botao: devolve a cor certa dos botões. */
+.site-cursos :is(.botao, .botao:hover) { color: var(--sobre-destaque); }
+.site-cursos :focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; border-radius: 0; }
+
+/* ---------- topo: nome espaçado, como no tema ---------- */
+.site-cursos .barra-topo { background: var(--fundo); backdrop-filter: none; border-bottom: 1px solid var(--linha); }
+.site-cursos .marca { font: 600 0.85rem var(--fonte-texto); text-transform: uppercase; letter-spacing: 0.35em; }
+.site-cursos .marca-icone { display: none; }
+.site-cursos .topo nav a { border-radius: 0; color: var(--texto); font-size: 15px; }
+.site-cursos .topo nav a:hover { background: none; text-decoration: underline; text-underline-offset: 6px; }
+.site-cursos .topo nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; }
+.site-cursos .nav-destaque { background: var(--texto) !important; color: var(--fundo) !important; }
+.site-cursos .nav-destaque:hover { text-decoration: none !important; }
+.site-cursos .rodape { background: var(--fundo); border-top: 1px solid var(--linha); }
+
+/* ---------- faixa preta de abertura (a marca do tema) ----------
+   Ocupa a largura toda sem estourar a página: a sombra pinta as laterais
+   e o clip-path corta o que passaria da tela. */
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) {
+  background: var(--faixa); color: var(--faixa-texto);
+  box-shadow: 0 0 0 100vmax var(--faixa); clip-path: inset(0 -100vmax);
+}
+.site-cursos .heroi { margin-top: -24px; padding: 64px 0 56px; }
+.site-cursos .heroi::before { display: none; }
+.site-cursos .heroi + .vantagens { margin-top: 40px; }
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) h1 { font-style: italic; font-weight: 400; letter-spacing: -0.015em; }
+.site-cursos .heroi h1 { font-size: clamp(2.5rem, 7vw, 4.6rem); line-height: 1.05; }
+.site-cursos .heroi h1 em { font-style: inherit; color: inherit; }
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) :is(p, .suave, .venda-preco-curto) { color: var(--faixa-suave); }
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) a:not(.botao, .botao-sec, .etiqueta) { color: var(--faixa-texto); }
+.site-cursos :is(.heroi, .venda-heroi) .botao { background: var(--faixa-texto); color: var(--faixa) !important; border-color: var(--faixa-texto); }
+.site-cursos :is(.heroi, .venda-heroi) .botao:hover { background: var(--faixa-suave); }
+.site-cursos :is(.heroi, .venda-heroi) .botao-sec { padding: 14px 22px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.18em; background: transparent; color: var(--faixa-texto); border-color: var(--faixa-texto); }
+.site-cursos .heroi .busca input { border-color: var(--faixa-texto); background: var(--faixa); color: var(--faixa-texto); box-shadow: none; }
+.site-cursos .heroi .busca input::placeholder { color: var(--faixa-suave); }
+.site-cursos .heroi .busca input:focus { box-shadow: 0 0 0 1px var(--faixa-texto); }
+.site-cursos .heroi .busca button { background: var(--faixa-texto); color: var(--faixa); border-color: var(--faixa-texto); }
+.site-cursos .heroi .etiqueta { background: transparent; color: var(--faixa-texto); border-color: var(--faixa-suave); }
+.site-cursos .heroi .etiqueta:hover { border-color: var(--faixa-texto); }
+.site-cursos .heroi .selo { background: none; color: var(--faixa-suave); padding: 0; }
+.site-cursos .heroi :focus-visible, .site-cursos .venda-heroi :focus-visible { outline-color: var(--faixa-texto); }
+
+.site-cursos .venda-heroi { margin-top: -24px; padding: 56px 0; }
+.site-cursos .venda-heroi h1 { letter-spacing: -0.02em; }
+.site-cursos .venda-celular { border-color: #2a2a2a; }
+.site-cursos .revista-cabeca { margin: -24px 0 8px; padding: 56px 0 48px; max-width: none; }
+.site-cursos .revista-cabeca > * { max-width: 720px; }
+.site-cursos .revista-cabeca h1 { font-size: clamp(2.4rem, 6.5vw, 4rem); }
+
+/* ---------- botões e etiquetas: cantos retos, letra espaçada ---------- */
+.site-cursos :is(.botao, .busca button, .formulario button, .botao-concluir) {
+  text-transform: uppercase; letter-spacing: 0.18em; font-size: 14px; font-weight: 500; padding: 14px 22px;
+}
+.site-cursos .botao-sec { border-color: var(--linha); }
+.site-cursos .botao-sec:hover { background: var(--texto); color: var(--fundo); border-color: var(--texto); }
+.site-cursos .etiqueta { background: transparent; color: var(--texto); border: 1px solid var(--borda); border-radius: 0; font-weight: 500; }
+.site-cursos .selo { background: none; padding: 0; color: var(--suave); border-radius: 0; }
+.site-cursos .chip-icone, .site-cursos .chip-icone.acento { background: none; border: 1px solid var(--linha); border-radius: 0; color: var(--texto); }
+
+/* ---------- cartões: moldura fina, como as fotos do tema ---------- */
+.site-cursos .cartao { border-color: var(--linha); }
+.site-cursos a.cartao:hover { transform: none; border-color: var(--linha); box-shadow: inset 0 0 0 1px var(--linha); }
+.site-cursos a.cartao:hover h3 { text-decoration: underline; text-underline-offset: 4px; }
+.site-cursos .cartao h3 { font-family: var(--fonte-titulo); font-size: 1.3rem; font-weight: 400; }
+.site-cursos .modulos section { border-color: var(--linha); }
+.site-cursos .atribuicao { border-color: var(--borda); border-left: 3px solid var(--linha); }
+.site-cursos .licao blockquote { border-left-color: var(--linha); }
+.site-cursos .progresso-licao.cta { background: var(--fundo-2); }
+.site-cursos .barra-progresso span { background: var(--destaque); }
+.site-cursos :is(.revista-lista, .venda-cursos ul) { border-top-color: var(--linha); }
+.site-cursos .revista-lista strong { font-family: var(--fonte-titulo); font-weight: 400; font-size: 1.45rem; }
+.site-cursos .revista-tipo { color: var(--suave); text-transform: uppercase; letter-spacing: 0.14em; font-size: 12px; font-weight: 500; }
+.site-cursos .venda-cursos strong { font-family: var(--fonte-titulo); font-weight: 400; font-size: 1.2rem; }
+.site-cursos .venda-plano { border-color: var(--linha); }
+.site-cursos .venda-valor strong { font-family: var(--fonte-titulo); font-weight: 400; }
+.site-cursos .venda-recurso h3 svg { color: var(--texto); }
+.site-cursos .artigo-serie { border-color: var(--linha); }
+.site-cursos .licao h4 { font-family: var(--fonte-titulo); font-weight: 700; font-size: 1.15rem; margin: 28px 0 0; }
+.site-cursos .licao h4 + p { margin-top: 2px; color: var(--suave); }
+.site-cursos .formulario input:not([type="checkbox"]), .site-cursos .formulario select, .site-cursos .busca input { border-color: var(--linha); }
+
+@media (max-width: 560px) {
+  .site-cursos .marca { letter-spacing: 0.28em; }
+  .site-cursos .heroi { padding: 44px 0 40px; }
+  .site-cursos .venda-heroi, .site-cursos .revista-cabeca { padding: 40px 0 36px; }
+}
