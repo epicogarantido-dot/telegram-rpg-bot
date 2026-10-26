@@ -7,7 +7,7 @@
  * Convites de prospecção são enviados por uma PESSOA, um a um, pelo painel
  * (/painel); o bot só cuida das respostas, inclusive do "SAIR".
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Boom } from "@hapi/boom";
 import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, useMultiFileAuthState } from "baileys";
@@ -26,9 +26,14 @@ const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
 const segredoSite = process.env.BOT_SEGREDO ?? "";
 
-/** Chama uma rota do site em nome do bot (segredo compartilhado). */
+/**
+ * Chama uma rota do site em nome do bot (segredo compartilhado). Rodando junto com o
+ * site (mesmo zip), SITE_INTERNO aponta pro próprio servidor; os links que vão pro
+ * cliente continuam com o endereço público (SITE_URL).
+ */
+const siteApi = (process.env.SITE_INTERNO ?? siteUrl).replace(/\/$/, "");
 async function chamarSite(caminho: string, corpo: object): Promise<Response> {
-  return fetch(`${siteUrl.replace(/\/$/, "")}${caminho}`, {
+  return fetch(`${siteApi}${caminho}`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${segredoSite}` },
     body: JSON.stringify(corpo),
@@ -107,9 +112,14 @@ async function conectar(): Promise<void> {
 
   if (numeroPareamento && !state.creds.registered) {
     // Alternativa ao QR: código de 8 dígitos digitado no celular (Aparelhos conectados).
+    // Se a conexão cair antes, a reconexão pede outro código: aqui só avisa.
     setTimeout(async () => {
-      const codigo = await sock.requestPairingCode(numeroPareamento);
-      console.log(`🔑 Código de pareamento: ${codigo}`);
+      try {
+        const codigo = await sock.requestPairingCode(numeroPareamento);
+        console.log(`🔑 Código de pareamento: ${codigo} (WhatsApp > Aparelhos conectados > Conectar com número de telefone)`);
+      } catch (e) {
+        console.warn("Não deu pra pedir o código de pareamento agora:", (e as Error).message);
+      }
     }, 3000);
   }
 
@@ -125,7 +135,10 @@ async function conectar(): Promise<void> {
     if (connection === "close") {
       const status = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
       if (status === DisconnectReason.loggedOut) {
-        console.error(`🚪 Sessão encerrada no celular. Apague ${PASTA_SESSAO} e pareie de novo.`);
+        // Desconectado pelo celular: a sessão salva não serve mais. Apaga, e na próxima
+        // vez que ligar aparece um código novo de pareamento.
+        console.error("🚪 Sessão encerrada no celular. Apagando a sessão salva: ao ligar de novo, pareie outra vez.");
+        rmSync(PASTA_SESSAO, { recursive: true, force: true });
         process.exit(1);
       }
       // Espera cada vez mais (até 1 min) pra não martelar o WhatsApp quando a rede cai.

@@ -44,7 +44,23 @@ pelo próprio servidor. Ela não vem no zip, o commit não apaga, e a chave é s
 do site atualizava. O `iniciar.cjs` apaga essa pasta a cada início, e as páginas estáticas
 têm `revalidate` de 10 min. Se algo parecer velho: confira `/api/versao` e reinicie.
 
-## Bot de WhatsApp (app separado)
+## Bot de WhatsApp junto com o site (padrão)
+
+O zip do site já leva o bot (`bot/`). Pra ligar, basta uma chave no app do site:
+
+```
+BOT_NUMERO=5555999998888    # o chip do bot, só números
+```
+
+O `iniciar.cjs` sobe o site e o bot como processo filho (se o bot cair, liga de novo
+esperando mais a cada queda). O site passa a mostrar esse número no "Entrar pelo WhatsApp"
+(`BOT_WHATSAPP` vem dele), e o `BOT_SEGREDO`, se não estiver no `.env`, é sorteado a cada
+início. A sessão fica em `data/privado/whatsapp/`: commit e reinício não desconectam.
+Memória: suba o app pra 768 MB. Pareamento: nos logs aparece o código; no celular do bot,
+WhatsApp → Aparelhos conectados → Conectar com número de telefone. Se desconectar pelo
+celular, a sessão é apagada sozinha e o próximo início mostra um código novo.
+
+## Bot de WhatsApp (app separado, opcional)
 
 ```bash
 npm run pacote:bot             # gera dist/aprenda-livre-bot.zip

@@ -8,6 +8,7 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { montarBot } from "./montar-bot.mjs";
 
 const raiz = new URL("..", import.meta.url).pathname;
 const site = join(raiz, "apps/site");
@@ -18,7 +19,8 @@ const zip = join(raiz, "dist/aprenda-livre-square.zip");
 const zipCommit = join(raiz, "dist/aprenda-livre-site-commit.zip");
 
 const subdominio = process.env.SQUARE_SUBDOMINIO ?? "aprendalivre";
-const memoria = process.env.SQUARE_MEMORIA ?? "512";
+// Site (~350 MB) + bot de WhatsApp (~150 MB) no mesmo app.
+const memoria = process.env.SQUARE_MEMORIA ?? "768";
 
 console.log("🔨 build do site...");
 execFileSync("npm", ["run", "build:site"], { cwd: raiz, stdio: "inherit" });
@@ -42,6 +44,9 @@ if (existsSync(join(site, "public"))) cpSync(join(site, "public"), join(destino,
 cpSync(join(raiz, "data/cursos"), join(destino, "data/cursos"), { recursive: true });
 // A Revista também: páginas refeitas no servidor (revalidate) leem os artigos do disco.
 cpSync(join(raiz, "data/artigos"), join(destino, "data/artigos"), { recursive: true });
+// Bot de WhatsApp junto: o iniciar.cjs liga ele quando BOT_NUMERO está no .env.
+console.log("🤖 bot de WhatsApp...");
+await montarBot(raiz, join(destino, "bot"));
 // Fotos de exemplo das demonstrações (lidas na hora de montar, pelo painel).
 cpSync(join(raiz, "data/demo-fotos"), join(destino, "data/demo-fotos"), { recursive: true });
 
@@ -67,6 +72,41 @@ process.env.APRENDA_RAIZ ??= __dirname;
 // commit não troca nem apaga: sem limpar, home e Revista ficavam presas no 1º deploy.
 // Apagar a cada início é seguro (ele refaz sozinho).
 fs.rmSync(path.join(__dirname, "apps/site/.next/server/route-cache"), { recursive: true, force: true });
+
+// ---------- Bot de WhatsApp, no mesmo app ----------
+// Liga só com BOT_NUMERO (o chip do bot). O site mostra esse número no "Entrar pelo
+// WhatsApp", e o segredo entre os dois, se não vier no .env, é sorteado a cada início
+// (os dois processos recebem o mesmo). A sessão do WhatsApp fica em data/privado/whatsapp,
+// fora do zip: commit e reinício não desconectam.
+const numeroBot = (process.env.BOT_NUMERO ?? "").replace(/\D/g, "");
+if (numeroBot) {
+  process.env.BOT_WHATSAPP ??= numeroBot;
+  if ((process.env.BOT_SEGREDO ?? "").length < 24) process.env.BOT_SEGREDO = require("node:crypto").randomBytes(32).toString("base64url");
+  const pastaWhats = path.join(__dirname, "data/privado/whatsapp");
+  fs.mkdirSync(pastaWhats, { recursive: true });
+  let espera = 5_000;
+  let bot;
+  const ligarBot = () => {
+    const inicio = Date.now();
+    bot = require("node:child_process").spawn(process.execPath, [path.join(__dirname, "bot/bot.mjs")], {
+      cwd: path.join(__dirname, "bot"),
+      env: { ...process.env, BOT_SESSAO: path.join(pastaWhats, "auth") + "/", SITE_INTERNO: "http://127.0.0.1:" + process.env.PORT },
+      stdio: "inherit",
+    });
+    bot.on("exit", (codigo) => {
+      // Caiu: liga de novo, esperando mais a cada queda seguida (até 5 min).
+      espera = Date.now() - inicio > 10 * 60_000 ? 5_000 : Math.min(espera * 2, 5 * 60_000);
+      console.log("🤖 Bot parou (código " + codigo + "); ligando de novo em " + espera / 1000 + " s.");
+      setTimeout(ligarBot, espera);
+    });
+  };
+  for (const sinal of ["SIGTERM", "SIGINT"]) process.once(sinal, () => { bot?.kill(); process.exit(0); });
+  // Dá tempo do site subir antes do bot começar a chamar a API.
+  setTimeout(ligarBot, 3_000);
+} else {
+  console.log("🤖 Bot de WhatsApp desligado (coloque BOT_NUMERO no .env pra ligar).");
+}
+
 process.chdir(path.join(__dirname, "apps/site"));
 require("./apps/site/server.js");
 `);
