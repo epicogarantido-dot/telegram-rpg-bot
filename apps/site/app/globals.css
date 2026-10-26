@@ -715,3 +715,5 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .data-proxima p { margin: 0; }
 .data-proxima p + p { margin-top: 4px; }
 .config-servico .config-servico-domicilio { grid-column: 1 / -1; grid-row: 3; }
+.etiqueta-alerta { border-color: var(--erro); color: var(--erro); }
+.plano-vencido { border-color: var(--erro); }

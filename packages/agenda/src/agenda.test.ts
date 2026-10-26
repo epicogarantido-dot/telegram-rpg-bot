@@ -858,3 +858,23 @@ describe("atendimento em domicílio", () => {
     expect(b.servicos(a.id, true).find((s) => s.nome !== "Corte em casa")!.emDomicilio).toBe(false);
   });
 });
+
+describe("plano mensal do cliente", () => {
+  it("cadastra, conta o uso do mês e mostra vencido", () => {
+    const antes = new Date("2026-10-01T12:00:00Z");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const [p] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    b.salvarPlano(a.id, { telefone: "5519998765432", nome: "Lucas", usosPorMes: 2, valorCentavos: 8000, validoAte: "2026-10-31" });
+    expect(() => b.salvarPlano(a.id, { telefone: "5519998765432", nome: "Lucas", usosPorMes: 0, valorCentavos: 8000, validoAte: "2026-10-31" })).toThrow(ErroAgenda);
+    for (const [d, h] of [["2026-10-13", "10:00"], ["2026-10-27", "10:00"], ["2026-11-10", "10:00"]] as const) {
+      b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data: d, hora: h, clienteNome: "Lucas", clienteTelefone: "5519998765432", agora: antes, peloBarbeiro: true });
+    }
+    expect(b.planos(a.id, new Date("2026-10-20T12:00:00Z"))[0]).toMatchObject({ usosPorMes: 2, usadosNoMes: 2, vencido: false });
+    expect(b.planos(a.id, new Date("2026-11-05T12:00:00Z"))[0]).toMatchObject({ usadosNoMes: 1, vencido: true });
+    b.salvarPlano(a.id, { telefone: "5519998765432", nome: "Lucas", usosPorMes: 2, valorCentavos: 8000, validoAte: "2026-11-30" });
+    expect(b.planos(a.id, new Date("2026-11-05T12:00:00Z"))).toHaveLength(1);
+    expect(b.planos(a.id, new Date("2026-11-05T12:00:00Z"))[0]!.vencido).toBe(false);
+  });
+});

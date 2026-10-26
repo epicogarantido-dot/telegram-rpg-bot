@@ -162,6 +162,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
   const agoraLocal = agoraNoFuso(barbearia.fuso);
   const sumidos = banco.clientesSumidos(barbearia.id).length;
+  const planos = new Map(banco.planos(barbearia.id).map((p) => [p.telefone, p]));
   const linkAvaliacao = banco.barbeariaPorId(barbearia.id)!.linkAvaliacao;
   // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
   const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1)).filter((a) => a.status === "confirmado") : [];
@@ -191,6 +192,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {" · "}<Link href="/app/config">Configurações</Link>
         {" · "}<Link href="/app/assinatura">Assinatura</Link>
         {" · "}<Link href="/app/numeros"><BarChart3 size={14} aria-hidden /> Números do mês</Link>
+        {" · "}<Link href="/app/planos">Planos</Link>
         {" · "}<Link href="/app/clientes">Clientes que sumiram{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
       </p>
 
@@ -313,6 +315,12 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             <strong>{a.inicio.slice(11)}–{a.fim.slice(11)}</strong> · {a.servico} com {a.profissional}
             {a.status === "cancelado" && <span className="etiqueta" style={{ marginLeft: 8 }}>cancelado</span>}
             {a.status === "faltou" && <span className="etiqueta" style={{ marginLeft: 8 }}>faltou</span>}
+            {planos.get(a.clienteTelefone) && (() => {
+              const p = planos.get(a.clienteTelefone)!;
+              return <span className={`etiqueta ${p.vencido || p.usadosNoMes > p.usosPorMes ? "etiqueta-alerta" : ""}`} style={{ marginLeft: 8 }}>
+                {p.vencido ? "plano vencido" : `plano: ${p.usadosNoMes} de ${p.usosPorMes} no mês`}
+              </span>;
+            })()}
             <br />
             {a.clienteNome}
             {a.enderecoCliente && (

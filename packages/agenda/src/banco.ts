@@ -70,6 +70,18 @@ export interface ClienteSumido {
   ritmoDias: number;
 }
 
+/** Plano mensal de um cliente, com o uso do mês. */
+export interface PlanoCliente {
+  id: number;
+  telefone: string;
+  nome: string;
+  usosPorMes: number;
+  valorCentavos: number;
+  validoAte: Data;
+  usadosNoMes: number;
+  vencido: boolean;
+}
+
 export interface DivisaoProfissional {
   profissionalId: number;
   nome: string;
@@ -367,6 +379,14 @@ export class BancoAgenda {
         p256dh TEXT NOT NULL, auth TEXT NOT NULL, criado_em TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS configuracoes (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
+      -- Plano mensal do cliente (ex.: 2 cortes por mês). Cobrança é com o barbeiro; aqui só o controle.
+      CREATE TABLE IF NOT EXISTS planos_clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        telefone TEXT NOT NULL, nome TEXT NOT NULL, usos_por_mes INTEGER NOT NULL, valor_centavos INTEGER NOT NULL,
+        valido_ate TEXT NOT NULL, criado_em TEXT NOT NULL,
+        UNIQUE (barbearia_id, telefone)
+      );
       -- Quando o barbeiro chamou de volta um cliente que sumiu (pra não insistir).
       CREATE TABLE IF NOT EXISTS chamadas_retorno (
         barbearia_id INTEGER NOT NULL REFERENCES barbearias(id), telefone TEXT NOT NULL, em TEXT NOT NULL,
@@ -822,6 +842,41 @@ export class BancoAgenda {
     }
     const sugerida = somarDias(ultima, ritmo);
     return { data: sugerida > hoje ? sugerida : somarDias(hoje, 1), ritmoDias: ritmo, deHistorico };
+  }
+
+  // ---------- plano mensal do cliente ----------
+
+  /** Cria ou atualiza o plano do cliente (um por número). Renovar = mudar o "válido até". */
+  salvarPlano(barbeariaId: number, dados: { telefone: string; nome: string; usosPorMes: number; valorCentavos: number; validoAte: Data }): void {
+    if (!/^\d{12,13}$/.test(dados.telefone)) throw new ErroAgenda("WhatsApp inválido.");
+    const usos = Math.round(dados.usosPorMes);
+    if (!(usos >= 1 && usos <= 31)) throw new ErroAgenda("Usos por mês entre 1 e 31.");
+    if (!(dados.valorCentavos >= 0 && dados.valorCentavos <= 10_000_00)) throw new ErroAgenda("Valor inválido.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.validoAte)) throw new ErroAgenda("Data inválida.");
+    this.db.prepare(`INSERT INTO planos_clientes (barbearia_id, telefone, nome, usos_por_mes, valor_centavos, valido_ate, criado_em)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (barbearia_id, telefone) DO UPDATE SET nome = excluded.nome, usos_por_mes = excluded.usos_por_mes,
+        valor_centavos = excluded.valor_centavos, valido_ate = excluded.valido_ate`)
+      .run(barbeariaId, dados.telefone, nomeValido(dados.nome, "o nome do cliente"), usos, Math.round(dados.valorCentavos), dados.validoAte, new Date().toISOString());
+  }
+
+  removerPlano(barbeariaId: number, id: number): void {
+    this.db.prepare("DELETE FROM planos_clientes WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+  /** Planos com o uso do mês atual (horários confirmados no mês, inclusive os já marcados pra frente). */
+  planos(barbeariaId: number, agora?: Date): PlanoCliente[] {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) return [];
+    const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
+    const mes = hoje.slice(0, 7);
+    return (this.db.prepare(`SELECT p.id, p.telefone, p.nome, p.usos_por_mes AS usosPorMes, p.valor_centavos AS valorCentavos,
+        p.valido_ate AS validoAte,
+        (SELECT COUNT(*) FROM agendamentos a WHERE a.barbearia_id = p.barbearia_id AND a.cliente_telefone = p.telefone
+          AND a.status = 'confirmado' AND a.inicio >= ? AND a.inicio < ?) AS usadosNoMes
+      FROM planos_clientes p WHERE p.barbearia_id = ? ORDER BY p.nome`)
+      .all(`${mes}-01`, `${mes}-99`, barbeariaId) as unknown as Omit<PlanoCliente, "vencido">[])
+      .map((p) => ({ ...p, vencido: p.validoAte < hoje }));
   }
 
   /**
