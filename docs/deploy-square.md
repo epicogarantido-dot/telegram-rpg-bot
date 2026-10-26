@@ -36,6 +36,14 @@ Antes, baixe o backup em `/painel/backup`.
 
 Subdomínio e memória: `SQUARE_SUBDOMINIO=meusite SQUARE_MEMORIA=512 npm run pacote:square`.
 
+### Armadilha: página velha depois do commit
+
+O Next 16 guarda as páginas que gera em `apps/site/.next/server/route-cache/`, pasta criada
+pelo próprio servidor. Ela não vem no zip, o commit não apaga, e a chave é só o endereço
+(sem a versão do build): home e Revista ficaram presas no primeiro deploy enquanto o resto
+do site atualizava. O `iniciar.cjs` apaga essa pasta a cada início, e as páginas estáticas
+têm `revalidate` de 10 min. Se algo parecer velho: confira `/api/versao` e reinicie.
+
 ## Bot de WhatsApp (app separado)
 
 ```bash

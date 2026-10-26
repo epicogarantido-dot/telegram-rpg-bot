@@ -63,6 +63,10 @@ process.env.PROSPECCAO_DB ??= path.join(__dirname, "data/privado/prospeccao.db")
 process.env.MEMBROS_DB ??= path.join(__dirname, "data/privado/membros.db");
 process.env.FOTOS_DIR ??= path.join(__dirname, "data/privado/fotos");
 process.env.APRENDA_RAIZ ??= __dirname;
+// Cache das páginas que o próprio Next grava enquanto roda. Não vem no zip, então um
+// commit não troca nem apaga: sem limpar, home e Revista ficavam presas no 1º deploy.
+// Apagar a cada início é seguro (ele refaz sozinho).
+fs.rmSync(path.join(__dirname, "apps/site/.next/server/route-cache"), { recursive: true, force: true });
 process.chdir(path.join(__dirname, "apps/site"));
 require("./apps/site/server.js");
 `);
