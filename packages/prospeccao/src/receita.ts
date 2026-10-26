@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream } from "node:fs";
+import { createReadStream } from "node:fs";
 import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -363,16 +363,18 @@ export type AchadoBrasil = ResultadoReceita["achados"][number] & { cidade: strin
 const EMAIL_DE_CONTADOR = /contab|contador|escritorio|assessoria|consultoria/i;
 
 /**
- * Todas as empresas do nicho no Brasil. Não segura tudo na memória: grava num arquivo
- * temporário durante a leitura e entrega em lotes (`aoLote`) no fim. Telefone de contador
- * aqui é o que se repete em 3+ empresas DO NICHO, ou e-mail de escritório (contar os
- * telefones de todas as empresas do país não cabe na memória).
+ * Todas as empresas do nicho no Brasil (mais de 1 milhão na atividade 9602-5/01). Pra caber
+ * em pouca memória, o que é encontrado vai pra um SQLite temporário em disco; na memória fica
+ * só o conjunto de CNPJs básicos (como número). Entrega em lotes (`aoLote`) no fim.
+ * Telefone de contador aqui é o que se repete em 3+ empresas DO NICHO, ou e-mail de escritório
+ * (contar os telefones de todas as empresas do país seria pesado demais).
  */
 export async function buscarNoBrasil(
   nicho: string,
   aoLote: (lote: AchadoBrasil[]) => void,
   opcoes: OpcoesRede & { mes?: string; aoAvancar?: (msg: string) => void; conexoes?: number; tamanhoLote?: number } = {},
 ): Promise<{ mes: string; total: number }> {
+  const { DatabaseSync } = await import("node:sqlite");
   const avisar = opcoes.aoAvancar ?? (() => {});
   const regra = NICHOS_RECEITA[nicho];
   if (!regra) throw new Error(`Nicho "${nicho}" sem regra na Receita.`);
@@ -380,17 +382,27 @@ export async function buscarNoBrasil(
   const cidades = new Map<string, string>();
   for await (const linha of linhasDoArquivo(mes, "Municipios.zip", opcoes)) {
     const [codigo, nome] = lerLinhaCsv(linha);
-    if (codigo && nome) cidades.set(codigo, nome.replace(/\b(\p{L})(\p{L}*)/gu, (_, a: string, b: string) => a + b.toLowerCase()).replace(/\b(De|Da|Do|Das|Dos|E)\b/g, (m) => m.toLowerCase()));
+    if (codigo && nome) cidades.set(codigo, nomeDeCidade(nome));
   }
 
   const pasta = await mkdtemp(join(tmpdir(), "receita-brasil-"));
-  const temporario = join(pasta, "achados.ndjson");
-  const saida = createWriteStream(temporario);
-  const basicos = new Set<string>();
-  /** telefone → [primeira empresa, quantas empresas diferentes] */
-  const telefones = new Map<string, [string, number]>();
+  const db = new DatabaseSync(join(pasta, "trabalho.db"));
+  db.exec(`PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;
+    CREATE TABLE achados (basico INTEGER NOT NULL, dados TEXT NOT NULL);
+    CREATE TABLE telefones (telefone TEXT NOT NULL, basico INTEGER NOT NULL);
+    CREATE TABLE razoes (basico INTEGER PRIMARY KEY, razao TEXT NOT NULL);`);
+  const insAchado = db.prepare("INSERT INTO achados (basico, dados) VALUES (?, ?)");
+  const insTelefone = db.prepare("INSERT INTO telefones (telefone, basico) VALUES (?, ?)");
+  const insRazao = db.prepare("INSERT OR REPLACE INTO razoes (basico, razao) VALUES (?, ?)");
+  const basicos = new Set<number>();
   let prontos = 0;
   let total = 0;
+  let pendentes = 0;
+  const transacao = () => {
+    // Grava em blocos: uma transação a cada 20 mil linhas deixa o SQLite rápido.
+    if (++pendentes >= 20_000) { db.exec("COMMIT; BEGIN"); pendentes = 0; }
+  };
+  db.exec("BEGIN");
   try {
     await emParalelo([...Array(10).keys()], opcoes.conexoes ?? 2, async (i) => {
       for await (const linha of linhasDoArquivo(mes, `Estabelecimentos${i}.zip`, opcoes)) {
@@ -398,36 +410,37 @@ export async function buscarNoBrasil(
         const e = estabelecimentoDaLinha(lerLinhaCsv(linha));
         if (!e || !ehDoNicho(e, nicho)) continue;
         total++;
-        basicos.add(e.cnpjBasico);
-        for (const t of e.telefones) {
-          const visto = telefones.get(t);
-          if (!visto) telefones.set(t, [e.cnpjBasico, 1]);
-          else if (visto[0] !== e.cnpjBasico) visto[1]++;
-        }
-        if (!saida.write(JSON.stringify(e) + "\n")) await new Promise((ok) => saida.once("drain", ok));
+        const basico = Number(e.cnpjBasico);
+        basicos.add(basico);
+        for (const t of e.telefones) insTelefone.run(t, basico);
+        insAchado.run(basico, JSON.stringify(e));
+        transacao();
       }
       avisar(`Estabelecimentos: ${++prontos}/10 arquivos (${total} até agora)`);
     });
-    await new Promise<void>((ok, erro) => saida.end((e?: Error | null) => (e ? erro(e) : ok())));
 
-    const razoes = new Map<string, string>();
     prontos = 0;
     await emParalelo([...Array(10).keys()], opcoes.conexoes ?? 2, async (i) => {
       for await (const linha of linhasDoArquivo(mes, `Empresas${i}.zip`, opcoes)) {
-        const basico = linha.slice(1, 9);
+        const basico = Number(linha.slice(1, 9));
         if (!basicos.has(basico)) continue;
         const [, razao] = lerLinhaCsv(linha);
-        if (razao) razoes.set(basico, razao.trim());
+        if (razao) { insRazao.run(basico, razao.trim()); transacao(); }
       }
       avisar(`Empresas (razão social): ${++prontos}/10 arquivos`);
     });
+    db.exec("COMMIT");
+    basicos.clear();
 
-    const deContador = new Set([...telefones].filter(([, [, n]]) => n >= 3).map(([t]) => t));
+    avisar("Juntando e calculando avisos…");
+    db.exec("CREATE INDEX telefones_t ON telefones(telefone)");
+    const deContador = new Set((db.prepare(`SELECT telefone FROM telefones GROUP BY telefone HAVING COUNT(DISTINCT basico) >= 3`)
+      .all() as { telefone: string }[]).map((r) => r.telefone));
     const tamanhoLote = opcoes.tamanhoLote ?? 2000;
     let lote: AchadoBrasil[] = [];
-    for await (const linha of createInterface({ input: createReadStream(temporario), crlfDelay: Infinity })) {
-      const e = JSON.parse(linha) as EstabelecimentoReceita;
-      e.razaoSocial = razoes.get(e.cnpjBasico);
+    for (const r of db.prepare(`SELECT a.dados, z.razao FROM achados a LEFT JOIN razoes z ON z.basico = a.basico`).iterate() as Iterable<{ dados: string; razao: string | null }>) {
+      const e = JSON.parse(r.dados) as EstabelecimentoReceita;
+      e.razaoSocial = r.razao ?? undefined;
       const contadorPorEmail = !!e.email && EMAIL_DE_CONTADOR.test(e.email);
       const m = melhorTelefone(e.telefones, deContador);
       lote.push({
@@ -440,8 +453,15 @@ export async function buscarNoBrasil(
     if (lote.length) aoLote(lote);
     return { mes, total };
   } finally {
+    try { db.close(); } catch { /* já fechado */ }
     await rm(pasta, { recursive: true, force: true });
   }
+}
+
+/** "SANTANA DO LIVRAMENTO" → "Santana do Livramento". */
+function nomeDeCidade(maiusculo: string): string {
+  return maiusculo.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (_, sep: string, l: string) => sep + l.toUpperCase())
+    .replace(/ (De|Da|Do|Das|Dos|E) /g, (m) => m.toLowerCase());
 }
 
 /** MEI vem como "12.345.678 FULANO DE TAL": tira o número do começo. */
