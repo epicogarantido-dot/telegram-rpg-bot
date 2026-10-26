@@ -1,12 +1,15 @@
 import { BancoProspeccao, STATUS, type Status } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
 import { buscarNoOSM } from "./openstreetmap.ts";
+import { buscarNaReceita, nomeDeExibicao } from "./receita.ts";
 
 const USO = `Uso:
   npm run prospectar -- buscar <nicho> <cidade> [--fonte osm|google] [--paginas N]
       ex.: buscar barbearia Campinas
       osm (padrão, grátis): cidade = nome exato do município; nichos em FILTROS_OSM
       google (precisa de GOOGLE_MAPS_API_KEY e conta com cartão): cidade livre, ex. "Campinas SP"
+  npm run prospectar -- receita <nicho> <cidade[,cidade2,...]> <UF>
+      ex.: receita barbearia Alegrete RS   (dados abertos do CNPJ, grátis; ~15-20 min por passada)
   npm run prospectar -- listar [status]
   npm run prospectar -- marcar <place_id> <${STATUS.join("|")}>
   npm run prospectar -- resumo`;
@@ -35,6 +38,24 @@ async function main() {
       const novos = banco.salvarEstabelecimentos(achados, nicho, cidade);
       const comTel = achados.filter((a) => a.telefone).length;
       console.log(`🔎 ${achados.length} encontrados (${comTel} com telefone), ${novos} novos no banco.`);
+      return;
+    }
+    case "receita": {
+      // Várias cidades da mesma UF numa passada só: receita barbearia "Alegrete,Uruguaiana" RS
+      const [nicho, cidades, uf] = args;
+      if (!nicho || !cidades || !uf) return sair(USO);
+      const inicio = Date.now();
+      const resultados = await buscarNaReceita(nicho, cidades.split(",").map((c) => c.trim()).filter(Boolean), uf,
+        { aoAvancar: (m) => console.log(`⏳ ${m} (${Math.round((Date.now() - inicio) / 1000)} s)`) });
+      for (const [cidade, r] of resultados) {
+        const { novos, total } = banco.salvarDaReceita(r, nicho, cidade);
+        const celular = r.achados.filter((a) => a.celular && !a.telefoneDeContador).length;
+        const confirmados = r.achados.filter((a) => a.nomeConfirma).length;
+        console.log(`\n📋 Receita ${r.mes}: ${r.totalNaCidade} empresas ativas em ${cidade}/${uf}.`);
+        console.log(`✂️  ${total} na atividade de cabeleireiro/barbeiro, ${confirmados} com "barb" no nome, ${celular} com celular próprio. ${novos} novos no banco.`);
+        for (const a of r.achados.filter((x) => x.nomeConfirma)) console.log(`  • ${nomeDeExibicao(a)} · ${a.telefone ?? "sem tel"}${a.telefone && !a.celular ? " (fixo)" : ""}${a.telefoneDeContador ? " (contador?)" : ""}`);
+      }
+      console.log(`⏱️  ${Math.round((Date.now() - inicio) / 1000)} s`);
       return;
     }
     case "listar": {

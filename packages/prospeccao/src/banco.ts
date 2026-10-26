@@ -2,6 +2,7 @@ import { mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Estabelecimento } from "./google-places.ts";
+import { nomeDeExibicao, type ResultadoReceita } from "./receita.ts";
 
 /**
  * Banco local (SQLite) com os leads. Fica em data/privado/, que está no
@@ -18,6 +19,14 @@ export interface Lead extends Estabelecimento {
   observacao?: string;
   criadoEm: string;
   contatadoEm?: string;
+  /** De onde veio: osm, google, receita, manual. */
+  fonte?: string;
+  cnpj?: string;
+  email?: string;
+  instagram?: string;
+  /** Alertas pra quem vai contatar: telefone fixo, do contador, nome que não confirma o nicho. */
+  avisos?: string;
+  abertura?: string;
 }
 
 export interface Inscricao {
@@ -42,7 +51,8 @@ function caminhoPadrao(): string {
 }
 
 const COLUNAS = `place_id AS placeId, nicho, cidade, nome, endereco, telefone, site, nota, avaliacoes,
-  maps_url AS mapsUrl, status, observacao, criado_em AS criadoEm, contatado_em AS contatadoEm`;
+  maps_url AS mapsUrl, status, observacao, criado_em AS criadoEm, contatado_em AS contatadoEm,
+  fonte, cnpj, email, instagram, avisos, abertura`;
 
 export class BancoProspeccao {
   readonly db: DatabaseSync;
@@ -73,6 +83,67 @@ export class BancoProspeccao {
         interesse TEXT NOT NULL, criado_em TEXT NOT NULL
       );
     `);
+    // Colunas novas em bancos antigos.
+    const existentes = new Set((this.db.prepare("PRAGMA table_info(leads)").all() as { name: string }[]).map((c) => c.name));
+    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura"]) {
+      if (!existentes.has(coluna)) this.db.exec(`ALTER TABLE leads ADD COLUMN ${coluna} TEXT`);
+    }
+  }
+
+  /**
+   * Importa o resultado da Receita. Não mexe em status, Instagram nem observação de
+   * quem já existe (o trabalho de quem contata não se perde ao atualizar a base).
+   */
+  salvarDaReceita(r: ResultadoReceita, nicho: string, cidade: string): { novos: number; total: number } {
+    const ins = this.db.prepare(`
+      INSERT INTO leads (place_id, nicho, cidade, nome, endereco, telefone, status, criado_em, fonte, cnpj, email, avisos, abertura)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'receita', ?, ?, ?, ?)
+      ON CONFLICT(place_id) DO UPDATE SET
+        nome = excluded.nome, endereco = excluded.endereco, email = excluded.email, avisos = excluded.avisos,
+        telefone = COALESCE(leads.telefone, excluded.telefone)`);
+    const existe = this.db.prepare("SELECT 1 FROM leads WHERE place_id = ?");
+    const agora = new Date().toISOString();
+    let novos = 0;
+    for (const e of r.achados) {
+      const id = `cnpj:${e.cnpj}`;
+      if (!existe.get(id)) novos++;
+      const avisos = [
+        !e.telefone && "sem telefone",
+        e.telefone && !e.celular && "telefone fixo (talvez sem WhatsApp)",
+        e.telefoneDeContador && "telefone parece do contador",
+        !e.nomeConfirma && "nome não diz barbearia: pode ser salão ou manicure",
+      ].filter(Boolean).join("; ");
+      const status: Status = e.telefone && this.estaBloqueado(e.telefone) ? "nao_contatar" : "novo";
+      const endereco = [e.endereco, e.bairro].filter(Boolean).join(" - ") || null;
+      ins.run(id, nicho, cidade, nomeDeExibicao(e), endereco, e.telefone ?? null, status, agora, e.cnpj, e.email ?? null, avisos || null, e.abertura ?? null);
+    }
+    return { novos, total: r.achados.length };
+  }
+
+  /** Lead achado à mão (Google, Instagram, Facebook) ou completado: junta pelo telefone ou pelo @. */
+  salvarManual(dados: { nome: string; cidade: string; nicho: string; telefone?: string; instagram?: string; observacao?: string }): { placeId: string; novo: boolean } {
+    const instagram = dados.instagram?.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/[/?].*$/, "").toLowerCase() || undefined;
+    const existente = this.db.prepare(`SELECT place_id AS id FROM leads WHERE (? IS NOT NULL AND telefone = ?) OR (? IS NOT NULL AND instagram = ?) LIMIT 1`)
+      .get(dados.telefone ?? null, dados.telefone ?? null, instagram ?? null, instagram ?? null) as { id: string } | undefined;
+    if (existente) {
+      this.db.prepare(`UPDATE leads SET telefone = COALESCE(telefone, ?), instagram = COALESCE(?, instagram),
+        observacao = COALESCE(?, observacao) WHERE place_id = ?`).run(dados.telefone ?? null, instagram ?? null, dados.observacao ?? null, existente.id);
+      return { placeId: existente.id, novo: false };
+    }
+    const placeId = `manual:${instagram ?? dados.telefone ?? `${Date.now()}`}`;
+    const status: Status = dados.telefone && this.estaBloqueado(dados.telefone) ? "nao_contatar" : "novo";
+    this.db.prepare(`INSERT INTO leads (place_id, nicho, cidade, nome, telefone, status, criado_em, fonte, instagram, observacao)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)`).run(placeId, dados.nicho, dados.cidade, dados.nome.trim(), dados.telefone ?? null,
+      status, new Date().toISOString(), instagram ?? null, dados.observacao ?? null);
+    return { placeId, novo: true };
+  }
+
+  /** Completar um lead (ex.: achou o @ ou o WhatsApp certo no Instagram). */
+  completar(placeId: string, dados: { telefone?: string; instagram?: string }): void {
+    const instagram = dados.instagram?.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/[/?].*$/, "").toLowerCase() || null;
+    this.db.prepare(`UPDATE leads SET telefone = COALESCE(?, telefone), instagram = COALESCE(?, instagram) WHERE place_id = ?`)
+      .run(dados.telefone ?? null, instagram, placeId);
+    if (dados.telefone && this.estaBloqueado(dados.telefone)) this.db.prepare("UPDATE leads SET status = 'nao_contatar' WHERE place_id = ?").run(placeId);
   }
 
   /** Insere sem sobrescrever o status de quem já existe. Devolve quantos eram novos. */

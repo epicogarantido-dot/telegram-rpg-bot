@@ -36,7 +36,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
   return (
     <>
-      <p><strong>Leads</strong> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
+      <p><strong>Leads</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
       <p>
         Contatos hoje: <strong>{hoje}/{config.limiteDiario}</strong>
@@ -73,13 +73,18 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             <div key={l.placeId} className="cartao lead">
               <div>
                 <span className="etiqueta">{ROTULO[l.status]}</span>{" "}
-                <strong>{l.nome}</strong> · ⭐ {l.nota ?? "-"} ({l.avaliacoes ?? 0})
+                <strong>{l.nome}</strong>
+                {l.avaliacoes ? <> · ⭐ {l.nota ?? "-"} ({l.avaliacoes})</> : null}
                 <br />
                 <small>
-                  {l.endereco} · {l.telefone ?? "sem telefone"}
-                  {l.telefone && !celular && " (fixo — provavelmente sem WhatsApp)"} ·{" "}
-                  {l.mapsUrl && <a href={l.mapsUrl} target="_blank" rel="noopener noreferrer">Maps</a>}
+                  {l.endereco ?? l.cidade} · {l.telefone ?? "sem telefone"}
+                  {l.telefone && !celular && " (fixo, provavelmente sem WhatsApp)"}
+                  {l.instagram && <> · <a href={`https://instagram.com/${l.instagram}`} target="_blank" rel="noopener noreferrer">@{l.instagram}</a></>}
+                  {l.mapsUrl && <> · <a href={l.mapsUrl} target="_blank" rel="noopener noreferrer">Maps</a></>}
+                  {l.fonte && <> · fonte: {l.fonte}</>}
                 </small>
+                {l.avisos && <><br /><small className="aviso-lead">⚠️ {l.avisos}</small></>}
+                {l.observacao && <><br /><small>📝 {l.observacao}</small></>}
               </div>
               <div className="acoes">
                 {mostrarConvite && (
@@ -101,7 +106,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             </div>
           );
         })}
-        {leads.length === 0 && <p>Nenhum lead. Rode <code>npm run prospectar -- buscar barbearia &quot;Sua Cidade UF&quot;</code>.</p>}
+        {leads.length === 0 && <p>Nenhum lead ainda. <a href="/painel/buscar">Buscar barbearias</a> pela base da Receita ou pelo Google e Instagram.</p>}
       </div>
     </>
   );

@@ -617,3 +617,12 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .minha-conta h2 { margin: 0; }
 .linha-nome { grid-template-columns: 1fr; }
 @media (min-width: 560px) { .linha-nome { grid-template-columns: 1fr auto; align-items: end; } }
+
+/* ---------- painel: buscar leads ---------- */
+.busca-etapa { margin-top: 36px; display: grid; gap: 10px; }
+.busca-etapa h2 { margin: 0; font-size: 1.3rem; }
+.buscas-prontas { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.buscas-prontas a { display: inline-block; padding: 8px 12px; border: 1px solid var(--borda); text-decoration: none; }
+.completar-lead { display: flex; flex-wrap: wrap; gap: 6px; }
+.completar-lead input { padding: 8px 10px; font: inherit; font-size: 15px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); min-width: 0; flex: 1 1 140px; }
+.aviso-lead { color: var(--erro); }
