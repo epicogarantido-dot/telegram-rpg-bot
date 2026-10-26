@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BellRing, CalendarCheck, CalendarClock, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, CalendarCheck, Repeat, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
 import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
@@ -47,10 +47,29 @@ const RECURSOS = [
     ],
   },
   {
+    icone: Repeat, titulo: "O cliente volta",
+    itens: [
+      "Terminou o corte? Um toque marca o próximo, já na data certa pro ritmo daquele cliente.",
+      "Na véspera, a lista de amanhã com o lembrete pronto pra mandar do seu WhatsApp.",
+      "Quem passou da hora de voltar aparece em \"Clientes que sumiram\", com a mensagem pronta.",
+      "Pedido de avaliação no Google com um toque, e uma placa com QR pra pôr no balcão.",
+    ],
+  },
+  {
+    icone: BarChart3, titulo: "Os números do mês",
+    itens: [
+      "Atendidos, faltas, quanto entrou e quanto se perdeu em falta, e quantos clientes voltaram.",
+      "Divisão por profissional: diga com quantos % cada um fica e o sistema faz a conta.",
+      "Plano mensal: anote quem paga por mês e veja quantos cortes já usou.",
+    ],
+  },
+  {
     icone: Users, titulo: "Do seu jeito",
     itens: [
       "Atende por ordem de chegada? O site mostra se está aberto e o tamanho da fila.",
       "Folga em parte do dia, \"fechar hoje\", horários de 30 min a 2 h, preços visíveis ou não.",
+      "Serviços com descrição, e o cliente pode mostrar o corte que quer escolhendo nas suas fotos.",
+      "Vai até o cliente? Marque o serviço como domicílio e o site pede o endereço.",
       "Serviços, preços e equipe você muda pelo celular, quando quiser.",
     ],
   },
@@ -67,7 +86,8 @@ const PERGUNTAS = [
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
   ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
-  ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Quem marca e some você pode bloquear."],
+  ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Na véspera, o painel lista quem vem amanhã pra você lembrar pelo WhatsApp. Quem falta fica marcado, entra nos números do mês, e quem marca e some você pode bloquear."],
+  ["O sistema manda mensagem pros meus clientes?", "Não. Ele prepara a mensagem e abre o SEU WhatsApp; quem envia é você. Assim seu número não corre risco e o cliente fala com quem conhece."],
   ["Posso trocar o estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem agendamentos."],
 ] as const;
 
