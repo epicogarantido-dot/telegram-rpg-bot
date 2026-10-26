@@ -14,7 +14,7 @@ import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, us
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
-import { ehPedidoDeEntrada, ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
+import { PESSOA_HORAS, RESPOSTA_SAIDA, responder, type Contexto, type Sessao } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
 
 // BOT_SESSAO: onde fica a sessão do WhatsApp (no pacote da Square Cloud, ./auth ao lado do bot).
@@ -24,6 +24,13 @@ const numeroPareamento = process.env.BOT_NUMERO?.replace(/\D/g, "");
 
 const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
+/** Em que ponto da árvore de opções cada conversa está (some sozinho com o tempo, ver SESSAO_MIN). */
+const sessoes = new Map<string, Sessao>();
+// Limpa conversas paradas de vez em quando, pra memória não crescer.
+setInterval(() => {
+  const limite = Date.now() - PESSOA_HORAS * 3_600_000;
+  for (const [chat, s] of sessoes) if (s.desde < limite) sessoes.delete(chat);
+}, 3_600_000).unref();
 const segredoSite = process.env.BOT_SEGREDO ?? "";
 
 /**
@@ -183,24 +190,27 @@ async function conectar(): Promise<void> {
       const jidTelefone = isPnUser(chat) ? chat : msg.key.remoteJidAlt;
       const telefone = jidTelefone?.split("@")[0]?.split(":")[0];
 
-      let resposta: string | null;
-      if (ehPedidoDeSaida(texto)) {
+      // A árvore de opções decide; aqui só se executa o que ela pediu.
+      const r = responder(texto, ctx, sessoes.get(chat));
+      sessoes.set(chat, r.sessao);
+      if (!r.resposta) continue;
+      let resposta: string;
+      if (r.resposta.tipo === "sair") {
         if (telefone) await registrarSaida(telefone);
         else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
         resposta = RESPOSTA_SAIDA;
-      } else if (ehPedidoDeEntrada(texto)) {
+      } else if (r.resposta.tipo === "entrada") {
         resposta = telefone
           ? await pedirLinkDeEntrada(telefone, msg.pushName ?? undefined)
           : "Não consegui identificar seu número. Tente mandar de novo daqui a pouco.";
       } else {
-        resposta = responder(texto, ctx);
+        resposta = r.resposta.texto;
       }
-      if (!resposta) continue;
       try {
         await sock.readMessages([msg.key]);
         await sock.sendPresenceUpdate("composing", chat);
         await new Promise((r) => setTimeout(r, 800 + Math.min(resposta.length * 10, 2500)));
-        await sock.sendMessage(chat, { text: resposta }, { quoted: msg });
+        await sock.sendMessage(chat, { text: resposta });
       } catch (e) {
         console.error(`Falha ao responder ${chat}:`, e);
       }
