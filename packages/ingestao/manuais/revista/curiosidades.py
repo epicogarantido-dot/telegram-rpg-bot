@@ -301,4 +301,50 @@ fontes=[
 ])
 
 
-ARTIGOS = [POSTE, IMPOSTO, SANGRADORES, GILLETTE, QUARTETO, MOVEMBER, CADEIRA]
+BARBA_VAI_E_VOLTA = cur(
+slug="a-barba-vai-e-volta",
+titulo="A barba vai e volta: por que o homem tirou e deixou crescer de novo",
+resumo="Alexandre, o Grande teria mandado raspar a barba dos soldados. No século 19, médicos recomendavam deixar crescer. A Gillette e a guerra rasparam de novo. A história da moda que sustenta a barbearia.",
+publicadoEm="2026-10-26",
+tags=["barbearia", "curiosidade", "história", "barba"],
+conteudo="""A barba nunca saiu de moda por muito tempo, e nunca ficou na moda pra sempre. Ela vai e volta há mais de dois mil anos, e cada volta teve um motivo que não tinha nada a ver com estética. Pra barbearia, essa gangorra é ótima notícia: barba que cresce precisa de cuidado, e barba que sai precisa de navalha.
+
+### Alexandre e a barba que dava pra agarrar
+
+O escritor grego Plutarco, no século 1, conta na vida do herói Teseu que alguns povos guerreiros cortavam o cabelo curto pra não dar ao inimigo onde agarrar no combate corpo a corpo. E acrescenta: Alexandre, o Grande "certamente entendeu isso quando, como se diz, mandou seus generais rasparem a barba dos macedônios", porque a barba era a pegada mais fácil numa luta.
+
+Repare no "como se diz": nem Plutarco garantia a história, e historiadores de hoje duvidam que puxão de barba fosse tática de guerra. Mas a história pegou, e é contada até hoje como a primeira grande ordem de raspar a barba.
+
+### Os vitorianos e a barba que "protegia a saúde"
+
+Na Inglaterra da metade do século 19, a barba voltou com tudo, e rápido. Um estudo de 1976 sobre os homens retratados no jornal *Illustrated London News* contou menos de 10% de barbudos em 1850 e quase 50% em 1860. Nos anos 1890, mais de 60% tinham barba.
+
+Até o começo da década de 1850, segundo o *Journal of Victorian Culture*, barba era coisa de artista e de rebelde. Em poucos anos virou símbolo de homem de verdade, ajudada pelas fotos dos soldados da Guerra da Crimeia, barbudos e castigados pela batalha, e por uma enxurrada de artigos a favor. Surgiram até clubes de barba e bigode.
+
+E entrou a medicina. O historiador Alun Withey, citado pela revista Smithsonian, escreve que "por volta de 1850, os médicos começavam a incentivar os homens a usar barba como forma de evitar doenças". Numa Londres de ar muito poluído, a barba era vista como um filtro que segurava as impurezas antes de entrarem no corpo. Hoje sabemos que não é bem assim, mas na época fazia sentido.
+
+### A lâmina e a guerra raspam de novo
+
+No começo do século 20, a barba perdeu de novo. A lâmina descartável da Gillette deixou o barbear fácil e seguro em casa, e a Primeira Guerra distribuiu milhões de kits de barbear a soldados americanos, que voltaram pra casa com o hábito do rosto limpo. Contamos essa história em [A lâmina descartável que tirou a barba da barbearia](/revista/a-lamina-que-tirou-a-barba-da-barbearia).
+
+### E de novo, a volta
+
+Nos anos 2010, a barba cheia voltou como moda, o visual "lenhador" que substituiu o homem metrossexual de rosto liso, como notou a Smithsonian em 2014. Com ela voltaram as barbearias clássicas, a toalha quente e os óleos, como mostram a Schorem, em Roterdã ([episódio 7](/revista/roterda-schorem)).
+
+### Como usar isso na sua barbearia
+
+**Atenda as duas ondas.** Tenha serviço pra quem deixa crescer (desenho, hidratação, óleo, aparo) e pra quem tira (barbear com navalha e toalha quente). Um cardápio que cobre os dois não depende da moda.
+
+Conte a história na cadeira. "Sabia que no século 19 os médicos mandavam deixar a barba crescer pra não ficar doente?" é assunto pra cinco minutos.
+
+Faça o calendário da barba. Novembro tem o bigode do [Movember](/revista/movember-e-novembro-azul); o fim do ano tem quem quer tirar tudo pras festas. Cada virada é uma chance de oferecer o serviço certo.
+
+A moda vai e volta. O cliente que sabe que a barbearia cuida da barba, seja ela qual for, volta sempre.""",
+fontes=[
+    {"titulo": "Plutarco — Vida de Teseu, 5 (tradução de Bernadotte Perrin, Perseus/Perseids)", "url": "https://fgh.perseids.org/read/greekLit/tlg0007/tlg001/perseus-eng3/5.1-5.4"},
+    {"titulo": "Journal of Victorian Culture Online — Victorian Movember: The Return of the Monarch Beard (2013)", "url": "https://jvc.oup.com/2013/11/26/victorian-movember-the-return-of-the-monarch-beard"},
+    {"titulo": "Smithsonian Magazine — In the Victorian Era, Doctors Prescribed Beards to Help Keep Men Healthy (2014)", "url": "https://www.smithsonianmag.com/smart-news/victorian-era-doctors-prescribed-beards-help-keep-men-healthy-180951471/"},
+])
+
+
+ARTIGOS = [POSTE, IMPOSTO, SANGRADORES, GILLETTE, QUARTETO, MOVEMBER, CADEIRA, BARBA_VAI_E_VOLTA]
