@@ -37,3 +37,7 @@ Antes de traduzir, veja se já existe versão oficial em português — se exist
 
 - Cursos com `autoria: "propria"` (ex.: *Seu dinheiro em ordem*, *Marketing pra barbearia*) são escritos aqui e publicados sob CC BY 4.0. Valores oficiais citados (DAS-MEI, limite do MEI) têm data de conferência na lição.
 - Artigos da Revista são texto nosso. Fatos e números vêm de fontes listadas no fim de cada artigo; não copiamos texto nem imagem dessas fontes. Vídeos de terceiros (YouTube) só por link, nunca baixados ou reenviados.
+
+## Conta pra ler as lições
+
+- Pedir conta grátis (login) pra ler a partir da 2ª lição não muda a licença: o texto continua CC BY, a atribuição e o link do original aparecem em toda página do curso, e ninguém paga. Não pomos termos extras que limitem copiar ou adaptar o conteúdo.

@@ -138,3 +138,6 @@
 @media (max-width: 420px) {
   .site-cursos :is(.botao, .propaganda .botao-sec) { letter-spacing: 0.1em; padding-inline: 16px; }
 }
+.site-cursos .licao-trancada { border-color: var(--linha); }
+.site-cursos .licao-trancada .botao-sec { padding: 14px 22px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.18em; }
+@media (max-width: 420px) { .site-cursos .licao-trancada .botao-sec { letter-spacing: 0.1em; padding-inline: 16px; } }

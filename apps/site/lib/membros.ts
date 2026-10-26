@@ -4,6 +4,7 @@ import { BancoMembros, ErroMembro, type Membro } from "@aprenda/membros";
 
 const COOKIE_SESSAO = "sessao_aluno";
 const COOKIE_DESAFIO = "desafio_whatsapp";
+const COOKIE_VOLTAR = "voltar_licao";
 
 let banco: BancoMembros | undefined;
 export function obterMembros(): BancoMembros {
@@ -31,6 +32,31 @@ export async function lerDesafio(): Promise<string | undefined> {
 
 export async function apagarDesafio(): Promise<void> {
   (await cookies()).delete(COOKIE_DESAFIO);
+}
+
+/**
+ * Pra onde mandar o aluno depois de entrar ou confirmar o WhatsApp. Só aceita caminho de
+ * curso do próprio site: nada de redirecionar pra fora com ?voltar=https://...
+ */
+export function destinoSeguro(valor: unknown): string | undefined {
+  const s = String(valor ?? "");
+  return /^\/cursos\/[a-z0-9-]+(\/[a-z0-9-]+){0,2}$/.test(s) ? s : undefined;
+}
+
+/** Guarda a lição que o aluno queria ler; sobrevive aos passos de cadastro e confirmação. */
+export async function guardarVolta(valor: unknown): Promise<void> {
+  const destino = destinoSeguro(valor);
+  if (destino) (await cookies()).set(COOKIE_VOLTAR, destino, {
+    httpOnly: true, sameSite: "lax", secure: seguro(), maxAge: 60 * 60, path: "/",
+  });
+}
+
+/** Lê e apaga o destino guardado. */
+export async function tirarVolta(): Promise<string | undefined> {
+  const jar = await cookies();
+  const destino = destinoSeguro(jar.get(COOKIE_VOLTAR)?.value);
+  jar.delete(COOKIE_VOLTAR);
+  return destino;
 }
 
 export async function membroAtual(): Promise<Membro | undefined> {

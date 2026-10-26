@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { carregarCurso, carregarCursos } from "@aprenda/catalogo";
+import { carregarCurso } from "@aprenda/catalogo";
 import { renderizarMarkdown } from "@/lib/markdown";
 import { Atribuicao } from "@/componentes/cursos";
 import { ProgressoLicao } from "@/componentes/ProgressoLicao";
+import { LicaoTrancada } from "@/componentes/LicaoTrancada";
+import { membroAtual } from "@/lib/membros";
 
 type Params = { slug: string; modulo: string; licao: string };
 
-export async function generateStaticParams(): Promise<Params[]> {
-  return (await carregarCursos()).flatMap((c) =>
-    c.modulos.flatMap((m) => m.licoes.map((l) => ({ slug: c.slug, modulo: m.id, licao: l.id }))),
-  );
-}
+// Dinâmica: a partir da segunda lição, o conteúdo depende de quem está logado.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const p = await params;
@@ -33,6 +32,8 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
   const anterior = sequencia[i - 1];
   const proxima = sequencia[i + 1];
   const href = (x: (typeof sequencia)[number]) => `/cursos/${curso.slug}/${x.modulo.id}/${x.licao.id}`;
+  // A primeira lição é a amostra grátis; o resto pede conta com WhatsApp confirmado.
+  const trancada = i > 0 && !(await membroAtual())?.verificado;
 
   return (
     <article className="licao">
@@ -40,8 +41,14 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
         <Link href={`/cursos/${curso.slug}`}>{curso.titulo}</Link> · {modulo.titulo}
       </p>
       <h1>{licao.titulo}</h1>
-      <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />
-      <ProgressoLicao curso={curso.slug} licao={licao.id} />
+      {trancada ? (
+        <LicaoTrancada caminho={href(sequencia[i]!)} primeira={href(sequencia[0]!)} totalLicoes={sequencia.length} />
+      ) : (
+        <>
+          <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />
+          <ProgressoLicao curso={curso.slug} licao={licao.id} />
+        </>
+      )}
       <Atribuicao curso={curso} />
       <nav className="navegacao">
         {anterior ? <Link href={href(anterior)}>← {anterior.licao.titulo}</Link> : <span />}

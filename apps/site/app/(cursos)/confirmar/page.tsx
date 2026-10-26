@@ -4,7 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { AguardarConfirmacao } from "@/componentes/AguardarConfirmacao";
 import { CopiarCodigo } from "@/componentes/CopiarCodigo";
 import {
-  apagarDesafio, gravarSessaoMembro, lerDesafio, mensagemMembro, obterMembros, whatsappBot,
+  apagarDesafio, gravarSessaoMembro, lerDesafio, mensagemMembro, obterMembros, tirarVolta, whatsappBot,
 } from "@/lib/membros";
 
 export const metadata = { title: "Confirmar WhatsApp", robots: { index: false } };
@@ -23,7 +23,7 @@ async function concluir() {
   }
   await apagarDesafio();
   await gravarSessaoMembro(token);
-  redirect("/minha-area?bemvindo=1");
+  redirect((await tirarVolta()) ?? "/minha-area?bemvindo=1");
 }
 
 export default async function Confirmar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {

@@ -601,3 +601,10 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .confirmar-ajuda summary { cursor: pointer; font-weight: 500; }
 .confirmar-ajuda p { margin: 12px 0 0; font-size: 15px; color: var(--suave); }
 .confirmar-ajuda .codigo { margin: 12px 0; }
+
+/* ---------- lição trancada (sem conta) ---------- */
+.licao-trancada { margin: 24px 0; padding: 28px 24px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); display: grid; gap: 12px; }
+.licao-trancada h2 { margin: 0; }
+.licao-trancada p { margin: 0; }
+.licao-trancada-icone { color: var(--suave); }
+.licao-trancada .acoes { margin-top: 8px; }

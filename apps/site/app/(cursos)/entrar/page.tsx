@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { LogIn } from "lucide-react";
 import {
-  gravarDesafio, gravarSessaoMembro, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros,
+  destinoSeguro, gravarDesafio, gravarSessaoMembro, guardarVolta, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros, tirarVolta,
 } from "@/lib/membros";
 
 export const metadata = { title: "Entrar" };
@@ -19,21 +19,25 @@ async function entrar(form: FormData) {
     verificado = r.verificado;
     await gravarSessaoMembro(r.token);
     if (!verificado) await gravarDesafio(banco.novoCodigo(telefone, "cadastro").desafio);
+    await guardarVolta(form.get("voltar"));
   } catch (e) {
-    redirect(`/entrar?erro=${encodeURIComponent(mensagemMembro(e))}`);
+    const voltar = destinoSeguro(form.get("voltar"));
+    redirect(`/entrar?erro=${encodeURIComponent(mensagemMembro(e))}${voltar ? `&voltar=${encodeURIComponent(voltar)}` : ""}`);
   }
-  redirect(verificado ? "/minha-area" : "/confirmar");
+  if (!verificado) redirect("/confirmar");
+  redirect((await tirarVolta()) ?? "/minha-area");
 }
 
-export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string; confirmar?: string }> }) {
-  if ((await membroAtual())?.verificado) redirect("/minha-area");
-  const { erro, confirmar } = await searchParams;
+export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string; confirmar?: string; voltar?: string }> }) {
+  const { erro, confirmar, voltar } = await searchParams;
+  if ((await membroAtual())?.verificado) redirect(destinoSeguro(voltar) ?? "/minha-area");
   return (
     <div className="caixa-auth">
       <h1>Entrar</h1>
       {confirmar && <p className="atribuicao">Falta confirmar seu WhatsApp. Entre de novo pra receber um código.</p>}
       {erro && <p className="erro" role="alert">{erro}</p>}
       <form action={entrar} className="formulario">
+        {destinoSeguro(voltar) && <input type="hidden" name="voltar" value={voltar} />}
         <label>WhatsApp (com DDD)
           <input name="telefone" required inputMode="tel" autoComplete="username" placeholder="(11) 98765-4321" />
         </label>
@@ -42,7 +46,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         </label>
         <BotaoEnviar carregando="Entrando…"><LogIn size={18} aria-hidden /> Entrar</BotaoEnviar>
       </form>
-      <p><Link href="/esqueci">Esqueci a senha</Link> · <Link href="/cadastro">Criar conta grátis</Link></p>
+      <p><Link href="/esqueci">Esqueci a senha</Link> · <Link href={destinoSeguro(voltar) ? `/cadastro?voltar=${encodeURIComponent(voltar!)}` : "/cadastro"}>Criar conta grátis</Link></p>
     </div>
   );
 }

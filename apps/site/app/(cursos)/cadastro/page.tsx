@@ -2,9 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { Lock, MessageCircle, Sparkles } from "lucide-react";
-import { gravarDesafio, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros } from "@/lib/membros";
+import { destinoSeguro, gravarDesafio, guardarVolta, ipDaRequisicao, membroAtual, mensagemMembro, obterMembros } from "@/lib/membros";
 
-export const metadata = { title: "Criar conta grátis" };
+export const metadata = { title: "Criar conta" };
 
 async function cadastrar(form: FormData) {
   "use server";
@@ -19,15 +19,17 @@ async function cadastrar(form: FormData) {
     });
     const { desafio } = banco.novoCodigo(String(form.get("telefone") ?? ""), "cadastro");
     await gravarDesafio(desafio);
+    await guardarVolta(form.get("voltar"));
   } catch (e) {
-    redirect(`/cadastro?erro=${encodeURIComponent(mensagemMembro(e))}`);
+    const voltar = destinoSeguro(form.get("voltar"));
+    redirect(`/cadastro?erro=${encodeURIComponent(mensagemMembro(e))}${voltar ? `&voltar=${encodeURIComponent(voltar)}` : ""}`);
   }
   redirect("/confirmar");
 }
 
-export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  if ((await membroAtual())?.verificado) redirect("/minha-area");
-  const { erro } = await searchParams;
+export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string; voltar?: string }> }) {
+  const { erro, voltar } = await searchParams;
+  if ((await membroAtual())?.verificado) redirect(destinoSeguro(voltar) ?? "/minha-area");
   return (
     <div className="caixa-auth">
       <span className="selo"><Sparkles className="icone" aria-hidden /> Grátis pra sempre</span>
@@ -35,6 +37,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
       <p className="suave">Salve seu progresso nos cursos. Seu login é o seu número de WhatsApp.</p>
       {erro && <p className="erro" role="alert">{erro}</p>}
       <form action={cadastrar} className="formulario">
+        {destinoSeguro(voltar) && <input type="hidden" name="voltar" value={voltar} />}
         <label>Seu nome<input name="nome" required minLength={2} maxLength={80} autoComplete="name" /></label>
         <label>WhatsApp (com DDD)
           <input name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(11) 98765-4321" />
@@ -50,7 +53,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <BotaoEnviar carregando="Criando conta…"><MessageCircle size={18} aria-hidden /> Continuar</BotaoEnviar>
       </form>
       <p className="suave pequeno"><Lock className="icone" aria-hidden /> No próximo passo você confirma o número com um toque: o WhatsApp abre com a mensagem pronta, é só enviar.</p>
-      <p>Já tem conta? <Link href="/entrar">Entrar</Link></p>
+      <p>Já tem conta? <Link href={destinoSeguro(voltar) ? `/entrar?voltar=${encodeURIComponent(voltar!)}` : "/entrar"}>Entrar</Link></p>
     </div>
   );
 }
