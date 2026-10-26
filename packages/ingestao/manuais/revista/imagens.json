@@ -152,5 +152,26 @@
     "credito": "Phillip Pessar, via Flickr",
     "licenca": "CC BY 2.0",
     "fonte": "https://www.flickr.com/photos/25955895@N03/8234900913"
+  },
+  "google-perfil-da-empresa-pra-barbearia": {
+    "arquivo": "/revista/google-perfil-da-empresa-pra-barbearia.webp",
+    "alt": "Barbearia vazia com três cadeiras de couro preto, parede de tijolos, espelhos e luminárias acesas",
+    "credito": "Unsplash",
+    "licenca": "Licença Unsplash",
+    "fonte": "https://images.unsplash.com/photo-1585747860715-2ba37e788b70"
+  },
+  "barbeiro-parceiro-lei-do-salao-parceiro": {
+    "arquivo": "/revista/barbeiro-parceiro-lei-do-salao-parceiro.webp",
+    "alt": "Barbeiro de luvas pretas penteando e cortando o cabelo cacheado de um cliente",
+    "credito": "Unsplash",
+    "licenca": "Licença Unsplash",
+    "fonte": "https://images.unsplash.com/photo-1567894340315-735d7c361db0"
+  },
+  "dia-nacional-do-barbeiro-18-de-janeiro": {
+    "arquivo": "/revista/dia-nacional-do-barbeiro-18-de-janeiro.webp",
+    "alt": "Foto em preto e branco de um barbeiro de mão tatuada aparando a barba de um cliente na tesoura",
+    "credito": "Unsplash",
+    "licenca": "Licença Unsplash",
+    "fonte": "https://images.unsplash.com/photo-1517832606299-7ae9b720a186"
   }
 }

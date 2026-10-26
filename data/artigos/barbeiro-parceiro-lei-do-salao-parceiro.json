@@ -1,0 +1,36 @@
+{
+  "slug": "barbeiro-parceiro-lei-do-salao-parceiro",
+  "titulo": "Barbeiro parceiro: o que diz a Lei do Salão-Parceiro e o que o STF decidiu",
+  "resumo": "Trabalhar por porcentagem é comum nas barbearias. A lei permite, com contrato escrito e homologado. O STF confirmou em 2021, com um aviso: parceria de fachada vira vínculo de emprego.",
+  "tipo": "guia",
+  "publicadoEm": "2026-10-26",
+  "tags": [
+    "barbearia",
+    "salão-parceiro",
+    "equipe",
+    "lei",
+    "guia"
+  ],
+  "imagem": {
+    "arquivo": "/revista/barbeiro-parceiro-lei-do-salao-parceiro.webp",
+    "alt": "Barbeiro de luvas pretas penteando e cortando o cabelo cacheado de um cliente",
+    "credito": "Unsplash",
+    "licenca": "Licença Unsplash",
+    "fonte": "https://images.unsplash.com/photo-1567894340315-735d7c361db0"
+  },
+  "conteudo": "Na maioria das barbearias com mais de uma cadeira, o combinado é antigo e de boca: o barbeiro fica com uma porcentagem de cada corte e a casa com o resto. Desde 2016 existe uma lei pra esse arranjo, e em 2021 o Supremo Tribunal Federal disse como ela deve ser usada. Quem segue as regras fica protegido; quem só imita o nome corre risco de processo.\n\n### De onde vem a lei\n\nA Lei 12.592, de 2012, reconheceu a profissão de barbeiro em todo o país. Em 2016, a Lei 13.352 acrescentou a ela os artigos 1º-A a 1º-D, criando o salão-parceiro e o profissional-parceiro. A lei fala em \"salões de beleza\" e vale pra cabeleireiro, barbeiro, esteticista, manicure, pedicure, depilador e maquiador ([texto atualizado na Câmara](https://www2.camara.leg.br/legin/fed/lei/2012/lei-12592-18-janeiro-2012-612301-normaatualizada-pl.html)).\n\n### Como funciona o dinheiro\n\nO salão-parceiro recebe o pagamento dos clientes e retém duas coisas: a cota-parte combinada e os tributos e contribuições que o profissional deve sobre a parte dele. Pra lei, a parte do salão é aluguel de bens e serviço de gestão, e a parte do barbeiro é prestação de serviço de beleza. A parte do barbeiro não entra no faturamento do salão, mesmo com nota fiscal única pro cliente.\n\nO profissional-parceiro pode ser MEI, micro ou pequeno empresário, e não pode assumir as responsabilidades da administração do salão.\n\n### O contrato\n\nTem que ser escrito, homologado pelo sindicato da categoria (ou, sem sindicato, pelo órgão local do Ministério do Trabalho) e assinado diante de duas testemunhas. E precisa ter, obrigatoriamente:\n\n1. O percentual retido pelo salão em cada serviço.\n2. A obrigação do salão de reter e recolher os tributos do parceiro.\n3. Condições e prazo de pagamento do parceiro, por tipo de serviço.\n4. Os direitos do parceiro sobre o uso dos materiais e o acesso ao local.\n5. A possibilidade de qualquer um encerrar, com aviso de pelo menos 30 dias.\n6. As responsabilidades de cada um com higiene, funcionamento e bom atendimento.\n7. A obrigação do parceiro de manter o cadastro dele em dia.\n\nEnquanto durar a parceria, não existe relação de emprego nem de sociedade. Mas o salão continua responsável pelas condições de trabalho, equipamentos e instalações.\n\n### Quando vira emprego\n\nA lei diz que há vínculo de emprego em dois casos: quando não existe o contrato formalizado como ela manda, e quando o parceiro faz funções diferentes das previstas no contrato.\n\nEm 28 de outubro de 2021, o STF julgou a ação que questionava a lei (ADI 5625) e decidiu, por maioria, que ela é constitucional. A tese aprovada tem duas partes: o contrato de parceria entre salões e profissionais é válido; e é nulo quando usado pra disfarçar uma relação de emprego que existe de fato, que deve ser reconhecida sempre que os elementos dela estiverem presentes.\n\nEm palavras de balcão: o papel não basta. Se na rotina o barbeiro cumpre horário imposto, recebe ordens como empregado e não tem autonomia sobre a própria agenda, o contrato pode ser anulado.\n\n### O que fazer, se você é o dono\n\n- Coloque por escrito o que hoje é de boca, com as sete cláusulas.\n- Leve o contrato pro sindicato homologar.\n- Retenha e recolha os tributos da parte do parceiro.\n- Deixe a agenda e os clientes do parceiro com ele, e não dê a ele tarefas fora do contrato.\n\n### O que conferir, se você é o barbeiro\n\n- Peça o contrato escrito, com a sua porcentagem e o prazo de pagamento.\n- Confira se os tributos sobre a sua parte estão sendo recolhidos.\n- Mantenha o seu MEI em dia, se for o caso.\n\nO curso [Abrir e organizar sua barbearia](/cursos/abrir-e-organizar-sua-barbearia) compara parceria e emprego e mostra a conta de quanto cada cadeira precisa render.\n\n*Resumo da lei e da decisão, não orientação jurídica. Monte o contrato com um contador ou advogado.*",
+  "fontes": [
+    {
+      "titulo": "Lei nº 12.592/2012, com os arts. 1º-A a 1º-D da Lei nº 13.352/2016 — texto atualizado na Câmara dos Deputados",
+      "url": "https://www2.camara.leg.br/legin/fed/lei/2012/lei-12592-18-janeiro-2012-612301-normaatualizada-pl.html"
+    },
+    {
+      "titulo": "Trilhante — STF, ADI 5625 (julgado em 28/10/2021): teses",
+      "url": "https://informativos.trilhante.com.br/julgados/stf-adi-5625-df"
+    },
+    {
+      "titulo": "ContNews — STF decide que contrato de parceria entre salões e profissionais de beleza é constitucional",
+      "url": "https://www.portalcontnews.com.br/stf-decide-que-contrato-de-parceria-entre-saloes-e-profissionais-de-beleza-e-constitucional/"
+    }
+  ]
+}

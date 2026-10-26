@@ -8,7 +8,7 @@ apps/site/scripts/foto-materia.mjs). Rodar de novo sobrescreve os JSON com o que
 import json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-import curiosidades, mercado, serie  # noqa: E402
+import curiosidades, guias, mercado, serie  # noqa: E402
 
 DESTINO = sys.argv[1] if len(sys.argv) > 1 else "data/artigos"
 IMAGENS = json.load(open(os.path.join(os.path.dirname(__file__), "imagens.json"), encoding="utf-8"))
@@ -25,7 +25,11 @@ def foto_no_texto(a):
     return {**a, "conteudo": conteudo, "fontes": fontes}
 
 
-for a in serie.ARTIGOS + curiosidades.ARTIGOS + mercado.ARTIGOS:
+for a in serie.ARTIGOS + curiosidades.ARTIGOS + mercado.ARTIGOS + guias.ARTIGOS:
+    if a["slug"] not in IMAGENS:
+        # Matéria sem foto não é publicada (o teste exige foto): fica esperando a imagem.
+        print("espera foto:", a["slug"])
+        continue
     a = {**foto_no_texto(a), "imagem": IMAGENS[a["slug"]]}
     a = {k: a[k] for k in ORDEM if k in a}
     with open(f"{DESTINO}/{a['slug']}.json", "w", encoding="utf-8") as f:

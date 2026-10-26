@@ -696,6 +696,138 @@ No fim dos 30 dias, olhe três números: quantos clientes atendeu, quantos volta
 ]
 
 
+# ---------------------------------------------------------------- agenda
+AG = [
+{"id": "montar-a-agenda", "titulo": "Montar uma agenda que cabe no dia", "conteudo": """Agenda que atrasa todo dia não é azar, é agenda montada errado. Antes de pensar em encher, vale arrumar a forma: quanto tempo cada serviço leva de verdade e onde ficam as folgas.
+
+### Cronometre uma semana
+
+Durante uma semana, anote quanto tempo cada serviço levou do cliente sentar até ele levantar, incluindo a conversa, a limpeza da bancada e o pagamento. Quase todo barbeiro descobre que o "corte de 30 minutos" leva 40.
+
+Com os números na mão, ajuste a agenda pelo tempo real, não pelo tempo ideal. Se o corte leva 40 minutos, marque de 45 em 45. Atender seis clientes no horário vale mais do que marcar oito e atrasar todos.
+
+### Serviço longo tem horário certo
+
+Barba completa, platinado, pacote do noivo: serviços longos atrapalham quando caem no meio do pico. Reserve pra eles os horários mais calmos (manhã de dia de semana, por exemplo) e deixe os horários de pico pros serviços rápidos.
+
+### Deixe uma folga por turno
+
+Uma janela de 15 a 30 minutos no meio da manhã e outra no meio da tarde absorvem atrasos, um encaixe ou um café. Agenda sem folga nenhuma transforma o primeiro atraso do dia em atraso de todos os outros.
+
+### Mostre só o que você consegue cumprir
+
+Se você usa agenda online, configure o tempo de cada serviço e os intervalos de acordo com o que mediu. O cliente vê apenas os horários livres de verdade e marca sozinho, e você para de responder "tem horário amanhã?" o dia inteiro.
+
+### Na prática
+
+| Antes | Depois |
+|---|---|
+| Corte marcado de 30 em 30 | Corte marcado pelo tempo real (ex.: 45 min) |
+| Barba completa no sábado à tarde | Barba completa na terça de manhã |
+| Nenhuma folga | Uma folga de 20 min por turno |
+
+### Para pensar
+
+- Quanto tempo o seu corte mais pedido leva de verdade, do sentar ao levantar?
+- Em qual dia e horário a sua agenda sempre atrasa?"""},
+
+{"id": "faltas-e-atrasos", "titulo": "Faltas e atrasos: como diminuir sem perder o cliente", "conteudo": """Cliente que marca e não aparece é cadeira vazia num horário que outra pessoa queria. Não dá pra zerar as faltas, mas dá pra diminuir bastante, e sem tratar o cliente como culpado.
+
+### Lembrete na véspera
+
+A maioria das faltas é esquecimento. Uma mensagem no dia anterior, com o horário e um jeito fácil de desmarcar, resolve boa parte: "Oi, Carlos! Lembrando do seu horário amanhã às 15h. Se não puder vir, me avisa que eu libero pra outra pessoa". O tom importa: é um lembrete, não uma cobrança.
+
+### Facilite desmarcar
+
+Parece contraditório, mas quanto mais fácil desmarcar, menos gente falta. Quem não consegue avisar some; quem consegue, avisa e libera o horário. Um link pra remarcar ou cancelar, ou um simples "me responde aqui", já ajuda.
+
+### Uma regra clara, dita antes
+
+Defina uma regra simples e conte pro cliente na hora de marcar, não depois que ele faltou. Por exemplo: "Tolerância de 10 minutos; depois disso, a gente tenta encaixar, mas pode precisar remarcar". Regra dita antes é combinado; regra inventada depois é briga.
+
+Com quem falta sempre, dá pra conversar com respeito e pedir confirmação no dia, ou só marcar com ele em horários menos disputados.
+
+### Atraso seu também conta
+
+O cliente que espera 30 minutos depois do horário marcado não acha que a barbearia é cheia; acha que ela é desorganizada. Se vai atrasar, avise antes do horário dele, com uma estimativa honesta. Ele pode decidir chegar mais tarde em vez de esperar sentado.
+
+### Anote e meça
+
+Conte, todo mês, quantos horários foram perdidos por falta. Conta de exemplo: 12 faltas num mês, com corte a R$ 45, são R$ 540 que poderiam ter entrado. Ver o número ajuda a decidir se vale apertar a regra ou mandar o lembrete com mais antecedência.
+
+### Para pensar
+
+- Quantas faltas você teve no último mês? Quanto isso deu em reais?
+- Qual seria a sua regra de tolerância, dita em uma frase?"""},
+
+{"id": "encaixes-e-fila", "titulo": "Encaixes, fila e quem chega sem marcar", "conteudo": """Muita barbearia vive das duas coisas ao mesmo tempo: horário marcado e cliente que chega na porta. Misturar sem regra vira confusão; misturar com regra aumenta o faturamento sem atrasar ninguém.
+
+### Decida o seu modelo
+
+- **Só agenda:** previsível, sem fila na porta. Funciona bem com clientela fiel.
+- **Só ordem de chegada:** simples, bom pra ponto de muito movimento, ruim pra quem não pode esperar.
+- **Os dois:** a agenda garante o fixo e quem chega preenche os buracos.
+
+No modelo misto, escreva a regra e diga pro cliente: quem marcou tem prioridade no horário dele; quem chega entra nas folgas, na ordem.
+
+### Mostre a fila
+
+Quem passa na frente e vê três pessoas esperando vai embora sem saber que o próximo horário livre era em 15 minutos. Mostrar a fila no status do WhatsApp, numa plaquinha ou no site (como faz a rede japonesa QB House com um semáforo na porta, [na Revista](/revista/japao-barbear-de-ritual-e-corte-de-10-minutos)) deixa o cliente decidir com informação.
+
+### O encaixe que não estraga o dia
+
+Encaixar é ótimo quando não atrasa ninguém. Antes de dizer sim, olhe a próxima hora: se o encaixe cabe na folga ou numa falta, entra. Se vai empurrar quem marcou, ofereça o próximo horário livre em vez de "dá um jeito".
+
+### Lista de espera
+
+Quando um horário disputado (sábado de manhã) é desmarcado, quem fica sabendo primeiro ganha. Mantenha uma lista curta de clientes que pediram aquele horário e avise um por vez, por mensagem individual.
+
+### Feche quando precisar
+
+Imprevisto acontece. Se precisar fechar mais cedo ou bloquear um horário, avise os clientes marcados o quanto antes e ofereça outro horário, em vez de deixar o cliente descobrir na porta.
+
+### Para pensar
+
+- Na sua barbearia, quem marcou sabe que tem prioridade? Quem chega sabe como funciona?
+- Qual é o horário mais disputado da sua semana? Quem estaria na lista de espera dele?"""},
+
+{"id": "agenda-que-se-enche", "titulo": "A agenda que se enche sozinha", "conteudo": """O melhor cliente é o que já volta marcado. Quando a maior parte da agenda é de retorno, os horários vazios ficam fáceis de preencher e a semana deixa de depender da sorte.
+
+### Marque o próximo na saída
+
+Antes do cliente levantar, ofereça o próximo horário pelo ritmo dele: "Seu degradê fica bom por umas três semanas. Sábado, dia 14, às 10h?". Como vimos no curso [Atendimento que vira ritual](/cursos/atendimento-que-vira-ritual), quem sai com o retorno marcado volta muito mais.
+
+### Conheça o ritmo de cada cliente
+
+Cada cliente tem um intervalo: o do degradê baixo volta em 15 dias, o do social em 30. Anote. Quando o intervalo passar e ele não tiver marcado, uma mensagem individual traz de volta: "Faz três semanas do último corte. Quer que eu guarde um horário?".
+
+### Preencha a semana fraca com motivo
+
+Toda barbearia tem dia fraco, geralmente no começo da semana. Em vez de desconto pra todo mundo, dê motivo pra quem pode vir nesses dias: um combo de corte e barba com preço especial só na terça, o horário mais calmo pro serviço longo, o atendimento das crianças.
+
+### Plano mensal
+
+Um plano com dois cortes por mês, ou barba toda semana, transforma cliente frequente em agenda garantida. Ele paga antes, você sabe com quanto conta, e ele economiza. Nos Estados Unidos, as vendas de planos de assinatura de barbearia cresceram 20% em 2025, segundo uma empresa do setor ([na Revista](/revista/barbearias-eua-2026-clientes-fieis)).
+
+### Olhe os números uma vez por mês
+
+Três números bastam:
+
+| Número | O que mostra |
+|---|---|
+| Ocupação (horários atendidos ÷ horários disponíveis) | Se falta cliente ou sobra agenda |
+| Clientes que voltaram no mês | Se o atendimento está segurando a clientela |
+| Faltas | Se o lembrete e a regra estão funcionando |
+
+Com esses três, você sabe se precisa de cliente novo, de retorno ou de organização, e para de tentar resolver tudo com promoção.
+
+### Para pensar
+
+- Quantos dos clientes desta semana já saíram com o próximo horário marcado?
+- Qual é o seu dia mais fraco? Que motivo faria alguém escolher vir nele?"""},
+]
+
+
 for c in [
     curso("atendimento-que-vira-ritual", "Atendimento que vira ritual",
           "Do \"bom dia\" ao próximo horário marcado: chegada, conversa antes do corte, etapas que o cliente lembra, higiene, saída e pós-atendimento, com exemplos de barbearias do mundo.",
@@ -715,6 +847,11 @@ for c in [
           [{"id": "formalizar", "titulo": "Formalizar", "licoes": AB[0:2]},
            {"id": "equipe", "titulo": "Equipe", "licoes": AB[2:4]},
            {"id": "ponto", "titulo": "Ponto e primeiros clientes", "licoes": AB[4:6]}]),
+    curso("agenda-cheia", "Agenda cheia: faltas, atrasos e encaixes",
+          "Montar a agenda pelo tempo real, diminuir faltas e atrasos, misturar horário marcado com quem chega, e fazer a agenda se encher com clientes que voltam.",
+          "Gestão", ["barbearia", "agenda", "atendimento", "organização"],
+          [{"id": "organizar", "titulo": "Organizar", "licoes": AG[0:2]},
+           {"id": "encher", "titulo": "Encher", "licoes": AG[2:4]}]),
 ]:
     json.dump(c, open(os.path.join(DESTINO, c["slug"] + ".json"), "w"), ensure_ascii=False, indent=2)
     print("ok", c["slug"], sum(len(m["licoes"]) for m in c["modulos"]), "lições",

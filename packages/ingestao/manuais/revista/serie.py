@@ -421,10 +421,70 @@ Respeite o limite. Nada de vender remédio, chá ou suplemento. O papel do barbe
 
 Uma barbearia não cura ninguém. Mas o estudo mostrou que ela pode ser o empurrão que faltava, e isso é um tipo de cuidado com o cliente que nenhum concorrente copia.
 
-*A série continua: mais barbearias pelo mundo em breve.*""",
+*No próximo episódio: Nova Délhi, onde o barbeiro trabalha na calçada com uma cadeira, um espelho e uma máquina.*""",
 fontes=[
     {"titulo": "Victor RG et al. — A Cluster-Randomized Trial of Blood-Pressure Reduction in Black Barbershops. N Engl J Med 2018 (PubMed)", "url": "https://pubmed.ncbi.nlm.nih.gov/29527973/"},
 ])
 
 
-ARTIGOS = [LONDRES, JAPAO, TURQUIA, MILAO, LISBOA, HAVANA, ROTERDA, LOS_ANGELES]
+DELHI = ep(9,
+slug="nova-delhi-o-barbeiro-de-calcada",
+titulo="Nova Délhi: o barbeiro de calçada que só precisa de cadeira, espelho e máquina",
+resumo="Nas calçadas de Nova Délhi, barbeiros cortam por 50 rúpias, sem aluguel e sem patrão. A cadeira fica acorrentada no poste à noite. O que esse jeito de trabalhar ensina sobre custo e clientela.",
+publicadoEm="2026-10-26",
+tags=["barbearia", "barbearias pelo mundo", "índia", "custos", "comunidade"],
+conteudo="""Às 8 da manhã, Sudesh Thakur sai de casa, em Nova Délhi, e caminha até a calçada onde a cadeira de barbeiro dele passou a noite acorrentada a um poste. Debaixo de uma lona improvisada, arruma a máquina e a tesoura, que leva pra casa toda noite, e começa a atender. Fica até as 6 da tarde, seis dias por semana. Na terça, dia tradicional de folga dos barbeiros por lá, descansa.
+
+### Barbearia sem paredes
+
+A Al Jazeera acompanhou, em 2024, um dia de barbeiros de rua da capital da Índia. Eles se espalham pela cidade, em bairros ricos e pobres, atendendo sobretudo trabalhadores: motoristas de riquixá, seguranças, operários. Na véspera do Diwali, a festa das luzes, a fila cresce. "Hoje estou vendo uma multidão!", comemorou Thakur.
+
+A maioria veio do interior, de estados como Uttar Pradesh, Rajasthan e Bihar, em busca de oportunidade na capital. Pra muitos, cortar cabelo é tradição de família. Rohtas, de 52 anos, aprendeu na barbearia do tio, depois da escola. Chegou a Délhi em 1986, ainda adolescente, fez bicos por um ano e voltou pro que sabia fazer: montou uma cadeira na calçada de um bairro nobre, onde está até hoje.
+
+### Quanto custa
+
+Thakur cobra 50 rúpias pelo corte e 30 pela barba. Nos salões de classe média ali perto, um corte simples sai de 100 a 500 rúpias, quase um dia de salário pra muitos dos clientes dele. Nos salões mais caros da cidade, chega a 1.500.
+
+| Onde | Corte |
+|---|---:|
+| Barbeiro de calçada (Thakur) | 50 rúpias |
+| Salão de classe média | 100 a 500 rúpias |
+| Salão de luxo | até 1.500 rúpias |
+
+*Valores publicados pela Al Jazeera em novembro de 2024.*
+
+### "Só preciso de uma máquina, um espelho e uma cadeira"
+
+A frase é de Rohtas, e resume a escolha. "Se eu for pra uma loja, vou ter que investir muito e pagar aluguel todo mês. E tenho a sensação de independência, de não trabalhar pra um patrão."
+
+A vida na calçada tem preço. O movimento cai na chuva forte e no calor extremo. Rajesh Kumar, que herdou a cadeira do pai, conta que já teve a cadeira e as ferramentas roubadas à noite várias vezes. Thakur foi atropelado por um carro que subiu na calçada e ficou seis meses de cama, sem trabalhar.
+
+Alguns barbeiros também vão à casa dos clientes fiéis pra cortar, barbear e fazer massagem. Bhaiya Lal, há 30 anos no mesmo ponto em Green Park, tem uma clientela que pede atendimento em casa.
+
+### O ponto de encontro
+
+A cadeira na calçada é mais do que um serviço barato. A reportagem descreve esses pontos como espaços onde trabalhadores conversam sobre a vida, a política e os problemas enquanto esperam. "Nós viemos de lugares diferentes, mas aqui viramos amigos", disse um motorista de riquixá que passa as horas vagas na cadeira de Bhaiya Lal.
+
+É a mesma coisa que vimos em Istambul, em Havana e em Los Angeles: a barbearia como lugar de confiança, com ou sem paredes.
+
+### O que dá pra trazer pra sua barbearia
+
+**Saiba qual é o seu custo fixo.** O barbeiro de calçada escolheu não ter aluguel. Você não precisa ir tão longe, mas precisa saber quanto custa manter a porta aberta por mês e quantos cortes pagam essa conta antes do primeiro real de lucro. A lição sobre o ponto no curso [Abrir e organizar sua barbearia](/cursos/abrir-e-organizar-sua-barbearia) mostra como fazer essa conta.
+
+Pense no atendimento em domicílio. Idosos, pessoas acamadas, noivos no dia do casamento, executivos sem tempo: pra esses clientes, o barbeiro que vai até eles vale bem mais que o corte. Dá pra cobrar o deslocamento e encaixar nos horários mais vazios da agenda.
+
+Tenha um preço pra cada bolso, com clareza. Délhi tem o corte de 50 e o de 1.500. Um cardápio com "só corte" acessível e serviços completos mais caros atende públicos diferentes sem confundir ninguém.
+
+Proteja o seu ganha-pão. Equipamento guardado com chave, seguro quando der, e cuidado com a própria saúde. Thakur ficou seis meses parado: uma reserva de emergência é o que segura o barbeiro nessas horas, como ensina o curso [Seu dinheiro em ordem](/cursos/seu-dinheiro-em-ordem).
+
+Seja o lugar da conversa. Os clientes de Bhaiya Lal viraram amigos na espera. Barbearia boa é aquela onde a pessoa gosta de ficar.
+
+O barbeiro de calçada mostra o ofício no osso: mão, ferramenta e cliente. Todo o resto, parede, letreiro e ar-condicionado, só vale a pena se ajudar a atender melhor quem senta na cadeira.
+
+*A série continua: mais barbearias pelo mundo em breve.*""",
+fontes=[
+    {"titulo": "Al Jazeera — A day in the life of a New Delhi roadside barber (17/11/2024)", "url": "https://www.aljazeera.com/features/longform/2024/11/17/a-day-in-the-life-of-a-new-delhi-roadside-barber"},
+])
+
+
+ARTIGOS = [LONDRES, JAPAO, TURQUIA, MILAO, LISBOA, HAVANA, ROTERDA, LOS_ANGELES, DELHI]

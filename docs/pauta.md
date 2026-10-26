@@ -35,13 +35,15 @@ Checagem: agente `checador-fatos`, `npm test -w @aprenda/catalogo` e `npm run co
 | ✅ 26/10 | Curiosidade | Quarteto de barbearia | cuida da música (e do Ecad) |
 | ✅ 26/10 | Curiosidade | Movember e Novembro Azul | faz o concurso do bigode em novembro |
 | ✅ 26/10 | Curiosidade | A cadeira hidráulica (Koken) | ajusta a cadeira pra poupar as costas |
-| ⬜ | Série ep. 9 | Nova York ou Coreia do Sul | — |
-| ⬜ | Série ep. 10 | México ou Índia (barbeiros de rua) | — |
+| ✅ 26/10 | Série ep. 9 | Nova Délhi: o barbeiro de calçada (Al Jazeera 2024) | sabe o custo fixo e pensa em atendimento em domicílio |
+| ✅ 26/10 | Guia | Perfil da Empresa no Google (Central de Ajuda) | cria, verifica e põe 9 fotos no perfil |
+| ✅ 26/10 | Guia | Barbeiro parceiro: Lei do Salão-Parceiro e STF | põe a parceria no papel e homologa |
+| ✅ 26/10 | Curiosidade | 18 de janeiro, Dia Nacional do Barbeiro (Lei 12.592) | põe a data no calendário |
+| ⬜ | Série ep. 10 | Nova York (Paul Mole's?) ou Coreia (yibalso): fontes fracas, procurar melhores | — |
 | ⬜ | Curiosidade | A barbearia mais antiga do Brasil | — |
 | ⬜ | Curiosidade | Barbeiros famosos da história (e clientes famosos) | — |
 | ⬜ | Curiosidade | Por que o homem tirou a barba (e voltou a deixar) | — |
-| ⬜ | Guia | Fotografar o ambiente e os trabalhos com o celular (luz, fundo) | posta foto que vende |
-| ⬜ | Guia | Google Perfil da Empresa passo a passo | aparece no mapa |
+| ✅ 26/10 | Guia | Fotografar com o celular | virou o curso "Foto e vídeo da barbearia com o celular" |
 
 ## Cursos
 
@@ -53,9 +55,11 @@ Checagem: agente `checador-fatos`, `npm test -w @aprenda/catalogo` e `npm run co
 | ✅ | Liderar sua equipe | OpenStax (CC BY), adaptado |
 | ✅ | Seu dinheiro em ordem | próprio |
 | ✅ | Marketing pra barbearia | próprio |
-| ⬜ | Atendimento que vira ritual (do "bom dia" ao pós-corte) | próprio |
-| ⬜ | Abrir sua barbearia (MEI, ponto, equipamento, primeiros clientes) | próprio, com fontes oficiais |
-| ⬜ | Foto e vídeo da barbearia com o celular | próprio |
+| ✅ | Atendimento que vira ritual | próprio (exemplos da Revista) |
+| ✅ | Abrir e organizar sua barbearia (MEI, Lei 12.592, salão-parceiro, ponto) | próprio, leis conferidas na Câmara |
+| ✅ | Foto e vídeo da barbearia com o celular | próprio |
+| ⬜ | Preço dos serviços e cardápio (combos, planos mensais) | próprio |
+| ⬜ | Agenda cheia: encaixe, falta e atraso | próprio |
 
 ## Regras rápidas
 
