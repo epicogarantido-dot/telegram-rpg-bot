@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { CalendarOff, CalendarPlus, MessageCircle } from "lucide-react";
+import { BarChart3, CalendarCheck, CalendarOff, CalendarPlus, Star, MessageCircle, UserX } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { situacaoAgora } from "@/lib/barbearias";
+import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -20,6 +21,41 @@ async function cancelar(form: FormData) {
   // Volta mostrando o botão de avisar o cliente (cancelar sem avisar = cliente aparece na porta).
   revalidatePath("/app");
   redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}&cancelado=${id}#ag-${id}`);
+}
+
+/**
+ * Lembrete da véspera e pedido de avaliação: anota que foi aberto (pra não repetir) e abre o
+ * WhatsApp DO BARBEIRO com a mensagem pronta. Quem envia é ele; o sistema não manda nada sozinho.
+ */
+async function contatar(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const banco = obterAgenda();
+  const a = banco.agendamento(barbearia.id, Number(form.get("id")));
+  const tipo = form.get("tipo") === "avaliacao" ? "avaliacao" : "lembrete";
+  if (!a || a.status !== "confirmado") redirect("/app");
+  const b = banco.barbeariaPorId(barbearia.id)!;
+  if (tipo === "avaliacao" && !b.linkAvaliacao) redirect("/app/config#depois");
+  const texto = tipo === "lembrete"
+    ? mensagemLembrete({ barbearia: b.nome, cliente: a.clienteNome, servico: a.servico, inicio: a.inicio })
+    : mensagemAvaliacao({ barbearia: b.nome, cliente: a.clienteNome, link: b.linkAvaliacao! });
+  banco.registrarContato(barbearia.id, a.id, tipo);
+  redirect(linkWhatsapp(a.clienteTelefone, texto));
+}
+
+/** O cliente não apareceu (ou desfaz). Entra nos números do mês. */
+async function marcarFalta(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const data = String(form.get("data") ?? "");
+  const id = Number(form.get("id"));
+  try {
+    obterAgenda().marcarFalta(barbearia.id, id, form.get("faltou") === "1");
+  } catch (e) {
+    redirect(`/app?data=${encodeURIComponent(data)}&erro=${encodeURIComponent(mensagemDeErro(e))}`);
+  }
+  revalidatePath("/app");
+  redirect(`/app?data=${encodeURIComponent(data)}#ag-${id}`);
 }
 
 /** Folga em parte do dia (ou o dia todo) de um profissional ou da barbearia toda. */
@@ -123,6 +159,12 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
     conflitos: agenda.filter((a) => a.status === "confirmado" && a.inicio < f.fim && a.fim > f.inicio && (f.profissionalId === undefined || a.profissionalId === f.profissionalId)),
   }));
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
+  const agoraLocal = agoraNoFuso(barbearia.fuso);
+  const linkAvaliacao = banco.barbeariaPorId(barbearia.id)!.linkAvaliacao;
+  // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
+  const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1)).filter((a) => a.status === "confirmado") : [];
+  // Quem já tem o próximo horário marcado (pra não oferecer "marcar o próximo" de novo).
+  const proximo = new Map(agenda.filter((a) => a.status === "confirmado").map((a) => [a.id, banco.proximoDoCliente(barbearia.id, a.clienteTelefone)]));
 
   return (
     <>
@@ -146,9 +188,33 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         Seu site: <a href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkPublico}</a>
         {" · "}<Link href="/app/config">Configurações</Link>
         {" · "}<Link href="/app/assinatura">Assinatura</Link>
+        {" · "}<Link href="/app/numeros"><BarChart3 size={14} aria-hidden /> Números do mês</Link>
       </p>
 
       <Hoje barbeariaId={barbearia.id} />
+
+      {amanha.length > 0 && (
+        <section className="lembretes" aria-labelledby="lembretes-titulo">
+          <h2 id="lembretes-titulo">Lembretes de amanhã <small className="suave">({amanha.filter((a) => !a.lembreteEm).length} pra mandar)</small></h2>
+          <p className="suave pequeno">Um lembrete na véspera diminui as faltas. Toque pra abrir o seu WhatsApp com a mensagem pronta.</p>
+          <ul>
+            {amanha.map((a) => (
+              <li key={a.id} className="hoje-linha">
+                <span><strong>{a.inicio.slice(11)}</strong> · {a.clienteNome} · {a.servico}</span>
+                {a.lembreteEm
+                  ? <span className="suave pequeno">Lembrete enviado ✓</span>
+                  : (
+                    <form action={contatar}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="tipo" value="lembrete" />
+                      <button className="botao-sec"><MessageCircle size={16} aria-hidden /> Lembrar</button>
+                    </form>
+                  )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
 
@@ -231,10 +297,46 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           <div>
             <strong>{a.inicio.slice(11)}–{a.fim.slice(11)}</strong> · {a.servico} com {a.profissional}
             {a.status === "cancelado" && <span className="etiqueta" style={{ marginLeft: 8 }}>cancelado</span>}
+            {a.status === "faltou" && <span className="etiqueta" style={{ marginLeft: 8 }}>faltou</span>}
             <br />
             {a.clienteNome}
           </div>
-          {a.status === "confirmado" && (
+          {a.status === "confirmado" && a.inicio <= agoraLocal && (
+            <div className="acoes">
+              {proximo.get(a.id)
+                ? <span className="suave pequeno"><CalendarCheck size={14} aria-hidden /> Próximo: {formatarData(proximo.get(a.id)!.slice(0, 10))} às {proximo.get(a.id)!.slice(11, 16)}</span>
+                : <Link className="botao" href={`/app/retorno/${a.id}`}><CalendarPlus size={16} aria-hidden /> Marcar o próximo</Link>}
+              {linkAvaliacao
+                ? (a.avaliacaoEm
+                  ? <span className="suave pequeno">Avaliação pedida ✓</span>
+                  : (
+                    <form action={contatar}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="tipo" value="avaliacao" />
+                      <button className="botao-sec"><Star size={16} aria-hidden /> Pedir avaliação</button>
+                    </form>
+                  ))
+                : <Link className="botao-sec" href="/app/config#depois"><Star size={16} aria-hidden /> Pedir avaliação</Link>}
+              <form action={marcarFalta}>
+                <input type="hidden" name="id" value={a.id} />
+                <input type="hidden" name="data" value={data} />
+                <input type="hidden" name="faltou" value="1" />
+                <button className="botao-sec"><UserX size={16} aria-hidden /> Faltou</button>
+              </form>
+            </div>
+          )}
+          {a.status === "faltou" && (
+            <div className="acoes">
+              <Link className="botao-sec" href={`/app/retorno/${a.id}`}><CalendarPlus size={16} aria-hidden /> Remarcar</Link>
+              <form action={marcarFalta}>
+                <input type="hidden" name="id" value={a.id} />
+                <input type="hidden" name="data" value={data} />
+                <input type="hidden" name="faltou" value="0" />
+                <button className="botao-sec">Desfazer falta</button>
+              </form>
+            </div>
+          )}
+          {a.status === "confirmado" && a.inicio > agoraLocal && (
             <div className="acoes">
               <a className="botao-sec" target="_blank" rel="noopener noreferrer"
                 href={linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio }))}>

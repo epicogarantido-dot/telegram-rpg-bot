@@ -714,3 +714,70 @@ describe("demonstração pra mostrar ao barbeiro", () => {
       agora: new Date("2026-12-01T12:00:00-03:00") })).toThrow(/venceu/);
   });
 });
+
+describe("depois do atendimento: falta, retorno, lembrete, avaliação e números", () => {
+  // Terças de outubro de 2026 (expediente padrão: ter a sáb). Marca no passado com um "agora" antigo.
+  const antes = new Date("2026-09-20T12:00:00Z");
+  function cenario() {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const [p] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    const marcar = (data: string, hora: string, tel = "5519998765432") =>
+      b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data, hora, clienteNome: "Lucas", clienteTelefone: tel, agora: antes, peloBarbeiro: true });
+    return { b, a, s: s!, marcar };
+  }
+
+  it("falta só depois da hora, e dá pra desfazer", () => {
+    const { b, a, marcar } = cenario();
+    const id = marcar("2026-10-20", "10:00");
+    expect(() => b.marcarFalta(a.id, id, true, new Date("2026-10-20T12:00:00Z"))).toThrow(/depois da hora/); // 09h em São Paulo
+    b.marcarFalta(a.id, id, true, new Date("2026-10-20T14:00:00Z"));
+    expect(b.agendamento(a.id, id)!.status).toBe("faltou");
+    b.marcarFalta(a.id, id, false, new Date("2026-10-20T14:00:00Z"));
+    expect(b.agendamento(a.id, id)!.status).toBe("confirmado");
+  });
+
+  it("sugere o retorno pelo ritmo do cliente, ou pelo padrão da barbearia", () => {
+    const { b, a, marcar } = cenario();
+    const depois = new Date("2026-10-21T15:00:00Z");
+    marcar("2026-10-06", "10:00", "5519911112222");
+    expect(b.sugestaoDeRetorno(a.id, "5519911112222", depois)).toMatchObject({ data: "2026-10-27", ritmoDias: 21, deHistorico: false });
+    marcar("2026-10-13", "10:00");
+    marcar("2026-10-20", "10:00");
+    expect(b.sugestaoDeRetorno(a.id, "5519998765432", depois)).toMatchObject({ data: "2026-10-27", ritmoDias: 7, deHistorico: true });
+    b.atualizarPosAtendimento(a.id, { retornoDias: 30, linkAvaliacao: "https://g.page/r/abc/review" });
+    expect(b.barbeariaPorId(a.id)).toMatchObject({ retornoDias: 30, linkAvaliacao: "https://g.page/r/abc/review" });
+    expect(() => b.atualizarPosAtendimento(a.id, { retornoDias: 3 })).toThrow(ErroAgenda);
+    expect(() => b.atualizarPosAtendimento(a.id, { retornoDias: 21, linkAvaliacao: "javascript:alert(1)" })).toThrow(ErroAgenda);
+  });
+
+  it("anota lembrete e pedido de avaliação; acha o próximo horário do cliente", () => {
+    const { b, a, marcar } = cenario();
+    const id = marcar("2026-10-20", "10:00");
+    marcar("2026-10-27", "10:00");
+    b.registrarContato(a.id, id, "lembrete");
+    b.registrarContato(a.id, id, "avaliacao");
+    const [x] = b.agendamentosDoDia(a.id, "2026-10-20");
+    expect(x!.lembreteEm).toBeTruthy();
+    expect(x!.avaliacaoEm).toBeTruthy();
+    expect(b.proximoDoCliente(a.id, "5519998765432", new Date("2026-10-21T12:00:00Z"))).toBe("2026-10-27T10:00");
+  });
+
+  it("números do mês: atendidos, faltas, quem voltou e quem saiu com retorno", () => {
+    const { b, a, s, marcar } = cenario();
+    marcar("2026-09-29", "10:00", "5519911110000"); // veio em setembro
+    marcar("2026-10-06", "10:00", "5519911110000"); // voltou em outubro, sem próximo
+    const faltou = marcar("2026-10-13", "11:00", "5519922220000");
+    marcar("2026-10-20", "10:00", "5519933330000"); // novo, com retorno marcado
+    marcar("2026-11-10", "10:00", "5519933330000");
+    const agora = new Date("2026-10-21T15:00:00Z");
+    b.marcarFalta(a.id, faltou, true, agora);
+    const n = b.numerosDoMes(a.id, "2026-10", agora);
+    expect(n).toMatchObject({ atendidos: 2, faltas: 1, clientes: 2, clientesQueVoltaram: 1, saiuComRetorno: 1 });
+    expect(n.faturamentoCentavos).toBe(2 * s.precoCentavos);
+    expect(n.perdidoEmFaltasCentavos).toBe(s.precoCentavos);
+    expect(n.ocupacao).toBeGreaterThan(0);
+    expect(n.ocupacao).toBeLessThan(0.1);
+  });
+});

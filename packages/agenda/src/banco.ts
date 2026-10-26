@@ -46,6 +46,27 @@ export interface Barbearia {
    * ainda). Vale até este dia; agendar fica desligado. Vira o site dele com `assumirDemonstracao`.
    */
   demoAte?: Data;
+  /** Link da página de avaliação no Google (o barbeiro cola uma vez em Configurações). */
+  linkAvaliacao?: string;
+  /** Em quantos dias o cliente costuma voltar, quando ele ainda não tem histórico. */
+  retornoDias: number;
+}
+
+/** Retorno padrão sugerido pra cliente sem histórico (dá pra mudar em Configurações). */
+export const RETORNO_PADRAO_DIAS = 21;
+
+/** O resumo do mês no painel (ver `numerosDoMes`). */
+export interface NumerosDoMes {
+  atendidos: number;
+  faltas: number;
+  faturamentoCentavos: number;
+  perdidoEmFaltasCentavos: number;
+  /** De 0 a 1, aproximada. */
+  ocupacao: number;
+  clientes: number;
+  clientesQueVoltaram: number;
+  /** Atendimentos do mês em que o cliente já tem outro horário marcado depois. */
+  saiuComRetorno: number;
 }
 
 /** Quantos dias uma demonstração fica no ar. */
@@ -99,7 +120,11 @@ export interface Agendamento {
   clienteTelefone: string;
   inicio: DataHora;
   fim: DataHora;
-  status: "confirmado" | "cancelado";
+  /** "faltou": o cliente não apareceu (só dá pra marcar depois da hora do horário). */
+  status: "confirmado" | "cancelado" | "faltou";
+  /** Quando o barbeiro abriu o lembrete da véspera e o pedido de avaliação (pra não repetir). */
+  lembreteEm?: string;
+  avaliacaoEm?: string;
 }
 /** O que o cliente vê na página do próprio horário (link secreto). */
 export interface HorarioCliente extends Agendamento {
@@ -142,13 +167,13 @@ export function planoDoAmbiente(): Plano {
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
   "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
-  "demo_ate AS demoAte";
+  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
 function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
   if (!linha) return undefined;
   const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1 } as Record<string, unknown>;
-  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte"]) if (b[k] === null) b[k] = undefined;
+  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte", "linkAvaliacao"]) if (b[k] === null) b[k] = undefined;
   return b as Barbearia & T;
 }
 const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
@@ -251,6 +276,9 @@ export class BancoAgenda {
     for (const c of ["fechado_em", "fila_atualizada_em"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
+    this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
+    this.garantirColuna("barbearias", "retorno_dias", `INTEGER NOT NULL DEFAULT ${RETORNO_PADRAO_DIAS}`);
+    for (const c of ["lembrete_em", "avaliacao_em"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.db.exec(`
@@ -571,13 +599,14 @@ export class BancoAgenda {
   // ---------- agenda ----------
 
   agendamentosDoDia(barbeariaId: number, data: Data, profissionalId?: number): Agendamento[] {
-    return this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
+    const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
-        a.inicio, a.fim, a.status
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.inicio LIKE ? ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined }));
   }
 
   /** `ignorarId`: ao remarcar, o horário antigo do próprio cliente não conta como ocupado. */
@@ -663,6 +692,118 @@ export class BancoAgenda {
 
   cancelar(barbeariaId: number, id: number): void {
     this.db.prepare("UPDATE agendamentos SET status = 'cancelado' WHERE id = ? AND barbearia_id = ?").run(id, barbeariaId);
+  }
+
+
+  // ---------- depois do atendimento: falta, retorno, lembrete, avaliação e números ----------
+
+  /** Marca (ou desmarca) que o cliente não apareceu. Só depois da hora do horário. */
+  marcarFalta(barbeariaId: number, id: number, faltou: boolean, agora?: Date): void {
+    const a = this.agendamento(barbeariaId, id);
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!a || !b) throw new ErroAgenda("Horário não encontrado.");
+    if (a.inicio > agoraNoFuso(b.fuso, agora)) throw new ErroAgenda("Só dá pra marcar falta depois da hora do horário.");
+    const [de, para] = faltou ? ["confirmado", "faltou"] : ["faltou", "confirmado"];
+    this.db.prepare("UPDATE agendamentos SET status = ? WHERE id = ? AND barbearia_id = ? AND status = ?").run(para, id, barbeariaId, de);
+  }
+
+  /** Anota que o barbeiro abriu o lembrete da véspera ou o pedido de avaliação desse horário. */
+  registrarContato(barbeariaId: number, id: number, tipo: "lembrete" | "avaliacao", agora = new Date()): void {
+    const coluna = tipo === "lembrete" ? "lembrete_em" : "avaliacao_em";
+    this.db.prepare(`UPDATE agendamentos SET ${coluna} = ? WHERE id = ? AND barbearia_id = ?`).run(agora.toISOString(), id, barbeariaId);
+  }
+
+  /** Configurações do pós-atendimento: link de avaliação do Google e retorno padrão. */
+  atualizarPosAtendimento(id: number, dados: { linkAvaliacao?: string; retornoDias: number }): void {
+    const link = dados.linkAvaliacao?.trim() || null;
+    if (link && (!/^https:\/\/[^\s]+$/.test(link) || link.length > 300)) throw new ErroAgenda("Cole o link completo, começando com https://");
+    const dias = Math.round(dados.retornoDias);
+    if (!(dias >= 7 && dias <= 90)) throw new ErroAgenda("O retorno padrão tem que ser de 7 a 90 dias.");
+    this.db.prepare("UPDATE barbearias SET link_avaliacao = ?, retorno_dias = ? WHERE id = ?").run(link, dias, id);
+  }
+
+  /** Próximo horário já marcado do cliente (depois de agora), se houver. */
+  proximoDoCliente(barbeariaId: number, telefone: string, agora?: Date): DataHora | undefined {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) return undefined;
+    const r = this.db.prepare(`SELECT MIN(inicio) AS i FROM agendamentos
+      WHERE barbearia_id = ? AND cliente_telefone = ? AND status = 'confirmado' AND inicio > ?`)
+      .get(barbeariaId, telefone, agoraNoFuso(b.fuso, agora)) as { i: string | null };
+    return r.i ?? undefined;
+  }
+
+  /**
+   * Quando sugerir a volta do cliente: pelo ritmo dele (média dos últimos intervalos entre
+   * visitas atendidas) ou, sem histórico, pelo retorno padrão da barbearia. Nunca antes de amanhã.
+   */
+  sugestaoDeRetorno(barbeariaId: number, telefone: string, agora?: Date): { data: Data; ritmoDias: number; deHistorico: boolean } {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) throw new ErroAgenda("Barbearia não encontrada.");
+    const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
+    const visitas = (this.db.prepare(`SELECT DISTINCT substr(inicio, 1, 10) AS d FROM agendamentos
+      WHERE barbearia_id = ? AND cliente_telefone = ? AND status = 'confirmado' AND inicio <= ?
+      ORDER BY d DESC LIMIT 5`).all(barbeariaId, telefone, agoraNoFuso(b.fuso, agora)) as { d: string }[]).map((x) => x.d);
+    const ultima = visitas[0] ?? hoje;
+    let ritmo = b.retornoDias;
+    let deHistorico = false;
+    if (visitas.length >= 2) {
+      const dias = (d: string) => Date.parse(`${d}T12:00:00Z`) / 86_400_000;
+      const gaps = visitas.slice(0, -1).map((d, i) => dias(d) - dias(visitas[i + 1]!));
+      ritmo = Math.min(90, Math.max(7, Math.round(gaps.reduce((x, y) => x + y, 0) / gaps.length)));
+      deHistorico = true;
+    }
+    const sugerida = somarDias(ultima, ritmo);
+    return { data: sugerida > hoje ? sugerida : somarDias(hoje, 1), ritmoDias: ritmo, deHistorico };
+  }
+
+  /**
+   * Os números do mês (até agora): atendidos, faltas, faturamento estimado pelo preço atual dos
+   * serviços, ocupação aproximada (minutos atendidos ÷ minutos de expediente × profissionais
+   * ativos), clientes que voltaram e quantos atendimentos saíram com o próximo horário marcado.
+   */
+  numerosDoMes(barbeariaId: number, mes: string, agora?: Date): NumerosDoMes {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b || !/^\d{4}-\d{2}$/.test(mes)) throw new ErroAgenda("Mês inválido.");
+    const agoraLocal = agoraNoFuso(b.fuso, agora);
+    const inicioMes = `${mes}-01`;
+    const linhas = this.db.prepare(`SELECT a.id, a.cliente_telefone AS telefone, a.inicio, a.fim, a.status, s.preco_centavos AS preco
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id
+      WHERE a.barbearia_id = ? AND a.inicio >= ? AND a.inicio < ? AND a.inicio <= ? AND a.status IN ('confirmado', 'faltou')`)
+      .all(barbeariaId, inicioMes, `${mes}-99`, agoraLocal) as { id: number; telefone: string; inicio: string; fim: string; status: string; preco: number }[];
+    const atendidos = linhas.filter((l) => l.status === "confirmado");
+    const faltas = linhas.filter((l) => l.status === "faltou");
+    const minutos = (l: { inicio: string; fim: string }) => paraMinutos(l.fim.slice(11)) - paraMinutos(l.inicio.slice(11));
+
+    // Capacidade: expediente de cada dia do mês até hoje, vezes os profissionais ativos.
+    const exped = this.expedientes(barbeariaId);
+    const profs = Math.max(1, this.profissionais(barbeariaId, true).length);
+    let capacidade = 0;
+    for (let d = inicioMes; d.startsWith(mes) && d <= agoraLocal.slice(0, 10); d = somarDias(d, 1)) {
+      const e = exped.get(diaDaSemana(d));
+      if (!e) continue;
+      let m = paraMinutos(e.fecha) - paraMinutos(e.abre);
+      if (e.pausaInicio && e.pausaFim) m -= paraMinutos(e.pausaFim) - paraMinutos(e.pausaInicio);
+      capacidade += Math.max(0, m) * profs;
+    }
+    const minutosAtendidos = atendidos.reduce((t, l) => t + minutos(l), 0);
+
+    const jaVieramAntes = new Set((this.db.prepare(`SELECT DISTINCT cliente_telefone AS t FROM agendamentos
+      WHERE barbearia_id = ? AND status = 'confirmado' AND inicio < ?`).all(barbeariaId, inicioMes) as { t: string }[]).map((x) => x.t));
+    const clientes = new Set(atendidos.map((l) => l.telefone));
+    const proximo = this.db.prepare(`SELECT 1 FROM agendamentos WHERE barbearia_id = ? AND cliente_telefone = ?
+      AND status IN ('confirmado', 'faltou') AND inicio > ? LIMIT 1`);
+    const comRetorno = atendidos.filter((l) => proximo.get(barbeariaId, l.telefone, l.inicio)).length;
+
+    return {
+      atendidos: atendidos.length,
+      faltas: faltas.length,
+      faturamentoCentavos: atendidos.reduce((t, l) => t + l.preco, 0),
+      perdidoEmFaltasCentavos: faltas.reduce((t, l) => t + l.preco, 0),
+      ocupacao: capacidade > 0 ? Math.min(1, minutosAtendidos / capacidade) : 0,
+      clientes: clientes.size,
+      clientesQueVoltaram: [...clientes].filter((t) => jaVieramAntes.has(t)).length,
+      saiuComRetorno: comRetorno,
+    };
   }
 
   // ---------- folga em parte do dia ----------

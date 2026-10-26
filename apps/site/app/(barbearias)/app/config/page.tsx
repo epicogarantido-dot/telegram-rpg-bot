@@ -62,6 +62,14 @@ async function salvarFuncionamento(form: FormData) {
   }));
 }
 
+async function salvarPosAtendimento(form: FormData) {
+  "use server";
+  await executar((id) => obterAgenda().atualizarPosAtendimento(id, {
+    linkAvaliacao: String(form.get("linkAvaliacao") ?? ""),
+    retornoDias: Number(form.get("retornoDias")),
+  }));
+}
+
 async function alternarServico(form: FormData) {
   "use server";
   await executar((id) => obterAgenda().alternarServico(id, Number(form.get("id"))));
@@ -154,6 +162,23 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <label className="marcar">
           <input type="checkbox" name="mostrarPrecos" defaultChecked={barbearia.mostrarPrecos} /> Mostrar os preços dos serviços no site
         </label>
+        <button>Salvar</button>
+      </form>
+
+      <h2 id="depois">Depois do atendimento</h2>
+      <form action={salvarPosAtendimento} className="formulario">
+        <label htmlFor="cfg-avaliacao">Link da sua página de avaliação no Google</label>
+        <input id="cfg-avaliacao" name="linkAvaliacao" type="url" defaultValue={barbearia.linkAvaliacao ?? ""} placeholder="https://g.page/r/..." aria-describedby="cfg-avaliacao-dica" />
+        <small id="cfg-avaliacao-dica" className="suave">
+          No seu Perfil da Empresa no Google, toque em &quot;Pedir avaliações&quot; e copie o link. Com ele, cada atendimento ganha o botão
+          &quot;Pedir avaliação&quot;. Não ofereça desconto nem brinde em troca: o Google proíbe e apaga essas avaliações.
+          {barbearia.linkAvaliacao && <> <Link href="/app/avaliacao">Imprimir o cartão com QR pro balcão</Link>.</>}
+        </small>
+        <label htmlFor="cfg-retorno">Retorno padrão (cliente sem histórico)</label>
+        <select id="cfg-retorno" name="retornoDias" defaultValue={barbearia.retornoDias} aria-describedby="cfg-retorno-dica">
+          {[7, 10, 14, 15, 21, 28, 30, 45, 60].map((d) => <option key={d} value={d}>{d} dias</option>)}
+        </select>
+        <small id="cfg-retorno-dica" className="suave">&quot;Marcar o próximo&quot; sugere essa data. Quem já veio mais vezes ganha a sugestão pelo próprio ritmo.</small>
         <button>Salvar</button>
       </form>
 
