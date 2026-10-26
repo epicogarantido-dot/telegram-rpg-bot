@@ -55,6 +55,18 @@ export interface Barbearia {
 /** Retorno padrão sugerido pra cliente sem histórico (dá pra mudar em Configurações). */
 export const RETORNO_PADRAO_DIAS = 21;
 
+/** "Clientes que sumiram": depois de quantos dias desiste (cliente perdido) e quanto espera pra chamar de novo. */
+export const SUMIDO_LIMITE_DIAS = 120;
+export const CHAMADA_PAUSA_DIAS = 14;
+export interface ClienteSumido {
+  telefone: string;
+  nome: string;
+  ultimoServico: string;
+  ultimaVisita: Data;
+  diasSemVir: number;
+  ritmoDias: number;
+}
+
 /** O resumo do mês no painel (ver `numerosDoMes`). */
 export interface NumerosDoMes {
   atendidos: number;
@@ -109,7 +121,11 @@ export interface Profissional { id: number; nome: string; ativo: number; especia
 
 /** Limite de fotos por barbearia: segura o disco do servidor. */
 export const MAX_FOTOS = 80;
-export interface Servico { id: number; nome: string; duracaoMin: number; precoCentavos: number; ativo: number }
+export interface Servico {
+  id: number; nome: string; duracaoMin: number; precoCentavos: number; ativo: number;
+  /** O que o serviço inclui, em poucas palavras ("toalha quente, navalha e massagem no fim"). */
+  descricao?: string;
+}
 export interface Agendamento {
   id: number;
   servicoId: number;
@@ -204,10 +220,12 @@ function nomeValido(nome: string, oque: string): string {
   return n;
 }
 
-function servicoValido(s: { nome: string; duracaoMin: number; precoCentavos: number }) {
+function servicoValido(s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }) {
   if (!(s.duracaoMin >= 5 && s.duracaoMin <= 480)) throw new ErroAgenda("Duração entre 5 e 480 minutos.");
   if (!(s.precoCentavos >= 0 && s.precoCentavos <= 10_000_00)) throw new ErroAgenda("Preço inválido.");
-  return { nome: nomeValido(s.nome, "o nome do serviço"), duracaoMin: Math.round(s.duracaoMin), precoCentavos: Math.round(s.precoCentavos) };
+  const descricao = s.descricao?.trim().replace(/\s+/g, " ") || null;
+  if (descricao && descricao.length > 140) throw new ErroAgenda("A descrição do serviço tem até 140 letras.");
+  return { nome: nomeValido(s.nome, "o nome do serviço"), duracaoMin: Math.round(s.duracaoMin), precoCentavos: Math.round(s.precoCentavos), descricao };
 }
 
 export class BancoAgenda {
@@ -277,6 +295,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
+    this.garantirColuna("servicos", "descricao", "TEXT");
     this.garantirColuna("barbearias", "retorno_dias", `INTEGER NOT NULL DEFAULT ${RETORNO_PADRAO_DIAS}`);
     for (const c of ["lembrete_em", "avaliacao_em"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
@@ -322,6 +341,11 @@ export class BancoAgenda {
         p256dh TEXT NOT NULL, auth TEXT NOT NULL, criado_em TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS configuracoes (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
+      -- Quando o barbeiro chamou de volta um cliente que sumiu (pra não insistir).
+      CREATE TABLE IF NOT EXISTS chamadas_retorno (
+        barbearia_id INTEGER NOT NULL REFERENCES barbearias(id), telefone TEXT NOT NULL, em TEXT NOT NULL,
+        PRIMARY KEY (barbearia_id, telefone)
+      );
     `);
   }
 
@@ -522,21 +546,22 @@ export class BancoAgenda {
   }
 
   servicos(barbeariaId: number, soAtivos = false): Servico[] {
-    return this.db.prepare(`SELECT id, nome, duracao_min AS duracaoMin, preco_centavos AS precoCentavos, ativo
-      FROM servicos WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`).all(barbeariaId) as unknown as Servico[];
+    return (this.db.prepare(`SELECT id, nome, duracao_min AS duracaoMin, preco_centavos AS precoCentavos, ativo, descricao
+      FROM servicos WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`).all(barbeariaId) as unknown as Servico[])
+      .map((x) => ({ ...x, descricao: x.descricao ?? undefined }));
   }
 
-  adicionarServico(barbeariaId: number, s: { nome: string; duracaoMin: number; precoCentavos: number }): void {
+  adicionarServico(barbeariaId: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }): void {
     const v = servicoValido(s);
-    this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos) VALUES (?, ?, ?, ?)")
-      .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos);
+    this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos, descricao) VALUES (?, ?, ?, ?, ?)")
+      .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos, v.descricao);
   }
 
   /** Muda nome, duração e preço. Horários já marcados continuam como foram marcados. */
-  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number }): void {
+  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }): void {
     const v = servicoValido(s);
-    this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ? WHERE id = ? AND barbearia_id = ?")
-      .run(v.nome, v.duracaoMin, v.precoCentavos, id, barbeariaId);
+    this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ?, descricao = ? WHERE id = ? AND barbearia_id = ?")
+      .run(v.nome, v.duracaoMin, v.precoCentavos, v.descricao, id, barbeariaId);
   }
 
   // ---------- funcionamento: preços, intervalo, atendimento, fila, fechar hoje ----------
@@ -754,6 +779,45 @@ export class BancoAgenda {
     }
     const sugerida = somarDias(ultima, ritmo);
     return { data: sugerida > hoje ? sugerida : somarDias(hoje, 1), ritmoDias: ritmo, deHistorico };
+  }
+
+  /**
+   * Clientes que passaram do próprio ritmo de volta (com 3 dias de folga) e não têm nada
+   * marcado. Fica de fora quem foi chamado nos últimos `CHAMADA_PAUSA_DIAS`, quem sumiu há
+   * mais de `SUMIDO_LIMITE_DIAS` (aí já não é atraso, é cliente perdido) e número bloqueado.
+   */
+  clientesSumidos(barbeariaId: number, agora?: Date): ClienteSumido[] {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) return [];
+    const agoraLocal = agoraNoFuso(b.fuso, agora);
+    const hoje = agoraLocal.slice(0, 10);
+    const desde = somarDias(hoje, -SUMIDO_LIMITE_DIAS);
+    const chamadosDesde = new Date((agora ?? new Date()).getTime() - CHAMADA_PAUSA_DIAS * 86_400_000).toISOString();
+    const linhas = this.db.prepare(`SELECT a.cliente_telefone AS telefone, MAX(a.inicio) AS ultima
+      FROM agendamentos a
+      WHERE a.barbearia_id = ? AND a.status = 'confirmado' AND a.inicio <= ?
+        AND NOT EXISTS (SELECT 1 FROM agendamentos f WHERE f.barbearia_id = a.barbearia_id AND f.cliente_telefone = a.cliente_telefone
+          AND f.status = 'confirmado' AND f.inicio > ?)
+        AND NOT EXISTS (SELECT 1 FROM telefones_bloqueados t WHERE t.barbearia_id = a.barbearia_id AND t.telefone = a.cliente_telefone)
+        AND NOT EXISTS (SELECT 1 FROM chamadas_retorno c WHERE c.barbearia_id = a.barbearia_id AND c.telefone = a.cliente_telefone AND c.em > ?)
+      GROUP BY a.cliente_telefone HAVING ultima >= ?`)
+      .all(barbeariaId, agoraLocal, agoraLocal, chamadosDesde, desde) as { telefone: string; ultima: string }[];
+    const ultimo = this.db.prepare(`SELECT a.cliente_nome AS nome, s.nome AS servico FROM agendamentos a JOIN servicos s ON s.id = a.servico_id
+      WHERE a.barbearia_id = ? AND a.cliente_telefone = ? AND a.inicio = ?`);
+    const dias = (d: string) => Date.parse(`${d}T12:00:00Z`) / 86_400_000;
+    return linhas.flatMap((l) => {
+      const { ritmoDias } = this.sugestaoDeRetorno(barbeariaId, l.telefone, agora);
+      const semVir = Math.round(dias(hoje) - dias(l.ultima.slice(0, 10)));
+      if (semVir < ritmoDias + 3) return [];
+      const u = ultimo.get(barbeariaId, l.telefone, l.ultima) as { nome: string; servico: string };
+      return [{ telefone: l.telefone, nome: u.nome, ultimoServico: u.servico, ultimaVisita: l.ultima.slice(0, 10), diasSemVir: semVir, ritmoDias }];
+    }).sort((x, y) => (y.diasSemVir - y.ritmoDias) - (x.diasSemVir - x.ritmoDias));
+  }
+
+  /** Anota que o barbeiro chamou o cliente de volta (some da lista por uns dias). */
+  registrarChamada(barbeariaId: number, telefone: string, agora = new Date()): void {
+    this.db.prepare(`INSERT INTO chamadas_retorno (barbearia_id, telefone, em) VALUES (?, ?, ?)
+      ON CONFLICT (barbearia_id, telefone) DO UPDATE SET em = excluded.em`).run(barbeariaId, telefone, agora.toISOString());
   }
 
   /**

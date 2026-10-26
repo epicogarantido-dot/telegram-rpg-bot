@@ -744,3 +744,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 }
 .b-demo-botao:hover { background: #ffffff; }
 .b-demo-botao:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 3px; }
+
+/* O que o serviço inclui, embaixo do nome. */
+.b-servico-desc { display: block; margin-top: 2px; font-weight: 400; font-size: 14px; line-height: 1.4; color: var(--suave); }

@@ -146,7 +146,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           {servicos.map((s) => (
             <li key={s.id}>
               <Link href={link({ servico: String(s.id), data: undefined })}>
-                <span className="b-lista-nome">{s.nome}</span>
+                <span className="b-lista-nome">{s.nome}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
                 <span className="b-lista-info">{s.duracaoMin} min</span>
                 {b.mostrarPrecos && <span className="b-lista-preco">{reais(s.precoCentavos)}</span>}
                 <ChevronRight size={18} aria-hidden />

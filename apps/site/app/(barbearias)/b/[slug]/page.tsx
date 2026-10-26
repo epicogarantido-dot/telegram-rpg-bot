@@ -188,7 +188,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         <ul className="b-servicos">
           {servicos.map((s) => (
             <li key={s.id}>
-              <span className="b-servico-nome">{s.nome}</span>
+              <span className="b-servico-nome">{s.nome}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
               <span className="b-servico-tempo">{s.duracaoMin} min</span>
               {b.mostrarPrecos && <span className="b-servico-preco">{reais(s.precoCentavos)}</span>}
               {agenda && <Link href={`${base}/agendar?servico=${s.id}`} className="b-servico-acao" aria-label={`Agendar ${s.nome}`}>Agendar</Link>}

@@ -781,3 +781,25 @@ describe("depois do atendimento: falta, retorno, lembrete, avaliação e número
     expect(n.ocupacao).toBeLessThan(0.1);
   });
 });
+
+describe("clientes que sumiram", () => {
+  it("lista quem passou do ritmo sem marcar; some ao ser chamado ou ao marcar", () => {
+    const antes = new Date("2026-04-01T12:00:00Z");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const [p] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    const horas = ["09:00", "10:00", "14:00", "15:00", "16:00"];
+    const m = (data: string, nome: string, tel: string) => b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: s!.id, data, hora: horas.shift()!, clienteNome: nome, clienteTelefone: tel, agora: antes, peloBarbeiro: true });
+    m("2026-09-01", "Ana", "5519911110001"); // 51 dias sem vir, ritmo padrão 21: sumiu
+    m("2026-10-13", "Beto", "5519911110002"); // 9 dias: em dia
+    m("2026-09-01", "Caio", "5519911110003"); m("2026-11-03", "Caio", "5519911110003"); // tem horário marcado
+    m("2026-05-05", "Duda", "5519911110004"); // há mais de 120 dias: perdido, fora da lista
+    const agora = new Date("2026-10-22T15:00:00Z");
+    expect(b.clientesSumidos(a.id, agora).map((c) => c.nome)).toEqual(["Ana"]);
+    expect(b.clientesSumidos(a.id, agora)[0]).toMatchObject({ ultimaVisita: "2026-09-01", diasSemVir: 51, ritmoDias: 21 });
+    b.registrarChamada(a.id, "5519911110001", agora);
+    expect(b.clientesSumidos(a.id, agora)).toEqual([]);
+    expect(b.clientesSumidos(a.id, new Date("2026-11-10T15:00:00Z")).map((c) => c.nome)).toContain("Ana");
+  });
+});

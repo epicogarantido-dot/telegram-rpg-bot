@@ -431,6 +431,8 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
   .config-servico { grid-template-columns: 1fr 1fr; }
   .config-servico label:first-of-type, .config-servico .acoes { grid-column: 1 / -1; }
 }
+/* A descrição ocupa a linha inteira, embaixo de nome, tempo e preço. */
+.config-servico .config-servico-desc { grid-column: 1 / -1; grid-row: 2; }
 .desativado { opacity: 0.55; }
 
 /* ---------- hoje: aberto/fechado e fila (painel) ---------- */
@@ -699,3 +701,5 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
   body:has(.placa-avaliacao) .so-tela, body:has(.placa-avaliacao) header, body:has(.placa-avaliacao) footer { display: none; }
   .placa-avaliacao { margin: 0 auto; }
 }
+.lista-sumidos { list-style: none; padding: 0; display: grid; gap: 10px; }
+.lista-sumidos .cartao { margin: 0; }

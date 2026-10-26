@@ -28,3 +28,11 @@ export function mensagemRetorno(a: { barbearia: string; cliente: string; servico
   return `Oi, ${primeiroNome(a.cliente)}! Seu próximo horário na ${a.barbearia} está marcado: ${a.servico}, ${quando(a.inicio)}. ` +
     `Pra ver, colocar na agenda do celular, remarcar ou cancelar: ${a.link}`;
 }
+
+/** Chamar de volta quem sumiu: uma mensagem individual, com saída fácil. */
+export function mensagemVolta(a: { barbearia: string; cliente: string; diasSemVir: number; servico: string; linkAgendar: string }): string {
+  const tempo = a.diasSemVir >= 60 ? `uns ${Math.round(a.diasSemVir / 30)} meses` : `umas ${Math.round(a.diasSemVir / 7)} semanas`;
+  return `Oi, ${primeiroNome(a.cliente)}! Aqui é da ${a.barbearia}. Faz ${tempo} do seu último ${a.servico.toLowerCase()} com a gente. ` +
+    `Quer que eu reserve um horário essa semana? É só responder aqui, ou marcar direto: ${a.linkAgendar}\n\n` +
+    `(Se preferir não receber esse tipo de mensagem, é só me avisar.)`;
+}

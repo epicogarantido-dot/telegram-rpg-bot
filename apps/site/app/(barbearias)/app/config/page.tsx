@@ -35,6 +35,7 @@ async function novoServico(form: FormData) {
     nome: String(form.get("nome")),
     duracaoMin: Number(form.get("duracao")),
     precoCentavos: lerPreco(String(form.get("preco") ?? "")),
+    descricao: String(form.get("descricao") ?? ""),
   }));
 }
 
@@ -50,6 +51,7 @@ async function editarServico(form: FormData) {
     nome: String(form.get("nome") ?? ""),
     duracaoMin: Number(form.get("duracao")),
     precoCentavos: lerPreco(String(form.get("preco") ?? "")),
+    descricao: String(form.get("descricao") ?? ""),
   }));
 }
 
@@ -183,13 +185,14 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       </form>
 
       <h2>Serviços</h2>
-      <p className="suave pequeno">Mude nome, tempo e preço e toque em Salvar. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
+      <p className="suave pequeno">Mude nome, tempo, preço e o que o serviço inclui, e toque em Salvar. Dizer as etapas (&quot;toalha quente, navalha, massagem&quot;) ajuda o cliente a entender o preço. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
       {servicos.map((s) => (
         <form key={s.id} action={editarServico} className={`config-servico ${s.ativo ? "" : "desativado"}`}>
           <input type="hidden" name="id" value={s.id} />
           <label>Serviço<input name="nome" defaultValue={s.nome} required maxLength={40} /></label>
           <label>Minutos<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required /></label>
           <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
+          <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
           <div className="acoes">
             <button className="botao-sec">Salvar</button>
             <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>
@@ -201,6 +204,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <input name="nome" placeholder="Novo serviço" required maxLength={40} />
         <input name="duracao" type="number" min={5} max={480} step={5} placeholder="Minutos" required />
         <input name="preco" placeholder="Preço (ex.: 45,00)" required inputMode="decimal" />
+        <input name="descricao" placeholder="O que inclui (opcional)" maxLength={140} />
         <button>Adicionar</button>
       </form>
 

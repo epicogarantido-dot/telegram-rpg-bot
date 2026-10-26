@@ -160,6 +160,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   }));
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
   const agoraLocal = agoraNoFuso(barbearia.fuso);
+  const sumidos = banco.clientesSumidos(barbearia.id).length;
   const linkAvaliacao = banco.barbeariaPorId(barbearia.id)!.linkAvaliacao;
   // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
   const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1)).filter((a) => a.status === "confirmado") : [];
@@ -189,6 +190,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {" · "}<Link href="/app/config">Configurações</Link>
         {" · "}<Link href="/app/assinatura">Assinatura</Link>
         {" · "}<Link href="/app/numeros"><BarChart3 size={14} aria-hidden /> Números do mês</Link>
+        {" · "}<Link href="/app/clientes">Clientes que sumiram{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
       </p>
 
       <Hoje barbeariaId={barbearia.id} />
