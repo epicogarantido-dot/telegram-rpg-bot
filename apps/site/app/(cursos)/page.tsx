@@ -7,6 +7,12 @@ import { Carrossel } from "@/componentes/Carrossel";
 import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
 import { CartaoMateria } from "@/componentes/revista";
 
+/**
+ * Página gerada no build, refeita no servidor a cada 10 min: depois de um deploy, uma versão
+ * velha que tenha ficado no disco é trocada sozinha, e preços do .env (propaganda) valem logo.
+ */
+export const revalidate = 600;
+
 export default async function Inicio() {
   const cursos = await carregarCursos();
   const artigos = (await carregarArtigos()).slice(0, MAX_ITENS_CARROSSEL);

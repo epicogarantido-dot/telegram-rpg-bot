@@ -40,6 +40,8 @@ writeFileSync(join(destino, "package.json"), JSON.stringify({ name: "aprenda-liv
 cpSync(join(site, ".next/static"), join(destino, "apps/site/.next/static"), { recursive: true });
 if (existsSync(join(site, "public"))) cpSync(join(site, "public"), join(destino, "apps/site/public"), { recursive: true });
 cpSync(join(raiz, "data/cursos"), join(destino, "data/cursos"), { recursive: true });
+// A Revista também: páginas refeitas no servidor (revalidate) leem os artigos do disco.
+cpSync(join(raiz, "data/artigos"), join(destino, "data/artigos"), { recursive: true });
 // Fotos de exemplo das demonstrações (lidas na hora de montar, pelo painel).
 cpSync(join(raiz, "data/demo-fotos"), join(destino, "data/demo-fotos"), { recursive: true });
 

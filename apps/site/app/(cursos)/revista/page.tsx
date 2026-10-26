@@ -3,6 +3,12 @@ import { carregarArtigos } from "@aprenda/catalogo";
 import { rotuloArtigo } from "@/componentes/revista";
 import { dataPorExtenso } from "@/lib/datas";
 
+/**
+ * Página gerada no build, refeita no servidor a cada 10 min: depois de um deploy, uma versão
+ * velha que tenha ficado no disco é trocada sozinha, e preços do .env (propaganda) valem logo.
+ */
+export const revalidate = 600;
+
 export const metadata = {
   title: "Revista da barbearia",
   description: "Notícias do mercado, a série Barbearias pelo mundo e curiosidades da profissão.",
