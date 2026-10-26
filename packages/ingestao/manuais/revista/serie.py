@@ -421,7 +421,7 @@ Respeite o limite. Nada de vender remédio, chá ou suplemento. O papel do barbe
 
 Uma barbearia não cura ninguém. Mas o estudo mostrou que ela pode ser o empurrão que faltava, e isso é um tipo de cuidado com o cliente que nenhum concorrente copia.
 
-*No próximo episódio: Nova Délhi, onde o barbeiro trabalha na calçada com uma cadeira, um espelho e uma máquina.*""",
+*A série continua: mais barbearias pelo mundo em breve.*""",
 fontes=[
     {"titulo": "Victor RG et al. — A Cluster-Randomized Trial of Blood-Pressure Reduction in Black Barbershops. N Engl J Med 2018 (PubMed)", "url": "https://pubmed.ncbi.nlm.nih.gov/29527973/"},
 ])

@@ -180,5 +180,12 @@
     "credito": "Unsplash",
     "licenca": "Licença Unsplash",
     "fonte": "https://images.unsplash.com/photo-1596728325488-58c87691e9af"
+  },
+  "figaro-o-barbeiro-de-sevilha": {
+    "arquivo": "/revista/figaro-o-barbeiro-de-sevilha.webp",
+    "alt": "Barbeiro cortando com tesoura de desbaste e pente o cabelo de um cliente de barba",
+    "credito": "Unsplash",
+    "licenca": "Licença Unsplash",
+    "fonte": "https://images.unsplash.com/photo-1647140655214-e4a2d914971f"
   }
 }
