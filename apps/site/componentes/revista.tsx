@@ -5,7 +5,7 @@ import { planoDoAmbiente } from "@aprenda/agenda";
 import { reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
 
-export const TIPO_ARTIGO: Record<Artigo["tipo"], string> = { noticia: "Mercado", serie: "Série", guia: "Guia" };
+export const TIPO_ARTIGO: Record<Artigo["tipo"], string> = { noticia: "Mercado", serie: "Série", guia: "Guia", curiosidade: "Curiosidade" };
 
 export function rotuloArtigo(a: Artigo): string {
   return a.serie ? `${a.serie.nome} · Ep. ${a.serie.episodio}` : TIPO_ARTIGO[a.tipo];

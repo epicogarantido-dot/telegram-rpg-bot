@@ -5,7 +5,7 @@ import { dataPorExtenso } from "@/lib/datas";
 
 export const metadata = {
   title: "Revista da barbearia",
-  description: "Notícias do mercado, a série Barbearias pelo mundo e guias pra quem vive de barbearia.",
+  description: "Notícias do mercado, a série Barbearias pelo mundo e curiosidades da profissão.",
 };
 
 export default async function Revista() {
@@ -14,7 +14,7 @@ export default async function Revista() {
     <div className="revista">
       <header className="revista-cabeca">
         <h1>Revista da barbearia</h1>
-        <p className="suave">Notícias do mercado, como trabalham as barbearias de outros países e guias pra aprender mais. Tudo com as fontes no fim.</p>
+        <p className="suave">Notícias do mercado, como trabalham as barbearias de outros países e curiosidades da profissão. Tudo com as fontes no fim.</p>
       </header>
       {artigos.length === 0 ? <p>Em breve.</p> : (
         <ul className="revista-lista">

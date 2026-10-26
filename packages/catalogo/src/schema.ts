@@ -64,14 +64,14 @@ export function permiteUsoComercial(l: Licenca): boolean {
 }
 
 /**
- * Artigo da revista (notícias, séries, guias). Sempre conteúdo próprio, escrito
+ * Artigo da revista (notícias, séries, guias, curiosidades). Sempre conteúdo próprio, escrito
  * em português; fatos e números vêm das `fontes`, que aparecem no fim do artigo.
  */
 export const Artigo = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   titulo: z.string(),
   resumo: z.string(),
-  tipo: z.enum(["noticia", "serie", "guia"]),
+  tipo: z.enum(["noticia", "serie", "guia", "curiosidade"]),
   /** Artigos de uma série ("Barbearias pelo mundo") com o número do episódio. */
   serie: z.object({ nome: z.string(), episodio: z.number().int().positive() }).optional(),
   publicadoEm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

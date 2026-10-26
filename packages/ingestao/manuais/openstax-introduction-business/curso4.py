@@ -139,7 +139,6 @@ Aulas com casos, **simulação de situações (role-play)**, vídeos e cursos on
 - **Rodízio:** quem só faz corte aprende barba, e vice-versa. A casa fica mais flexível pra cobrir faltas.
 - **Cabeça de manequim é o simulador da barbearia:** técnica nova se treina nela antes do cliente.
 - **Simulação de atendimento:** treine em dupla o cliente que reclama, o que chega atrasado, o que pede "igual da foto".
-- **Vídeos de fora:** veja o guia [Onde aprender cortes de graça](/revista/aprender-cortes-de-graca-canais-de-fora).
 
 ### Para pensar
 

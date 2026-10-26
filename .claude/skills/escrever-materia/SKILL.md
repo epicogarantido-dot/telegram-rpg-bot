@@ -9,6 +9,10 @@ Leitor: **barbeiro brasileiro**, dono ou funcionário, lendo no celular no inter
 clientes. Objetivo: ele aprende algo que usa amanhã e confia na gente (e um dia assina o SaaS).
 A propaganda do SaaS entra sozinha no fim da página; o texto não vende nada.
 
+**Linha editorial** (detalhes em `docs/pauta.md`): nada de técnica de corte nem de divulgar
+quem vende curso (até termos link de afiliado, sinalizado na matéria). Foco em atendimento,
+gestão, dinheiro, divulgação, equipe, barbearias de outros países e **curiosidades**.
+
 ## 1. Pauta
 
 Pegue a próxima de `docs/pauta.md` (ou a pedida). Antes de escrever, responda em uma linha:
@@ -44,7 +48,10 @@ Pegue a próxima de `docs/pauta.md` (ou a pedida). Antes de escrever, responda e
   um barbeiro daqui aplica sem gastar muito) → gancho pro próximo episódio.
 - **Notícia**: o que mudou → pra quem vale e a partir de quando → o que fazer agora → "combine
   com seu contador" quando for imposto/lei.
-- **Guia**: o que é cada recurso → pra quem serve → como estudar/usar → link pro guia irmão.
+- **Guia**: o que é cada recurso → pra quem serve → como usar → link pro guia irmão.
+- **Curiosidade** (`tipo: "curiosidade"`): o fato que surpreende logo na abertura → a história,
+  com datas e fontes → "Como usar isso na sua barbearia" (conversa na cadeira, post, identidade).
+  Quando historiadores discordam, mostre as versões em vez de escolher uma.
 - Links internos (`/revista/...`, `/cursos/...`, `/barbeiros#comunidade`) ajudam a navegar;
   o teste confere se existem.
 - Tamanho: 500–1.200 palavras. Mais que isso, divida em dois.
@@ -58,7 +65,7 @@ Pegue a próxima de `docs/pauta.md` (ou a pedida). Antes de escrever, responda e
   "slug": "japao-barbearia-ritual-e-rapidez",
   "titulo": "até 90 caracteres",
   "resumo": "até 220 caracteres; é o que aparece no carrossel e no WhatsApp",
-  "tipo": "serie",
+  "tipo": "serie | noticia | guia | curiosidade",
   "serie": { "nome": "Barbearias pelo mundo", "episodio": 2 },
   "publicadoEm": "AAAA-MM-DD (hoje)",
   "tags": ["barbearia", "..."],
