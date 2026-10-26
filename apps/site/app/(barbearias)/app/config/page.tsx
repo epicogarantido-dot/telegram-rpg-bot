@@ -94,6 +94,7 @@ async function editarProfissional(form: FormData) {
     nome: String(form.get("nome") ?? ""),
     especialidade: String(form.get("especialidade") ?? ""),
     fotoArquivo: foto || null,
+    partePct: String(form.get("parte") ?? "").trim() === "" ? null : Number(form.get("parte")),
   }));
 }
 
@@ -209,7 +210,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       </form>
 
       <h2>Profissionais <small className="suave">({profissionais.filter((p) => p.ativo).length} atendendo)</small></h2>
-      <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…".</p>
+      <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…". Em &quot;Fica com&quot;, a porcentagem de cada serviço que é do profissional (comissão ou <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">barbeiro parceiro</a>); deixe vazio se não divide. A conta do mês sai em <Link href="/app/numeros">Números do mês</Link>.</p>
       {profissionais.map((p) => (
         <div key={p.id} className={`equipe-item ${p.ativo ? "" : "desativado"}`}>
           <form action={editarProfissional}>
@@ -220,6 +221,9 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
               <option value="">Sem foto</option>
               {fotosEquipe.map((f, i) => <option key={f.arquivo} value={f.arquivo}>{f.legenda || `Foto da equipe ${i + 1}`}</option>)}
             </select>
+            <label className="parte-pct">Fica com
+              <input name="parte" type="number" min={0} max={100} step={1} defaultValue={p.partePct ?? ""} placeholder="—" aria-label={`Porcentagem que fica com ${p.nome}`} />%
+            </label>
             <button className="botao-sec">Salvar</button>
             <button className="botao-sec" formAction={alternarProfissional} formNoValidate>{p.ativo ? "Desativar" : "Ativar"}</button>
           </form>

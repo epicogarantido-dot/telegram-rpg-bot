@@ -822,3 +822,22 @@ describe("cardápio de cortes: foto de referência ao marcar", () => {
     expect(b.agendamentosDoDia(a.id, "2026-10-20")[0]!.referenciaFoto).toBe(degrade);
   });
 });
+
+describe("divisão do mês por profissional", () => {
+  it("soma o atendido de cada um e divide pela parte combinada", () => {
+    const antes = new Date("2026-10-01T12:00:00Z");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    b.adicionarProfissional(a.id, "Beto");
+    const [ze, beto] = b.profissionais(a.id, true);
+    const [s] = b.servicos(a.id, true);
+    b.atualizarProfissional(a.id, beto!.id, { partePct: 60 });
+    expect(() => b.atualizarProfissional(a.id, beto!.id, { partePct: 120 })).toThrow(ErroAgenda);
+    const m = (prof: number, hora: string) => b.agendar({ barbeariaId: a.id, profissionalId: prof, servicoId: s!.id, data: "2026-10-20", hora, clienteNome: "Cliente", clienteTelefone: `55199887766${hora.slice(0, 2)}`, agora: antes, peloBarbeiro: true });
+    m(ze!.id, "09:00"); m(beto!.id, "09:00"); m(beto!.id, "10:00");
+    const d = b.divisaoDoMes(a.id, "2026-10", new Date("2026-10-21T12:00:00Z"));
+    expect(d.find((x) => x.nome === "Zé")).toMatchObject({ atendidos: 1, partePct: undefined, parteProfissionalCentavos: undefined });
+    expect(d.find((x) => x.nome === "Beto")).toMatchObject({ atendidos: 2, totalCentavos: 2 * s!.precoCentavos, partePct: 60,
+      parteProfissionalCentavos: Math.round(2 * s!.precoCentavos * 0.6), parteBarbeariaCentavos: 2 * s!.precoCentavos - Math.round(2 * s!.precoCentavos * 0.6) });
+  });
+});

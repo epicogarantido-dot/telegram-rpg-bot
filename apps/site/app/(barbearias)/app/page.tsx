@@ -9,6 +9,7 @@ import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { situacaoAgora, urlFoto } from "@/lib/barbearias";
 import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
+import { proximaData } from "@/lib/datas-barbearia";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -194,6 +195,18 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       </p>
 
       <Hoje barbeariaId={barbearia.id} />
+
+      {(() => {
+        const d = proximaData(hoje);
+        if (!d) return null;
+        const faltam = Math.round((Date.parse(`${d.dia}T12:00:00Z`) - Date.parse(`${hoje}T12:00:00Z`)) / 86_400_000);
+        return (
+          <aside className="data-proxima" aria-label="Próxima data">
+            <p><strong>{faltam === 0 ? "Hoje" : `Daqui a ${faltam} dia${faltam > 1 ? "s" : ""}`}: {d.titulo}</strong></p>
+            <p className="suave pequeno">{d.ideia}{d.link && <> <a href={d.link} target="_blank" rel="noopener noreferrer">Ler a matéria</a></>}</p>
+          </aside>
+        );
+      })()}
 
       {amanha.length > 0 && (
         <section className="lembretes" aria-labelledby="lembretes-titulo">

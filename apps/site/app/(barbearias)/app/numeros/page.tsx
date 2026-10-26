@@ -24,6 +24,8 @@ export default async function Numeros({ searchParams }: { searchParams: Promise<
   const atual = agoraNoFuso(barbearia.fuso).slice(0, 7);
   const mes = pedido && /^\d{4}-\d{2}$/.test(pedido) && pedido <= atual ? pedido : atual;
   const n = obterAgenda().numerosDoMes(barbearia.id, mes);
+  const divisao = obterAgenda().divisaoDoMes(barbearia.id, mes);
+  const divide = divisao.some((d) => d.partePct !== undefined);
   const [a, m] = mes.split("-");
   const nomeMes = `${MESES[Number(m) - 1]} de ${a}`;
   const retorno = n.atendidos ? n.saiuComRetorno / n.atendidos : 0;
@@ -64,6 +66,33 @@ export default async function Numeros({ searchParams }: { searchParams: Promise<
           <p>da agenda ocupada (aproximado: tempo atendido ÷ expediente de quem atende)</p>
         </div>
       </div>
+
+      {divisao.length > 1 || divide ? (
+        <>
+          <h2>Por profissional</h2>
+          <div className="tabela-rolavel">
+            <table className="tabela-divisao">
+              <thead>
+                <tr><th>Profissional</th><th>Atendimentos</th><th>Total</th>{divide && <><th>Parte dele</th><th>Parte da casa</th></>}</tr>
+              </thead>
+              <tbody>
+                {divisao.map((d) => (
+                  <tr key={d.profissionalId}>
+                    <td>{d.nome}{d.partePct !== undefined && <small className="suave"> ({d.partePct}%)</small>}</td>
+                    <td>{d.atendidos}</td>
+                    <td>{reais(d.totalCentavos)}</td>
+                    {divide && <><td>{d.parteProfissionalCentavos !== undefined ? reais(d.parteProfissionalCentavos) : "—"}</td><td>{d.parteBarbeariaCentavos !== undefined ? reais(d.parteBarbeariaCentavos) : "—"}</td></>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="suave pequeno">
+            Pelo preço atual de cada serviço, só o que foi atendido (faltas não entram). A porcentagem de cada um você define em <Link href="/app/config">Configurações</Link>.
+            Barbeiro parceiro precisa de contrato escrito e homologado: veja o guia <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">Barbeiro parceiro</a> e combine com seu contador.
+          </p>
+        </>
+      ) : null}
 
       <h2>O que fazer com isso</h2>
       <ul>

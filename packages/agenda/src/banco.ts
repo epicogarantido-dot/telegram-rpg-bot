@@ -70,6 +70,16 @@ export interface ClienteSumido {
   ritmoDias: number;
 }
 
+export interface DivisaoProfissional {
+  profissionalId: number;
+  nome: string;
+  atendidos: number;
+  totalCentavos: number;
+  partePct?: number;
+  parteProfissionalCentavos?: number;
+  parteBarbeariaCentavos?: number;
+}
+
 /** O resumo do mês no painel (ver `numerosDoMes`). */
 export interface NumerosDoMes {
   atendidos: number;
@@ -120,7 +130,11 @@ export interface Pagamento {
   criadoEm: string;
   decididoEm?: string;
 }
-export interface Profissional { id: number; nome: string; ativo: number; especialidade?: string; fotoArquivo?: string }
+export interface Profissional {
+  id: number; nome: string; ativo: number; especialidade?: string; fotoArquivo?: string;
+  /** Porcentagem de cada serviço que fica com o profissional (parceiro ou comissão). Vazio = não divide. */
+  partePct?: number;
+}
 
 /** Limite de fotos por barbearia: segura o disco do servidor. */
 export const MAX_FOTOS = 80;
@@ -305,6 +319,7 @@ export class BancoAgenda {
     for (const c of ["lembrete_em", "avaliacao_em", "referencia_foto"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
+    this.garantirColuna("profissionais", "parte_pct", "INTEGER");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS fotos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -527,13 +542,19 @@ export class BancoAgenda {
   }
 
   profissionais(barbeariaId: number, soAtivos = false): Profissional[] {
-    return this.db.prepare(`SELECT id, nome, ativo, especialidade, foto_arquivo AS fotoArquivo FROM profissionais
+    return (this.db.prepare(`SELECT id, nome, ativo, especialidade, foto_arquivo AS fotoArquivo, parte_pct AS partePct FROM profissionais
       WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`)
-      .all(barbeariaId) as unknown as Profissional[];
+      .all(barbeariaId) as unknown as Profissional[]).map((p) => ({ ...p, partePct: p.partePct ?? undefined }));
   }
 
-  atualizarProfissional(barbeariaId: number, id: number, dados: { nome?: string; especialidade?: string; fotoArquivo?: string | null }): void {
+  atualizarProfissional(barbeariaId: number, id: number, dados: { nome?: string; especialidade?: string; fotoArquivo?: string | null; partePct?: number | null }): void {
     if (dados.fotoArquivo && !this.fotoDaBarbearia(barbeariaId, dados.fotoArquivo)) throw new ErroAgenda("Foto inválida.");
+    if (dados.partePct !== undefined) {
+      if (dados.partePct !== null && !(Number.isInteger(dados.partePct) && dados.partePct >= 0 && dados.partePct <= 100)) {
+        throw new ErroAgenda("A parte do profissional vai de 0 a 100%.");
+      }
+      this.db.prepare("UPDATE profissionais SET parte_pct = ? WHERE id = ? AND barbearia_id = ?").run(dados.partePct, id, barbeariaId);
+    }
     if (dados.nome !== undefined) {
       this.db.prepare("UPDATE profissionais SET nome = ? WHERE id = ? AND barbearia_id = ?").run(nomeValido(dados.nome, "o nome do profissional"), id, barbeariaId);
     }
@@ -788,6 +809,27 @@ export class BancoAgenda {
     }
     const sugerida = somarDias(ultima, ritmo);
     return { data: sugerida > hoje ? sugerida : somarDias(hoje, 1), ritmoDias: ritmo, deHistorico };
+  }
+
+  /**
+   * Divisão do mês por profissional: atendimentos, total pelo preço atual dos serviços e, pra
+   * quem tem parte definida, quanto fica com ele e com a casa (comissão ou salão-parceiro).
+   */
+  divisaoDoMes(barbeariaId: number, mes: string, agora?: Date): DivisaoProfissional[] {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b || !/^\d{4}-\d{2}$/.test(mes)) throw new ErroAgenda("Mês inválido.");
+    const linhas = this.db.prepare(`SELECT a.profissional_id AS id, COUNT(*) AS atendidos, SUM(s.preco_centavos) AS total
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id
+      WHERE a.barbearia_id = ? AND a.status = 'confirmado' AND a.inicio >= ? AND a.inicio < ? AND a.inicio <= ?
+      GROUP BY a.profissional_id`).all(barbeariaId, `${mes}-01`, `${mes}-99`, agoraNoFuso(b.fuso, agora)) as { id: number; atendidos: number; total: number }[];
+    const porId = new Map(linhas.map((l) => [l.id, l]));
+    return this.profissionais(barbeariaId).filter((p) => p.ativo || porId.has(p.id)).map((p) => {
+      const l = porId.get(p.id);
+      const total = l?.total ?? 0;
+      const parte = p.partePct === undefined ? undefined : Math.round((total * p.partePct) / 100);
+      return { profissionalId: p.id, nome: p.nome, atendidos: l?.atendidos ?? 0, totalCentavos: total, partePct: p.partePct,
+        parteProfissionalCentavos: parte, parteBarbeariaCentavos: parte === undefined ? undefined : total - parte };
+    });
   }
 
   /**
