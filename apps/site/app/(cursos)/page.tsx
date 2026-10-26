@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { ArrowRight, Globe2, HeartHandshake, Languages, Scissors, Search, ShieldCheck } from "lucide-react";
-import { carregarCursos } from "@aprenda/catalogo";
+import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { DemoBarbearia } from "@/componentes/DemoBarbearia";
 import { CartaoCurso } from "@/componentes/cursos";
+import { Carrossel } from "@/componentes/Carrossel";
+import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
+import { CartaoMateria } from "@/componentes/revista";
 
 export default async function Inicio() {
   const cursos = await carregarCursos();
+  const artigos = (await carregarArtigos()).slice(0, MAX_ITENS_CARROSSEL);
   const areas = [...new Set(cursos.map((c) => c.area))].sort();
   return (
     <>
@@ -44,10 +48,15 @@ export default async function Inicio() {
         </div>
       </section>
 
-      <h2>Cursos</h2>
-      <div className="grade">
-        {cursos.map((c) => <CartaoCurso key={c.slug} curso={c} />)}
-      </div>
+      <Carrossel titulo="Cursos" verTodos={{ href: "/cursos", texto: "Ver todos" }}>
+        {cursos.slice(0, MAX_ITENS_CARROSSEL).map((c) => <CartaoCurso key={c.slug} curso={c} />)}
+      </Carrossel>
+
+      {artigos.length > 0 && (
+        <Carrossel titulo="Da revista" verTodos={{ href: "/revista", texto: "Ver todas" }}>
+          {artigos.map((a) => <CartaoMateria key={a.slug} artigo={a} />)}
+        </Carrossel>
+      )}
 
       <section className="vitrine">
         <div>

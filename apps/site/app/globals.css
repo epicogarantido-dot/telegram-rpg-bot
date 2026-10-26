@@ -554,4 +554,44 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .artigo-fontes h2, .artigo-serie h2 { font-size: 1.1rem; }
 .artigo-fontes ol { padding-left: 20px; display: grid; gap: 4px; word-break: break-word; }
 .artigo-serie { margin-top: 24px; padding: 16px 20px; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
-.artigo-cta { margin-top: 32px; font-weight: 600; }
+
+/* ---------- carrossel (cursos e matérias) ---------- */
+.carrossel { margin: 48px 0 8px; min-width: 0; }
+.carrossel-topo { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.carrossel-topo h2 { margin: 0; flex: 1 1 auto; }
+.carrossel-todos { font-size: 15px; font-weight: 500; }
+.carrossel-setas { display: flex; gap: 8px; }
+.carrossel-setas button {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; cursor: pointer;
+  border: 1px solid var(--borda); border-radius: 999px; background: var(--cartao); color: var(--texto);
+}
+.carrossel-setas button:hover:not(:disabled) { border-color: var(--destaque); }
+.carrossel-setas button:disabled { opacity: 0.35; cursor: default; }
+/* No celular a pessoa rola com o dedo; as setas ficam pro computador. */
+@media (hover: none) and (pointer: coarse) { .carrossel-setas { display: none; } }
+.carrossel-trilho {
+  list-style: none; margin: 0 -16px; padding: 4px 16px 16px; display: flex; gap: 16px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.carrossel-trilho > li { flex: 0 0 min(300px, 82%); scroll-snap-align: start; display: flex; }
+.carrossel-trilho > li > .cartao { flex: 1; display: flex; flex-direction: column; }
+.carrossel-trilho > li > .cartao .rodape-cartao { margin-top: auto; padding-top: 16px; }
+.cartao-materia { gap: 6px; }
+.cartao-materia h3 { margin: 4px 0 2px; }
+.cartao-materia time { margin-top: auto; padding-top: 12px; font-size: 13px; color: var(--suave); }
+
+/* ---------- propaganda do SaaS no fim das matérias ---------- */
+.propaganda {
+  display: grid; gap: 24px; align-items: center; margin: 48px 0 0; padding: 28px 24px;
+  background: var(--destaque); color: var(--sobre-destaque); border-radius: var(--raio);
+}
+@media (min-width: 760px) { .propaganda { grid-template-columns: 1fr 220px; padding: 36px 40px; } }
+.propaganda h2 { margin: 4px 0 12px; font-size: clamp(1.6rem, 4.5vw, 2.3rem); }
+.propaganda ul { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 4px; }
+.propaganda-de, .propaganda-preco { margin: 0; font-size: 15px; opacity: 0.8; }
+.propaganda .acoes { margin-top: 20px; }
+.propaganda .botao { background: var(--sobre-destaque); color: var(--destaque); border-color: var(--sobre-destaque); }
+.propaganda .botao-sec { background: transparent; color: var(--sobre-destaque); border-color: currentColor; }
+.propaganda-celular { display: none; width: 100%; height: auto; border-radius: 22px; border: 6px solid #2a2a2a; background: #2a2a2a; }
+@media (min-width: 760px) { .propaganda-celular { display: block; } }

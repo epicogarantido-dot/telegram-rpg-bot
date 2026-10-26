@@ -1,0 +1,40 @@
+{
+  "slug": "japao-barbear-de-ritual-e-corte-de-10-minutos",
+  "titulo": "Japão: o barbear mais caprichado do mundo e o corte de 10 minutos",
+  "resumo": "No mesmo país convivem a barbearia de bairro que faz o rosto inteiro na navalha e uma rede que só corta, em 10 minutos, por ¥ 1.400. As duas ensinam algo.",
+  "tipo": "serie",
+  "serie": {
+    "nome": "Barbearias pelo mundo",
+    "episodio": 2
+  },
+  "publicadoEm": "2026-10-26",
+  "tags": [
+    "barbearia",
+    "barbearias pelo mundo",
+    "japão",
+    "atendimento"
+  ],
+  "conteudo": "No Japão dá pra ver os dois extremos da barbearia lado a lado: a casa de bairro onde o atendimento leva **uma hora** e inclui barbear o rosto inteiro, e uma rede que **só corta cabelo, em uns 10 minutos**. O curioso é que a segunda nasceu de um cliente da primeira.\n\n### O barbeiro japonês e a navalha\n\nNo Japão, barbearia é tão ligada ao barbear que está na lei: a Lei dos Barbeiros (理容師法) define o trabalho do barbeiro como **\"o corte do cabelo, o barbear do rosto e outros meios de deixar a aparência em ordem\"**.\n\nE o barbear de lá não é só a barba. Em 2021, um repórter do site SoraNews24 foi à **Shibagaki**, em Yokohama, considerada a barbearia em estilo ocidental mais antiga do país, aberta em **1869** e tocada pela mesma família há cinco gerações. O atendimento foi assim:\n\n1. **Corte**, com o mestre decidindo o estilo pelo formato do rosto (a maioria dos clientes deixa na mão dele).\n2. **Lavagem com o cliente inclinado pra frente**, sobre a pia, porque assim o barbeiro alcança melhor a nuca.\n3. **Rosto massageado com creme**, depois **toalha quente no rosto inteiro**.\n4. **Espuma e navalha** no rosto, com traços firmes.\n5. **Massagem nos ombros** no final, com um aparelho de vibração antigo.\n\nTudo levou **cerca de uma hora**.\n\n### A rede que só corta\n\nA **QB House** conta no próprio site como começou. O fundador, **o senhor Konishi**, frequentava uma barbearia cara antes de reuniões importantes. Um dia, com pressa, pediu o serviço \"em 30 minutos\" e saiu com o mesmo resultado na metade do tempo de sempre. Daí veio a pergunta: **por que pagar por barbear, lavagem e massagem quando eu só quero cortar?**\n\nEm **novembro de 1996** abriu a primeira loja, em Kanda, Tóquio, com a ideia de **\"10 minutos, 1.000 ienes\"**. Algumas soluções da casa:\n\n- **Pagamento antes, numa máquina de fichas** na entrada (a empresa diz ter sido a primeira do setor). O barbeiro não perde tempo com caixa.\n- **Um \"semáforo\" na porta** mostra o tempo de espera: verde, amarelo ou vermelho. Ninguém precisa ligar pra perguntar.\n- **Sem lavagem:** um aspirador tira os fios cortados.\n- **Sem agendamento e sem escolher barbeiro:** atende na ordem de chegada.\n\n### Quanto custa\n\n| | Japão | Fonte |\n|---|---|---|\n| Corte na QB House | **¥ 1.400** (com imposto), só corte | site oficial, out/2026 |\n| Tempo médio de corte na QB House | **12 min 15 s** | site oficial |\n| Lojas da QB House no Japão | **612** (jun/2026), e outras em 6 países | site oficial |\n| Atendimento completo na Shibagaki | cerca de **1 hora** | SoraNews24, 2021 |\n\n### O que dá pra trazer pra sua barbearia\n\n- **Separe o rápido do ritual.** Ofereça um \"só corte\" bem feito e rápido pra quem tem pressa, e um \"completo\" (corte, lavagem, toalha quente, barba, massagem) com preço de experiência. Cada cliente paga pelo que quer.\n- **Mostre a espera.** O semáforo da QB House é simples de copiar: um aviso na porta ou no Instagram dizendo \"fila agora: 2 pessoas\". (O site de agendamento do Aprenda Livre tem isso pronto pra quem atende por ordem de chegada.)\n- **Tire o caixa do meio do corte.** Cobrar antes, ou por Pix com QR na bancada, poupa minutos em cada cliente.\n- **Toalha quente no rosto inteiro.** Custa pouco e é o momento que o cliente lembra.\n- **Termine com os ombros.** Dois minutos de massagem no fim mudam a sensação do serviço inteiro.\n\n*No próximo episódio: Turquia, onde muito homem vai ao barbeiro toda semana.*",
+  "fontes": [
+    {
+      "titulo": "QB House — história da marca (誕生ストーリー)",
+      "url": "https://www.qbhouse.co.jp/qblab/birth/"
+    },
+    {
+      "titulo": "QB House — como funciona e preço (ご利用案内)",
+      "url": "https://www.qbhouse.co.jp/guidance/"
+    },
+    {
+      "titulo": "QB House — números da rede (数字で見るQB HOUSE)",
+      "url": "https://www.qbhouse.co.jp/qblab/number/"
+    },
+    {
+      "titulo": "e-Gov Japão — Lei dos Barbeiros (理容師法)",
+      "url": "https://laws.e-gov.go.jp/law/322AC0000000234"
+    },
+    {
+      "titulo": "SoraNews24 — What it's like to get a haircut at Japan's oldest barber shop (2021)",
+      "url": "https://soranews24.com/2021/06/04/what-its-like-to-get-a-haircut-at-japans-oldest-barber-shop/"
+    }
+  ]
+}

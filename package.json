@@ -3,8 +3,13 @@
   "private": true,
   "description": "Cursos gratuitos e abertos do mundo inteiro, traduzidos para português — site + bot de WhatsApp.",
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev:site": "npm run dev -w @aprenda/site",
     "build:site": "npm run build -w @aprenda/site",
@@ -14,6 +19,7 @@
     "prospectar": "npm run prospectar -w @aprenda/prospeccao --",
     "traduzir": "npm run traduzir -w @aprenda/ingestao --",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "conferir:links": "npm run conferir:links -w @aprenda/catalogo --"
   }
 }
