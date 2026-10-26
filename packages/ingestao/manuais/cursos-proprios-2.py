@@ -14,7 +14,8 @@ FONTE = {
     "autores": ["Aprenda Livre"],
     "licenca": "CC-BY-4.0",
     "atribuicao": "Conteúdo original do Aprenda Livre, escrito em português, sob licença CC BY 4.0. "
-                  "Exemplos de outros países vêm das matérias da Revista, com as fontes no fim de cada uma.",
+                  "Exemplos de outros países vêm das matérias da Revista, com as fontes no fim de cada uma. "
+                  "Leis citadas conferidas no texto atualizado da Câmara dos Deputados em 26/10/2026; regras mudam, confirme com seu contador.",
 }
 
 
@@ -453,6 +454,248 @@ Se um cliente pedir pra apagar uma foto, apague no mesmo dia, sem discussão, e 
 ]
 
 
+# ---------------------------------------------------------------- abrir e organizar
+# Conferido em 26/10/2026 no texto atualizado da Câmara dos Deputados:
+# - LC 123/2006, art. 18-A §4º (MEI: um estabelecimento, sem participar de outra empresa) e
+#   art. 18-C (um único empregado, com salário mínimo ou piso). Limites pela LC 238/2026.
+# - Lei 12.592/2012: reconhece a profissão (art. 1º), esterilização (art. 4º), dia nacional
+#   na data da promulgação, 18 de janeiro (art. 5º); arts. 1º-A a 1º-D (salão-parceiro, Lei 13.352/2016).
+# - STF, ADI 5625 (28/10/2021): parceria constitucional; nula se disfarçar emprego.
+# - Lei 8.245/1991, art. 51 (renovatória). DAS do MEI 2026: Receita Federal.
+CAMARA_12592 = "https://www2.camara.leg.br/legin/fed/lei/2012/lei-12592-18-janeiro-2012-612301-normaatualizada-pl.html"
+CAMARA_LC123 = "https://www2.camara.leg.br/legin/fed/leicom/2006/leicomplementar-123-14-dezembro-2006-548099-normaatualizada-pl.html"
+CAMARA_8245 = "https://www2.camara.leg.br/legin/fed/lei/1991/lei-8245-18-outubro-1991-322506-normaatualizada-pl.html"
+
+AB = [
+{"id": "mei-ou-me", "titulo": "MEI, ME ou parceiro: o formato certo pra começar", "conteudo": f"""Antes de pintar a parede ou comprar a cadeira, vale decidir como a barbearia vai existir no papel. O formato muda quanto você paga de imposto, quem pode trabalhar com você e quanto pode faturar.
+
+### MEI: o caminho mais comum
+
+A maioria dos barbeiros que trabalha sozinho começa como MEI, o microempreendedor individual. Pra quem presta serviço, o imposto é um valor fixo por mês, o DAS: em 2026, R$ 86,05 (R$ 81,05 de INSS e R$ 5,00 de ISS), segundo a Receita Federal. Com ele você tem CNPJ, emite nota e contribui pra aposentadoria.
+
+Mas o MEI tem regras que pesam numa barbearia, todas na Lei Complementar 123 ([texto atualizado]({CAMARA_LC123})):
+
+- **Limite de faturamento:** R$ 81 mil em 2026, R$ 110 mil em 2027 e R$ 140 mil a partir de 2028 ([veja a matéria](/revista/mei-vai-poder-faturar-mais-2027-2028)).
+- **Um empregado só,** recebendo um salário mínimo ou o piso da categoria.
+- **Um estabelecimento só.** Abrir a segunda unidade não cabe no MEI.
+- **Sem sociedade:** quem é MEI não pode ser titular, sócio ou administrador de outra empresa.
+
+### Quando passar pra microempresa (ME)
+
+Se a barbearia vai ter sócio, mais de um funcionário, segunda unidade, ou faturar acima do limite, o caminho é a microempresa, normalmente no Simples Nacional. O imposto deixa de ser fixo e passa a ser uma porcentagem do faturamento, e você vai precisar de contador.
+
+Não é bicho de sete cabeças: é o passo natural de quem cresceu. O erro é crescer como ME funcionando como MEI, sem perceber.
+
+### E o barbeiro que trabalha na barbearia de outro?
+
+Ele pode ser empregado (com carteira), ou trabalhar como parceiro, pelo contrato de salão-parceiro previsto em lei. Esse formato tem regras próprias e é o assunto do módulo 2.
+
+### Na prática
+
+| Situação | Formato mais comum |
+|---|---|
+| Trabalho sozinho, fatura até o limite | MEI |
+| Tenho um ajudante com salário mínimo | MEI (um empregado) |
+| Vou ter sócio, segunda unidade ou equipe | Microempresa, com contador |
+| Trabalho na cadeira da barbearia de outro | Empregado ou profissional-parceiro |
+
+*Este curso explica as regras gerais. Antes de abrir ou mudar de formato, converse com um contador.*
+
+### Para pensar
+
+- Quanto sua barbearia faturou nos últimos 12 meses? Cabe no limite do MEI?
+- Daqui a dois anos, você imagina a barbearia com quantas cadeiras?"""},
+
+{"id": "profissao-e-higiene", "titulo": "Profissão reconhecida e as regras de higiene", "conteudo": f"""Desde 2012, barbeiro é profissão reconhecida em todo o Brasil pela Lei 12.592 ([texto atualizado]({CAMARA_12592})). A lei é curta, mas tem três pontos que todo dono de barbearia precisa conhecer.
+
+### O que a lei diz
+
+O artigo 1º reconhece as atividades de cabeleireiro, barbeiro, esteticista, manicure, pedicure, depilador e maquiador, e define esses profissionais como quem trabalha com "higiene e embelezamento capilar, estético, facial e corporal".
+
+O artigo 4º é o mais importante pro dia a dia: os profissionais "deverão obedecer às normas sanitárias, efetuando a esterilização de materiais e utensílios utilizados no atendimento a seus clientes". Ou seja, esterilizar não é capricho, é obrigação.
+
+E o artigo 5º criou o Dia Nacional do Cabeleireiro, Barbeiro, Esteticista, Manicure, Pedicure, Depilador e Maquiador, comemorado na data da promulgação da lei: 18 de janeiro. Uma boa data pro calendário da sua barbearia.
+
+### Higiene na prática
+
+As regras detalhadas de higiene são da vigilância sanitária, e cada estado e município tem as suas. Em geral, elas cobram:
+
+- Lâmina descartável, trocada a cada cliente.
+- Material que não é descartável (tesoura, pente, pinça) limpo e esterilizado entre um cliente e outro.
+- Bancada, cadeira e lavatório limpos, e lixo com tampa.
+- Toalhas e capas lavadas, separadas das usadas.
+
+Procure a vigilância sanitária da sua cidade, ou o site da prefeitura, e pergunte quais são as exigências pra barbearia. Ter isso por escrito evita surpresa na fiscalização.
+
+### Alvará e licença de funcionamento
+
+Também depende da prefeitura. Algumas atividades de baixo risco foram dispensadas de alvará pela lei federal de liberdade econômica, mas a classificação e o procedimento variam de cidade pra cidade. O caminho seguro é consultar a prefeitura (ou o contador) antes de abrir as portas e guardar o comprovante.
+
+### Mostre que segue as regras
+
+Como vimos em [atendimento](/cursos/atendimento-que-vira-ritual), higiene que o cliente vê vale dobrado: abrir a lâmina na frente dele e manter o esterilizador à vista transforma uma obrigação em argumento de venda.
+
+### Para pensar
+
+- Você sabe quais são as exigências da vigilância sanitária da sua cidade pra barbearia?
+- Como o cliente percebe, hoje, que seu material é esterilizado?"""},
+
+{"id": "salao-parceiro", "titulo": "Barbeiro parceiro: o que diz a lei do salão-parceiro", "conteudo": f"""Muita barbearia trabalha com barbeiros que ficam com uma porcentagem de cada serviço. Desde 2016, a Lei 13.352 colocou esse arranjo dentro da Lei 12.592, com o nome de salão-parceiro e profissional-parceiro ([texto atualizado]({CAMARA_12592})). Feito do jeito certo, é seguro pros dois lados. Feito de qualquer jeito, pode virar processo trabalhista.
+
+### Como funciona
+
+- O salão-parceiro centraliza os pagamentos dos clientes.
+- Ele retém a sua parte (a cota-parte combinada) e também os impostos e contribuições que o profissional deve sobre a parte dele.
+- A parte do salão é a título de aluguel de bens e de serviços de gestão; a parte do barbeiro, de prestação de serviços de beleza.
+- O profissional-parceiro pode ser MEI, micro ou pequeno empresário.
+- Enquanto durar a parceria, não há relação de emprego nem de sociedade entre eles.
+
+### O contrato tem que ter
+
+A lei exige contrato **escrito**, homologado pelo sindicato da categoria (ou, sem sindicato, pelo órgão local do Ministério do Trabalho), com duas testemunhas. E lista cláusulas obrigatórias:
+
+1. O percentual que o salão retém de cada serviço.
+2. A obrigação do salão de reter e recolher os tributos do parceiro.
+3. Condições e prazo de pagamento do parceiro, por tipo de serviço.
+4. Os direitos do parceiro sobre o uso dos materiais e o acesso ao local.
+5. Rescisão por qualquer um dos lados, com aviso de pelo menos 30 dias.
+6. Responsabilidades de cada um com a higiene, o funcionamento e o bom atendimento.
+7. A obrigação do parceiro de manter o cadastro dele em dia.
+
+### Quando vira emprego
+
+A própria lei diz que há vínculo de emprego quando não existe o contrato formalizado desse jeito, ou quando o parceiro faz funções diferentes das do contrato (por exemplo, atender caixa ou limpar a barbearia como tarefa).
+
+Em 2021, o Supremo Tribunal Federal julgou a lei e decidiu que ela é constitucional, com uma ressalva: o contrato de parceria é nulo quando usado pra disfarçar uma relação de emprego que existe de fato (ADI 5625). Ou seja: horário imposto, ordens como de patrão e exclusividade forçada podem pesar mais do que o papel assinado.
+
+### Na prática
+
+- Combine a porcentagem e o resto por escrito, antes de começar.
+- Leve o contrato pra homologar no sindicato.
+- Trate o parceiro como parceiro: ele tem a agenda e os clientes dele.
+- Retenha e recolha os tributos como a lei manda.
+
+*Este é um resumo da lei, não orientação jurídica. Monte o primeiro contrato com um contador ou advogado.*
+
+### Para pensar
+
+- Os barbeiros que trabalham com você hoje têm contrato escrito?
+- Na rotina, a sua relação com eles parece mais de parceria ou de emprego?"""},
+
+{"id": "montar-a-equipe", "titulo": "Montar a equipe: empregado, parceiro ou sozinho", "conteudo": """Mais cadeiras não quer dizer mais lucro. Cada formato de equipe tem custos, riscos e um tipo de relação diferente. Vale escolher olhando o número, não só a vontade de crescer.
+
+### Os três caminhos
+
+**Sozinho.** Menos custo, mais controle, e o teto é a sua agenda. Funciona muito bem como MEI e com agenda online bem organizada.
+
+**Com empregado.** Você paga salário, encargos e férias, e em troca define horário, tarefas e jeito de atender. O MEI pode ter um empregado só, com salário mínimo ou o piso da categoria. Mais que isso, é microempresa.
+
+**Com parceiros.** O barbeiro fica com uma porcentagem de cada serviço, tem a própria agenda e os próprios clientes, e o salão retém a parte dele e os tributos, como vimos na lição anterior. Exige contrato escrito e homologado.
+
+### Compare antes de decidir
+
+| | Empregado | Profissional-parceiro |
+|---|---|---|
+| Quem define o horário | O dono | Combinado no contrato |
+| Como recebe | Salário fixo | Porcentagem dos serviços |
+| Custo num mês fraco | Igual | Cai junto com o movimento |
+| Contrato | Carteira assinada | Contrato escrito, homologado no sindicato |
+| Risco de processo | Baixo, se tudo em dia | Alto se a parceria for só no papel |
+
+### Faça a conta da cadeira
+
+Antes de pôr mais uma cadeira, calcule quanto ela precisa render. Conta de exemplo: se a cadeira nova custa R$ 1.500 por mês (espaço, energia, produtos, parte da reforma) e o corte médio deixa R$ 20 pra barbearia depois de pagar o barbeiro, ela só se paga a partir de 75 cortes por mês. Abaixo disso, a cadeira está dando prejuízo.
+
+### Escolher quem
+
+Técnica se ensina; jeito de tratar o cliente é mais difícil. Na entrevista, além do corte de teste, observe como a pessoa conversa, como cuida da bancada e se chega no horário. Uma semana de experiência paga, combinada por escrito, mostra mais que qualquer currículo.
+
+O curso [Liderar sua equipe](/cursos/liderar-sua-equipe) aprofunda como treinar, motivar e dar retorno pra quem trabalha com você.
+
+### Para pensar
+
+- Quantos cortes por mês a sua próxima cadeira precisaria fazer pra se pagar?
+- O que você mais valoriza num barbeiro, além da técnica?"""},
+
+{"id": "o-ponto", "titulo": "O ponto: aluguel, reforma e contrato", "conteudo": f"""O lugar certo traz cliente sozinho; o contrato errado pode fechar a barbearia, mesmo cheia. Em Lisboa, a barbearia mais antiga de Portugal em atividade fechou em 2023 porque o aluguel subiu de € 1.000 pra € 2.900 ([episódio 5](/revista/lisboa-barbearia-campos)).
+
+### Escolher o ponto
+
+- **Passagem de gente do seu público.** Fique meia hora na calçada, num sábado de manhã e num dia de semana à tarde, contando quem passa.
+- **Visibilidade.** A fachada aparece de longe? Dá pra colocar placa?
+- **Acesso.** Perto de ponto de ônibus, com lugar pra parar o carro ou a moto.
+- **Vizinhos.** Academia, escola e comércio de rua trazem movimento. Outra barbearia na porta ao lado não é proibido, mas exige um diferencial claro.
+
+### O contrato
+
+Leia antes de assinar, de preferência com alguém que entenda:
+
+- **Reajuste:** qual índice corrige o aluguel e quando. Faça a conta de cinco anos, não só do primeiro mês.
+- **Prazo:** contrato curto deixa você sem garantia de ficar depois de investir na reforma.
+- **Reforma:** quem paga e o que acontece com ela se você sair.
+- **Destinação:** o contrato tem que permitir uso comercial pra barbearia.
+
+### O direito de renovar
+
+O artigo 51 da Lei do Inquilinato ([texto atualizado]({CAMARA_8245})) garante a renovação do aluguel comercial quando três coisas se somam: contrato escrito e com prazo determinado, cinco anos ou mais de contrato (somando os seguidos) e três anos sem parar no mesmo ramo. A ação tem prazo: tem que ser proposta entre um ano e seis meses antes do fim do contrato. Por isso, contratos curtos e renovados de boca deixam o inquilino desprotegido.
+
+### Quanto o aluguel pode pesar
+
+Acompanhe o aluguel como porcentagem do faturamento. Conta de exemplo: faturando R$ 15 mil por mês com aluguel de R$ 2.500, ele leva cerca de 17% de tudo que entra. Quando esse número sobe ano após ano, é hora de renegociar antes de atrasar.
+
+### Reforma com cabeça
+
+Gaste primeiro no que o cliente sente: cadeira boa, luz boa, lavatório funcionando, ar fresco, banheiro limpo. Decoração cara pode esperar o caixa crescer.
+
+*Contrato de aluguel é assunto jurídico. Antes de assinar ou renovar, fale com um advogado.*
+
+### Para pensar
+
+- O seu contrato atual dá direito à renovatória? Quando ele vence?
+- Quanto o aluguel representa hoje do seu faturamento?"""},
+
+{"id": "primeiros-30-dias", "titulo": "Os primeiros 30 dias", "conteudo": """A barbearia abriu. O primeiro mês define o ritmo dos próximos: se os primeiros clientes saem satisfeitos e voltam, o boca a boca começa a trabalhar por você.
+
+### Antes de abrir a porta
+
+- **Página do Google pronta,** com endereço, horário, telefone e fotos. Quem passa na frente e procura no celular tem que te achar.
+- **Instagram com pelo menos 9 posts:** fachada, ambiente, você trabalhando e alguns cortes. Perfil vazio não passa confiança.
+- **Agenda organizada,** de preferência online, pra ninguém ficar sem resposta.
+
+O curso [Marketing pra barbearia](/cursos/marketing-pra-barbearia) mostra cada um desses passos, e o [Foto e vídeo com o celular](/cursos/foto-e-video-com-o-celular) ensina a fazer as fotos.
+
+### Avise quem você conhece, um por um
+
+Faça uma lista de 50 pessoas: amigos, ex-clientes, vizinhos, colegas. Mande uma mensagem pessoal pra cada um, com o nome, contando que abriu e convidando pra conhecer. Mensagem individual, não lista de transmissão. Peça também que indiquem um amigo.
+
+### Inauguração simples
+
+Um sábado de portas abertas, com café, música e um desconto de inauguração com data pra acabar, já movimenta. Convide os vizinhos de comércio: eles vão indicar você se te conhecerem.
+
+### Parcerias no bairro
+
+Em Havana, o barbeiro Papito transformou a rua inteira juntando forças com os vizinhos ([episódio 6](/revista/havana-callejon-de-los-peluqueros)). Comece pequeno: um cartão de desconto cruzado com a academia, a lanchonete ou a loja de roupa da esquina.
+
+### Cada cliente novo é uma semente
+
+No primeiro mês, cada atendimento conta em dobro:
+
+- Pergunte o nome e anote.
+- Pergunte como ele conheceu a barbearia, e anote também. Em poucas semanas você sabe o que funciona.
+- Marque o próximo horário antes dele sair.
+- Peça a avaliação no Google pra todos.
+
+### Meça
+
+No fim dos 30 dias, olhe três números: quantos clientes atendeu, quantos voltaram ou já marcaram o retorno e quantas avaliações recebeu. Eles dizem mais sobre o futuro da barbearia do que o faturamento do primeiro mês.
+
+### Para pensar
+
+- Quem são as 50 pessoas da sua lista?
+- Qual vizinho de comércio seria o melhor parceiro pra você?"""},
+]
+
+
 for c in [
     curso("atendimento-que-vira-ritual", "Atendimento que vira ritual",
           "Do \"bom dia\" ao próximo horário marcado: chegada, conversa antes do corte, etapas que o cliente lembra, higiene, saída e pós-atendimento, com exemplos de barbearias do mundo.",
@@ -466,6 +709,12 @@ for c in [
           [{"id": "foto", "titulo": "Foto que vende", "licoes": FV[0:2]},
            {"id": "video", "titulo": "Vídeo curto", "licoes": FV[2:4]},
            {"id": "usar", "titulo": "Usar as fotos", "licoes": FV[4:6]}]),
+    curso("abrir-e-organizar-sua-barbearia", "Abrir e organizar sua barbearia",
+          "MEI ou microempresa, a lei da profissão e as regras de higiene, barbeiro parceiro (Lei do Salão-Parceiro), montar a equipe, escolher o ponto e o contrato, e os primeiros 30 dias.",
+          "Gestão", ["barbearia", "abrir negócio", "MEI", "salão-parceiro", "aluguel"],
+          [{"id": "formalizar", "titulo": "Formalizar", "licoes": AB[0:2]},
+           {"id": "equipe", "titulo": "Equipe", "licoes": AB[2:4]},
+           {"id": "ponto", "titulo": "Ponto e primeiros clientes", "licoes": AB[4:6]}]),
 ]:
     json.dump(c, open(os.path.join(DESTINO, c["slug"] + ".json"), "w"), ensure_ascii=False, indent=2)
     print("ok", c["slug"], sum(len(m["licoes"]) for m in c["modulos"]), "lições",
