@@ -142,6 +142,8 @@ export interface Servico {
   id: number; nome: string; duracaoMin: number; precoCentavos: number; ativo: number;
   /** O que o serviço inclui, em poucas palavras ("toalha quente, navalha e massagem no fim"). */
   descricao?: string;
+  /** Atendimento na casa do cliente: o agendamento pede o endereço. */
+  emDomicilio: boolean;
 }
 export interface Agendamento {
   id: number;
@@ -160,6 +162,8 @@ export interface Agendamento {
   avaliacaoEm?: string;
   /** Foto do portfólio que o cliente escolheu ao marcar ("quero esse corte"). */
   referenciaFoto?: string;
+  /** Endereço do cliente, só em serviço em domicílio (só o barbeiro vê). */
+  enderecoCliente?: string;
 }
 /** O que o cliente vê na página do próprio horário (link secreto). */
 export interface HorarioCliente extends Agendamento {
@@ -239,12 +243,12 @@ function nomeValido(nome: string, oque: string): string {
   return n;
 }
 
-function servicoValido(s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }) {
+function servicoValido(s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string; emDomicilio?: boolean }) {
   if (!(s.duracaoMin >= 5 && s.duracaoMin <= 480)) throw new ErroAgenda("Duração entre 5 e 480 minutos.");
   if (!(s.precoCentavos >= 0 && s.precoCentavos <= 10_000_00)) throw new ErroAgenda("Preço inválido.");
   const descricao = s.descricao?.trim().replace(/\s+/g, " ") || null;
   if (descricao && descricao.length > 140) throw new ErroAgenda("A descrição do serviço tem até 140 letras.");
-  return { nome: nomeValido(s.nome, "o nome do serviço"), duracaoMin: Math.round(s.duracaoMin), precoCentavos: Math.round(s.precoCentavos), descricao };
+  return { nome: nomeValido(s.nome, "o nome do serviço"), duracaoMin: Math.round(s.duracaoMin), precoCentavos: Math.round(s.precoCentavos), descricao, emDomicilio: s.emDomicilio ? 1 : 0 };
 }
 
 export class BancoAgenda {
@@ -315,6 +319,8 @@ export class BancoAgenda {
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
     this.garantirColuna("servicos", "descricao", "TEXT");
+    this.garantirColuna("servicos", "em_domicilio", "INTEGER NOT NULL DEFAULT 0");
+    this.garantirColuna("agendamentos", "endereco_cliente", "TEXT");
     this.garantirColuna("barbearias", "retorno_dias", `INTEGER NOT NULL DEFAULT ${RETORNO_PADRAO_DIAS}`);
     for (const c of ["lembrete_em", "avaliacao_em", "referencia_foto"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
@@ -572,22 +578,22 @@ export class BancoAgenda {
   }
 
   servicos(barbeariaId: number, soAtivos = false): Servico[] {
-    return (this.db.prepare(`SELECT id, nome, duracao_min AS duracaoMin, preco_centavos AS precoCentavos, ativo, descricao
-      FROM servicos WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`).all(barbeariaId) as unknown as Servico[])
-      .map((x) => ({ ...x, descricao: x.descricao ?? undefined }));
+    return (this.db.prepare(`SELECT id, nome, duracao_min AS duracaoMin, preco_centavos AS precoCentavos, ativo, descricao, em_domicilio AS emDomicilio
+      FROM servicos WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`).all(barbeariaId) as unknown as (Omit<Servico, "emDomicilio"> & { emDomicilio: number })[])
+      .map((x) => ({ ...x, descricao: x.descricao ?? undefined, emDomicilio: x.emDomicilio === 1 }));
   }
 
-  adicionarServico(barbeariaId: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }): void {
+  adicionarServico(barbeariaId: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string; emDomicilio?: boolean }): void {
     const v = servicoValido(s);
-    this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos, descricao) VALUES (?, ?, ?, ?, ?)")
-      .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos, v.descricao);
+    this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos, descricao, em_domicilio) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos, v.descricao, v.emDomicilio);
   }
 
   /** Muda nome, duração e preço. Horários já marcados continuam como foram marcados. */
-  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string }): void {
+  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string; emDomicilio?: boolean }): void {
     const v = servicoValido(s);
-    this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ?, descricao = ? WHERE id = ? AND barbearia_id = ?")
-      .run(v.nome, v.duracaoMin, v.precoCentavos, v.descricao, id, barbeariaId);
+    this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ?, descricao = ?, em_domicilio = ? WHERE id = ? AND barbearia_id = ?")
+      .run(v.nome, v.duracaoMin, v.precoCentavos, v.descricao, v.emDomicilio, id, barbeariaId);
   }
 
   // ---------- funcionamento: preços, intervalo, atendimento, fila, fechar hoje ----------
@@ -652,12 +658,13 @@ export class BancoAgenda {
   agendamentosDoDia(barbeariaId: number, data: Data, profissionalId?: number): Agendamento[] {
     const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
-        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.referencia_foto AS referenciaFoto
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.referencia_foto AS referenciaFoto,
+        a.endereco_cliente AS enderecoCliente
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.inicio LIKE ? ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
-    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined }));
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
   }
 
   /** `ignorarId`: ao remarcar, o horário antigo do próprio cliente não conta como ocupado. */
@@ -694,6 +701,8 @@ export class BancoAgenda {
     clienteNome: string; clienteTelefone: string; agora?: Date; peloBarbeiro?: boolean;
     /** Foto do portfólio da própria barbearia (categorias de trabalho, nunca equipe/ambiente/produtos). */
     referenciaFoto?: string;
+    /** Obrigatório quando o serviço é em domicílio. */
+    enderecoCliente?: string;
   }): number {
     const nome = dados.clienteNome.trim().replace(/\s+/g, " ");
     if (nome.length < 2) throw new ErroAgenda("Informe seu nome.");
@@ -719,6 +728,8 @@ export class BancoAgenda {
     if (!prof || !servico) throw new ErroAgenda("Serviço ou profissional indisponível.");
     const referencia = dados.referenciaFoto ? this.fotoDaBarbearia(dados.barbeariaId, dados.referenciaFoto) : undefined;
     if (dados.referenciaFoto && (!referencia || !CATEGORIAS_REFERENCIA.includes(referencia.categoria))) throw new ErroAgenda("Foto de referência inválida.");
+    const endereco = servico.emDomicilio ? dados.enderecoCliente?.trim().replace(/\s+/g, " ") ?? "" : "";
+    if (servico.emDomicilio && (endereco.length < 8 || endereco.length > 200)) throw new ErroAgenda("Informe o endereço completo (rua, número e bairro).");
 
     this.db.exec("BEGIN IMMEDIATE");
     try {
@@ -726,10 +737,10 @@ export class BancoAgenda {
       if (!livres.includes(dados.hora)) throw new ErroAgenda("Esse horário acabou de ser ocupado. Escolha outro.");
       const fim = deMinutos(paraMinutos(dados.hora) + servico.duracaoMin);
       const r = this.db.prepare(`INSERT INTO agendamentos
-          (barbearia_id, servico_id, profissional_id, cliente_nome, cliente_telefone, inicio, fim, criado_em, referencia_foto)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+          (barbearia_id, servico_id, profissional_id, cliente_nome, cliente_telefone, inicio, fim, criado_em, referencia_foto, endereco_cliente)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(dados.barbeariaId, servico.id, prof.id, nome.slice(0, 80), dados.clienteTelefone,
-          `${dados.data}T${dados.hora}`, `${dados.data}T${fim}`, new Date().toISOString(), referencia?.arquivo ?? null);
+          `${dados.data}T${dados.hora}`, `${dados.data}T${fim}`, new Date().toISOString(), referencia?.arquivo ?? null, endereco || null);
       this.db.exec("COMMIT");
       return Number(r.lastInsertRowid);
     } catch (e) {
@@ -739,10 +750,12 @@ export class BancoAgenda {
   }
 
   agendamento(barbeariaId: number, id: number): Agendamento | undefined {
-    return this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
-        p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status
+    const a = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, a.profissional_id AS profissionalId,
+        p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status,
+        a.endereco_cliente AS enderecoCliente
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.id = ?`).get(barbeariaId, id) as Agendamento | undefined;
+    return a && { ...a, enderecoCliente: a.enderecoCliente ?? undefined };
   }
 
   cancelar(barbeariaId: number, id: number): void {

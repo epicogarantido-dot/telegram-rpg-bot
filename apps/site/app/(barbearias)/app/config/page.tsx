@@ -36,6 +36,7 @@ async function novoServico(form: FormData) {
     duracaoMin: Number(form.get("duracao")),
     precoCentavos: lerPreco(String(form.get("preco") ?? "")),
     descricao: String(form.get("descricao") ?? ""),
+    emDomicilio: form.get("domicilio") === "on",
   }));
 }
 
@@ -52,6 +53,7 @@ async function editarServico(form: FormData) {
     duracaoMin: Number(form.get("duracao")),
     precoCentavos: lerPreco(String(form.get("preco") ?? "")),
     descricao: String(form.get("descricao") ?? ""),
+    emDomicilio: form.get("domicilio") === "on",
   }));
 }
 
@@ -194,6 +196,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
           <label>Minutos<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required /></label>
           <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
           <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
+          <label className="marcar config-servico-domicilio"><input type="checkbox" name="domicilio" defaultChecked={s.emDomicilio} /> Vou até o cliente (pede o endereço)</label>
           <div className="acoes">
             <button className="botao-sec">Salvar</button>
             <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>
@@ -206,6 +209,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <input name="duracao" type="number" min={5} max={480} step={5} placeholder="Minutos" required />
         <input name="preco" placeholder="Preço (ex.: 45,00)" required inputMode="decimal" />
         <input name="descricao" placeholder="O que inclui (opcional)" maxLength={140} />
+        <label className="marcar"><input type="checkbox" name="domicilio" /> Vou até o cliente</label>
         <button>Adicionar</button>
       </form>
 

@@ -714,3 +714,4 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .data-proxima { margin: 16px 0; padding: 12px 16px; border-left: 3px solid var(--destaque); background: var(--cartao); border-radius: 0 var(--raio-p) var(--raio-p) 0; }
 .data-proxima p { margin: 0; }
 .data-proxima p + p { margin-top: 4px; }
+.config-servico .config-servico-domicilio { grid-column: 1 / -1; grid-row: 3; }

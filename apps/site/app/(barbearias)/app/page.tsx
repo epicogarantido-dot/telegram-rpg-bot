@@ -315,6 +315,14 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             {a.status === "faltou" && <span className="etiqueta" style={{ marginLeft: 8 }}>faltou</span>}
             <br />
             {a.clienteNome}
+            {a.enderecoCliente && (
+              <>
+                <br />
+                <a className="pequeno" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.enderecoCliente)}`} target="_blank" rel="noopener noreferrer">
+                  Em domicílio: {a.enderecoCliente}
+                </a>
+              </>
+            )}
             {a.referenciaFoto && (
               <a className="referencia-pedida" href={urlFoto(a.referenciaFoto)} target="_blank" rel="noopener noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

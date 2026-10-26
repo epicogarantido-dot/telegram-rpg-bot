@@ -759,3 +759,4 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-referencia-nenhuma span { padding: 6px; text-align: center; font-size: 13px; color: var(--suave); }
 .b-referencia:has(input:checked) { border-color: var(--destaque); box-shadow: 0 0 0 2px var(--destaque); }
 .b-referencia:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
+.b-servico-domicilio { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 12px; font-weight: 600; border: 1px solid currentColor; border-radius: 999px; vertical-align: middle; }

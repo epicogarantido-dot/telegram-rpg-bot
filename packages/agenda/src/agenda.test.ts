@@ -841,3 +841,20 @@ describe("divisão do mês por profissional", () => {
       parteProfissionalCentavos: Math.round(2 * s!.precoCentavos * 0.6), parteBarbeariaCentavos: 2 * s!.precoCentavos - Math.round(2 * s!.precoCentavos * 0.6) });
   });
 });
+
+describe("atendimento em domicílio", () => {
+  it("serviço em domicílio exige o endereço do cliente", () => {
+    const antes = new Date("2026-10-01T12:00:00Z");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    b.adicionarServico(a.id, { nome: "Corte em casa", duracaoMin: 60, precoCentavos: 9000, emDomicilio: true });
+    const casa = b.servicos(a.id, true).find((s) => s.nome === "Corte em casa")!;
+    expect(casa.emDomicilio).toBe(true);
+    const [p] = b.profissionais(a.id, true);
+    const m = (enderecoCliente?: string) => b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: casa.id, data: "2026-10-20", hora: "09:00", clienteNome: "Dona Maria", clienteTelefone: "5519998765432", agora: antes, enderecoCliente });
+    expect(() => m()).toThrow(/endereço/);
+    const id = m("Rua das Flores, 123 - Centro");
+    expect(b.agendamento(a.id, id)!.enderecoCliente).toBe("Rua das Flores, 123 - Centro");
+    expect(b.servicos(a.id, true).find((s) => s.nome !== "Corte em casa")!.emDomicilio).toBe(false);
+  });
+});

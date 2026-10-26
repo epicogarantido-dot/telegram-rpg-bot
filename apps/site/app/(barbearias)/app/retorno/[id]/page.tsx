@@ -28,7 +28,7 @@ async function marcar(form: FormData) {
     novo = banco.agendar({
       barbeariaId: barbearia.id, profissionalId: Number(form.get("profissional")), servicoId: origem.servicoId,
       data, hora: String(form.get("hora")), clienteNome: origem.clienteNome, clienteTelefone: origem.clienteTelefone,
-      peloBarbeiro: true,
+      peloBarbeiro: true, enderecoCliente: origem.enderecoCliente,
     });
   } catch (e) {
     redirect(`/app/retorno/${origem.id}?data=${encodeURIComponent(data)}&erro=${encodeURIComponent(mensagemDeErro(e))}`);

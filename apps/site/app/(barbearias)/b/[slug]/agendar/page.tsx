@@ -48,6 +48,7 @@ async function confirmar(form: FormData) {
       barbeariaId: b.id, profissionalId: Number(campos.com), servicoId: Number(campos.servico),
       data: campos.data, hora: campos.hora, clienteNome: String(form.get("nome") ?? ""), clienteTelefone: telefone ?? "",
       peloBarbeiro, referenciaFoto: String(form.get("referencia") ?? "") || undefined,
+      enderecoCliente: String(form.get("endereco") ?? "") || undefined,
     });
     protecao?.registrar();
     // Link secreto do cliente (ver, cancelar, remarcar). Só o hash fica no banco.
@@ -147,7 +148,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           {servicos.map((s) => (
             <li key={s.id}>
               <Link href={link({ servico: String(s.id), data: undefined })}>
-                <span className="b-lista-nome">{s.nome}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
+                <span className="b-lista-nome">{s.nome}{s.emDomicilio && <small className="b-servico-domicilio">Vou até você</small>}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
                 <span className="b-lista-info">{s.duracaoMin} min</span>
                 {b.mostrarPrecos && <span className="b-lista-preco">{reais(s.precoCentavos)}</span>}
                 <ChevronRight size={18} aria-hidden />
@@ -219,6 +220,13 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <label htmlFor="telefone">Seu WhatsApp com DDD</label>
           <input id="telefone" name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" aria-describedby="telefone-dica" />
           <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário.</small>
+          {servico.emDomicilio && (
+            <>
+              <label htmlFor="endereco">Endereço do atendimento</label>
+              <input id="endereco" name="endereco" required minLength={8} maxLength={200} autoComplete="street-address" placeholder="Rua, número, bairro e complemento" aria-describedby="endereco-dica" />
+              <small id="endereco-dica" className="b-dica">O barbeiro vai até você. Só ele vê o endereço.</small>
+            </>
+          )}
           {referencias.length > 0 && (
             <fieldset className="b-referencias">
               <legend>Quer mostrar o corte? <small>(opcional)</small></legend>
