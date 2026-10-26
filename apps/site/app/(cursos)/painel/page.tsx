@@ -8,6 +8,7 @@ import {
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { estadoDoBot, type EstadoBot } from "@/lib/bot";
 
 export const metadata = { title: "Painel de leads", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -215,6 +216,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
     <>
       <p><strong>Leads</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
+      <EstadoWhatsapp estado={estadoDoBot()} />
       <p>
         Primeiras mensagens hoje: <strong>{hoje}/{config.limiteDiario}</strong>
         {!podeContatar && " — limite do dia atingido. Volte amanhã: número que manda muito pra quem não responde é limitado ou banido."}
@@ -281,4 +283,24 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       </div>
     </>
   );
+}
+
+/** Bot de WhatsApp que roda junto com o site: conectado, ou o código pra parear no celular. */
+function EstadoWhatsapp({ estado }: { estado: EstadoBot }) {
+  if (estado.estado === "desligado") {
+    return <p className="cartao"><strong>Bot do WhatsApp desligado.</strong> Pra ligar, coloque BOT_NUMERO (o chip do bot) nas variáveis do app e reinicie.</p>;
+  }
+  const quando = new Date(estado.em).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
+  if (estado.estado === "conectado") return <p className="cartao"><strong>WhatsApp do bot: conectado ✓</strong> <small>desde {quando}</small></p>;
+  if (estado.estado === "pareamento" && estado.codigo) {
+    return (
+      <div className="cartao">
+        <p><strong>Conectar o WhatsApp do bot:</strong> no celular do chip, abra WhatsApp → Aparelhos conectados → Conectar aparelho → Conectar com número de telefone, e digite:</p>
+        <p style={{ fontSize: "1.8rem", letterSpacing: "0.15em", fontVariantNumeric: "tabular-nums" }}><strong>{estado.codigo}</strong></p>
+        <p><small>Código de {quando}. Venceu? Recarregue esta página daqui a pouco: o bot pede outro sozinho. <a href="/painel">Atualizar</a></small></p>
+      </div>
+    );
+  }
+  const texto = { conectando: "conectando…", caiu: "a conexão caiu, tentando de novo", desconectado: "desconectado pelo celular; vai mostrar um código novo", pareamento: "pedindo o código…" }[estado.estado];
+  return <p className="cartao"><strong>WhatsApp do bot: {texto}</strong> <small>({quando}) · <a href="/painel">Atualizar</a></small></p>;
 }

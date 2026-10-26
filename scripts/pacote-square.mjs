@@ -84,6 +84,8 @@ if (numeroBot) {
   if ((process.env.BOT_SEGREDO ?? "").length < 24) process.env.BOT_SEGREDO = require("node:crypto").randomBytes(32).toString("base64url");
   const pastaWhats = path.join(__dirname, "data/privado/whatsapp");
   fs.mkdirSync(pastaWhats, { recursive: true });
+  // O /painel lê o estado da conexão daqui.
+  process.env.BOT_PASTA = pastaWhats;
   let espera = 5_000;
   let bot;
   const ligarBot = () => {

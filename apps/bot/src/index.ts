@@ -97,8 +97,23 @@ async function pedirLinkDeEntrada(telefone: string, nome: string | undefined): P
 }
 console.log(`📚 ${ctx.cursos.length} cursos carregados`);
 
+/**
+ * Estado da conexão num arquivo ao lado da sessão (sem o código de dentro dela): o
+ * /painel do site mostra "conectado" ou o código de pareamento, sem precisar abrir os logs.
+ */
+const ARQUIVO_ESTADO = join(PASTA_SESSAO, "..", "estado.json");
+function gravarEstado(estado: "conectando" | "pareamento" | "conectado" | "caiu" | "desconectado", extra: Record<string, string> = {}): void {
+  try {
+    mkdirSync(join(ARQUIVO_ESTADO, ".."), { recursive: true });
+    writeFileSync(ARQUIVO_ESTADO, JSON.stringify({ estado, em: new Date().toISOString(), ...extra }));
+  } catch (e) {
+    console.warn("Não deu pra gravar o estado do bot:", (e as Error).message);
+  }
+}
+
 let tentativas = 0;
 async function conectar(): Promise<void> {
+  gravarEstado("conectando");
   const { state, saveCreds } = await useMultiFileAuthState(PASTA_SESSAO);
   const { version } = await fetchLatestBaileysVersion();
   const sock = makeWASocket({
@@ -117,6 +132,7 @@ async function conectar(): Promise<void> {
       try {
         const codigo = await sock.requestPairingCode(numeroPareamento);
         console.log(`🔑 Código de pareamento: ${codigo} (WhatsApp > Aparelhos conectados > Conectar com número de telefone)`);
+        gravarEstado("pareamento", { codigo });
       } catch (e) {
         console.warn("Não deu pra pedir o código de pareamento agora:", (e as Error).message);
       }
@@ -131,6 +147,7 @@ async function conectar(): Promise<void> {
     if (connection === "open") {
       tentativas = 0;
       console.log("✅ Conectado ao WhatsApp");
+      gravarEstado("conectado");
     }
     if (connection === "close") {
       const status = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
@@ -139,11 +156,13 @@ async function conectar(): Promise<void> {
         // vez que ligar aparece um código novo de pareamento.
         console.error("🚪 Sessão encerrada no celular. Apagando a sessão salva: ao ligar de novo, pareie outra vez.");
         rmSync(PASTA_SESSAO, { recursive: true, force: true });
+        gravarEstado("desconectado");
         process.exit(1);
       }
       // Espera cada vez mais (até 1 min) pra não martelar o WhatsApp quando a rede cai.
       const espera = Math.min(60_000, 2_000 * 2 ** Math.min(tentativas++, 5));
       console.log(`🔌 Conexão caiu (${status ?? "?"}); reconectando em ${espera / 1000} s...`);
+      gravarEstado("caiu", { motivo: String(status ?? "?") });
       setTimeout(() => void conectar(), espera);
     }
   });
