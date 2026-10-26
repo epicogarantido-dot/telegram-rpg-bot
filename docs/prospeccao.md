@@ -18,8 +18,10 @@ dá bloqueio e expõe o projeto. A busca assistida é uma pessoa navegando; o pa
 ## Receita: como funciona
 
 - Atividade **9602-5/01** (cabeleireiros, manicure e pedicure), principal ou secundária, empresa
-  **ativa**. "barb" no nome fantasia ou na razão social confirma barbearia; sem isso o lead
-  ganha o aviso "pode ser salão ou manicure".
+  **ativa**. Essa atividade junta três públicos, e o nome separa em nichos próprios no banco:
+  **barbearia** ("barb"), **manicure** (unha, nail, esmalteria…), **salao** (salão, cabelo, beleza,
+  studio…) e **beleza_indefinido** (MEI só com o nome da pessoa). Salão e manicure ficam
+  guardados pra frentes futuras. Base antiga: `npm run prospectar -- reclassificar`.
 - **Telefone do contador:** número repetido em 3+ empresas da mesma cidade. O painel avisa e
   prefere o celular do dono quando existe.
 - Celular antigo cadastrado com 8 dígitos ganha o 9 na frente. Fixo é avisado (raramente tem WhatsApp).
@@ -34,7 +36,7 @@ dá bloqueio e expõe o projeto. A busca assistida é uma pessoa navegando; o pa
 - **Brasil inteiro:** `npm run prospectar -- receita-brasil barbearia` (uma passada, minutos; os
   arquivos vêm em 8 pedaços paralelos, 2 por vez, e são apagados depois de lidos). Telefone de
   contador aqui = repetido em 3+ barbearias ou e-mail de escritório. Depois:
-  `npm run prospectar -- exportar barbearias-RS.csv --uf RS --confirmados` gera a planilha
+  `npm run prospectar -- exportar barbearias-RS.csv --uf RS --nicho barbearia` gera a planilha
   (abre no Excel/Google Planilhas). Quem pediu SAIR nunca sai na planilha.
 - Cidade é buscada sem acento ("São Paulo" = "SAO PAULO"); o painel filtra por cidade e UF.
 

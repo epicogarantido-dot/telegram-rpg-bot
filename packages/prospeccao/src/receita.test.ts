@@ -92,3 +92,29 @@ describe("importação no banco de leads", () => {
     expect(b.salvarManual({ nome: "Outra", cidade: "Alegrete", nicho: "barbearia", instagram: "outra.barber" }).novo).toBe(true);
   });
 });
+
+describe("barbearia, salão e manicure separados", () => {
+  it("classifica pelo nome", async () => {
+    const { classificarBeleza } = await import("./receita.ts");
+    expect(classificarBeleza("BARBEARIA DO ZE")).toBe("barbearia");
+    expect(classificarBeleza("Studio Barber Shop")).toBe("barbearia");
+    expect(classificarBeleza("ESMALTERIA DA BIA")).toBe("manicure");
+    expect(classificarBeleza("SALAO BELEZA PURA")).toBe("salao");
+    expect(classificarBeleza("MARIA DA SILVA")).toBe("beleza_indefinido");
+  });
+
+  it("importa cada um no seu nicho e reclassifica base antiga", () => {
+    const b = new BancoProspeccao(":memory:");
+    const achado = (fantasia: string, cnpj: string) => ({
+      ...estabelecimentoDaLinha(lerLinhaCsv(linha({ 0: cnpj, 4: fantasia })))!,
+      cidade: "Alegrete", telefone: undefined, celular: false, telefoneDeContador: false, nomeConfirma: false,
+    });
+    b.salvarAchados([achado("BARBEARIA X", "11111111"), achado("ESMALTERIA Y", "22222222"), achado("", "33333333")], "barbearia");
+    expect(b.listar({ nicho: "barbearia" }).map((l) => l.nome)).toEqual(["BARBEARIA X"]);
+    expect(b.listar({ nicho: "manicure" })).toHaveLength(1);
+    expect(b.listar({ nicho: "beleza_indefinido" })[0]!.avisos).toContain("nome não diz");
+    // base antiga: tudo como barbearia
+    b.db.exec("UPDATE leads SET nicho = 'barbearia'");
+    expect(b.reclassificarBeleza()).toEqual({ barbearia: 1, manicure: 1, beleza_indefinido: 1 });
+  });
+});

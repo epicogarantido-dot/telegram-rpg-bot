@@ -13,7 +13,8 @@ const USO = `Uso:
       ex.: receita barbearia Alegrete RS   (dados abertos do CNPJ, grátis; ~15-20 min por passada)
   npm run prospectar -- receita-brasil <nicho>
       todas as do Brasil numa passada (~20-40 min); depois: exportar
-  npm run prospectar -- exportar <arquivo.csv> [--uf RS] [--confirmados]
+  npm run prospectar -- exportar <arquivo.csv> [--uf RS] [--nicho barbearia|salao|manicure|beleza_indefinido]
+  npm run prospectar -- reclassificar   (separa barbearia, salão e manicure em bases antigas)
   npm run prospectar -- listar [status]
   npm run prospectar -- marcar <place_id> <${STATUS.join("|")}>
   npm run prospectar -- resumo`;
@@ -81,8 +82,13 @@ async function main() {
       const [arquivo] = args;
       if (!arquivo) return sair(USO);
       const i = args.indexOf("--uf");
-      const n = exportarCsv(banco, arquivo, { uf: i >= 0 ? args[i + 1] : undefined, soConfirmados: args.includes("--confirmados") });
+      const j = args.indexOf("--nicho");
+      const n = exportarCsv(banco, arquivo, { uf: i >= 0 ? args[i + 1] : undefined, nicho: j >= 0 ? args[j + 1] : undefined });
       console.log(`💾 ${n} leads em ${arquivo}`);
+      return;
+    }
+    case "reclassificar": {
+      console.table(banco.reclassificarBeleza());
       return;
     }
     case "listar": {

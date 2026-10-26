@@ -107,6 +107,21 @@ export function estabelecimentoDaLinha(campos: string[]): EstabelecimentoReceita
   };
 }
 
+/**
+ * A atividade 9602-5/01 junta barbearia, salão e manicure. O nome separa: cada grupo vira
+ * um nicho próprio no banco (os de salão e manicure ficam guardados pra usar depois).
+ * MEI sem nome de negócio (só o nome da pessoa) fica como "beleza_indefinido".
+ */
+export const SUBNICHOS_BELEZA: [nicho: string, nome: RegExp][] = [
+  ["barbearia", /barb/i],
+  ["manicure", /unha|nail|manicur|pedicur|esmalt|podolog/i],
+  ["salao", /sal[aã]o|cabel|hair|beleza|beauty|studio|est[uú]dio|escova|tran[cç]|mega ?hair|visagis|lash|c[ií]lio|sobrancel|maquia|make/i],
+];
+
+export function classificarBeleza(nome: string): string {
+  return SUBNICHOS_BELEZA.find(([, r]) => r.test(nome))?.[0] ?? "beleza_indefinido";
+}
+
 /** A empresa é do nicho? Atividade principal ou secundária. */
 export function ehDoNicho(e: EstabelecimentoReceita, nicho: string): boolean {
   const n = NICHOS_RECEITA[nicho];

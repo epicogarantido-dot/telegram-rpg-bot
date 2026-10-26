@@ -2,7 +2,7 @@ import { mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Estabelecimento } from "./google-places.ts";
-import { nomeDeExibicao, type AchadoBrasil, type ResultadoReceita } from "./receita.ts";
+import { classificarBeleza, nomeDeExibicao, type AchadoBrasil, type ResultadoReceita } from "./receita.ts";
 
 /**
  * Banco local (SQLite) com os leads. Fica em data/privado/, que está no
@@ -118,7 +118,7 @@ export class BancoProspeccao {
       INSERT INTO leads (place_id, nicho, cidade, uf, nome, endereco, telefone, status, criado_em, fonte, cnpj, email, avisos, abertura, cidade_chave)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'receita', ?, ?, ?, ?, ?)
       ON CONFLICT(place_id) DO UPDATE SET
-        nome = excluded.nome, endereco = excluded.endereco, email = excluded.email, avisos = excluded.avisos, uf = excluded.uf,
+        nicho = excluded.nicho, nome = excluded.nome, endereco = excluded.endereco, email = excluded.email, avisos = excluded.avisos, uf = excluded.uf,
         telefone = COALESCE(leads.telefone, excluded.telefone)`);
     const existe = this.db.prepare("SELECT 1 FROM leads WHERE place_id = ?");
     const agora = new Date().toISOString();
@@ -128,15 +128,18 @@ export class BancoProspeccao {
       for (const e of achados) {
         const id = `cnpj:${e.cnpj}`;
         if (!existe.get(id)) novos++;
+        const nome = nomeDeExibicao(e);
+        // Barbearia, salão e manicure dividem a mesma atividade na Receita: o nome separa.
+        const nichoDoLead = nicho === "barbearia" ? classificarBeleza(`${e.nomeFantasia ?? ""} ${e.razaoSocial ?? ""}`) : nicho;
         const avisos = [
           !e.telefone && "sem telefone",
           e.telefone && !e.celular && "telefone fixo (talvez sem WhatsApp)",
           e.telefoneDeContador && "telefone parece do contador",
-          !e.nomeConfirma && "nome não diz barbearia: pode ser salão ou manicure",
+          nichoDoLead === "beleza_indefinido" && "nome não diz se é barbearia, salão ou manicure",
         ].filter(Boolean).join("; ");
         const status: Status = e.telefone && this.estaBloqueado(e.telefone) ? "nao_contatar" : "novo";
         const endereco = [e.endereco, e.bairro].filter(Boolean).join(" - ") || null;
-        ins.run(id, nicho, e.cidade, e.uf || null, nomeDeExibicao(e), endereco, e.telefone ?? null, status, agora, e.cnpj, e.email ?? null, avisos || null, e.abertura ?? null, chaveCidade(e.cidade));
+        ins.run(id, nichoDoLead, e.cidade, e.uf || null, nome, endereco, e.telefone ?? null, status, agora, e.cnpj, e.email ?? null, avisos || null, e.abertura ?? null, chaveCidade(e.cidade));
       }
       this.db.exec("COMMIT");
     } catch (erro) {
@@ -144,6 +147,32 @@ export class BancoProspeccao {
       throw erro;
     }
     return { novos, total: achados.length };
+  }
+
+  /**
+   * Separa barbearia, salão e manicure em leads importados antes da separação (pelo nome
+   * gravado). Não mexe em status nem no trabalho de quem contatou.
+   */
+  reclassificarBeleza(): Record<string, number> {
+    const contagem: Record<string, number> = {};
+    const atualizar = this.db.prepare("UPDATE leads SET nicho = ?, avisos = ? WHERE place_id = ?");
+    const linhas = this.db.prepare(`SELECT place_id AS id, nome, avisos FROM leads
+      WHERE fonte = 'receita' AND nicho IN ('barbearia', 'salao', 'manicure', 'beleza_indefinido')`).all() as { id: string; nome: string; avisos: string | null }[];
+    this.db.exec("BEGIN");
+    try {
+      for (const l of linhas) {
+        const nicho = classificarBeleza(l.nome);
+        const avisos = (l.avisos ?? "").split("; ").filter((a) => a && !a.startsWith("nome não diz"))
+          .concat(nicho === "beleza_indefinido" ? ["nome não diz se é barbearia, salão ou manicure"] : []).join("; ");
+        atualizar.run(nicho, avisos || null, l.id);
+        contagem[nicho] = (contagem[nicho] ?? 0) + 1;
+      }
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+    return contagem;
   }
 
   /** Lead achado à mão (Google, Instagram, Facebook) ou completado: junta pelo telefone ou pelo @. */
