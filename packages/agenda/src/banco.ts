@@ -128,7 +128,7 @@ export function planoDoAmbiente(): Plano {
     valorCentavos: Math.round(Number(process.env.PLANO_VALOR ?? "50") * 100),
     adesaoCentavos: Math.round(Number(process.env.PLANO_ADESAO ?? "100") * 100),
     dias: Number(process.env.PLANO_DIAS ?? 30),
-    testeDias: Number(process.env.PLANO_TESTE_DIAS ?? 7),
+    testeDias: Number(process.env.PLANO_TESTE_DIAS ?? 0),
   };
 }
 

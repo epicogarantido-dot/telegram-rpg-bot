@@ -9,7 +9,7 @@ import { reais } from "@/lib/agenda";
 
 export const metadata = {
   title: "Site e agenda online para barbearias",
-  description: "Seu cliente vê seus cortes, vê os horários livres e marca sozinho. Seis estilos de site, avisos no celular, ordem de chegada. Teste grátis, pagamento por Pix.",
+  description: "Seu cliente vê seus cortes, vê os horários livres e marca sozinho. Seis estilos de site, avisos no celular, ordem de chegada. Pagamento por Pix, sem cartão.",
 };
 
 async function inscrever(form: FormData) {
@@ -64,7 +64,7 @@ const RECURSOS = [
 
 const PERGUNTAS = [
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
-  ["Precisa de cartão de crédito?", "Não. Você testa grátis e, se gostar, paga por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
+  ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
   ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Quem marca e some você pode bloquear."],
   ["Posso trocar o estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem agendamentos."],
@@ -88,11 +88,11 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             &quot;tem horário?&quot; no meio do corte.
           </p>
           <div className="acoes">
-            <Link href="/app/cadastro" className="botao">Criar minha agenda grátis <ArrowRight size={18} aria-hidden /></Link>
+            <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
             <a href="#estilos" className="botao-sec">Ver os estilos</a>
           </div>
           <p className="venda-preco-curto">
-            {plano.testeDias > 0 && `${plano.testeDias} dias grátis. `}Contratação de {reais(adesao)} e depois {reais(plano.valorCentavos)} por mês, no Pix. Sem cartão, sem fidelidade.
+            {plano.testeDias > 0 && `${plano.testeDias} dias pra testar. `}Contratação de {reais(adesao)} e depois {reais(plano.valorCentavos)} por mês, no Pix. Sem cartão, sem fidelidade.
           </p>
         </div>
         <figure className="venda-celular" aria-hidden="true">
@@ -136,14 +136,14 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
           </div>
           <ul>
-            {plano.testeDias > 0 && <li>{plano.testeDias} dias grátis pra testar antes de contratar.</li>}
+            {plano.testeDias > 0 && <li>{plano.testeDias} dias pra testar antes de contratar.</li>}
             <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
             <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
           </ul>
         </div>
         <div className="venda-plano-acao">
-          <Link href="/app/cadastro" className="botao">Criar minha agenda grátis <ArrowRight size={18} aria-hidden /></Link>
+          <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
           <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva uns 5 minutos, pelo celular.</p>
         </div>
       </section>

@@ -36,7 +36,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
       <h1>Agenda online para sua barbearia</h1>
       <p>Seu cliente marca pelo link, você vê tudo no celular.</p>
       <p className="suave">
-        {plano.testeDias > 0 && `Teste grátis por ${plano.testeDias} dias. `}Pra continuar: contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
+        {plano.testeDias > 0 && `Teste por ${plano.testeDias} dias. `}Contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix. Você cria a conta agora e o site é liberado assim que o pagamento é confirmado.
       </p>
       {erro && <p className="erro">{erro}</p>}
       <form action={cadastrar} className="formulario">

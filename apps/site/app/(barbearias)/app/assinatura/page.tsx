@@ -28,7 +28,8 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
   const pagamento = banco.pagamentoAberto(barbearia.id);
-  const contratacao = !banco.jaContratou(barbearia.id) && (banco.plano.adesaoCentavos ?? 0) > 0;
+  const nuncaPagou = !banco.jaContratou(barbearia.id);
+  const contratacao = nuncaPagou && (banco.plano.adesaoCentavos ?? 0) > 0;
   const historico = banco.pagamentosDaBarbearia(barbearia.id).filter((p) => p.id !== pagamento.id);
   const pixConfigurado = !!(configPix.chave && configPix.nome && configPix.cidade);
   const copiaECola = pixConfigurado
@@ -42,6 +43,11 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       <h1>Assinatura</h1>
       {ativo ? (
         <p>✅ Acesso liberado até <strong>{formatarData(barbearia.acessoAte)}</strong>. Pode renovar antes: os dias se somam.</p>
+      ) : nuncaPagou ? (
+        <aside className="aviso-novo">
+          Sua conta foi criada. Falta só o pagamento: assim que ele for confirmado, seu site e sua agenda
+          ficam no ar e os clientes já podem marcar.
+        </aside>
       ) : (
         <aside className="erro">
           🔒 Sua agenda está bloqueada (o acesso venceu em {formatarData(barbearia.acessoAte)}). Seus clientes não conseguem

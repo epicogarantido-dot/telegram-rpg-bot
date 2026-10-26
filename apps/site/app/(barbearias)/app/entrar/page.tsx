@@ -42,7 +42,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" />
         <button type="submit">Entrar</button>
       </form>
-      <p>Ainda não tem? <Link href="/app/cadastro">Criar conta grátis</Link></p>
+      <p>Ainda não tem? <Link href="/app/cadastro">Criar conta</Link></p>
     </>
   );
 }

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BancoAgenda, ErroAgenda, gerarSlug } from "./banco.ts";
+import { BancoAgenda, ErroAgenda, gerarSlug, planoDoAmbiente } from "./banco.ts";
 import { horariosLivres } from "./disponibilidade.ts";
 import { agoraNoFuso, diaDaSemana, somarDias } from "./tempo.ts";
 import { conferirSenha, hashSenha } from "./senha.ts";
 import { crc16, gerarPixCopiaECola } from "./pix.ts";
+
+/** Plano com conta já liberada ao criar: os testes de agenda não dependem do padrão do .env. */
+const PLANO_LIBERADO = { valorCentavos: 2990, dias: 30, testeDias: 7 };
 
 describe("tempo", () => {
   it("converte o agora para o fuso da barbearia", () => {
@@ -133,6 +136,13 @@ describe("Pix", () => {
 });
 
 describe("assinatura", () => {
+  it("sem PLANO_TESTE_DIAS, não há período grátis", () => {
+    const antes = process.env.PLANO_TESTE_DIAS;
+    delete process.env.PLANO_TESTE_DIAS;
+    try { expect(planoDoAmbiente().testeDias).toBe(0); }
+    finally { if (antes !== undefined) process.env.PLANO_TESTE_DIAS = antes; }
+  });
+
   const dia = (d: string) => new Date(`${d}T15:00:00Z`); // meio-dia em SP
 
   function conta(testeDias: number) {
@@ -199,7 +209,7 @@ describe("assinatura", () => {
       telefone TEXT NOT NULL, endereco TEXT, fuso TEXT NOT NULL DEFAULT 'America/Sao_Paulo', criado_em TEXT NOT NULL);
       INSERT INTO barbearias (slug, nome, telefone, criado_em) VALUES ('x', 'X', '5519900000001', '2026-01-01');`);
     velho.close();
-    const b = new BancoAgenda(arq);
+    const b = new BancoAgenda(arq, PLANO_LIBERADO);
     expect(b.barbeariaPorSlug("x")!.acessoAte).toBe("1970-01-01");
   });
 });
@@ -213,7 +223,7 @@ describe("site da barbearia", () => {
   }
 
   it("tema, textos e instagram validados", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const { barbearia } = b.criarConta({ nomeBarbearia: "B", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
     expect(barbearia.tema).toBe("silencioso");
     b.atualizarSite(barbearia.id, { tema: "potencia", bio: " Degradê na régua ", instagram: "https://instagram.com/navalha.ouro/", oferta: "10% na 1ª visita" });
@@ -224,7 +234,7 @@ describe("site da barbearia", () => {
   });
 
   it("fotos: isoladas por barbearia, capa única, profissional com foto", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     const f1 = b.registrarFoto(a.id, { categoria: "degrade", largura: 800, altura: 1000 });
@@ -269,7 +279,7 @@ describe("site da barbearia", () => {
 
 describe("efeitos: ano de abertura e antes/depois", () => {
   it("valida o ano e guarda", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const { barbearia } = b.criarConta({ nomeBarbearia: "B", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
     b.atualizarSite(barbearia.id, { tema: "tecnico", desde: 2015 });
     expect(b.barbeariaPorId(barbearia.id)!.desde).toBe(2015);
@@ -279,7 +289,7 @@ describe("efeitos: ano de abertura e antes/depois", () => {
   });
 
   it("pares de antes e depois: só da mesma barbearia, somem ao apagar", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     const antes = b.registrarFoto(a.id, { categoria: "corte", largura: 800, altura: 1000 });
@@ -301,7 +311,7 @@ describe("avisos no celular do barbeiro", () => {
   const sub = (n: number) => ({ endpoint: `https://fcm.googleapis.com/fcm/send/aparelho-${n}`, p256dh: "B".repeat(87), auth: "a".repeat(22) });
 
   it("guarda por barbearia, troca de dono sem duplicar e remove só o próprio", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     b.salvarInscricaoAviso(a.id, sub(1));
@@ -317,7 +327,7 @@ describe("avisos no celular do barbeiro", () => {
   });
 
   it("recusa endereço estranho e passa do limite de aparelhos", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     expect(() => b.salvarInscricaoAviso(a.id, { ...sub(1), endpoint: "http://inseguro.com/x" })).toThrow(ErroAgenda);
     expect(() => b.salvarInscricaoAviso(a.id, { ...sub(1), auth: "<script>" })).toThrow(ErroAgenda);
@@ -326,7 +336,7 @@ describe("avisos no celular do barbeiro", () => {
   });
 
   it("dados do aviso só saem pra barbearia dona do agendamento", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     const servico = b.servicos(a.id, true)[0]!;
@@ -343,7 +353,7 @@ describe("avisos no celular do barbeiro", () => {
   });
 
   it("configurações guardam e trocam valor", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     expect(b.configuracao("x")).toBeUndefined();
     b.definirConfiguracao("x", "1");
     b.definirConfiguracao("x", "2");
@@ -353,7 +363,7 @@ describe("avisos no celular do barbeiro", () => {
 
 describe("funcionamento: preços, intervalo, atendimento, fila e fechar hoje", () => {
   function conta() {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const { barbearia } = b.criarConta({ nomeBarbearia: "Navalha", telefone: "5519900000001", nome: "Zé", email: "z@x.com", senha: "segredo123" });
     return { b, id: barbearia.id };
   }
@@ -437,7 +447,7 @@ describe("funcionamento: preços, intervalo, atendimento, fila e fechar hoje", (
 
 describe("link do cliente: cancelar e remarcar", () => {
   function cenario() {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     const agora = new Date();
@@ -494,7 +504,7 @@ describe("link do cliente: cancelar e remarcar", () => {
 
 describe("calendário do barbeiro", () => {
   it("link da barbearia e de cada profissional; renovar invalida o antigo", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     const [p] = b.profissionais(a.id);
@@ -513,7 +523,7 @@ describe("calendário do barbeiro", () => {
   });
 
   it("lista só confirmados no intervalo e filtra por profissional", () => {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     b.adicionarProfissional(a.id, "Beto");
     const [p1, p2] = b.profissionais(a.id, true);
@@ -538,7 +548,7 @@ describe("calendário do barbeiro", () => {
 
 describe("travas contra abuso", () => {
   function cenario() {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const agora = new Date();
     const hoje = agoraNoFuso(a.fuso, agora).slice(0, 10);
@@ -583,7 +593,7 @@ describe("travas contra abuso", () => {
 
 describe("folga em parte do dia", () => {
   function cenario() {
-    const b = new BancoAgenda(":memory:");
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
     const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123" }).barbearia;
     const o = b.criarConta({ nomeBarbearia: "O", telefone: "5519900000002", nome: "Ana", email: "o@x.com", senha: "segredo123" }).barbearia;
     b.adicionarProfissional(a.id, "Beto");
