@@ -25,7 +25,7 @@ export const RECEITA_COMPARTILHAMENTO = process.env.RECEITA_COMPARTILHAMENTO ?? 
 
 /** Como cada nicho aparece na Receita: atividade (CNAE) e palavras no nome que confirmam o nicho. */
 export const NICHOS_RECEITA: Record<string, { cnaes: string[]; nome: RegExp; descricao: string }> = {
-  barbearia: { cnaes: ["9602501"], nome: /barb/i, descricao: "Cabeleireiros, manicure e pedicure (9602-5/01)" },
+  barbearia: { cnaes: ["9602501"], nome: /x^/, descricao: "Cabeleireiros, manicure e pedicure (9602-5/01)" },
 };
 
 export interface EstabelecimentoReceita {
@@ -112,14 +112,22 @@ export function estabelecimentoDaLinha(campos: string[]): EstabelecimentoReceita
  * um nicho próprio no banco (os de salão e manicure ficam guardados pra usar depois).
  * MEI sem nome de negócio (só o nome da pessoa) fica como "beleza_indefinido".
  */
+/**
+ * Palavras de barbearia (barbearia, barbeiro, barber, barbershop, barba, barbudo e os erros de
+ * digitação que aparecem na base). "barb" sozinho NÃO serve: Barbosa, Bárbara, Barboza, Barbieri,
+ * Barbalho e Barbacena eram a maioria dos falsos positivos (Barbosa aparece mais que Barbearia).
+ */
+export const PALAVRAS_BARBEARIA = /\bbarb(ea|ei|er\b|ers|ersh|ercl|eria|erar|eshop|as?\b|ud|oter)/i;
+
 export const SUBNICHOS_BELEZA: [nicho: string, nome: RegExp][] = [
-  ["barbearia", /barb/i],
+  ["barbearia", PALAVRAS_BARBEARIA],
   ["manicure", /unha|nail|manicur|pedicur|esmalt|podolog/i],
   ["salao", /sal[aã]o|cabel|hair|beleza|beauty|studio|est[uú]dio|escova|tran[cç]|mega ?hair|visagis|lash|c[ií]lio|sobrancel|maquia|make/i],
 ];
 
 export function classificarBeleza(nome: string): string {
-  return SUBNICHOS_BELEZA.find(([, r]) => r.test(nome))?.[0] ?? "beleza_indefinido";
+  const limpo = nome.normalize("NFD").replace(/\p{M}/gu, "");
+  return SUBNICHOS_BELEZA.find(([, r]) => r.test(limpo))?.[0] ?? "beleza_indefinido";
 }
 
 /** A empresa é do nicho? Atividade principal ou secundária. */
@@ -131,8 +139,8 @@ export function ehDoNicho(e: EstabelecimentoReceita, nicho: string): boolean {
 
 /** O nome (fantasia ou razão social) confirma o nicho? Ex.: "barbearia", "barber". */
 export function nomeConfirmaNicho(e: EstabelecimentoReceita, nicho: string): boolean {
-  const n = NICHOS_RECEITA[nicho]!;
-  return n.nome.test(e.nomeFantasia ?? "") || n.nome.test(e.razaoSocial ?? "");
+  const nome = `${e.nomeFantasia ?? ""} ${e.razaoSocial ?? ""}`;
+  return nicho === "barbearia" ? classificarBeleza(nome) === "barbearia" : NICHOS_RECEITA[nicho]!.nome.test(nome);
 }
 
 /**

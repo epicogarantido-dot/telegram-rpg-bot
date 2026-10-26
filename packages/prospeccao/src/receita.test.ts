@@ -101,6 +101,14 @@ describe("barbearia, salão e manicure separados", () => {
     expect(classificarBeleza("ESMALTERIA DA BIA")).toBe("manicure");
     expect(classificarBeleza("SALAO BELEZA PURA")).toBe("salao");
     expect(classificarBeleza("MARIA DA SILVA")).toBe("beleza_indefinido");
+    // Nomes de pessoa com "barb" não são barbearia (eram a maioria dos falsos positivos).
+    for (const nome of ["PAULO ROBERTO DA SILVA BARBOSA", "BARBARA DA ROSA PERES", "DANIELLE BARBOZA", "JOAO BARBIERI", "SALAO BARBACENA"]) {
+      expect(classificarBeleza(nome), nome).not.toBe("barbearia");
+    }
+    for (const nome of ["3XR BARBEARIA E LANCHERIA", "JOAO BARBEIRO", "KING'S BARBER", "BARBERSHOP DO ZE", "CABELO E BARBA", "BARBER'S CLUB",
+      "BARBERARIA SILVA", "BARBUDOS", "Barbearia São João"]) {
+      expect(classificarBeleza(nome), nome).toBe("barbearia");
+    }
   });
 
   it("importa cada um no seu nicho e reclassifica base antiga", () => {
@@ -116,5 +124,17 @@ describe("barbearia, salão e manicure separados", () => {
     // base antiga: tudo como barbearia
     b.db.exec("UPDATE leads SET nicho = 'barbearia'");
     expect(b.reclassificarBeleza()).toEqual({ barbearia: 1, manicure: 1, beleza_indefinido: 1 });
+  });
+
+  it("MEI sem tipo achado no Instagram vira barbearia com o nome do negócio", () => {
+    const b = new BancoProspeccao(":memory:");
+    const mei = { ...estabelecimentoDaLinha(lerLinhaCsv(linha({ 0: "44444444", 4: "" })))!, razaoSocial: "12.345.678 JOAO DA SILVA",
+      cidade: "Alegrete", telefone: "5555999912345", celular: true, telefoneDeContador: false, nomeConfirma: false };
+    b.salvarAchados([mei], "barbearia");
+    expect(b.listar({ nicho: "beleza_indefinido" })).toHaveLength(1);
+    b.salvarManual({ nome: "Barbearia do João", cidade: "Alegrete", nicho: "barbearia", telefone: "5555999912345", instagram: "@barbeariadojoao" });
+    const [lead] = b.listar({ nicho: "barbearia" });
+    expect(lead).toMatchObject({ nome: "Barbearia do João", instagram: "barbeariadojoao", cnpj: "44444444000190" });
+    expect(lead!.avisos ?? "").not.toContain("nome não diz");
   });
 });

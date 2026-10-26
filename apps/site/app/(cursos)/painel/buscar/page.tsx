@@ -76,11 +76,17 @@ export default async function Buscar({ searchParams }: { searchParams: Promise<{
         <input name="uf" defaultValue={uf} aria-label="UF" placeholder="UF" maxLength={2} required />
         <button type="submit">Trocar cidade</button>
       </form>
-      <p className="suave">{leads.length} leads em {cidade}/{uf} no banco.</p>
+      <p className="suave">
+        {leads.length} barbearias em {cidade}/{uf} no banco · {obterBanco().listar({ nicho: "beleza_indefinido", cidade, uf, limite: 100000 }).length} MEI de beleza sem tipo (cruzam pelo WhatsApp)
+      </p>
 
       <section className="busca-etapa" aria-labelledby="t-receita">
         <h2 id="t-receita">1. Base da Receita (todas as barbearias com CNPJ)</h2>
-        <p className="suave pequeno">Dados abertos do CNPJ, oficiais e grátis. Traz quase todas as barbearias formalizadas, inclusive MEI. Leva alguns minutos; pode sair da página.</p>
+        <p className="suave pequeno">
+          Dados abertos do CNPJ, oficiais e grátis. Barbearia, salão e manicure dividem a mesma atividade, então o nome separa.
+          A maioria dos MEI tem só o nome da pessoa: esses ficam guardados como &quot;sem tipo&quot; e viram barbearia quando você
+          cadastra aqui embaixo o WhatsApp que achou no Instagram ou no Google. Leva uns 15 minutos; pode sair da página.
+        </p>
         {estado.rodando ? (
           <p className="atribuicao" role="status">⏳ Buscando {estado.cidade}/{estado.uf}: {estado.etapa} (atualiza sozinho)</p>
         ) : (

@@ -181,8 +181,14 @@ export class BancoProspeccao {
     const existente = this.db.prepare(`SELECT place_id AS id FROM leads WHERE (? IS NOT NULL AND telefone = ?) OR (? IS NOT NULL AND instagram = ?) LIMIT 1`)
       .get(dados.telefone ?? null, dados.telefone ?? null, instagram ?? null, instagram ?? null) as { id: string } | undefined;
     if (existente) {
+      // MEI da Receita sem tipo (só o nome da pessoa) que você achou no Instagram/Google como
+      // barbearia: agora sabemos o que é. O nome do negócio também passa a ser o que você viu.
       this.db.prepare(`UPDATE leads SET telefone = COALESCE(telefone, ?), instagram = COALESCE(?, instagram),
-        observacao = COALESCE(?, observacao) WHERE place_id = ?`).run(dados.telefone ?? null, instagram ?? null, dados.observacao ?? null, existente.id);
+        observacao = COALESCE(?, observacao),
+        nicho = CASE WHEN nicho = 'beleza_indefinido' THEN ? ELSE nicho END,
+        nome = CASE WHEN nicho = 'beleza_indefinido' THEN ? ELSE nome END,
+        avisos = CASE WHEN nicho = 'beleza_indefinido' THEN NULLIF(REPLACE(REPLACE(COALESCE(avisos, ''), 'nome não diz se é barbearia, salão ou manicure', ''), '; ;', ';'), '') ELSE avisos END
+        WHERE place_id = ?`).run(dados.telefone ?? null, instagram ?? null, dados.observacao ?? null, dados.nicho, dados.nome.trim(), existente.id);
       return { placeId: existente.id, novo: false };
     }
     const placeId = `manual:${instagram ?? dados.telefone ?? `${Date.now()}`}`;

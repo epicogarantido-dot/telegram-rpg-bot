@@ -57,3 +57,19 @@ dá bloqueio e expõe o projeto. A busca assistida é uma pessoa navegando; o pa
 - Dado público não é dado livre (art. 7º, §3º e §7º): o uso tem que combinar com o contexto
   (contato comercial com o negócio), por isso nada de usar a base pra outra coisa.
 - Isto é orientação de boa prática, não parecer jurídico. Ao escalar, vale uma consulta.
+
+## O que a primeira passada mostrou (Receita, outubro/2026)
+
+| Nicho | Empresas ativas | Com celular próprio |
+|---|---:|---:|
+| barbearia (nome com barbearia, barber, barbeiro, barba…) | 11.472 | 8.003 |
+| salao | 31.391 | 17.520 |
+| manicure | 9.717 | 7.080 |
+| beleza_indefinido (MEI só com o nome da pessoa) | 1.090.489 | 818.809 |
+
+- "barb" sozinho enganava: **Barbosa** aparecia mais que "Barbearia" (e Bárbara, Barboza,
+  Barbieri, Barbacena). O filtro usa só palavras de barbearia (`PALAVRAS_BARBEARIA`).
+- A maioria dos barbeiros é MEI com o próprio nome: pela Receita eles caem em
+  `beleza_indefinido`. Quando a busca assistida acha a barbearia no Instagram/Google e o WhatsApp
+  bate, o lead vira `barbearia` com o nome do negócio. Em cidade pequena (Alegrete: 1 barbearia
+  pelo nome, 424 MEI sem tipo), a busca assistida é a fonte principal.
