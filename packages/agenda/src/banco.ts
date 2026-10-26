@@ -41,7 +41,15 @@ export interface Barbearia {
   /** Pessoas esperando na fila (ordem de chegada) e quando o dono informou. */
   filaPessoas?: number;
   filaAtualizadaEm?: string;
+  /**
+   * Site de DEMONSTRAÇÃO montado pelo Aprenda Livre pra mostrar a um barbeiro (não tem dono
+   * ainda). Vale até este dia; agendar fica desligado. Vira o site dele com `assumirDemonstracao`.
+   */
+  demoAte?: Data;
 }
+
+/** Quantos dias uma demonstração fica no ar. */
+export const DEMONSTRACAO_DIAS = 14;
 
 export type Atendimento = "agenda" | "chegada" | "ambos";
 export const INTERVALOS = [30, 60, 90, 120] as const;
@@ -133,13 +141,14 @@ export function planoDoAmbiente(): Plano {
 }
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
-  "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm";
+  "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
+  "demo_ate AS demoAte";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
 function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
   if (!linha) return undefined;
   const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1 } as Record<string, unknown>;
-  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde"]) if (b[k] === null) b[k] = undefined;
+  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte"]) if (b[k] === null) b[k] = undefined;
   return b as Barbearia & T;
 }
 const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
@@ -241,6 +250,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "atendimento", "TEXT NOT NULL DEFAULT 'agenda'");
     for (const c of ["fechado_em", "fila_atualizada_em"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
+    for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.db.exec(`
@@ -294,35 +304,111 @@ export class BancoAgenda {
 
   // ---------- conta ----------
 
-  criarConta(dados: { nomeBarbearia: string; telefone: string; nome: string; email: string; senha: string; agora?: Date }): { barbearia: Barbearia; token: string } {
+  private validarConta(dados: { email: string; senha: string }): string {
     const email = dados.email.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new ErroAgenda("E-mail inválido.");
     if (dados.senha.length < 8) throw new ErroAgenda("A senha precisa ter pelo menos 8 caracteres.");
     if (this.db.prepare("SELECT 1 FROM usuarios WHERE email = ?").get(email)) throw new ErroAgenda("Já existe conta com esse e-mail.");
+    return email;
+  }
 
+  private slugLivre(nome: string): string {
+    let slug = gerarSlug(nome);
+    for (let n = 2; this.db.prepare("SELECT 1 FROM barbearias WHERE slug = ?").get(slug); n++) slug = `${gerarSlug(nome)}-${n}`;
+    return slug;
+  }
+
+  /** Ponto de partida pra barbearia já sair usando: dá pra editar tudo no painel. */
+  private semearBarbearia(barbeariaId: number, profissional: string): void {
+    this.db.prepare("INSERT INTO profissionais (barbearia_id, nome) VALUES (?, ?)").run(barbeariaId, profissional);
+    for (const [nome, dur, preco] of [["Corte", 30, 4000], ["Barba", 30, 3000], ["Corte + barba", 60, 6500]] as const) {
+      this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos) VALUES (?, ?, ?, ?)").run(barbeariaId, nome, dur, preco);
+    }
+    for (let dia = 2; dia <= 6; dia++) {
+      this.db.prepare("INSERT INTO expedientes (barbearia_id, dia_semana, abre, fecha, pausa_inicio, pausa_fim) VALUES (?, ?, '09:00', '19:00', '12:00', '13:00')").run(barbeariaId, dia);
+    }
+  }
+
+  /** acesso_ate de conta nova = último dia liberado; teste de N dias inclui o dia de hoje (0 = já nasce bloqueada). */
+  private acessoInicial(agora?: Date): Data {
+    return somarDias(agoraNoFuso("America/Sao_Paulo", agora).slice(0, 10), this.plano.testeDias - 1);
+  }
+
+  criarConta(dados: { nomeBarbearia: string; telefone: string; nome: string; email: string; senha: string; agora?: Date }): { barbearia: Barbearia; token: string } {
+    const email = this.validarConta(dados);
     const agora = new Date().toISOString();
-    let slug = gerarSlug(dados.nomeBarbearia);
-    for (let n = 2; this.db.prepare("SELECT 1 FROM barbearias WHERE slug = ?").get(slug); n++) slug = `${gerarSlug(dados.nomeBarbearia)}-${n}`;
-
+    const slug = this.slugLivre(dados.nomeBarbearia);
     this.db.exec("BEGIN");
     try {
-      // acesso_ate = último dia liberado; teste de N dias inclui o dia de hoje.
-      const acessoAte = somarDias(agoraNoFuso("America/Sao_Paulo", dados.agora).slice(0, 10), this.plano.testeDias - 1);
       const b = this.db.prepare("INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate) VALUES (?, ?, ?, ?, ?)")
-        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora, acessoAte);
+        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora, this.acessoInicial(dados.agora));
       const barbeariaId = Number(b.lastInsertRowid);
       const u = this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(barbeariaId, dados.nome.trim(), email, hashSenha(dados.senha), agora);
-      // Ponto de partida pra barbearia já sair usando: dá pra editar tudo no painel.
-      this.db.prepare("INSERT INTO profissionais (barbearia_id, nome) VALUES (?, ?)").run(barbeariaId, dados.nome.trim());
-      for (const [nome, dur, preco] of [["Corte", 30, 4000], ["Barba", 30, 3000], ["Corte + barba", 60, 6500]] as const) {
-        this.db.prepare("INSERT INTO servicos (barbearia_id, nome, duracao_min, preco_centavos) VALUES (?, ?, ?, ?)").run(barbeariaId, nome, dur, preco);
-      }
-      for (let dia = 2; dia <= 6; dia++) {
-        this.db.prepare("INSERT INTO expedientes (barbearia_id, dia_semana, abre, fecha, pausa_inicio, pausa_fim) VALUES (?, ?, '09:00', '19:00', '12:00', '13:00')").run(barbeariaId, dia);
-      }
+      this.semearBarbearia(barbeariaId, dados.nome.trim());
       this.db.exec("COMMIT");
       return { barbearia: this.barbeariaPorId(barbeariaId)!, token: this.criarSessao(Number(u.lastInsertRowid)) };
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
+  // ---------- demonstração (site de exemplo pra mostrar a um barbeiro) ----------
+
+  /**
+   * Monta um site de exemplo com o nome da barbearia do lead. Não tem dono nem login; fica
+   * no ar por `dias` e não aceita agendamento. Devolve o convite (segredo): com ele o barbeiro
+   * transforma a demonstração no site dele (`assumirDemonstracao`). O banco guarda só o hash.
+   */
+  criarDemonstracao(dados: { nome: string; tema: string; cidade?: string; lead?: string; dias?: number; agora?: Date }): { barbearia: Barbearia; convite: string } {
+    const nome = dados.nome.trim();
+    if (nome.length < 2) throw new ErroAgenda("Diga o nome da barbearia.");
+    if (!temaValido(dados.tema)) throw new ErroAgenda("Estilo inválido.");
+    const ate = somarDias(agoraNoFuso("America/Sao_Paulo", dados.agora).slice(0, 10), (dados.dias ?? DEMONSTRACAO_DIAS) - 1);
+    const { token, hash } = novoToken();
+    const cidade = dados.cidade?.trim() || undefined;
+    this.db.exec("BEGIN");
+    try {
+      const b = this.db.prepare(`INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, tema, cidade, bio, demo_ate, demo_token_hash, demo_lead)
+        VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?)`).run(this.slugLivre(nome), nome, new Date().toISOString(), ate, dados.tema, cidade ?? null,
+        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Escolha o horário e marque aqui mesmo.`, ate, hash, dados.lead ?? null);
+      const id = Number(b.lastInsertRowid);
+      this.semearBarbearia(id, "Barbeiro");
+      this.db.exec("COMMIT");
+      return { barbearia: this.barbeariaPorId(id)!, convite: token };
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
+  /** Demonstração ainda no ar e ainda sem dono, pelo convite. */
+  demonstracaoPorConvite(convite: string | undefined, agora?: Date): Barbearia | undefined {
+    if (!convite) return undefined;
+    const b = paraBarbearia(this.db.prepare(`SELECT ${COLUNAS_BARBEARIA} FROM barbearias WHERE demo_token_hash = ? AND demo_ate IS NOT NULL`)
+      .get(hashToken(convite)) as Record<string, unknown> | undefined);
+    return b && this.acessoAtivo(b, agora) ? b : undefined;
+  }
+
+  /**
+   * O barbeiro gostou e quer o site: a demonstração vira a barbearia dele, com o mesmo endereço
+   * (/b/<slug>), estilo e fotos de exemplo (que ele troca pelas dele). O acesso segue o plano
+   * como uma conta nova: sem período grátis, só libera depois do Pix confirmado.
+   */
+  assumirDemonstracao(convite: string, dados: { telefone: string; nome: string; email: string; senha: string; nomeBarbearia?: string; agora?: Date }): { barbearia: Barbearia; token: string } {
+    const demo = this.demonstracaoPorConvite(convite, dados.agora);
+    if (!demo) throw new ErroAgenda("Esse convite de demonstração venceu ou já foi usado.");
+    const email = this.validarConta(dados);
+    this.db.exec("BEGIN");
+    try {
+      this.db.prepare(`UPDATE barbearias SET nome = ?, telefone = ?, acesso_ate = ?, demo_ate = NULL, demo_token_hash = NULL WHERE id = ?`)
+        .run(dados.nomeBarbearia?.trim() || demo.nome, dados.telefone, this.acessoInicial(dados.agora), demo.id);
+      const u = this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
+        .run(demo.id, dados.nome.trim(), email, hashSenha(dados.senha), new Date().toISOString());
+      this.db.prepare("UPDATE profissionais SET nome = ? WHERE barbearia_id = ? AND nome = 'Barbeiro'").run(dados.nome.trim(), demo.id);
+      this.db.exec("COMMIT");
+      return { barbearia: this.barbeariaPorId(demo.id)!, token: this.criarSessao(Number(u.lastInsertRowid)) };
     } catch (e) {
       this.db.exec("ROLLBACK");
       throw e;
@@ -545,6 +631,7 @@ export class BancoAgenda {
     }
     const b = this.barbeariaPorId(dados.barbeariaId);
     if (!b || !this.acessoAtivo(b, dados.agora)) throw new ErroAgenda("Agenda temporariamente indisponível.");
+    if (b.demoAte) throw new ErroAgenda("Este site é uma demonstração: os horários são de exemplo e não dá pra marcar.");
     const prof = this.profissionais(dados.barbeariaId, true).find((p) => p.id === dados.profissionalId);
     const servico = this.servicos(dados.barbeariaId, true).find((s) => s.id === dados.servicoId);
     if (!prof || !servico) throw new ErroAgenda("Serviço ou profissional indisponível.");

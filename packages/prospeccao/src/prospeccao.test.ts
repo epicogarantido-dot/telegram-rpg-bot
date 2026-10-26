@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BancoProspeccao } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
-import { mensagemConvite } from "./mensagem.ts";
+import { mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato, mensagemSegunda, nomeParaMensagem, proximoPasso } from "./mensagem.ts";
 import { buscarNoOSM, montarConsulta } from "./openstreetmap.ts";
 import { ehCelularBR, linkWhatsapp, normalizarTelefone } from "./telefone.ts";
 
@@ -60,13 +60,46 @@ describe("banco", () => {
 });
 
 describe("mensagem", () => {
-  it("é pessoal, tem link e opção de sair", () => {
-    const m = mensagemConvite({ nome: "Barbearia do Zé - Centro", nota: 4.8, avaliacoes: 120 },
-      { remetente: "João", linkComunidade: "https://chat.whatsapp.com/x", nichoPlural: "barbeiros" });
-    expect(m).toContain("Barbearia do Zé!");
-    expect(m).toContain("4,8");
-    expect(m).toContain("https://chat.whatsapp.com/x");
+  const cfg = { remetente: "João, do Aprenda Livre", botWhatsapp: "5555999990000" };
+  const agora = new Date("2026-10-26T12:00:00Z");
+
+  it("arruma o nome em maiúsculas da Receita", () => {
+    expect(nomeParaMensagem("BARBEARIA DO ZE - CENTRO")).toBe("Barbearia do Ze");
+    expect(nomeParaMensagem("Barber Shop do Léo")).toBe("Barber Shop do Léo");
+  });
+
+  it("1ª mensagem: quem é, por que esta barbearia, pergunta fácil, SAIR e nenhum link", () => {
+    const m = mensagemPrimeiroContato({ nome: "Barbearia do Zé - Centro" }, cfg,
+      { detalhe: "do degradê do último post", onde: "no Instagram", agora });
+    expect(m).toContain("Aqui é João, do Aprenda Livre");
+    expect(m).toContain("Vi a Barbearia do Zé no Instagram e gostei do degradê do último post.");
+    expect(m).toContain("pelo WhatsApp ou é por ordem de chegada?");
     expect(m).toContain("SAIR");
+    expect(m).not.toMatch(/https?:/);
+  });
+
+  it("sem detalhe usa o tempo de casa, e nada de elogio inventado", () => {
+    expect(mensagemPrimeiroContato({ nome: "BARBEARIA X", abertura: "2019-03-01" }, cfg, { agora })).toContain("desde 2019");
+    const nova = mensagemPrimeiroContato({ nome: "BARBEARIA X", abertura: "2025-03-01" }, cfg, { agora });
+    expect(nova).toContain("Vi a Barbearia X. Pergunta rápida");
+  });
+
+  it("a sequência: 2ª sem link, demonstração com link, lembrete com SAIR, cursos com o bot", () => {
+    expect(mensagemSegunda({ nome: "Barbearia X" }, "whatsapp")).not.toMatch(/https?:/);
+    expect(mensagemSegunda({ nome: "Barbearia X" }, "chegada")).toContain("fila");
+    expect(mensagemDemonstracao({ nome: "Barbearia X" }, "https://s/b/x?convite=a")).toContain("https://s/b/x?convite=a");
+    expect(mensagemLembrete({ nome: "Barbearia X" })).toContain("SAIR");
+    expect(mensagemCursos(cfg)).toContain("https://wa.me/5555999990000");
+    expect(mensagemCursos({ remetente: "João" })).toBeUndefined();
+  });
+
+  it("lembrete no 3º dia, desiste 4 dias depois do lembrete", () => {
+    const dias = (n: number) => new Date(agora.getTime() - n * 86_400_000).toISOString();
+    expect(proximoPasso({ status: "contatado", atualizadoEm: dias(2) }, agora)).toBeUndefined();
+    expect(proximoPasso({ status: "contatado", atualizadoEm: dias(3) }, agora)).toBe("lembrete");
+    expect(proximoPasso({ status: "lembrete", atualizadoEm: dias(3) }, agora)).toBeUndefined();
+    expect(proximoPasso({ status: "lembrete", atualizadoEm: dias(4) }, agora)).toBe("desistir");
+    expect(proximoPasso({ status: "respondeu", atualizadoEm: dias(30) }, agora)).toBeUndefined();
   });
 });
 

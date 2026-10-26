@@ -14,7 +14,12 @@ export function chaveCidade(cidade: string): string {
   return cidade.normalize("NFD").replace(/\p{M}/gu, "").trim().toUpperCase().replace(/\s+/g, " ");
 }
 
-export const STATUS = ["novo", "contatado", "respondeu", "entrou", "cliente", "nao_contatar"] as const;
+/**
+ * Etapas da conversa (docs/abordagem.md): 1ª mensagem → (lembrete) → respondeu → demonstração
+ * enviada → cliente. "sem_resposta" sai da fila depois do lembrete; "entrou" é de quem entrou
+ * no grupo/comunidade (antigo).
+ */
+export const STATUS = ["novo", "contatado", "lembrete", "respondeu", "demo_enviada", "cliente", "sem_resposta", "entrou", "nao_contatar"] as const;
 export type Status = (typeof STATUS)[number];
 
 export interface Lead extends Estabelecimento {
@@ -33,6 +38,11 @@ export interface Lead extends Estabelecimento {
   /** Alertas pra quem vai contatar: telefone fixo, do contador, nome que não confirma o nicho. */
   avisos?: string;
   abertura?: string;
+  /** Quando mudou de etapa pela última vez (pro lembrete aparecer no dia certo). */
+  atualizadoEm?: string;
+  /** Demonstração montada pra ele: /b/<demoSlug>?convite=<demoConvite>. */
+  demoSlug?: string;
+  demoConvite?: string;
 }
 
 export interface Inscricao {
@@ -58,7 +68,7 @@ function caminhoPadrao(): string {
 
 const COLUNAS = `place_id AS placeId, nicho, cidade, nome, endereco, telefone, site, nota, avaliacoes,
   maps_url AS mapsUrl, status, observacao, criado_em AS criadoEm, contatado_em AS contatadoEm,
-  fonte, cnpj, email, instagram, avisos, abertura, uf`;
+  fonte, cnpj, email, instagram, avisos, abertura, uf, atualizado_em AS atualizadoEm, demo_slug AS demoSlug, demo_convite AS demoConvite`;
 
 export class BancoProspeccao {
   readonly db: DatabaseSync;
@@ -91,7 +101,7 @@ export class BancoProspeccao {
     `);
     // Colunas novas em bancos antigos.
     const existentes = new Set((this.db.prepare("PRAGMA table_info(leads)").all() as { name: string }[]).map((c) => c.name));
-    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave"]) {
+    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite"]) {
       if (!existentes.has(coluna)) this.db.exec(`ALTER TABLE leads ADD COLUMN ${coluna} TEXT`);
     }
     if (!existentes.has("cidade_chave")) {
@@ -242,10 +252,20 @@ export class BancoProspeccao {
   marcar(placeId: string, status: Status, observacao?: string): void {
     const lead = this.db.prepare(`SELECT ${COLUNAS} FROM leads WHERE place_id = ?`).get(placeId) as Lead | undefined;
     if (!lead) throw new Error(`Lead ${placeId} não existe`);
-    this.db.prepare(`UPDATE leads SET status = ?, observacao = COALESCE(?, observacao),
+    const agora = new Date().toISOString();
+    this.db.prepare(`UPDATE leads SET status = ?, observacao = COALESCE(?, observacao), atualizado_em = ?,
       contatado_em = CASE WHEN ? = 'contatado' THEN ? ELSE contatado_em END WHERE place_id = ?`)
-      .run(status, observacao ?? null, status, new Date().toISOString(), placeId);
+      .run(status, observacao ?? null, agora, status, agora, placeId);
     if (status === "nao_contatar" && lead.telefone) this.bloquear(lead.telefone);
+  }
+
+  /** Guarda a demonstração montada pro lead (o convite fica aqui, no banco privado, pra reenviar o link). */
+  guardarDemonstracao(placeId: string, slug: string, convite: string): void {
+    this.db.prepare("UPDATE leads SET demo_slug = ?, demo_convite = ? WHERE place_id = ?").run(slug, convite, placeId);
+  }
+
+  lead(placeId: string): Lead | undefined {
+    return this.db.prepare(`SELECT ${COLUNAS} FROM leads WHERE place_id = ?`).get(placeId) as Lead | undefined;
   }
 
   /** Opt-out: bloqueia o número e marca todos os leads com ele. Irreversível pela interface, de propósito. */

@@ -677,3 +677,40 @@ describe("preço: contratação e mensalidade", () => {
     expect(b1.pagamentoAberto(barbearia.id).valorCentavos).toBe(10000);
   });
 });
+
+describe("demonstração pra mostrar ao barbeiro", () => {
+  const agora = new Date("2026-10-27T12:00:00-03:00");
+
+  it("monta o site com o nome dele, fica 14 dias no ar e não aceita agendamento", () => {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const { barbearia, convite } = b.criarDemonstracao({ nome: "Barbearia do Zé", tema: "potencia", cidade: "Alegrete", lead: "cnpj:1", agora });
+    expect(barbearia).toMatchObject({ slug: "barbearia-do-ze", tema: "potencia", cidade: "Alegrete", demoAte: "2026-11-09" });
+    expect(b.acessoAtivo(barbearia, agora)).toBe(true);
+    expect(b.acessoAtivo(barbearia, new Date("2026-11-10T12:00:00-03:00"))).toBe(false);
+    expect(convite.length).toBeGreaterThan(20);
+    const [prof] = b.profissionais(barbearia.id);
+    const [servico] = b.servicos(barbearia.id);
+    expect(() => b.agendar({ barbeariaId: barbearia.id, profissionalId: prof!.id, servicoId: servico!.id, data: "2026-10-28", hora: "10:00",
+      clienteNome: "Teste", clienteTelefone: "5511999999999", agora })).toThrow(/demonstração/);
+  });
+
+  it("o barbeiro assume pelo convite: vira o site dele, no mesmo endereço, e o convite morre", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 5000, adesaoCentavos: 10000, dias: 30, testeDias: 0 });
+    const { barbearia, convite } = b.criarDemonstracao({ nome: "Barbearia do Zé", tema: "atemporal", agora });
+    expect(b.demonstracaoPorConvite("inventado", agora)).toBeUndefined();
+    const r = b.assumirDemonstracao(convite, { telefone: "5555999990001", nome: "José", email: "ze@exemplo.com", senha: "senha-boa-123", agora });
+    expect(r.barbearia).toMatchObject({ id: barbearia.id, slug: "barbearia-do-ze", tema: "atemporal", telefone: "5555999990001" });
+    expect(r.barbearia.demoAte).toBeUndefined();
+    // Sem período grátis: nasce bloqueada até o Pix ser confirmado.
+    expect(b.acessoAtivo(r.barbearia, agora)).toBe(false);
+    expect(b.profissionais(barbearia.id).map((p) => p.nome)).toEqual(["José"]);
+    expect(() => b.assumirDemonstracao(convite, { telefone: "1", nome: "Outro", email: "o@exemplo.com", senha: "senha-boa-123", agora })).toThrow(/venceu ou já foi usado/);
+  });
+
+  it("demonstração vencida não pode ser assumida", () => {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const { convite } = b.criarDemonstracao({ nome: "Barbearia X", tema: "silencioso", agora });
+    expect(() => b.assumirDemonstracao(convite, { telefone: "1", nome: "X", email: "x@exemplo.com", senha: "senha-boa-123",
+      agora: new Date("2026-12-01T12:00:00-03:00") })).toThrow(/venceu/);
+  });
+});

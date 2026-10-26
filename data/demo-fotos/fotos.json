@@ -1,0 +1,72 @@
+[
+  {
+    "arquivo": "ambiente-15126904.jpg",
+    "categoria": "ambiente",
+    "legenda": "Nossa cadeira",
+    "credito": "https://unsplash.com/photos/1512690459411-b9245aed614b"
+  },
+  {
+    "arquivo": "ambiente-15857478.jpg",
+    "categoria": "ambiente",
+    "legenda": "O salão",
+    "credito": "https://unsplash.com/photos/1585747860715-2ba37e788b70"
+  },
+  {
+    "arquivo": "ambiente-15926474.jpg",
+    "categoria": "ambiente",
+    "credito": "https://unsplash.com/photos/1592647420148-bfcc177e2117"
+  },
+  {
+    "arquivo": "degrade-15937022.jpg",
+    "categoria": "degrade",
+    "legenda": "Degradê",
+    "credito": "https://unsplash.com/photos/1593702275687-f8b402bf1fb5"
+  },
+  {
+    "arquivo": "degrade-16222863.jpg",
+    "categoria": "degrade",
+    "legenda": "Low fade",
+    "credito": "https://unsplash.com/photos/1622286342621-4bd786c2447c"
+  },
+  {
+    "arquivo": "corte-15678943.jpg",
+    "categoria": "corte",
+    "legenda": "Corte na tesoura",
+    "credito": "https://unsplash.com/photos/1567894340315-735d7c361db0"
+  },
+  {
+    "arquivo": "corte-16471406.jpg",
+    "categoria": "corte",
+    "legenda": "Acabamento",
+    "credito": "https://unsplash.com/photos/1647140655214-e4a2d914971f"
+  },
+  {
+    "arquivo": "barba-15327100.jpg",
+    "categoria": "barba",
+    "legenda": "Barba",
+    "credito": "https://unsplash.com/photos/1532710093739-9470acff878f"
+  },
+  {
+    "arquivo": "barba-15967283.jpg",
+    "categoria": "barba",
+    "legenda": "Toalha quente",
+    "credito": "https://unsplash.com/photos/1596728325488-58c87691e9af"
+  },
+  {
+    "arquivo": "barba-15039519.jpg",
+    "categoria": "barba",
+    "credito": "https://unsplash.com/photos/1503951914875-452162b0f3f1"
+  },
+  {
+    "arquivo": "navalhado-15178326.jpg",
+    "categoria": "navalhado",
+    "legenda": "Navalha",
+    "credito": "https://unsplash.com/photos/1517832606299-7ae9b720a186"
+  },
+  {
+    "arquivo": "produtos-15879092.jpg",
+    "categoria": "produtos",
+    "legenda": "Produtos",
+    "credito": "https://unsplash.com/photos/1587909209111-5097ee578ec3"
+  }
+]
