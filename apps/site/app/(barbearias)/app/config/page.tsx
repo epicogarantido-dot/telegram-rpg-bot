@@ -1,21 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { ErroAgenda, INTERVALOS, nomeDia } from "@aprenda/agenda";
+import { ErroAgenda, FOLGAS, formatarData, INTERVALOS, nomeDia } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
 export const metadata = { title: "Configurações", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-async function executar(acao: (barbeariaId: number) => void) {
+async function executar<T>(acao: (barbeariaId: number) => T): Promise<T> {
   const { barbearia } = await exigirAcessoAtivo();
+  let r: T;
   try {
-    acao(barbearia.id);
+    r = acao(barbearia.id);
   } catch (e) {
     redirect(`/app/config?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
   revalidatePath("/app/config");
+  return r;
 }
 
 async function salvarDados(form: FormData) {
@@ -48,13 +50,21 @@ function lerPreco(texto: string): number {
 
 async function editarServico(form: FormData) {
   "use server";
-  await executar((id) => obterAgenda().atualizarServico(id, Number(form.get("id")), {
+  const { ajustados, conflitos } = await executar((id) => obterAgenda().atualizarServico(id, Number(form.get("id")), {
     nome: String(form.get("nome") ?? ""),
     duracaoMin: Number(form.get("duracao")),
     precoCentavos: lerPreco(String(form.get("preco") ?? "")),
     descricao: String(form.get("descricao") ?? ""),
     emDomicilio: form.get("domicilio") === "on",
   }));
+  if (!ajustados) return;
+  let aviso = `Tempo novo aplicado ${ajustados === 1 ? "no horário já marcado" : `nos ${ajustados} horários já marcados`} desse serviço.`;
+  if (conflitos.length) {
+    aviso += ` Com o tempo novo, ${conflitos.length === 1 ? "este encosta" : "estes encostam"} no cliente seguinte: ` +
+      conflitos.slice(0, 5).map((a) => `${a.clienteNome}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}`).join("; ") +
+      ". Veja na agenda se dá pra atender ou remarque.";
+  }
+  redirect(`/app/config?aviso=${encodeURIComponent(aviso)}#servicos`);
 }
 
 async function salvarFuncionamento(form: FormData) {
@@ -62,6 +72,7 @@ async function salvarFuncionamento(form: FormData) {
   await executar((id) => obterAgenda().atualizarFuncionamento(id, {
     mostrarPrecos: form.get("mostrarPrecos") === "on",
     intervaloMin: Number(form.get("intervalo")),
+    folgaMin: Number(form.get("folga")),
     atendimento: String(form.get("atendimento")),
   }));
 }
@@ -118,9 +129,9 @@ async function salvarExpediente(form: FormData) {
   });
 }
 
-export default async function Config({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+export default async function Config({ searchParams }: { searchParams: Promise<{ erro?: string; aviso?: string }> }) {
   const { barbearia } = await exigirAcessoAtivo();
-  const { erro } = await searchParams;
+  const { erro, aviso } = await searchParams;
   const banco = obterAgenda();
   const servicos = banco.servicos(barbearia.id);
   const profissionais = banco.profissionais(barbearia.id);
@@ -133,6 +144,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       <p><Link href="/app">← Voltar pra agenda</Link></p>
       <h1>Configurações</h1>
       {erro && <p className="erro">{erro}</p>}
+      {aviso && <p className="aviso-novo" role="status">{aviso}</p>}
 
       <h2>Barbearia</h2>
       <form action={salvarDados} className="formulario">
@@ -164,6 +176,14 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <select id="cfg-intervalo" name="intervalo" defaultValue={barbearia.intervaloMin}>
           {INTERVALOS.map((m) => <option key={m} value={m}>{m < 60 ? `${m} minutos` : m === 60 ? "1 hora" : m === 90 ? "1 hora e meia" : "2 horas"}</option>)}
         </select>
+        <label htmlFor="cfg-folga">Folga entre um cliente e outro</label>
+        <select id="cfg-folga" name="folga" defaultValue={barbearia.folgaMin} aria-describedby="cfg-folga-dica">
+          {FOLGAS.map((m) => <option key={m} value={m}>{m === 0 ? "Sem folga" : `${m} minutos`}</option>)}
+        </select>
+        <small id="cfg-folga-dica" className="suave">
+          Tempo livre depois de cada cliente, pra um atraso não empurrar o dia todo. O site só oferece horários com essa folga,
+          e o próximo horário começa logo depois dela (um corte de 40 min às 9h com 10 de folga libera 9h50).
+        </small>
         <label className="marcar">
           <input type="checkbox" name="mostrarPrecos" defaultChecked={barbearia.mostrarPrecos} /> Mostrar os preços dos serviços no site
         </label>
@@ -187,13 +207,13 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <button>Salvar</button>
       </form>
 
-      <h2>Serviços</h2>
-      <p className="suave pequeno">Mude nome, tempo, preço e o que o serviço inclui, e toque em Salvar. Dizer as etapas (&quot;toalha quente, navalha, massagem&quot;) ajuda o cliente a entender o preço. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
+      <h2 id="servicos">Serviços</h2>
+      <p className="suave pequeno">Cada serviço tem o seu tempo: ponha quanto você leva de verdade no corte, na barba e no combo. Mudou o tempo? Os horários já marcados desse serviço passam a terminar no tempo novo na sua agenda e no calendário. Mude nome, tempo, preço e o que o serviço inclui, e toque em Salvar. Dizer as etapas (&quot;toalha quente, navalha, massagem&quot;) ajuda o cliente a entender o preço. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
       {servicos.map((s) => (
         <form key={s.id} action={editarServico} className={`config-servico ${s.ativo ? "" : "desativado"}`}>
           <input type="hidden" name="id" value={s.id} />
           <label>Serviço<input name="nome" defaultValue={s.nome} required maxLength={40} /></label>
-          <label>Minutos<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required /></label>
+          <label>Tempo (minutos)<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required inputMode="numeric" /></label>
           <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
           <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
           <label className="marcar config-servico-domicilio"><input type="checkbox" name="domicilio" defaultChecked={s.emDomicilio} /> Vou até o cliente (pede o endereço)</label>
@@ -206,7 +226,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       <h3>Novo serviço</h3>
       <form action={novoServico} className="formulario linha">
         <input name="nome" placeholder="Novo serviço" required maxLength={40} />
-        <input name="duracao" type="number" min={5} max={480} step={5} placeholder="Minutos" required />
+        <input name="duracao" type="number" min={5} max={480} step={5} placeholder="Tempo em minutos" aria-label="Tempo em minutos" required inputMode="numeric" />
         <input name="preco" placeholder="Preço (ex.: 45,00)" required inputMode="decimal" />
         <input name="descricao" placeholder="O que inclui (opcional)" maxLength={140} />
         <label className="marcar"><input type="checkbox" name="domicilio" /> Vou até o cliente</label>

@@ -67,7 +67,8 @@ const RECURSOS = [
     icone: Users, titulo: "Do seu jeito",
     itens: [
       "Atende por ordem de chegada? O site mostra se está aberto e o tamanho da fila.",
-      "Folga em parte do dia, \"fechar hoje\", horários de 30 min a 2 h, preços visíveis ou não.",
+      "Cada serviço com o seu tempo (corte, barba, combo) e uma folga entre clientes pra atraso não empurrar o dia.",
+      "Folga em parte do dia, \"fechar hoje\", preços visíveis ou não.",
       "Serviços com descrição, e o cliente pode mostrar o corte que quer escolhendo nas suas fotos.",
       "Vai até o cliente? Marque o serviço como domicílio e o site pede o endereço.",
       "Serviços, preços e equipe você muda pelo celular, quando quiser.",

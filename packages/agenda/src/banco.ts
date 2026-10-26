@@ -32,8 +32,10 @@ export interface Barbearia {
   desde?: number;
   /** Mostrar os preços dos serviços no site. */
   mostrarPrecos: boolean;
-  /** De quantos em quantos minutos começam os horários (30, 60, 90 ou 120). */
+  /** De quantos em quantos minutos começam os horários (15 a 120). */
   intervaloMin: number;
+  /** Minutos livres entre um cliente e outro (atraso, limpar a cadeira). */
+  folgaMin: number;
   /** Como atende: só com horário marcado, só por ordem de chegada, ou os dois. */
   atendimento: Atendimento;
   /** Dia (no fuso da barbearia) em que o dono fechou a barbearia de última hora. */
@@ -110,7 +112,9 @@ export interface NumerosDoMes {
 export const DEMONSTRACAO_DIAS = 14;
 
 export type Atendimento = "agenda" | "chegada" | "ambos";
-export const INTERVALOS = [30, 60, 90, 120] as const;
+export const INTERVALOS = [15, 20, 30, 60, 90, 120] as const;
+/** Opções de folga entre clientes, em minutos. */
+export const FOLGAS = [0, 5, 10, 15, 20, 30] as const;
 /** Quantos horários futuros um mesmo número pode ter na mesma barbearia (marcando pelo site). */
 export const MAX_HORARIOS_POR_TELEFONE = 2;
 /** Fila informada há mais tempo que isso não aparece no site (pode estar errada). */
@@ -217,7 +221,7 @@ export function planoDoAmbiente(): Plano {
 }
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
-  "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
+  "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, folga_min AS folgaMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
   "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
@@ -325,6 +329,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "desde", "INTEGER");
     this.garantirColuna("barbearias", "mostrar_precos", "INTEGER NOT NULL DEFAULT 1");
     this.garantirColuna("barbearias", "intervalo_min", "INTEGER NOT NULL DEFAULT 30");
+    this.garantirColuna("barbearias", "folga_min", "INTEGER NOT NULL DEFAULT 0");
     this.garantirColuna("barbearias", "atendimento", "TEXT NOT NULL DEFAULT 'agenda'");
     for (const c of ["fechado_em", "fila_atualizada_em"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
@@ -609,20 +614,45 @@ export class BancoAgenda {
       .run(barbeariaId, v.nome, v.duracaoMin, v.precoCentavos, v.descricao, v.emDomicilio);
   }
 
-  /** Muda nome, duração e preço. Horários já marcados continuam como foram marcados. */
-  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string; emDomicilio?: boolean }): void {
+  /**
+   * Muda nome, duração e preço. Se a duração mudou, os horários futuros desse serviço
+   * passam a terminar no novo tempo (a agenda e o calendário do barbeiro já mostram assim).
+   * Devolve os horários que, com o tempo novo, encostam no cliente seguinte, pro barbeiro decidir.
+   */
+  atualizarServico(barbeariaId: number, id: number, s: { nome: string; duracaoMin: number; precoCentavos: number; descricao?: string; emDomicilio?: boolean }, agora?: Date): { ajustados: number; conflitos: Agendamento[] } {
     const v = servicoValido(s);
+    const b = this.barbeariaPorId(barbeariaId);
     this.db.prepare("UPDATE servicos SET nome = ?, duracao_min = ?, preco_centavos = ?, descricao = ?, em_domicilio = ? WHERE id = ? AND barbearia_id = ?")
       .run(v.nome, v.duracaoMin, v.precoCentavos, v.descricao, v.emDomicilio, id, barbeariaId);
+    if (!b) return { ajustados: 0, conflitos: [] };
+    const futuros = this.db.prepare(`SELECT id, inicio, fim, profissional_id AS profissionalId FROM agendamentos
+      WHERE barbearia_id = ? AND servico_id = ? AND status = 'confirmado' AND inicio > ?`)
+      .all(barbeariaId, id, agoraNoFuso(b.fuso, agora)) as { id: number; inicio: string; fim: string; profissionalId: number }[];
+    const mudar = this.db.prepare("UPDATE agendamentos SET fim = ? WHERE id = ? AND barbearia_id = ?");
+    const conflitos: Agendamento[] = [];
+    let ajustados = 0;
+    for (const a of futuros) {
+      const fim = `${a.inicio.slice(0, 10)}T${deMinutos(paraMinutos(a.inicio.slice(11)) + v.duracaoMin)}`;
+      if (fim === a.fim) continue;
+      mudar.run(fim, a.id, barbeariaId);
+      ajustados++;
+      const encosta = this.db.prepare(`SELECT 1 FROM agendamentos WHERE barbearia_id = ? AND profissional_id = ? AND status = 'confirmado'
+        AND id <> ? AND inicio < ? AND fim > ?`).get(barbeariaId, a.profissionalId, a.id, fim, a.inicio);
+      const ag = encosta && this.agendamento(barbeariaId, a.id);
+      if (ag) conflitos.push(ag);
+    }
+    return { ajustados, conflitos };
   }
 
   // ---------- funcionamento: preços, intervalo, atendimento, fila, fechar hoje ----------
 
-  atualizarFuncionamento(id: number, dados: { mostrarPrecos: boolean; intervaloMin: number; atendimento: string }): void {
+  atualizarFuncionamento(id: number, dados: { mostrarPrecos: boolean; intervaloMin: number; atendimento: string; folgaMin?: number }): void {
     if (!(INTERVALOS as readonly number[]).includes(dados.intervaloMin)) throw new ErroAgenda("Intervalo inválido.");
     if (!["agenda", "chegada", "ambos"].includes(dados.atendimento)) throw new ErroAgenda("Forma de atendimento inválida.");
-    this.db.prepare("UPDATE barbearias SET mostrar_precos = ?, intervalo_min = ?, atendimento = ? WHERE id = ?")
-      .run(dados.mostrarPrecos ? 1 : 0, dados.intervaloMin, dados.atendimento, id);
+    const folga = dados.folgaMin ?? this.barbeariaPorId(id)?.folgaMin ?? 0;
+    if (!(FOLGAS as readonly number[]).includes(folga)) throw new ErroAgenda("Folga entre clientes inválida.");
+    this.db.prepare("UPDATE barbearias SET mostrar_precos = ?, intervalo_min = ?, atendimento = ?, folga_min = ? WHERE id = ?")
+      .run(dados.mostrarPrecos ? 1 : 0, dados.intervaloMin, dados.atendimento, folga, id);
   }
 
   /** Fecha (ou reabre) a barbearia hoje: o site mostra "Fechado hoje" e não oferece horários do dia. */
@@ -696,7 +726,9 @@ export class BancoAgenda {
     const ocupados = [
       ...this.agendamentosDoDia(barbeariaId, data, profissionalId).filter((a) => a.status === "confirmado" && a.id !== ignorarId),
       // Folgas: as da barbearia toda e as deste profissional.
-      ...this.bloqueiosDoDia(barbeariaId, data).filter((x) => x.profissionalId === undefined || x.profissionalId === profissionalId),
+      ...this.bloqueiosDoDia(barbeariaId, data)
+        .filter((x) => x.profissionalId === undefined || x.profissionalId === profissionalId)
+        .map((x) => ({ ...x, semFolga: true })),
     ];
     return horariosLivres({
       data,
@@ -705,6 +737,7 @@ export class BancoAgenda {
       ocupados,
       agora: agoraNoFuso(b.fuso, agora),
       passo: b.intervaloMin,
+      folga: b.folgaMin,
     });
   }
 
@@ -1108,7 +1141,9 @@ export class BancoAgenda {
 
   /** Horários confirmados num intervalo de datas (pro calendário do barbeiro). */
   agendamentosEntre(barbeariaId: number, desde: Data, ate: Data, profissionalId?: number): (Agendamento & { duracaoMin: number })[] {
-    return this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico, s.duracao_min AS duracaoMin,
+    // Duração pelo fim gravado: é o que ocupa a agenda (muda junto quando o barbeiro muda o tempo do serviço).
+    return this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome AS servico,
+        CAST(round((julianday(a.fim) - julianday(a.inicio)) * 1440) AS INTEGER) AS duracaoMin,
         a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome,
         a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id

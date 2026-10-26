@@ -36,6 +36,29 @@ describe("horariosLivres", () => {
     });
     expect(r).toEqual(["09:00", "10:00"]);
   });
+  it("folga entre clientes e encaixe logo depois de cada um", () => {
+    const longo = { abre: "09:00", fecha: "12:00" };
+    // Corte de 40 min às 9h com 10 de folga: o próximo pode começar 9h50, não 9h40 nem 9h30.
+    const r = horariosLivres({
+      ...base, duracao: 40, folga: 10, expediente: longo,
+      ocupados: [{ inicio: "2026-10-28T09:00", fim: "2026-10-28T09:40" }],
+    });
+    expect(r).toContain("09:50");
+    expect(r).not.toContain("09:30");
+    // Antes de um cliente também precisa da folga: 10h40 com 40 min termina 11h20, encosta num cliente às 11h25.
+    const antes = horariosLivres({
+      ...base, duracao: 40, folga: 10, expediente: longo,
+      ocupados: [{ inicio: "2026-10-28T11:25", fim: "2026-10-28T12:00" }],
+    });
+    expect(antes).toContain("10:30");
+    expect(antes).not.toContain("10:40");
+    // Bloqueio do barbeiro não pede folga.
+    const bloqueio = horariosLivres({
+      ...base, duracao: 30, folga: 15, expediente: longo,
+      ocupados: [{ inicio: "2026-10-28T09:00", fim: "2026-10-28T10:00", semFolga: true }],
+    });
+    expect(bloqueio[0]).toBe("10:00");
+  });
   it("hoje só a partir de agora + antecedência; ontem nada; dia fechado nada", () => {
     expect(horariosLivres({ ...base, data: "2026-10-27", agora: "2026-10-27T09:10", expediente: exp })).toEqual(["10:00", "10:30"]);
     expect(horariosLivres({ ...base, data: "2026-10-26", expediente: exp })).toEqual([]);
@@ -876,5 +899,45 @@ describe("plano mensal do cliente", () => {
     b.salvarPlano(a.id, { telefone: "5519998765432", nome: "Lucas", usosPorMes: 2, valorCentavos: 8000, validoAte: "2026-11-30" });
     expect(b.planos(a.id, new Date("2026-11-05T12:00:00Z"))).toHaveLength(1);
     expect(b.planos(a.id, new Date("2026-11-05T12:00:00Z"))[0]!.vencido).toBe(false);
+  });
+});
+
+describe("tempo de cada serviço e folga entre clientes", () => {
+  const antes = new Date("2026-10-01T12:00:00Z");
+  function montar() {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const a = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "a@x.com", senha: "segredo123", agora: antes }).barbearia;
+    const [p] = b.profissionais(a.id, true);
+    const corte = b.servicos(a.id, true).find((s) => s.nome === "Corte")!;
+    const marcar = (hora: string, telefone: string) => b.agendar({ barbeariaId: a.id, profissionalId: p!.id, servicoId: corte.id, data: "2026-10-20", hora, clienteNome: "Cliente", clienteTelefone: telefone, agora: antes });
+    return { b, a, p: p!, corte, marcar };
+  }
+
+  it("a folga da barbearia entra nos horários livres", () => {
+    const { b, a, p, corte, marcar } = montar();
+    b.atualizarServico(a.id, corte.id, { nome: "Corte", duracaoMin: 40, precoCentavos: 4000 }, antes);
+    b.atualizarFuncionamento(a.id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "agenda", folgaMin: 10 });
+    expect(b.barbeariaPorId(a.id)!.folgaMin).toBe(10);
+    marcar("09:00", "5519998000001");
+    const livres = b.horariosLivres(a.id, p.id, corte.id, "2026-10-20", antes);
+    expect(livres[0]).toBe("09:50");
+    expect(() => b.atualizarFuncionamento(a.id, { mostrarPrecos: true, intervaloMin: 30, atendimento: "agenda", folgaMin: 7 })).toThrow(ErroAgenda);
+    // Sem dizer a folga, mantém a que estava.
+    b.atualizarFuncionamento(a.id, { mostrarPrecos: false, intervaloMin: 15, atendimento: "agenda" });
+    expect(b.barbeariaPorId(a.id)).toMatchObject({ folgaMin: 10, intervaloMin: 15 });
+  });
+
+  it("mudar o tempo do serviço muda os horários futuros na agenda e avisa quem encosta no seguinte", () => {
+    const { b, a, corte, marcar } = montar();
+    const primeiro = marcar("09:00", "5519998000001");
+    marcar("09:30", "5519998000002");
+    const r = b.atualizarServico(a.id, corte.id, { nome: "Corte", duracaoMin: 45, precoCentavos: 4000 }, antes);
+    expect(r.ajustados).toBe(2);
+    expect(b.agendamento(a.id, primeiro)!.fim).toBe("2026-10-20T09:45");
+    expect(r.conflitos.map((c) => c.id)).toContain(primeiro);
+    // O calendário do barbeiro mostra o tempo novo.
+    expect(b.agendamentosEntre(a.id, "2026-10-20", "2026-10-20")[0]!.duracaoMin).toBe(45);
+    // Mudar só o preço não mexe nos horários.
+    expect(b.atualizarServico(a.id, corte.id, { nome: "Corte", duracaoMin: 45, precoCentavos: 4500 }, antes).ajustados).toBe(0);
   });
 });
