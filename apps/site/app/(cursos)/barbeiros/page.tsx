@@ -92,9 +92,6 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
             <a href="#estilos" className="botao-sec">Ver os estilos</a>
           </div>
-          <p className="venda-preco-curto">
-            {plano.testeDias > 0 && `${plano.testeDias} dias pra testar. `}Contratação de {reais(adesao)} e depois {reais(plano.valorCentavos)} por mês, no Pix. Sem cartão, sem fidelidade.
-          </p>
         </div>
         <figure className="venda-celular" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,26 +118,6 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
               <ul>{itens.map((i) => <li key={i}>{i}</li>)}</ul>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="venda-plano" aria-labelledby="plano-titulo">
-        <div>
-          <h2 id="plano-titulo">Quanto custa</h2>
-          <div className="venda-valores">
-            <p className="venda-valor"><strong>{reais(adesao)}</strong> na contratação</p>
-            <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
-          </div>
-          <ul>
-            {plano.testeDias > 0 && <li>{plano.testeDias} dias pra testar antes de contratar.</li>}
-            <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
-            <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
-            <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
-          </ul>
-        </div>
-        <div className="venda-plano-acao">
-          <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
-          <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva uns 5 minutos, pelo celular.</p>
         </div>
       </section>
 
@@ -178,6 +155,27 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           </ul>
         </section>
       )}
+
+      {/* Preço por último: primeiro o barbeiro vê o que ganha, depois quanto custa. */}
+      <section className="venda-plano" aria-labelledby="plano-titulo">
+        <div>
+          <h2 id="plano-titulo">Quanto custa</h2>
+          <div className="venda-valores">
+            <p className="venda-valor"><strong>{reais(adesao)}</strong> na contratação</p>
+            <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
+          </div>
+          <ul>
+            {plano.testeDias > 0 && <li>{plano.testeDias} dias pra testar antes de contratar.</li>}
+            <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
+            <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
+            <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
+          </ul>
+        </div>
+        <div className="venda-plano-acao">
+          <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
+          <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva uns 5 minutos, pelo celular.</p>
+        </div>
+      </section>
 
       <section className="venda-perguntas" aria-labelledby="perguntas-titulo">
         <h2 id="perguntas-titulo">Perguntas</h2>
