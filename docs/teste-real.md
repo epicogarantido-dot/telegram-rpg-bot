@@ -43,3 +43,14 @@ um seu, como **barbeiro**, e outro (de alguém da família) como **cliente**.
 | Link do cliente | remarcar/cancelar até 10 vezes por hora por aparelho |
 
 O barbeiro logado não passa pelas travas (pode marcar quantos quiser pros clientes).
+
+## Aluno: entrar pelo WhatsApp (precisa do bot rodando)
+
+1. Num celular que nunca entrou, abra uma lição: tem que aparecer "Entre pra ler esta lição".
+2. Toque em **Entrar pelo WhatsApp**: o WhatsApp abre com "Quero entrar no Aprenda Livre". Envie.
+3. O bot responde em segundos com "Oi, <nome>!" e o link `/e/...`. A prévia do link aparece na conversa.
+4. Toque no link: o site abre já dentro, **na mesma lição**.
+5. Toque no mesmo link de novo (ou mande pra outro celular): tem que dar "Esse link venceu".
+6. Mande **entrar** pro bot: chega um link novo. Abra no computador: entra lá também.
+7. Na área do aluno, **Sair de todos os aparelhos**: celular e computador saem.
+8. Bot desligado: em `/painel/alunos`, **Gerar link** e mande à mão pra pessoa.

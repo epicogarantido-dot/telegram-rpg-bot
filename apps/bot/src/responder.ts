@@ -23,6 +23,18 @@ export function ehPedidoDeSaida(texto: string): boolean {
   return ["sair", "parar", "pare", "stop", "descadastrar", "remover"].includes(normalizar(texto.trim()).replace(/[!.]/g, ""));
 }
 
+/**
+ * Quem escreve isso quer entrar no site: o bot responde com o link de entrada.
+ * Saudação também conta, porque o primeiro contato quase sempre é um "oi" ou a
+ * mensagem pronta do botão "Entrar pelo WhatsApp" ("Quero entrar no Aprenda Livre").
+ */
+export function ehPedidoDeEntrada(texto: string): boolean {
+  const t = normalizar(texto.trim()).replace(/[!?.,]/g, " ").replace(/\s+/g, " ").trim();
+  const palavras = ["oi", "ola", "oie", "eai", "e ai", "entrar", "entra", "acessar", "acesso", "login", "link", "comecar", "bom dia", "boa tarde", "boa noite"];
+  if (palavras.includes(t)) return true;
+  return ["quero entrar", "aprenda livre", "meu codigo", "manda o link", "me manda o link", "quero acessar", "quero os cursos", "novo link"].some((f) => t.includes(f));
+}
+
 export const RESPOSTA_SAIDA = "Pronto, você não vai mais receber mensagens nossas. Desculpe o incômodo e bom trabalho! 🙏";
 
 export function responder(textoRecebido: string, ctx: Contexto): string | null {
@@ -33,8 +45,6 @@ export function responder(textoRecebido: string, ctx: Contexto): string | null {
   const arg = resto.join(" ");
 
   switch (comando) {
-    case "oi":
-    case "ola":
     case "menu":
     case "ajuda":
     case "start":

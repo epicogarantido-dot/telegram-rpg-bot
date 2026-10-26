@@ -1,20 +1,24 @@
 # Segurança
 
-## Login dos alunos (WhatsApp + senha)
+## Login dos alunos (só WhatsApp, sem senha)
 
-- **Prova do número sem SMS:** o site mostra um código; a pessoa o **envia** pro WhatsApp do bot.
-  A mensagem chega do número dela, então só quem tem o WhatsApp consegue confirmar. O bot nunca
-  manda mensagem primeiro (menos risco de banimento, zero custo).
-- O código vale 15 minutos, é de uso único, e só o **navegador que pediu** conclui o fluxo
-  (cookie `desafio_whatsapp` httpOnly; no banco fica só o hash).
-- Código de outro número não confirma; o bot só repassa ao site com o segredo `BOT_SEGREDO`.
-- Senhas com scrypt + sal. Senhas óbvias recusadas. Sessões: token aleatório no cookie
-  httpOnly/SameSite=Lax/Secure, hash no banco, 30 dias.
-- **Força bruta:** 5 senhas erradas por número em 15 min; 30 ações por IP em 15 min (inclui o
-  login do admin). Mesma mensagem pra "número não existe" e "senha errada", e o tempo de resposta
-  é igual (não dá pra descobrir quem tem conta).
-- Trocar a senha exige confirmar pelo WhatsApp de novo e **derruba todas as sessões**.
-- Cadastro nunca confirmado pode ser refeito: quem provar o número fica com ele.
+- **A pessoa escreve pro bot** ("Quero entrar no Aprenda Livre", "oi", "entrar"). A mensagem chega
+  do número dela, então só quem tem aquele WhatsApp recebe a resposta. O bot nunca manda mensagem
+  primeiro (menos risco de banimento, zero custo); o número vem do WhatsApp, não de formulário.
+- O bot repassa número + nome do perfil ao site (`/api/whatsapp/entrada`, protegido por
+  `BOT_SEGREDO`). O site cria a conta no primeiro contato e devolve um **link pessoal** `/e/<token>`.
+- O link vale **uma vez** e por **24 horas**; pedir outro mata o anterior. No banco fica só o hash.
+- **Prévia do WhatsApp não gasta o link:** a página `/e/<token>` só entra quando o navegador roda o
+  JavaScript (ou a pessoa toca no botão). Quem só busca a página (robô de prévia) não envia nada.
+  A página não manda Referer e não é indexada.
+- Link já usado ou vencido → "Esse link venceu" com um botão pra pedir outro (mensagem fixa).
+- **Força bruta:** token de 32 bytes aleatórios; 5 links por número em 15 min; 30 entradas por IP.
+- Sessões: token aleatório no cookie httpOnly/SameSite=Lax/Secure, hash no banco, **180 dias**.
+- **"Sair de todos os aparelhos"** na área do aluno derruba todas as sessões e o link pendente.
+- O destino depois de entrar (`?voltar=`) só aceita caminho `/cursos/...` do próprio site.
+- Plano B com o bot fora do ar: o admin gera o link em `/painel/alunos` e manda à mão, numa
+  conversa que a pessoa começou.
+- O painel das barbearias (que paga e tem dados de cliente) continua com e-mail + senha.
 
 ## Site
 
@@ -26,7 +30,7 @@
 
 ## LGPD
 
-- Consentimento explícito no cadastro (registrado com data).
+- A conta nasce quando a pessoa escreve pro bot pedindo pra entrar (data registrada). O bot só responde; convites e comunidade têm opt-in próprio.
 - "Excluir minha conta" na área do aluno apaga conta, sessões e progresso.
 - Quem responde SAIR ao bot é bloqueado pra sempre nos contatos de prospecção.
 - Bancos em `data/privado/` (fora do git). Backup só com login de admin.

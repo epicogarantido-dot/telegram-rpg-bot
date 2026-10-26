@@ -9,7 +9,7 @@ import { membroAtual } from "@/lib/membros";
 
 type Params = { slug: string; modulo: string; licao: string };
 
-// Dinâmica: a partir da segunda lição, o conteúdo depende de quem está logado.
+// Dinâmica: o conteúdo só aparece pra quem entrou.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
@@ -32,8 +32,8 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
   const anterior = sequencia[i - 1];
   const proxima = sequencia[i + 1];
   const href = (x: (typeof sequencia)[number]) => `/cursos/${curso.slug}/${x.modulo.id}/${x.licao.id}`;
-  // A primeira lição é a amostra grátis; o resto pede conta com WhatsApp confirmado.
-  const trancada = i > 0 && !(await membroAtual())?.verificado;
+  // Lição só pra quem entrou pelo WhatsApp; a página do curso (resumo e lista) é que fica aberta.
+  const trancada = !(await membroAtual())?.verificado;
 
   return (
     <article className="licao">
@@ -42,7 +42,7 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
       </p>
       <h1>{licao.titulo}</h1>
       {trancada ? (
-        <LicaoTrancada caminho={href(sequencia[i]!)} primeira={href(sequencia[0]!)} totalLicoes={sequencia.length} />
+        <LicaoTrancada caminho={href(sequencia[i]!)} totalLicoes={sequencia.length} />
       ) : (
         <>
           <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />

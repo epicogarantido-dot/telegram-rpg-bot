@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { BancoMembros, ErroMembro, extrairCodigo, LIMITES, telefoneValido, validarSenha } from "./banco.ts";
+import { BancoMembros, ErroMembro, LIMITES, LINK_HORAS, limparNome, SESSAO_DIAS, telefoneValido } from "./banco.ts";
 
 const TEL = "5511987654321";
 const novo = () => new BancoMembros(":memory:");
-const cadastro = (b: BancoMembros, senha = "segredo-forte") =>
-  b.cadastrar({ nome: "Ana Souza", telefone: "(11) 98765-4321", senha, consentiu: true });
+/** Entra pelo fluxo real: pede o link (como o bot) e troca por sessão (como o site). */
+function entrar(b: BancoMembros, nome = "Ana Souza") {
+  const { token } = b.linkDeEntrada(TEL, nome);
+  return b.entrarComLink(token);
+}
 
 describe("validações", () => {
   it("aceita só celular brasileiro", () => {
@@ -12,92 +15,101 @@ describe("validações", () => {
     expect(() => telefoneValido("(11) 3232-1010")).toThrow(ErroMembro);
     expect(() => telefoneValido("+1 415 555 0100")).toThrow(ErroMembro);
   });
-  it("recusa senha curta, óbvia ou repetida", () => {
-    expect(() => validarSenha("curta")).toThrow(/8 caracteres/);
-    expect(() => validarSenha("12345678")).toThrow(/fácil/);
-    expect(() => validarSenha("aaaaaaaaa")).toThrow(/fácil/);
-    expect(() => validarSenha("barbearia-2026")).not.toThrow();
-  });
-  it("acha o código na mensagem", () => {
-    expect(extrairCodigo("Meu código: AB3K9Q")).toBe("AB3K9Q");
-    expect(extrairCodigo("ab3k9q")).toBe("AB3K9Q");
-    expect(extrairCodigo("oi, tudo bem?")).toBeUndefined();
-    expect(extrairCodigo("ABCDEFGH")).toBeUndefined(); // 8 letras não é código
-    // Palavras comuns de 6 letras não podem virar código (quebrariam comandos do bot).
-    expect(extrairCodigo("buscar python")).toBeUndefined();
-    expect(extrairCodigo("barbas")).toBeUndefined();
-    expect(extrairCodigo("buscar 234567")).toBeUndefined(); // só número também não
-    expect(extrairCodigo("buscar ok, código 7K3M9P")).toBe("7K3M9P");
+  it("limpa o nome do perfil do WhatsApp", () => {
+    expect(limparNome("  João 💈 Barber\n ")).toBe("João Barber");
+    expect(limparNome("Zé")).toBe("Zé");
+    expect(limparNome("🔥🔥")).toBeUndefined();
+    expect(limparNome(undefined)).toBeUndefined();
   });
 });
 
-describe("cadastro com confirmação pelo WhatsApp", () => {
-  it("fluxo completo: código → mensagem do próprio número → sessão", () => {
+describe("entrar pelo WhatsApp", () => {
+  it("primeira mensagem cria a conta já confirmada e o link abre a sessão", () => {
     const b = novo();
-    cadastro(b);
-    const { codigo, desafio } = b.novoCodigo(TEL, "cadastro");
-    expect(extrairCodigo(codigo)).toBe(codigo); // todo código gerado é reconhecível
-    expect(b.statusDoDesafio(desafio)?.confirmado).toBe(false);
-    expect(() => b.concluirCadastro(desafio)).toThrow(/Ainda não/);
-
-    // Mensagem de OUTRO número com o código certo não confirma.
-    expect(b.confirmarPeloWhatsapp("5521999998888", `Meu código: ${codigo}`)?.ok).toBe(false);
-    expect(b.confirmarPeloWhatsapp(TEL, `Meu código: ${codigo}`)?.ok).toBe(true);
-    // Reenvio não confirma de novo.
-    expect(b.confirmarPeloWhatsapp(TEL, codigo)?.ok).toBe(false);
-
-    const token = b.concluirCadastro(desafio);
-    expect(b.membroDaSessao(token)).toMatchObject({ telefone: TEL, verificado: true });
-    // O código é de uso único.
-    expect(() => b.concluirCadastro(desafio)).toThrow();
+    const r = b.linkDeEntrada(TEL, "Ana Souza 💈");
+    expect(r.novo).toBe(true);
+    expect(r.nome).toBe("Ana Souza");
+    const sessao = b.entrarComLink(r.token);
+    expect(b.membroDaSessao(sessao)).toMatchObject({ telefone: TEL, nome: "Ana Souza", verificado: true });
   });
 
-  it("outro navegador (sem o desafio) não conclui", () => {
+  it("sem nome no perfil vira \"Aluno\"; quem volta mantém o nome", () => {
     const b = novo();
-    cadastro(b);
-    const { codigo } = b.novoCodigo(TEL, "cadastro");
-    b.confirmarPeloWhatsapp(TEL, codigo);
-    expect(() => b.concluirCadastro("desafio-inventado")).toThrow(ErroMembro);
-    expect(() => b.concluirCadastro(undefined)).toThrow(ErroMembro);
+    expect(b.linkDeEntrada(TEL).nome).toBe("Aluno");
+    const deNovo = b.linkDeEntrada(TEL, "Outro Nome");
+    expect(deNovo.novo).toBe(false);
+    expect(deNovo.nome).toBe("Aluno");
   });
 
-  it("código expira e o novo invalida o antigo", () => {
+  it("o link funciona uma vez só", () => {
     const b = novo();
-    cadastro(b);
-    const t0 = new Date("2026-10-25T12:00:00Z");
-    const a = b.novoCodigo(TEL, "cadastro", t0);
-    expect(b.confirmarPeloWhatsapp(TEL, a.codigo, new Date("2026-10-25T12:16:00Z"))?.ok).toBe(false);
-    const b1 = b.novoCodigo(TEL, "cadastro", t0);
-    const b2 = b.novoCodigo(TEL, "cadastro", t0);
-    expect(b.confirmarPeloWhatsapp(TEL, b1.codigo, t0)?.ok).toBe(false);
-    expect(b.confirmarPeloWhatsapp(TEL, b2.codigo, t0)?.ok).toBe(true);
+    const { token } = b.linkDeEntrada(TEL, "Ana");
+    b.entrarComLink(token);
+    expect(() => b.entrarComLink(token)).toThrow(/já foi usado ou venceu/);
   });
 
-  it("número confirmado não pode ser recadastrado; não confirmado pode", () => {
+  it(`o link vence em ${LINK_HORAS} horas`, () => {
     const b = novo();
-    cadastro(b, "primeira-senha");
-    cadastro(b, "segunda-senha"); // ninguém provou o número ainda: substitui
-    const { codigo, desafio } = b.novoCodigo(TEL, "cadastro");
-    b.confirmarPeloWhatsapp(TEL, codigo);
-    b.concluirCadastro(desafio);
-    expect(() => cadastro(b, "terceira-senha")).toThrow(/já tem conta/);
-    expect(b.entrar(TEL, "segunda-senha").verificado).toBe(true);
+    const agora = new Date("2026-10-27T12:00:00Z");
+    const { token } = b.linkDeEntrada(TEL, "Ana", agora);
+    const depois = new Date(agora.getTime() + LINK_HORAS * 3_600_000 + 1000);
+    expect(() => b.entrarComLink(token, depois)).toThrow(/venceu/);
   });
-});
 
-describe("login", () => {
-  it("mesma mensagem pra número inexistente e senha errada; bloqueia após limite", () => {
+  it("pedir link novo mata o anterior", () => {
     const b = novo();
-    cadastro(b);
-    const erroInexistente = (() => { try { b.entrar("21 99999-0000", "x"); } catch (e) { return (e as Error).message; } })();
-    const erroSenha = (() => { try { b.entrar(TEL, "errada"); } catch (e) { return (e as Error).message; } })();
-    expect(erroInexistente).toBe(erroSenha);
+    const velho = b.linkDeEntrada(TEL, "Ana").token;
+    const atual = b.linkDeEntrada(TEL, "Ana").token;
+    expect(() => b.entrarComLink(velho)).toThrow(ErroMembro);
+    expect(() => b.entrarComLink(atual)).not.toThrow();
+  });
 
+  it("token inventado não entra", () => {
+    const b = novo();
+    b.linkDeEntrada(TEL, "Ana");
+    expect(() => b.entrarComLink("qualquer-coisa")).toThrow(ErroMembro);
+  });
+
+  it("limita links pedidos por número", () => {
+    const b = novo();
     const agora = new Date();
-    for (let i = 1; i < LIMITES.porTelefone; i++) expect(() => b.entrar(TEL, "errada", agora)).toThrow(/incorretos/);
-    expect(() => b.entrar(TEL, "segredo-forte", agora)).toThrow(/Muitas tentativas/);
-    // Passada a janela, volta a funcionar.
-    expect(b.entrar(TEL, "segredo-forte", new Date(agora.getTime() + 16 * 60_000)).token).toBeTruthy();
+    for (let i = 0; i < LIMITES.linksPorTelefone; i++) b.linkDeEntrada(TEL, "Ana", agora);
+    expect(() => b.linkDeEntrada(TEL, "Ana", agora)).toThrow(/muitos links/);
+    expect(() => b.linkDeEntrada("5511912345678", "Bia", agora)).not.toThrow();
+  });
+
+  it("número de fora do Brasil não ganha conta", () => {
+    expect(() => novo().linkDeEntrada("14155550100", "John")).toThrow(ErroMembro);
+  });
+
+  it(`a sessão dura ${SESSAO_DIAS} dias`, () => {
+    const b = novo();
+    const sessao = entrar(b);
+    const linha = b.db.prepare("SELECT expira_em AS e FROM sessoes").get() as { e: string };
+    const dias = (new Date(linha.e).getTime() - Date.now()) / 86_400_000;
+    expect(Math.round(dias)).toBe(SESSAO_DIAS);
+    expect(b.membroDaSessao(sessao)).toBeDefined();
+  });
+
+  it("sair de todos os aparelhos derruba as sessões e o link pendente", () => {
+    const b = novo();
+    const celular = entrar(b);
+    const computador = b.entrarComLink(b.linkDeEntrada(TEL).token);
+    const pendente = b.linkDeEntrada(TEL).token;
+    const { id } = b.membroDaSessao(celular)!;
+    b.sairDeTodos(id);
+    expect(b.membroDaSessao(celular)).toBeUndefined();
+    expect(b.membroDaSessao(computador)).toBeUndefined();
+    expect(() => b.entrarComLink(pendente)).toThrow(ErroMembro);
+  });
+
+  it("o banco não guarda o link nem a sessão em texto", () => {
+    const b = novo();
+    const { token } = b.linkDeEntrada(TEL, "Ana");
+    const sessao = b.entrarComLink(token);
+    const tudo = JSON.stringify([b.db.prepare("SELECT * FROM links_entrada").all(), b.db.prepare("SELECT * FROM sessoes").all()]);
+    expect(tudo).not.toContain(token);
+    expect(tudo).not.toContain(sessao);
   });
 
   it("limita por IP", () => {
@@ -109,43 +121,26 @@ describe("login", () => {
   });
 });
 
-describe("esqueci a senha", () => {
-  it("troca a senha só com confirmação e derruba sessões antigas", () => {
+describe("nome, progresso e LGPD", () => {
+  it("troca o nome", () => {
     const b = novo();
-    cadastro(b);
-    const c = b.novoCodigo(TEL, "cadastro");
-    b.confirmarPeloWhatsapp(TEL, c.codigo);
-    const velha = b.concluirCadastro(c.desafio);
-
-    const r = b.novoCodigo(TEL, "senha");
-    expect(() => b.redefinirSenha(r.desafio, "nova-senha-boa")).toThrow(/Confirme/);
-    b.confirmarPeloWhatsapp(TEL, r.codigo);
-    const nova = b.redefinirSenha(r.desafio, "nova-senha-boa");
-    expect(b.membroDaSessao(velha)).toBeUndefined();
-    expect(b.membroDaSessao(nova)?.telefone).toBe(TEL);
-    expect(b.entrar(TEL, "nova-senha-boa").token).toBeTruthy();
+    const { id } = b.membroDaSessao(entrar(b, "Aluno"))!;
+    b.trocarNome(id, "  Carlos  Silva ");
+    expect(b.listar()[0]!.nome).toBe("Carlos Silva");
+    expect(() => b.trocarNome(id, "💈")).toThrow(ErroMembro);
   });
 
-  it("número sem conta recebe código que nunca funciona (não revela se existe)", () => {
-    const b = novo();
-    const r = b.novoCodigo("21 99999-0000", "senha");
-    expect(r.codigo).toHaveLength(6);
-    expect(b.confirmarPeloWhatsapp("5521999990000", r.codigo)?.ok).toBe(false);
-  });
-});
-
-describe("progresso e LGPD", () => {
   it("marca lições e apaga tudo ao excluir a conta", () => {
     const b = novo();
-    const id = cadastro(b);
+    const sessao = entrar(b);
+    const { id } = b.membroDaSessao(sessao)!;
     b.marcarLicao(id, "curso-a", "l1", true);
     b.marcarLicao(id, "curso-a", "l1", true);
     b.marcarLicao(id, "curso-a", "l2", true);
     b.marcarLicao(id, "curso-a", "l2", false);
     expect([...b.licoesConcluidas(id, "curso-a")]).toEqual(["curso-a/l1"]);
-    const token = b.criarSessao(id);
     b.excluirConta(id);
-    expect(b.membroDaSessao(token)).toBeUndefined();
+    expect(b.membroDaSessao(sessao)).toBeUndefined();
     expect(b.licoesConcluidas(id).size).toBe(0);
   });
 });

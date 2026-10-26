@@ -1,25 +1,21 @@
-import Link from "next/link";
-import { Lock, MessageCircle } from "lucide-react";
+import { Lock } from "lucide-react";
+import { EntrarPeloWhatsapp } from "@/componentes/EntrarPeloWhatsapp";
 
 /**
- * O que aparece no lugar da lição pra quem não entrou. A primeira lição de cada curso é aberta;
- * as outras pedem conta (grátis, confirmada pelo WhatsApp). Depois de entrar, volta pra cá.
+ * O que aparece no lugar da lição pra quem não entrou. Entrar é pelo WhatsApp: um toque
+ * abre a conversa com a mensagem pronta, o bot responde com o link e a pessoa volta pra cá.
  */
-export function LicaoTrancada({ caminho, primeira, totalLicoes }: { caminho: string; primeira: string; totalLicoes: number }) {
-  const voltar = encodeURIComponent(caminho);
+export function LicaoTrancada({ caminho, totalLicoes }: { caminho: string; totalLicoes: number }) {
   return (
     <section className="licao-trancada" aria-labelledby="trancada-titulo">
       <p className="licao-trancada-icone" aria-hidden><Lock size={22} /></p>
-      <h2 id="trancada-titulo">Essa lição é pra quem tem conta</h2>
+      <h2 id="trancada-titulo">Entre pra ler esta lição</h2>
       <p className="suave">
-        A conta é grátis e leva um minuto: seu login é o seu WhatsApp. Com ela você libera as {totalLicoes} lições
-        do curso e o site guarda onde você parou.
+        É grátis e sem senha: seu WhatsApp é a sua entrada. Você libera as {totalLicoes} lições do curso, todos os
+        outros cursos, e o site guarda onde você parou.
       </p>
-      <div className="acoes">
-        <Link href={`/cadastro?voltar=${voltar}`} className="botao"><MessageCircle size={18} aria-hidden /> Criar conta grátis</Link>
-        <Link href={`/entrar?voltar=${voltar}`} className="botao-sec">Já tenho conta</Link>
-      </div>
-      <p className="suave pequeno">Ainda não sabe se o curso é pra você? <Link href={primeira}>Leia a primeira lição</Link>, ela é aberta.</p>
+      <EntrarPeloWhatsapp voltar={caminho} />
+      <p className="suave pequeno">O WhatsApp abre com a mensagem pronta. Envie, toque no link que chega e você volta direto pra esta lição.</p>
     </section>
   );
 }

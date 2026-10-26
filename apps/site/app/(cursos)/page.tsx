@@ -40,7 +40,7 @@ export default async function Inicio() {
         </div>
         <div className="vantagem">
           <span className="chip-icone acento"><HeartHandshake size={20} aria-hidden /></span>
-          <div><strong>Grátis de verdade</strong><span>Sem pegadinha. <Link href="/cadastro">Crie sua conta</Link> com o WhatsApp e salve seu progresso.</span></div>
+          <div><strong>Grátis de verdade</strong><span>Sem pegadinha e sem senha. <Link href="/entrar">Entre pelo WhatsApp</Link> e salve seu progresso.</span></div>
         </div>
         <div className="vantagem">
           <span className="chip-icone"><ShieldCheck size={20} aria-hidden /></span>

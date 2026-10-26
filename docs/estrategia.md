@@ -8,6 +8,8 @@
    finanças, marketing) e a **Revista** (`/revista`): notícias do mercado, a série *Barbearias pelo
    mundo* (um país por episódio; próximos: Japão, Turquia, EUA, Itália) e guias de onde aprender
    cortes de graça. Cada artigo termina com um convite pra `/barbeiros`.
+   **Entrada (27/10/2026):** contato começa no WhatsApp. A pessoa escreve pro bot e recebe um link
+   que abre o site já dentro, sem senha. Lições só pra quem entrou; Revista aberta (Google).
 2. **Site dos barbeiros (`app/(barbearias)`)** — o "book" de cada barbearia (fotos dos trabalhos,
    equipe, serviços, horários) com um dos 6 temas + agenda online + assinatura por Pix. Base pronta;
    próximos: efeitos completos de cada tema (docs/estilos/plano.md), vale-presente, plano mensal,

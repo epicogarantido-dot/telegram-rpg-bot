@@ -608,3 +608,12 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .licao-trancada p { margin: 0; }
 .licao-trancada-icone { color: var(--suave); }
 .licao-trancada .acoes { margin-top: 8px; }
+
+/* ---------- entrar pelo WhatsApp ---------- */
+.entrar-whats { margin: 20px 0 8px; }
+.entrar-whats .botao-whats { width: 100%; font-size: 18px; padding: 18px; }
+.passos-entrar { margin: 16px 0; padding-left: 22px; display: grid; gap: 6px; color: var(--suave); font-size: 15px; }
+.minha-conta { margin-top: 48px; display: grid; gap: 12px; max-width: 560px; }
+.minha-conta h2 { margin: 0; }
+.linha-nome { grid-template-columns: 1fr; }
+@media (min-width: 560px) { .linha-nome { grid-template-columns: 1fr auto; align-items: end; } }

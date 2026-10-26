@@ -1,9 +1,8 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { BancoMembros, ErroMembro, type Membro } from "@aprenda/membros";
+import { BancoMembros, ErroMembro, SESSAO_DIAS, type Membro } from "@aprenda/membros";
 
 const COOKIE_SESSAO = "sessao_aluno";
-const COOKIE_DESAFIO = "desafio_whatsapp";
 const COOKIE_VOLTAR = "voltar_licao";
 
 let banco: BancoMembros | undefined;
@@ -15,27 +14,12 @@ const seguro = () => process.env.NODE_ENV === "production";
 
 export async function gravarSessaoMembro(token: string): Promise<void> {
   (await cookies()).set(COOKIE_SESSAO, token, {
-    httpOnly: true, sameSite: "lax", secure: seguro(), maxAge: 60 * 60 * 24 * 30, path: "/",
+    httpOnly: true, sameSite: "lax", secure: seguro(), maxAge: 60 * 60 * 24 * SESSAO_DIAS, path: "/",
   });
-}
-
-export async function gravarDesafio(desafio: string): Promise<void> {
-  // Vive só o tempo do código (15 min) e nunca é lido por JavaScript.
-  (await cookies()).set(COOKIE_DESAFIO, desafio, {
-    httpOnly: true, sameSite: "lax", secure: seguro(), maxAge: 60 * 20, path: "/",
-  });
-}
-
-export async function lerDesafio(): Promise<string | undefined> {
-  return (await cookies()).get(COOKIE_DESAFIO)?.value;
-}
-
-export async function apagarDesafio(): Promise<void> {
-  (await cookies()).delete(COOKIE_DESAFIO);
 }
 
 /**
- * Pra onde mandar o aluno depois de entrar ou confirmar o WhatsApp. Só aceita caminho de
+ * Pra onde mandar o aluno depois de entrar pelo link do WhatsApp. Só aceita caminho de
  * curso do próprio site: nada de redirecionar pra fora com ?voltar=https://...
  */
 export function destinoSeguro(valor: unknown): string | undefined {
@@ -43,7 +27,7 @@ export function destinoSeguro(valor: unknown): string | undefined {
   return /^\/cursos\/[a-z0-9-]+(\/[a-z0-9-]+){0,2}$/.test(s) ? s : undefined;
 }
 
-/** Guarda a lição que o aluno queria ler; sobrevive aos passos de cadastro e confirmação. */
+/** Guarda a lição que o aluno queria ler; sobrevive à ida e volta pelo WhatsApp. */
 export async function guardarVolta(valor: unknown): Promise<void> {
   const destino = destinoSeguro(valor);
   if (destino) (await cookies()).set(COOKIE_VOLTAR, destino, {
@@ -66,8 +50,7 @@ export async function membroAtual(): Promise<Membro | undefined> {
 /** Página só pra aluno logado E com número confirmado. */
 export async function exigirMembro(): Promise<Membro> {
   const m = await membroAtual();
-  if (!m) redirect("/entrar");
-  if (!m.verificado) redirect("/entrar?confirmar=1");
+  if (!m?.verificado) redirect("/entrar");
   return m;
 }
 
@@ -104,5 +87,17 @@ export function mensagemMembro(e: unknown): string {
   return "Algo deu errado. Tente de novo.";
 }
 
-/** Número do bot (só dígitos com DDI) pra onde a pessoa manda o código. */
+/** Número do bot (só dígitos com DDI): a pessoa escreve pra ele e recebe o link de entrada. */
 export const whatsappBot = process.env.BOT_WHATSAPP ?? "";
+
+/** Texto que já vem escrito quando a pessoa toca em "Entrar pelo WhatsApp". */
+export const TEXTO_ENTRAR = "Quero entrar no Aprenda Livre";
+
+export function linkWhatsappEntrar(): string | undefined {
+  return whatsappBot ? `https://wa.me/${whatsappBot}?text=${encodeURIComponent(TEXTO_ENTRAR)}` : undefined;
+}
+
+/** Endereço público do site, pra montar o link que o bot manda. */
+export function urlDoSite(): string {
+  return (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+}

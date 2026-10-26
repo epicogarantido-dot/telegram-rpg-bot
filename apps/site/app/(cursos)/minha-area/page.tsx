@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, LogOut, Trophy } from "lucide-react";
 import { carregarCursos } from "@aprenda/catalogo";
-import { exigirMembro, obterMembros, sairMembro } from "@/lib/membros";
+import { exigirMembro, mensagemMembro, obterMembros, sairMembro } from "@/lib/membros";
 
 export const metadata = { title: "Minha área", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -11,6 +11,25 @@ async function sair() {
   "use server";
   await sairMembro();
   redirect("/");
+}
+
+async function sairDeTodos() {
+  "use server";
+  const m = await exigirMembro();
+  obterMembros().sairDeTodos(m.id);
+  await sairMembro();
+  redirect("/entrar");
+}
+
+async function trocarNome(form: FormData) {
+  "use server";
+  const m = await exigirMembro();
+  try {
+    obterMembros().trocarNome(m.id, String(form.get("nome") ?? ""));
+  } catch (e) {
+    redirect(`/minha-area?erroNome=${encodeURIComponent(mensagemMembro(e))}#conta`);
+  }
+  redirect("/minha-area?nome=1#conta");
 }
 
 async function excluir(form: FormData) {
@@ -22,7 +41,7 @@ async function excluir(form: FormData) {
   redirect("/?excluida=1");
 }
 
-export default async function MinhaArea({ searchParams }: { searchParams: Promise<{ bemvindo?: string; senha?: string; erro?: string }> }) {
+export default async function MinhaArea({ searchParams }: { searchParams: Promise<{ bemvindo?: string; erro?: string; nome?: string; erroNome?: string }> }) {
   const m = await exigirMembro();
   const sp = await searchParams;
   const cursos = await carregarCursos();
@@ -35,7 +54,6 @@ export default async function MinhaArea({ searchParams }: { searchParams: Promis
         <h1>{sp.bemvindo ? `Bem-vindo, ${primeiroNome}!` : `Olá, ${primeiroNome}!`}</h1>
         <form action={sair}><button className="botao-sec"><LogOut size={16} aria-hidden /> Sair</button></form>
       </div>
-      {sp.senha && <p className="atribuicao">Senha trocada. Os outros aparelhos foram desconectados.</p>}
       <p className="suave">Seu progresso fica salvo aqui. Continue de onde parou:</p>
 
       <div className="grade">
@@ -61,6 +79,21 @@ export default async function MinhaArea({ searchParams }: { searchParams: Promis
           );
         })}
       </div>
+
+      <section id="conta" className="minha-conta" aria-labelledby="conta-titulo">
+        <h2 id="conta-titulo">Sua conta</h2>
+        <p className="suave pequeno">Você entra com o WhatsApp terminado em {m.telefone.slice(-4)}. Sem senha.</p>
+        {sp.nome && <p className="atribuicao" role="status">Nome atualizado.</p>}
+        {sp.erroNome && <p className="erro" role="alert">{sp.erroNome}</p>}
+        <form action={trocarNome} className="formulario linha-nome">
+          <label>Seu nome<input name="nome" defaultValue={m.nome} required maxLength={60} autoComplete="name" /></label>
+          <button type="submit" className="botao-sec">Salvar nome</button>
+        </form>
+        <form action={sairDeTodos}>
+          <button type="submit" className="botao-sec"><LogOut size={16} aria-hidden /> Sair de todos os aparelhos</button>
+        </form>
+        <p className="suave pequeno">Use se perdeu o celular ou entrou num aparelho que não é seu. Pra voltar, peça um link novo no WhatsApp.</p>
+      </section>
 
       <details className="zona-perigo" id="excluir">
         <summary>Excluir minha conta</summary>

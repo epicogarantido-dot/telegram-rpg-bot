@@ -24,7 +24,7 @@ export function ProgressoLicao({ curso, licao }: { curso: string; licao: string 
     return (
       <div className="progresso-licao cta">
         <Sparkles size={20} aria-hidden />
-        <span><Link href="/cadastro">Crie sua conta grátis</Link> pra salvar seu progresso e continuar de onde parou.</span>
+        <span><Link href="/entrar">Entre pelo WhatsApp</Link> pra salvar seu progresso e continuar de onde parou.</span>
       </div>
     );
   }

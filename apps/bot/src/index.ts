@@ -12,9 +12,8 @@ import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, us
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
-import { extrairCodigo } from "@aprenda/membros";
 import { BancoProspeccao } from "@aprenda/prospeccao";
-import { ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
+import { ehPedidoDeEntrada, ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
 
 const PASTA_SESSAO = new URL("../auth/", import.meta.url).pathname;
@@ -27,23 +26,24 @@ const banco = new BancoProspeccao();
 const segredoSite = process.env.BOT_SEGREDO ?? "";
 
 /**
- * Código de confirmação do site: quem manda a mensagem prova que é dono do
- * número. O bot não decide nada, só repassa (número real + texto) pro site.
+ * Pedido de entrada: quem manda a mensagem prova que é dono do número. O bot não
+ * decide nada, só repassa (número real + nome do perfil) e devolve a resposta do
+ * site, que já vem com o link pessoal de entrada.
  */
-async function confirmarCodigoNoSite(telefone: string, texto: string): Promise<string> {
-  if (segredoSite.length < 24) return "Confirmação indisponível no momento. Tente mais tarde.";
+async function pedirLinkDeEntrada(telefone: string, nome: string | undefined): Promise<string> {
+  if (segredoSite.length < 24) return "A entrada pelo WhatsApp está indisponível no momento. Tente mais tarde.";
   try {
-    const r = await fetch(`${siteUrl.replace(/\/$/, "")}/api/whatsapp/codigo`, {
+    const r = await fetch(`${siteUrl.replace(/\/$/, "")}/api/whatsapp/entrada`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${segredoSite}` },
-      body: JSON.stringify({ telefone, texto }),
+      body: JSON.stringify({ telefone, nome }),
       signal: AbortSignal.timeout(10_000),
     });
     const d = (await r.json()) as { ok?: boolean; mensagem?: string };
-    return d.mensagem ?? "Não consegui confirmar agora. Tente de novo em instantes.";
+    return d.mensagem ?? "Não consegui gerar seu link agora. Mande *entrar* de novo em instantes.";
   } catch (e) {
     console.error("Falha ao falar com o site:", e);
-    return "Não consegui confirmar agora. Tente de novo em instantes.";
+    return "Não consegui gerar seu link agora. Mande *entrar* de novo em instantes.";
   }
 }
 console.log(`📚 ${ctx.cursos.length} cursos carregados`);
@@ -102,14 +102,14 @@ async function conectar(): Promise<void> {
       const telefone = jidTelefone?.split("@")[0]?.split(":")[0];
 
       let resposta: string | null;
-      if (extrairCodigo(texto)) {
-        resposta = telefone
-          ? await confirmarCodigoNoSite(telefone, texto)
-          : "Não consegui identificar seu número. Tente mandar de novo daqui a pouco.";
-      } else if (ehPedidoDeSaida(texto)) {
+      if (ehPedidoDeSaida(texto)) {
         if (telefone) banco.bloquear(telefone);
         else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
         resposta = RESPOSTA_SAIDA;
+      } else if (ehPedidoDeEntrada(texto)) {
+        resposta = telefone
+          ? await pedirLinkDeEntrada(telefone, msg.pushName ?? undefined)
+          : "Não consegui identificar seu número. Tente mandar de novo daqui a pouco.";
       } else {
         resposta = responder(texto, ctx);
       }
