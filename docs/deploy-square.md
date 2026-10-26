@@ -21,6 +21,12 @@ rodar `npm install` nem `build`.
 
 ## Atualizar um site que já está no ar (commit)
 
+Use `dist/aprenda-livre-site-commit.zip` (o mesmo conteúdo, sem `squarecloud.config`: o app já
+tem o dele, com o subdomínio dele). Depois de reiniciar, abra `/api/versao` no seu endereço: tem
+que mostrar o mesmo código e horário que o `npm run pacote:square` imprimiu. Se mostrar o antigo,
+o commit não entrou ou o app não reiniciou.
+
+
 Use o mesmo zip como **commit** no app que já existe (painel do app → Commit, ou
 `squarecloud commit <ID> --restart` no CLI). O commit descompacta o zip por cima dos
 arquivos do app e **mantém** o resto: `data/privado/` (bancos e fotos) e o `.env` não

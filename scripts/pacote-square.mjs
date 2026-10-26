@@ -13,6 +13,9 @@ const raiz = new URL("..", import.meta.url).pathname;
 const site = join(raiz, "apps/site");
 const destino = join(raiz, "dist/square");
 const zip = join(raiz, "dist/aprenda-livre-square.zip");
+// Pra atualizar um app que já existe: sem squarecloud.config (o app já tem o dele,
+// com o subdomínio certo; mandar outro pode fazer o commit não entrar).
+const zipCommit = join(raiz, "dist/aprenda-livre-site-commit.zip");
 
 const subdominio = process.env.SQUARE_SUBDOMINIO ?? "aprendalivre";
 const memoria = process.env.SQUARE_MEMORIA ?? "512";
@@ -22,6 +25,7 @@ execFileSync("npm", ["run", "build:site"], { cwd: raiz, stdio: "inherit" });
 
 rmSync(destino, { recursive: true, force: true });
 rmSync(zip, { force: true });
+rmSync(zipCommit, { force: true });
 mkdirSync(destino, { recursive: true });
 
 cpSync(join(site, ".next/standalone"), destino, { recursive: true });
@@ -56,6 +60,7 @@ process.env.AGENDA_DB ??= path.join(__dirname, "data/privado/agenda.db");
 process.env.PROSPECCAO_DB ??= path.join(__dirname, "data/privado/prospeccao.db");
 process.env.MEMBROS_DB ??= path.join(__dirname, "data/privado/membros.db");
 process.env.FOTOS_DIR ??= path.join(__dirname, "data/privado/fotos");
+process.env.APRENDA_RAIZ ??= __dirname;
 process.chdir(path.join(__dirname, "apps/site"));
 require("./apps/site/server.js");
 `);
@@ -71,6 +76,14 @@ AUTORESTART=true
 
 cpSync(join(raiz, ".env.example"), join(destino, ".env.example"));
 
+// Versão no ar: abra /api/versao depois de reiniciar pra conferir.
+const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: raiz }).toString().trim();
+const versao = `${commit} · gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
+writeFileSync(join(destino, "VERSAO.txt"), versao + "\n");
+
 execFileSync("zip", ["-qr", zip, "."], { cwd: destino });
-console.log(`✅ ${zip}`);
+execFileSync("zip", ["-qr", zipCommit, ".", "-x", "squarecloud.config"], { cwd: destino });
+console.log(`✅ ${zip} (primeiro envio: Upload)`);
+console.log(`✅ ${zipCommit} (atualizar o app que já existe: Commit e reiniciar)`);
+console.log(`Versão: ${versao}`);
 console.log("Antes de subir: crie o .env (copie de .env.example) com PAINEL_SENHA e os dados do Pix. Ver docs/deploy-square.md.");
