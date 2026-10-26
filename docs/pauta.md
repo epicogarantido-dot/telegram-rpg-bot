@@ -35,7 +35,7 @@ Checagem: agente `checador-fatos`, `npm test -w @aprenda/catalogo` e `npm run co
 | ✅ 26/10 | Curiosidade | Quarteto de barbearia | cuida da música (e do Ecad) |
 | ✅ 26/10 | Curiosidade | Movember e Novembro Azul | faz o concurso do bigode em novembro |
 | ✅ 26/10 | Curiosidade | A cadeira hidráulica (Koken) | ajusta a cadeira pra poupar as costas |
-| ⏳ 26/10 | Série ep. 9 | Nova Délhi: o barbeiro de calçada (Al Jazeera 2024). **Escrita, falta só a foto** (Openverse fora do ar): rode `foto-materia.mjs buscar "Delhi street barber"`, ponha em `imagens.json` e troque o fim do ep. 8 pra anunciar Nova Délhi | sabe o custo fixo e pensa em atendimento em domicílio |
+| ✅ 26/10 | Série ep. 9 | Nova Délhi: o barbeiro de calçada (Al Jazeera 2024) | sabe o custo fixo e pensa em atendimento em domicílio |
 | ✅ 26/10 | Guia | Perfil da Empresa no Google (Central de Ajuda) | cria, verifica e põe 9 fotos no perfil |
 | ✅ 26/10 | Guia | Barbeiro parceiro: Lei do Salão-Parceiro e STF | põe a parceria no papel e homologa |
 | ✅ 26/10 | Curiosidade | 18 de janeiro, Dia Nacional do Barbeiro (Lei 12.592) | põe a data no calendário |
