@@ -1,5 +1,5 @@
-import { timingSafeEqual } from "node:crypto";
 import { LINK_HORAS } from "@aprenda/membros";
+import { pedidoDoBot } from "@/lib/bot";
 import { mensagemMembro, obterMembros, urlDoSite } from "@/lib/membros";
 
 /**
@@ -9,13 +9,7 @@ import { mensagemMembro, obterMembros, urlDoSite } from "@/lib/membros";
  * Protegido por segredo compartilhado (BOT_SEGREDO): sem ele, ninguém de fora gera link.
  */
 export async function POST(req: Request) {
-  const segredo = process.env.BOT_SEGREDO ?? "";
-  const recebido = req.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
-  const a = Buffer.from(recebido);
-  const b = Buffer.from(segredo);
-  if (segredo.length < 24 || a.length !== b.length || !timingSafeEqual(a, b)) {
-    return Response.json({ erro: "não autorizado" }, { status: 401 });
-  }
+  if (!pedidoDoBot(req)) return Response.json({ erro: "não autorizado" }, { status: 401 });
   const corpo = (await req.json().catch(() => ({}))) as { telefone?: unknown; nome?: unknown };
   if (typeof corpo.telefone !== "string" || !/^\d{12,13}$/.test(corpo.telefone)) {
     return Response.json({ erro: "dados inválidos" }, { status: 400 });

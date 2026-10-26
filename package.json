@@ -14,6 +14,7 @@
     "dev:site": "npm run dev -w @aprenda/site",
     "build:site": "npm run build -w @aprenda/site",
     "pacote:square": "node scripts/pacote-square.mjs",
+    "pacote:bot": "node scripts/pacote-bot.mjs",
     "bot": "npm run start -w @aprenda/bot",
     "ingerir": "npm run ingerir -w @aprenda/ingestao --",
     "prospectar": "npm run prospectar -w @aprenda/prospeccao --",

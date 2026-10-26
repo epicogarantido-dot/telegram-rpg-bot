@@ -7,23 +7,72 @@
  * Convites de prospecção são enviados por uma PESSOA, um a um, pelo painel
  * (/painel); o bot só cuida das respostas, inclusive do "SAIR".
  */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { Boom } from "@hapi/boom";
 import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, useMultiFileAuthState } from "baileys";
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
-import { BancoProspeccao } from "@aprenda/prospeccao";
 import { ehPedidoDeEntrada, ehPedidoDeSaida, RESPOSTA_SAIDA, responder, type Contexto } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
 
-const PASTA_SESSAO = new URL("../auth/", import.meta.url).pathname;
+// BOT_SESSAO: onde fica a sessão do WhatsApp (no pacote da Square Cloud, ./auth ao lado do bot).
+const PASTA_SESSAO = process.env.BOT_SESSAO ?? new URL("../auth/", import.meta.url).pathname;
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 const numeroPareamento = process.env.BOT_NUMERO?.replace(/\D/g, "");
 
 const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
-const banco = new BancoProspeccao();
 const segredoSite = process.env.BOT_SEGREDO ?? "";
+
+/** Chama uma rota do site em nome do bot (segredo compartilhado). */
+async function chamarSite(caminho: string, corpo: object): Promise<Response> {
+  return fetch(`${siteUrl.replace(/\/$/, "")}${caminho}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${segredoSite}` },
+    body: JSON.stringify(corpo),
+    signal: AbortSignal.timeout(10_000),
+  });
+}
+
+/**
+ * SAIR é permanente e fica no banco de leads do site (o bot pode rodar em outro servidor).
+ * Se o site não responder, o número fica numa lista em disco e o bot tenta de novo.
+ */
+const ARQUIVO_SAIR = join(PASTA_SESSAO, "..", "sair-pendentes.json");
+function saidasPendentes(): string[] {
+  try {
+    return existsSync(ARQUIVO_SAIR) ? (JSON.parse(readFileSync(ARQUIVO_SAIR, "utf8")) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+function guardarPendentes(lista: string[]): void {
+  mkdirSync(join(ARQUIVO_SAIR, ".."), { recursive: true });
+  writeFileSync(ARQUIVO_SAIR, JSON.stringify([...new Set(lista)]));
+}
+async function avisarSaida(telefone: string): Promise<boolean> {
+  try {
+    return segredoSite.length >= 24 && (await chamarSite("/api/whatsapp/sair", { telefone })).ok;
+  } catch {
+    return false;
+  }
+}
+async function registrarSaida(telefone: string): Promise<void> {
+  if (await avisarSaida(telefone)) return;
+  console.warn(`SAIR de ${telefone} não chegou ao site; vou tentar de novo.`);
+  guardarPendentes([...saidasPendentes(), telefone]);
+}
+async function reenviarSaidas(): Promise<void> {
+  const pendentes = saidasPendentes();
+  if (!pendentes.length) return;
+  const falharam: string[] = [];
+  for (const t of pendentes) if (!(await avisarSaida(t))) falharam.push(t);
+  guardarPendentes(falharam);
+}
+setInterval(() => void reenviarSaidas(), 10 * 60_000).unref();
+void reenviarSaidas();
 
 /**
  * Pedido de entrada: quem manda a mensagem prova que é dono do número. O bot não
@@ -33,12 +82,7 @@ const segredoSite = process.env.BOT_SEGREDO ?? "";
 async function pedirLinkDeEntrada(telefone: string, nome: string | undefined): Promise<string> {
   if (segredoSite.length < 24) return "A entrada pelo WhatsApp está indisponível no momento. Tente mais tarde.";
   try {
-    const r = await fetch(`${siteUrl.replace(/\/$/, "")}/api/whatsapp/entrada`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${segredoSite}` },
-      body: JSON.stringify({ telefone, nome }),
-      signal: AbortSignal.timeout(10_000),
-    });
+    const r = await chamarSite("/api/whatsapp/entrada", { telefone, nome });
     const d = (await r.json()) as { ok?: boolean; mensagem?: string };
     return d.mensagem ?? "Não consegui gerar seu link agora. Mande *entrar* de novo em instantes.";
   } catch (e) {
@@ -48,6 +92,7 @@ async function pedirLinkDeEntrada(telefone: string, nome: string | undefined): P
 }
 console.log(`📚 ${ctx.cursos.length} cursos carregados`);
 
+let tentativas = 0;
 async function conectar(): Promise<void> {
   const { state, saveCreds } = await useMultiFileAuthState(PASTA_SESSAO);
   const { version } = await fetchLatestBaileysVersion();
@@ -73,15 +118,20 @@ async function conectar(): Promise<void> {
       console.log("📱 Escaneie no WhatsApp > Aparelhos conectados:");
       qrcode.generate(qr, { small: true });
     }
-    if (connection === "open") console.log("✅ Conectado ao WhatsApp");
+    if (connection === "open") {
+      tentativas = 0;
+      console.log("✅ Conectado ao WhatsApp");
+    }
     if (connection === "close") {
       const status = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
       if (status === DisconnectReason.loggedOut) {
-        console.error("🚪 Sessão encerrada no celular. Apague apps/bot/auth/ e pareie de novo.");
+        console.error(`🚪 Sessão encerrada no celular. Apague ${PASTA_SESSAO} e pareie de novo.`);
         process.exit(1);
       }
-      console.log(`🔌 Conexão caiu (${status ?? "?"}); reconectando...`);
-      void conectar();
+      // Espera cada vez mais (até 1 min) pra não martelar o WhatsApp quando a rede cai.
+      const espera = Math.min(60_000, 2_000 * 2 ** Math.min(tentativas++, 5));
+      console.log(`🔌 Conexão caiu (${status ?? "?"}); reconectando em ${espera / 1000} s...`);
+      setTimeout(() => void conectar(), espera);
     }
   });
 
@@ -103,7 +153,7 @@ async function conectar(): Promise<void> {
 
       let resposta: string | null;
       if (ehPedidoDeSaida(texto)) {
-        if (telefone) banco.bloquear(telefone);
+        if (telefone) await registrarSaida(telefone);
         else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
         resposta = RESPOSTA_SAIDA;
       } else if (ehPedidoDeEntrada(texto)) {

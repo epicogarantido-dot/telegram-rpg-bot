@@ -20,7 +20,8 @@ const memoria = process.env.SQUARE_MEMORIA ?? "512";
 console.log("🔨 build do site...");
 execFileSync("npm", ["run", "build:site"], { cwd: raiz, stdio: "inherit" });
 
-rmSync(join(raiz, "dist"), { recursive: true, force: true });
+rmSync(destino, { recursive: true, force: true });
+rmSync(zip, { force: true });
 mkdirSync(destino, { recursive: true });
 
 cpSync(join(site, ".next/standalone"), destino, { recursive: true });

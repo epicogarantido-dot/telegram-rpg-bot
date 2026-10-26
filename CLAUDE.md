@@ -27,7 +27,7 @@ num site e num bot de WhatsApp. Tudo em TypeScript, monorepo com npm workspaces.
 - Visual do site de cursos: tema "Elegância Atemporal" dos sites das barbearias (preto e branco, Libre Caslon + Jost, faixa preta na abertura), em `app/(cursos)/atemporal.css`, escopo `body.site-cursos` (o painel `/app` usa o `globals.css` puro).
 - Revista e cursos na página inicial em carrosséis (`componentes/Carrossel.tsx`, até `MAX_ITENS_CARROSSEL` = 20 em `lib/carrossel.ts`; só anda com toque/seta). Fim de cada matéria: `PropagandaSaas` + carrossel "Continue lendo" (`componentes/revista.tsx`). Propaganda nunca em curso CC BY-NC.
 - Escrever conteúdo: skills `escrever-materia` e `escrever-curso`, agente `checador-fatos`, pauta em `docs/pauta.md`. `npm test` confere o conteúdo real (`packages/catalogo/src/conteudo.test.ts`: links internos, séries, rascunhos); `NODE_USE_ENV_PROXY=1 npm run conferir:links [-- <slug>]` abre os links externos.
-- `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte.
+- `apps/bot` — WhatsApp via Baileys (não oficial). `responder.ts` é a lógica pura; `index.ts` é só transporte. Não acessa banco: SAIR vai pra `/api/whatsapp/sair` (com fila em disco se o site cair), entrar pra `/api/whatsapp/entrada`, ambos com `BOT_SEGREDO` (`lib/bot.ts`).
 - `docs/estilos/` — `plano.md` (plano dos 6 temas escolhidos, com nível de efeitos 1–5 que o tema deve respeitar) e Atlas de Estilos: 10 temas pros sites das barbearias, cada um a essência de uma sensação de luxo (marca só como referência).
 - `docs/` — `seguranca.md`, licenças/fontes, riscos do WhatsApp e `estrategia.md` (funil e roadmap do SaaS).
 
@@ -42,6 +42,7 @@ npm run ingerir -- --listar | <slug> | --todos [--sem-traducao]
 npm run bot
 npm run prospectar -- buscar barbearia Campinas [--fonte osm|google] | listar | resumo
 npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
+npm run pacote:bot      # zip do bot (app separado; SAIR e entrar vão pro site pela API)
 ```
 
 ## Regras do projeto

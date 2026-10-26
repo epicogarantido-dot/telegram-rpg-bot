@@ -30,6 +30,21 @@ Antes, baixe o backup em `/painel/backup`.
 
 Subdomínio e memória: `SQUARE_SUBDOMINIO=meusite SQUARE_MEMORIA=512 npm run pacote:square`.
 
+## Bot de WhatsApp (app separado)
+
+```bash
+npm run pacote:bot             # gera dist/aprenda-livre-bot.zip
+```
+
+- Suba como **outro app** (Upload na 1ª vez, Commit nas próximas). Precisa de `SITE_URL`,
+  `BOT_NUMERO` e `BOT_SEGREDO` (o mesmo do site).
+- Na 1ª vez, abra os logs do app: aparece o código de pareamento. No celular do bot,
+  WhatsApp → Aparelhos conectados → Conectar com número de telefone → digite o código.
+- A sessão fica em `dados/` no servidor (não vai no zip): commit novo não desconecta.
+- O bot não guarda dados: "entrar" e "SAIR" vão pro site (`/api/whatsapp/entrada` e
+  `/api/whatsapp/sair`). Se o site estiver fora, o SAIR fica em `dados/sair-pendentes.json`
+  e o bot reenvia a cada 10 min.
+
 ## O que a documentação da Square Cloud confirma (lida em 25/10/2026)
 
 - **Não existe plano grátis.** O mais barato é o Hobby, a partir de R$ 12,49/mês (1 GB de RAM).
