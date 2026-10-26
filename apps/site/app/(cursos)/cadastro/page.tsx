@@ -49,7 +49,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         </label>
         <BotaoEnviar carregando="Criando conta…"><MessageCircle size={18} aria-hidden /> Continuar</BotaoEnviar>
       </form>
-      <p className="suave pequeno"><Lock className="icone" aria-hidden /> No próximo passo você confirma o número mandando um código pro nosso WhatsApp. Sem SMS, sem custo.</p>
+      <p className="suave pequeno"><Lock className="icone" aria-hidden /> No próximo passo você confirma o número com um toque: o WhatsApp abre com a mensagem pronta, é só enviar.</p>
       <p>Já tem conta? <Link href="/entrar">Entrar</Link></p>
     </div>
   );

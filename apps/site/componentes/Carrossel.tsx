@@ -10,7 +10,15 @@ import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
  * pessoa toca numa seta, e com "reduzir movimento" o salto é instantâneo. Cada item é um link
  * normal, então Tab percorre os itens e o navegador traz o item focado pra tela.
  */
-export function Carrossel({ titulo, verTodos, children }: { titulo: string; verTodos?: { href: string; texto: string }; children: React.ReactNode }) {
+export function Carrossel({ titulo, verTodos, descricao, id: idExterno, children }: {
+  titulo: string;
+  verTodos?: { href: string; texto: string };
+  /** Linha logo abaixo do título. */
+  descricao?: React.ReactNode;
+  /** Âncora da seção (ex.: "estilos" pra /barbeiros#estilos). */
+  id?: string;
+  children: React.ReactNode;
+}) {
   const trilho = useRef<HTMLUListElement>(null);
   const [inicio, setInicio] = useState(true);
   const [fim, setFim] = useState(false);
@@ -41,7 +49,7 @@ export function Carrossel({ titulo, verTodos, children }: { titulo: string; verT
   }
 
   return (
-    <section className="carrossel" aria-labelledby={id} aria-roledescription="carrossel">
+    <section className="carrossel" id={idExterno} aria-labelledby={id} aria-roledescription="carrossel">
       <div className="carrossel-topo">
         <h2 id={id}>{titulo}</h2>
         {verTodos && <Link href={verTodos.href} className="carrossel-todos">{verTodos.texto}</Link>}
@@ -54,6 +62,7 @@ export function Carrossel({ titulo, verTodos, children }: { titulo: string; verT
           </button>
         </div>
       </div>
+      {descricao && <p className="carrossel-descricao suave">{descricao}</p>}
       <ul className="carrossel-trilho" id={`${id}-trilho`} ref={trilho}>
         {itens.map((item, i) => <li key={i} aria-label={`${i + 1} de ${itens.length}`}>{item}</li>)}
       </ul>

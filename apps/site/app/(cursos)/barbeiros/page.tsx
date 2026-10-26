@@ -6,6 +6,7 @@ import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "@/lib/painel";
 import { reais } from "@/lib/agenda";
+import { Carrossel } from "@/componentes/Carrossel";
 
 export const metadata = {
   title: "Site e agenda online para barbearias",
@@ -101,20 +102,15 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
         </figure>
       </section>
 
-      <section id="estilos" className="venda-estilos" aria-labelledby="estilos-titulo">
-        <h2 id="estilos-titulo">Escolha a cara da sua barbearia</h2>
-        <p className="suave">Seis estilos prontos, com suas fotos e seus serviços. Dá pra trocar quando quiser.</p>
-        <ul className="venda-faixa">
-          {TEMAS.map((t) => (
-            <li key={t.id}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
-              <strong>{t.nome}</strong>
-              <span>{t.resumo}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Carrossel id="estilos" titulo="Escolha a cara da sua barbearia" descricao="Seis estilos prontos, com suas fotos e seus serviços. Dá pra trocar quando quiser.">
+        {TEMAS.map((t) => (
+          <figure key={t.id} className="estilo-slide">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
+            <figcaption><strong>{t.nome}</strong><span>{t.resumo}</span></figcaption>
+          </figure>
+        ))}
+      </Carrossel>
 
       <section className="venda-recursos" aria-labelledby="recursos-titulo">
         <h2 id="recursos-titulo">O que muda no seu dia</h2>

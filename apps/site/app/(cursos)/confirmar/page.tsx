@@ -40,26 +40,31 @@ export default async function Confirmar({ searchParams }: { searchParams: Promis
   const texto = `Meu código: ${s.codigo}`;
   const final = s.telefone.slice(-4);
   return (
-    <div className="caixa-auth">
-      <h1>Confirme seu WhatsApp</h1>
+    <div className="caixa-auth confirmar">
+      <h1>Falta um toque</h1>
       <p className="suave">
-        Mande o código abaixo pro nosso WhatsApp <strong>a partir do número terminado em {final}</strong>.
-        Assim temos certeza de que o número é seu.
+        Toque no botão: o WhatsApp abre com a mensagem pronta. É só apertar <strong>enviar</strong>, do
+        seu número terminado em {final}.
       </p>
       {erro && <p className="erro" role="alert">{erro}</p>}
-      <CopiarCodigo codigo={s.codigo} />
       {whatsappBot ? (
         <a className="botao botao-whats" href={`https://wa.me/${whatsappBot}?text=${encodeURIComponent(texto)}`} target="_blank" rel="noopener noreferrer">
-          <MessageCircle size={20} aria-hidden /> Abrir WhatsApp e enviar
+          <MessageCircle size={22} aria-hidden /> Confirmar pelo WhatsApp
         </a>
       ) : (
         <p className="erro">WhatsApp de confirmação não configurado (BOT_WHATSAPP). Avise o suporte.</p>
       )}
       <AguardarConfirmacao formId="concluir" />
-      <form id="concluir" action={concluir}>
-        <button type="submit" className="botao-sec">Já enviei, continuar</button>
+      <form id="concluir" action={concluir} hidden>
+        <button type="submit">Continuar</button>
       </form>
-      <p className="suave pequeno">Não recebeu resposta? O código vale 15 minutos. <Link href="/entrar">Gerar outro</Link>.</p>
+      <details className="confirmar-ajuda">
+        <summary>O WhatsApp não abriu?</summary>
+        <p>Mande este código {whatsappBot && <>pro número <strong>+{whatsappBot}</strong></>}, do seu WhatsApp terminado em {final}:</p>
+        <CopiarCodigo codigo={s.codigo} />
+        <button type="submit" form="concluir" className="botao-sec">Já enviei, continuar</button>
+      </details>
+      <p className="suave pequeno">O código vale 15 minutos. <Link href="/entrar">Gerar outro</Link>.</p>
     </div>
   );
 }
