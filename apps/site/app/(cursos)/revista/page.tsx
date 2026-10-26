@@ -20,11 +20,17 @@ export default async function Revista() {
         <ul className="revista-lista">
           {artigos.map((a) => (
             <li key={a.slug}>
-              <Link href={`/revista/${a.slug}`}>
-                <span className="revista-tipo">{rotuloArtigo(a)}</span>
-                <strong>{a.titulo}</strong>
-                <span className="suave">{a.resumo}</span>
-                <time dateTime={a.publicadoEm}>{dataPorExtenso(a.publicadoEm)}</time>
+              <Link href={`/revista/${a.slug}`} className={a.imagem ? "com-foto" : undefined}>
+                {a.imagem && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.imagem.arquivo} alt="" width={300} height={200} loading="lazy" decoding="async" />
+                )}
+                <span className="revista-texto">
+                  <span className="revista-tipo">{rotuloArtigo(a)}</span>
+                  <strong>{a.titulo}</strong>
+                  <span className="suave">{a.resumo}</span>
+                  <time dateTime={a.publicadoEm}>{dataPorExtenso(a.publicadoEm)}</time>
+                </span>
               </Link>
             </li>
           ))}

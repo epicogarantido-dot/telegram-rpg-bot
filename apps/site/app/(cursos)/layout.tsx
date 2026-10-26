@@ -5,6 +5,8 @@ import "../globals.css";
 import "./atemporal.css";
 
 export const metadata: Metadata = {
+  // Endereço público, pra prévia do WhatsApp achar as fotos (og:image precisa de URL completa).
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: { default: "Aprenda Livre", template: "%s · Aprenda Livre" },
   description: "Os melhores cursos gratuitos e abertos do mundo, traduzidos para o português.",
 };

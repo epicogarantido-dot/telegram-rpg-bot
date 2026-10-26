@@ -1,0 +1,36 @@
+{
+  "slug": "lisboa-barbearia-campos",
+  "titulo": "Lisboa: a barbearia de Fernando Pessoa que fechou por causa do aluguel",
+  "resumo": "A Barbearia Campos atendeu Eça de Queiroz e Fernando Pessoa e era a mais antiga de Portugal em atividade. Fechou em 2023, quando o aluguel chegou a € 2.900. A lição é sobre o ponto.",
+  "tipo": "serie",
+  "serie": {
+    "nome": "Barbearias pelo mundo",
+    "episodio": 5
+  },
+  "publicadoEm": "2026-10-26",
+  "tags": [
+    "barbearia",
+    "barbearias pelo mundo",
+    "portugal",
+    "gestão",
+    "aluguel"
+  ],
+  "imagem": {
+    "arquivo": "/revista/lisboa-barbearia-campos.webp",
+    "alt": "Barbeiro de jaleco branco cortando o cabelo de um cliente na Barbearia Campos, em Lisboa, com espelhos de moldura escura e o nome da casa no vidro",
+    "credito": "mannamedgloria, via Flickr",
+    "licenca": "CC BY 2.0",
+    "fonte": "https://www.flickr.com/photos/12034440@N05/8435385787"
+  },
+  "conteudo": "No número 4 do Largo do Chiado, em Lisboa, a fachada ainda dizia \"Cabelleireiro\", com dois L, quando a Barbearia Campos entregou as chaves em dezembro de 2023. Ali tinham sentado Fernando Pessoa e Eça de Queiroz. Era a barbearia mais antiga de Portugal em atividade. O que fechou a porta foi o aluguel.\n\n### Uma cadeira na história da cidade\n\nA data que a casa usava, 1886, é a de uma apólice de seguro que ficava pendurada na parede, o documento mais antigo que ela tinha. Desde 1910 a barbearia estava nas mãos da família do sócio-fundador, José Augusto de Campos. A clientela é uma lista de rua com nome: além de Pessoa e Eça, Ramalho Ortigão, Aquilino Ribeiro, Almada Negreiros, António Ferro e o ator Vasco Santana. Boa parte também frequentava o café vizinho, A Brasileira, das tertúlias e da poesia.\n\nEm 2016, o prédio foi reformado pelos novos donos, a empresa Coporgest, que abriu apartamentos turísticos no edifício. A barbearia voltou ao Chiado com cara nova, mas manteve a bancada e os lavatórios de mármore de Carrara, os móveis clássicos, a navalha e as fotografias de outro século. Já tinha o selo \"Lojas com História\", da Câmara Municipal de Lisboa, criado pra proteger estabelecimentos tradicionais.\n\n### A conta que não fechou\n\nA Time Out Lisboa reconstruiu a história do contrato. Com a mudança de dono do prédio, a barbearia assinou um aluguel de € 1.000 por mês, com reajuste todo ano. Os aumentos foram somando até chegar a € 2.900 em julho de 2023, quase o triplo do começo. Segundo a proprietária, a última renda paga foi a de julho de 2023, e já havia dívidas antes disso. O contrato terminou por falta de pagamento, e a própria barbearia devolveu as chaves.\n\nNo lugar, segundo a proprietária, entraria uma loja de artesanato português. Selo de loja histórica, clientes ilustres e mármore de Carrara não pagam o aluguel.\n\n### O que dá pra trazer pra sua barbearia\n\n**Leia o reajuste antes de assinar.** Pergunte qual índice corrige o aluguel e faça a conta de cinco anos, não só do primeiro mês. Um aumento que parece pequeno no ano um vira outro negócio no ano cinco.\n\nSaiba quanto o aluguel pesa no faturamento. Conta de exemplo: se a barbearia fatura R$ 15 mil por mês e o aluguel é R$ 2.500, ele come 17% de tudo que entra. Acompanhe esse número todo ano; quando ele sobe muito, é hora de renegociar ou de pensar em outro ponto, antes de atrasar.\n\nConheça seu direito de renovar. No Brasil, o artigo 51 da Lei do Inquilinato garante a renovação do aluguel comercial quando três coisas se somam: contrato escrito e com prazo determinado, cinco anos ou mais de contrato (somando os seguidos) e três anos sem parar no mesmo ramo. A ação tem prazo certo: entre um ano e seis meses antes do fim do contrato. Passou disso, perde o direito. Converse com um advogado com antecedência.\n\nNão espere a dívida crescer. Segundo a proprietária, a Campos acumulou meses de atraso e parou de responder às ligações. Negociar com o aluguel em dia é muito mais fácil do que com três meses atrasados.\n\nE guarde a história com você. Fotos antigas, a cadeira do avô, a primeira nota fiscal: tudo isso vai junto se um dia você precisar mudar de endereço. A clientela segue a barbearia, não o ponto.\n\n*No próximo episódio: Havana, onde um barbeiro transformou a rua mais feia da cidade.*\n\n*Este episódio fala de contrato e de lei; não é orientação jurídica. Antes de assinar ou renovar, fale com um advogado.*",
+  "fontes": [
+    {
+      "titulo": "Time Out Lisboa — Lisboa perde barbearia histórica, por onde passaram Eça e Pessoa (20/12/2023)",
+      "url": "https://www.timeout.pt/lisboa/pt/noticias/lisboa-perde-barbearia-historica-por-onde-passaram-eca-e-pessoa-122023"
+    },
+    {
+      "titulo": "Lei nº 8.245/1991 (Lei do Inquilinato), art. 51 — texto atualizado na Câmara dos Deputados",
+      "url": "https://www2.camara.leg.br/legin/fed/lei/1991/lei-8245-18-outubro-1991-322506-normaatualizada-pl.html"
+    }
+  ]
+}

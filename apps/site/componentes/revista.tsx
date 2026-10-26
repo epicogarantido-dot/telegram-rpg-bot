@@ -14,11 +14,28 @@ export function rotuloArtigo(a: Artigo): string {
 export function CartaoMateria({ artigo }: { artigo: Artigo }) {
   return (
     <Link href={`/revista/${artigo.slug}`} className="cartao cartao-materia">
+      {artigo.imagem && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={artigo.imagem.arquivo} alt="" width={600} height={400} loading="lazy" decoding="async" className="cartao-materia-foto" />
+      )}
       <span className="revista-tipo">{rotuloArtigo(artigo)}</span>
       <h3>{artigo.titulo}</h3>
       <p>{artigo.resumo}</p>
       <time dateTime={artigo.publicadoEm}>{dataPorExtenso(artigo.publicadoEm)}</time>
     </Link>
+  );
+}
+
+/** Foto de abertura da matéria com o crédito e a licença (exigência das licenças CC). */
+export function FotoMateria({ imagem }: { imagem: NonNullable<Artigo["imagem"]> }) {
+  return (
+    <figure className="artigo-foto">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={imagem.arquivo} alt={imagem.alt} width={1200} height={800} fetchPriority="high" />
+      <figcaption>
+        Foto: <a href={imagem.fonte} target="_blank" rel="noopener noreferrer">{imagem.credito}</a> ({imagem.licenca})
+      </figcaption>
+    </figure>
   );
 }
 

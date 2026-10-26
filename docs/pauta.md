@@ -23,13 +23,23 @@ Checagem: agente `checador-fatos`, `npm test -w @aprenda/catalogo` e `npm run co
 | ✅ 26/10 | Curiosidade | Por que o poste da barbearia é listrado | conta a história na cadeira e posta |
 | 🚫 26/10 | Guia | ~~Educadores de fora (Andis, Wahl)~~ | removido: técnica de corte |
 | 🚫 26/10 | Guia | ~~Barbeiros brasileiros que ensinam de graça~~ | removido: espera link de afiliado |
-| ⬜ | Série ep. 4 | Nova York: barbearia de bairro que virou marca | cria uma identidade pro próprio bairro |
-| ⬜ | Série ep. 5 | Itália: a barbearia clássica como ponto de encontro | trata a cadeira como lugar de conversa |
-| ⬜ | Série ep. 6 | Coreia do Sul ou México | — |
-| ⬜ | Curiosidade | A cadeira de barbeiro: de onde veio e por que gira | — |
+| ✅ 26/10 | — | **Reescrita** das 6 primeiras com o guia "Escrever bem" da skill, e foto em todas | — |
+| ✅ 26/10 | Série ep. 4 | Milão: Antica Barbieria Colla | usa na cadeira o produto que vende no balcão |
+| ✅ 26/10 | Série ep. 5 | Lisboa: Barbearia Campos e o aluguel | confere o reajuste e o direito à renovatória |
+| ✅ 26/10 | Série ep. 6 | Havana: Callejón de los Peluqueros | faz parceria com os vizinhos e cria um dia por ano |
+| ✅ 26/10 | Série ep. 7 | Roterdã: Schorem e os 12 cortes | encurta o cardápio e põe na parede |
+| ✅ 26/10 | Série ep. 8 | Los Angeles: barbearia e pressão alta (NEJM) | puxa o assunto da saúde, sem bancar o médico |
+| ✅ 26/10 | Curiosidade | O imposto da barba de Pedro, o Grande | faz a "ficha da barba" (cartão fidelidade) |
+| ✅ 26/10 | Curiosidade | Barbeiros sangradores no Brasil (Fiocruz) | conta a origem da profissão no Brasil |
+| ✅ 26/10 | Curiosidade | Gillette e a lâmina descartável | vende o que a lâmina de casa não faz |
+| ✅ 26/10 | Curiosidade | Quarteto de barbearia | cuida da música (e do Ecad) |
+| ✅ 26/10 | Curiosidade | Movember e Novembro Azul | faz o concurso do bigode em novembro |
+| ✅ 26/10 | Curiosidade | A cadeira hidráulica (Koken) | ajusta a cadeira pra poupar as costas |
+| ⬜ | Série ep. 9 | Nova York ou Coreia do Sul | — |
+| ⬜ | Série ep. 10 | México ou Índia (barbeiros de rua) | — |
 | ⬜ | Curiosidade | A barbearia mais antiga do Brasil | — |
 | ⬜ | Curiosidade | Barbeiros famosos da história (e clientes famosos) | — |
-| ⬜ | Curiosidade | Por que homem passou a tirar a barba (e a deixar de novo) | — |
+| ⬜ | Curiosidade | Por que o homem tirou a barba (e voltou a deixar) | — |
 | ⬜ | Guia | Fotografar o ambiente e os trabalhos com o celular (luz, fundo) | posta foto que vende |
 | ⬜ | Guia | Google Perfil da Empresa passo a passo | aparece no mapa |
 

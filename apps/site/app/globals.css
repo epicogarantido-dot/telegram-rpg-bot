@@ -576,7 +576,7 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .carrossel-trilho > li { flex: 0 0 min(300px, 82%); scroll-snap-align: start; display: flex; }
 .carrossel-trilho > li > .cartao { flex: 1; display: flex; flex-direction: column; }
 .carrossel-trilho > li > .cartao .rodape-cartao { margin-top: auto; padding-top: 16px; }
-.cartao-materia { gap: 6px; }
+.cartao-materia { gap: 6px; --respiro-cartao: 22px; overflow: hidden; }
 .cartao-materia h3 { margin: 4px 0 2px; }
 .cartao-materia time { margin-top: auto; padding-top: 12px; font-size: 13px; color: var(--suave); }
 
@@ -654,4 +654,22 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
   body:has(.folha-cartoes) .so-tela { display: none; }
   body:has(.folha-cartoes) main { padding: 0; margin: 0; max-width: none; }
   .folha-cartoes { margin: 0; }
+}
+
+/* ---------- fotos das matérias ---------- */
+.cartao-materia-foto {
+  display: block; width: calc(100% + 2 * var(--respiro-cartao, 20px)); max-width: none; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
+  margin: calc(-1 * var(--respiro-cartao, 20px)) calc(-1 * var(--respiro-cartao, 20px)) 10px;
+  border-radius: var(--raio) var(--raio) 0 0; background: var(--borda);
+}
+.artigo-foto { margin: 24px 0 28px; }
+.artigo-foto img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; background: var(--borda); }
+.artigo-foto figcaption { margin-top: 8px; font-size: 13px; color: var(--suave); }
+.artigo-foto figcaption a { color: inherit; }
+.revista-texto { display: grid; gap: 4px; align-content: start; }
+.revista-lista a.com-foto { grid-template-columns: 112px 1fr; gap: 16px; align-items: start; }
+.revista-lista a.com-foto img { width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover; background: var(--borda); }
+@media (min-width: 640px) {
+  .revista-lista a.com-foto { grid-template-columns: 240px 1fr; gap: 24px; }
+  .revista-lista a.com-foto img { aspect-ratio: 3 / 2; }
 }

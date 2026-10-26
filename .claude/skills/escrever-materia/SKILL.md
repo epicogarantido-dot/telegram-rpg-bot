@@ -56,6 +56,38 @@ Pegue a próxima de `docs/pauta.md` (ou a pedida). Antes de escrever, responda e
   o teste confere se existem.
 - Tamanho: 500–1.200 palavras. Mais que isso, divida em dois.
 
+### Escrever bem (pedido do dono: as primeiras matérias pareciam lista de fatos)
+
+- **Abra com uma cena ou um fato que surpreende**, não com um resumo. "Na St James's Street,
+  um barbear custa £ 60 e a fila não acaba" puxa mais que "A Truefitt & Hill é a mais antiga".
+- **Negrito com economia:** no máximo um por seção, só no que o leitor tem que lembrar.
+  Texto todo em negrito é texto sem destaque.
+- **Fonte no ponto certo, uma vez.** "Segundo a CNN..." na primeira menção basta; o resto do
+  crédito fica na lista de fontes do fim. Nada de "segundo X" em toda frase.
+- **Parágrafo de 2 a 4 frases, com ligação entre eles.** Lista só pra passos ou itens paralelos;
+  o resto é texto corrido, que lê melhor no celular do que bala atrás de bala.
+- **Comente o fato.** Depois do dado, uma frase que diz o que ele significa ("Repare quantas
+  vezes o cliente escolhe alguma coisa").
+- **As ideias pra barbearia são concretas:** o que fazer amanhã, quanto custa, e quando der,
+  uma conta em reais marcada como exemplo ("conta de exemplo: corte a R$ 40...").
+- **Feche com uma frase que amarra**, não com resumo. Depois, o gancho do próximo episódio.
+- Sem clichê ("no mundo de hoje", "não é mesmo?", "confira") e sem exclamação em excesso.
+
+### Foto (obrigatória)
+
+Toda matéria tem `imagem`, e o teste falha sem ela. Só licença que deixa usar em site com venda
+e modificar (CC0, domínio público, CC BY, CC BY-SA), com crédito visível:
+
+```bash
+cd apps/site
+NODE_USE_ENV_PROXY=1 node scripts/foto-materia.mjs buscar "barber pole" /caminho/folha.png  # olhe a folha numerada
+NODE_USE_ENV_PROXY=1 node scripts/foto-materia.mjs <slug> <id> [top|bottom|attention]       # grava public/revista/<slug>.webp
+```
+
+Cole o bloco impresso no JSON e escreva o `alt` (o que a foto mostra, pra quem não vê). Confira
+a tag/título da foto: "Havana barber" pode ser de Miami. Foto de outro lugar que não o da
+matéria só se o `alt` disser isso.
+
 ## 4. Arquivo
 
 `data/artigos/<slug>.json` (schema `Artigo` em `packages/catalogo/src/schema.ts`):
@@ -70,12 +102,14 @@ Pegue a próxima de `docs/pauta.md` (ou a pedida). Antes de escrever, responda e
   "publicadoEm": "AAAA-MM-DD (hoje)",
   "tags": ["barbearia", "..."],
   "conteudo": "Markdown",
-  "fontes": [{ "titulo": "Nome — página", "url": "https://..." }]
+  "fontes": [{ "titulo": "Nome — página", "url": "https://..." }],
+  "imagem": { "arquivo": "/revista/<slug>.webp", "alt": "...", "credito": "...", "licenca": "CC BY 2.0", "fonte": "https://..." }
 }
 ```
 
-`tipo: "serie"` anda junto com `serie`, e episódios não pulam número. Texto longo: gere o JSON
-com um script Python em `packages/ingestao/manuais/` (evita erro de aspas) e rode-o.
+`tipo: "serie"` anda junto com `serie`, e episódios não pulam número. Escreva a matéria em
+`packages/ingestao/manuais/revista/` (`serie.py`, `curiosidades.py` ou `mercado.py`; foto em
+`imagens.json`) e gere os JSON com `python3 packages/ingestao/manuais/revista/gerar.py`.
 
 ## 5. Conferir antes de publicar
 

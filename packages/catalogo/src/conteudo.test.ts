@@ -1,5 +1,7 @@
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { carregarArtigos, carregarCursos } from "./carregar.ts";
+import { carregarArtigos, carregarCursos, PASTA_CURSOS } from "./carregar.ts";
 
 /**
  * Confere o conteúdo de verdade (data/cursos e data/artigos), não exemplos:
@@ -70,6 +72,18 @@ describe("conteúdo publicado", () => {
       expect(repetidos(a.fontes.map((f) => f.url)), a.slug).toEqual([]);
       expect(a.resumo.length, `resumo de ${a.slug}`).toBeLessThanOrEqual(220);
       expect(a.titulo.length, `título de ${a.slug}`).toBeLessThanOrEqual(90);
+    }
+  });
+
+  it("toda matéria tem foto com licença aberta, crédito e arquivo no site", () => {
+    const publico = join(dirname(dirname(PASTA_CURSOS)), "apps", "site", "public");
+    // Só licenças que deixam usar em site com venda e redimensionar a foto.
+    const abertas = /^(Domínio público|CC0|CC BY( \d\.\d)?|CC BY-SA( \d\.\d)?|Licença Unsplash|Licença Pexels)$/;
+    for (const a of artigos) {
+      expect(a.imagem, `${a.slug} sem imagem`).toBeDefined();
+      expect(a.imagem!.licenca, a.slug).toMatch(abertas);
+      expect(a.imagem!.credito.trim(), a.slug).not.toBe("");
+      expect(existsSync(join(publico, a.imagem!.arquivo)), `${a.slug}: falta ${a.imagem!.arquivo}`).toBe(true);
     }
   });
 

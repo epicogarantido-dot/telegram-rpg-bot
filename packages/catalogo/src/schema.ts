@@ -78,5 +78,17 @@ export const Artigo = z.object({
   conteudo: z.string(),
   fontes: z.array(z.object({ titulo: z.string(), url: z.url() })).min(1),
   tags: z.array(z.string()).default([]),
+  /**
+   * Foto de abertura (também vai no carrossel e na prévia do WhatsApp). Só imagem com licença
+   * que permite uso comercial e modificação (domínio público, CC0, CC BY, CC BY-SA, Unsplash),
+   * guardada em `apps/site/public/revista/` já redimensionada, com crédito e licença visíveis.
+   */
+  imagem: z.object({
+    arquivo: z.string().regex(/^\/revista\/[a-z0-9-]+\.webp$/),
+    alt: z.string().min(10),
+    credito: z.string(),
+    licenca: z.string(),
+    fonte: z.url(),
+  }).optional(),
 });
 export type Artigo = z.infer<typeof Artigo>;

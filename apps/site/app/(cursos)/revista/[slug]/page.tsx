@@ -5,7 +5,7 @@ import { renderizarMarkdown } from "@/lib/markdown";
 import { dataPorExtenso } from "@/lib/datas";
 import { Carrossel } from "@/componentes/Carrossel";
 import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
-import { CartaoMateria, PropagandaSaas } from "@/componentes/revista";
+import { CartaoMateria, FotoMateria, PropagandaSaas } from "@/componentes/revista";
 
 export async function generateStaticParams() {
   return (await carregarArtigos()).map((a) => ({ slug: a.slug }));
@@ -14,7 +14,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const a = (await carregarArtigos()).find((x) => x.slug === slug);
-  return a ? { title: a.titulo, description: a.resumo } : {};
+  if (!a) return {};
+  // A foto aparece na prévia quando o link é mandado no WhatsApp.
+  return { title: a.titulo, description: a.resumo, openGraph: { title: a.titulo, description: a.resumo, type: "article", ...(a.imagem && { images: [a.imagem.arquivo] }) } };
 }
 
 export default async function PaginaArtigo({ params }: { params: Promise<{ slug: string }> }) {
@@ -37,6 +39,7 @@ export default async function PaginaArtigo({ params }: { params: Promise<{ slug:
         <h1>{a.titulo}</h1>
         <p className="artigo-resumo">{a.resumo}</p>
         <p className="suave pequeno">Por Aprenda Livre · <time dateTime={a.publicadoEm}>{dataPorExtenso(a.publicadoEm)}</time></p>
+        {a.imagem && <FotoMateria imagem={a.imagem} />}
         <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(a.conteudo) }} />
         <aside className="artigo-fontes">
           <h2>Fontes</h2>
