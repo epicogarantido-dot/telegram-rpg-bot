@@ -24,10 +24,10 @@ async function adicionar(form: FormData) {
   const cidade = String(form.get("cidade") ?? "").trim();
   const uf = String(form.get("uf") ?? "");
   const nome = String(form.get("nome") ?? "").trim();
-  const telefone = normalizarTelefone(String(form.get("telefone") ?? "")) ;
+  const telefone = normalizarTelefone(String(form.get("telefone") ?? ""));
   const instagram = String(form.get("instagram") ?? "").trim() || undefined;
   if (!nome || !cidade || (!telefone && !instagram)) redirect(`/painel/buscar?cidade=${encodeURIComponent(cidade)}&uf=${uf}&erro=1#adicionar`);
-  const r = obterBanco().salvarManual({ nome, cidade, nicho: NICHO, telefone, instagram, observacao: String(form.get("observacao") ?? "").trim() || undefined });
+  const r = obterBanco().salvarManual({ nome, cidade, uf, nicho: NICHO, telefone, instagram, observacao: String(form.get("observacao") ?? "").trim() || undefined });
   revalidatePath("/painel");
   redirect(`/painel/buscar?cidade=${encodeURIComponent(cidade)}&uf=${uf}&${r.novo ? "novo" : "juntou"}=1#adicionar`);
 }
@@ -63,7 +63,7 @@ export default async function Buscar({ searchParams }: { searchParams: Promise<{
   const cidade = sp.cidade?.trim() || "Alegrete";
   const uf = (sp.uf?.trim() || "RS").toUpperCase();
   const estado = estadoDaBusca();
-  const leads = obterBanco().listar({ nicho: NICHO, limite: 1000 }).filter((l) => l.cidade.toLowerCase() === cidade.toLowerCase());
+  const leads = obterBanco().listar({ nicho: NICHO, cidade, uf, limite: 5000 });
   const paraCompletar = leads.filter((l) => l.status === "novo" && (!l.instagram || l.avisos));
 
   return (

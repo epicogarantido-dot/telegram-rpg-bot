@@ -23,13 +23,20 @@ dá bloqueio e expõe o projeto. A busca assistida é uma pessoa navegando; o pa
 - **Telefone do contador:** número repetido em 3+ empresas da mesma cidade. O painel avisa e
   prefere o celular do dono quando existe.
 - Celular antigo cadastrado com 8 dígitos ganha o 9 na frente. Fixo é avisado (raramente tem WhatsApp).
-- Os arquivos são grandes (~7 GB por mês). O leitor baixa os 10 arquivos em paralelo e filtra
-  em fluxo, sem gravar nada: uns 15-20 minutos por passada. Uma passada serve pra várias cidades
+- Os arquivos são grandes (~7 GB por mês). A Receita limita a velocidade por conexão, então o
+  leitor baixa cada arquivo em 8 pedaços paralelos (2 arquivos por vez) e filtra
+  em fluxo: uns 15-20 minutos por passada. Uma passada serve pra várias cidades
   da mesma UF: `receita barbearia "Alegrete,Uruguaiana,Santana do Livramento" RS`.
 - Endereço: compartilhamento público da Receita
   (`https://arquivos.receitafederal.gov.br/index.php/s/gn672Ad4CF8N6TK`, pasta Dados > Cadastros > CNPJ).
   Se mudar, ponha o código novo em `RECEITA_COMPARTILHAMENTO` no `.env`.
 - Atualizar a base de novo não apaga status, Instagram nem observação de quem já foi trabalhado.
+- **Brasil inteiro:** `npm run prospectar -- receita-brasil barbearia` (uma passada, minutos; os
+  arquivos vêm em 8 pedaços paralelos, 2 por vez, e são apagados depois de lidos). Telefone de
+  contador aqui = repetido em 3+ barbearias ou e-mail de escritório. Depois:
+  `npm run prospectar -- exportar barbearias-RS.csv --uf RS --confirmados` gera a planilha
+  (abre no Excel/Google Planilhas). Quem pediu SAIR nunca sai na planilha.
+- Cidade é buscada sem acento ("São Paulo" = "SAO PAULO"); o painel filtra por cidade e UF.
 
 ## LGPD: por que pode e como fazer direito
 

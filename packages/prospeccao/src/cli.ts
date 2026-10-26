@@ -1,7 +1,8 @@
 import { BancoProspeccao, STATUS, type Status } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
 import { buscarNoOSM } from "./openstreetmap.ts";
-import { buscarNaReceita, nomeDeExibicao } from "./receita.ts";
+import { buscarNaReceita, buscarNoBrasil, nomeDeExibicao } from "./receita.ts";
+import { exportarCsv } from "./exportar.ts";
 
 const USO = `Uso:
   npm run prospectar -- buscar <nicho> <cidade> [--fonte osm|google] [--paginas N]
@@ -10,6 +11,9 @@ const USO = `Uso:
       google (precisa de GOOGLE_MAPS_API_KEY e conta com cartão): cidade livre, ex. "Campinas SP"
   npm run prospectar -- receita <nicho> <cidade[,cidade2,...]> <UF>
       ex.: receita barbearia Alegrete RS   (dados abertos do CNPJ, grátis; ~15-20 min por passada)
+  npm run prospectar -- receita-brasil <nicho>
+      todas as do Brasil numa passada (~20-40 min); depois: exportar
+  npm run prospectar -- exportar <arquivo.csv> [--uf RS] [--confirmados]
   npm run prospectar -- listar [status]
   npm run prospectar -- marcar <place_id> <${STATUS.join("|")}>
   npm run prospectar -- resumo`;
@@ -56,6 +60,29 @@ async function main() {
         for (const a of r.achados.filter((x) => x.nomeConfirma)) console.log(`  • ${nomeDeExibicao(a)} · ${a.telefone ?? "sem tel"}${a.telefone && !a.celular ? " (fixo)" : ""}${a.telefoneDeContador ? " (contador?)" : ""}`);
       }
       console.log(`⏱️  ${Math.round((Date.now() - inicio) / 1000)} s`);
+      return;
+    }
+    case "receita-brasil": {
+      const [nicho] = args;
+      if (!nicho) return sair(USO);
+      const inicio = Date.now();
+      let novos = 0;
+      let salvos = 0;
+      const r = await buscarNoBrasil(nicho, (lote) => {
+        const s = banco.salvarAchados(lote, nicho);
+        novos += s.novos;
+        salvos += s.total;
+      }, { aoAvancar: (m) => console.log(`⏳ ${m} (${Math.round((Date.now() - inicio) / 1000)} s)`) });
+      console.log(`\n📋 Receita ${r.mes}: ${r.total} empresas ativas na atividade do nicho no Brasil; ${salvos} salvas, ${novos} novas.`);
+      console.log(`⏱️  ${Math.round((Date.now() - inicio) / 1000)} s`);
+      return;
+    }
+    case "exportar": {
+      const [arquivo] = args;
+      if (!arquivo) return sair(USO);
+      const i = args.indexOf("--uf");
+      const n = exportarCsv(banco, arquivo, { uf: i >= 0 ? args[i + 1] : undefined, soConfirmados: args.includes("--confirmados") });
+      console.log(`💾 ${n} leads em ${arquivo}`);
       return;
     }
     case "listar": {

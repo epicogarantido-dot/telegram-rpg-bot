@@ -1,4 +1,8 @@
-import { Readable, Transform, type TransformCallback } from "node:stream";
+import { createReadStream, createWriteStream } from "node:fs";
+import { mkdtemp, open, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { Transform, type TransformCallback } from "node:stream";
 import { createInterface } from "node:readline";
 import { createInflateRaw } from "node:zlib";
 import { ehCelularBR, normalizarTelefone } from "./telefone.ts";
@@ -156,27 +160,77 @@ class CabecalhoZip extends Transform {
   }
 }
 
-/** Baixa um .zip da Receita e entrega as linhas do CSV (latin1), sem gravar nada em disco. */
-export async function* linhasDoArquivo(mes: string, arquivo: string, opcoes: { fetch?: typeof fetch } = {}): AsyncGenerator<string> {
+type OpcoesRede = { fetch?: typeof fetch };
+
+function autorizacao(): string {
+  return `Basic ${Buffer.from(`${RECEITA_COMPARTILHAMENTO}:`).toString("base64")}`;
+}
+
+/**
+ * Baixa um arquivo da Receita pra uma pasta temporária. A Receita limita a velocidade
+ * por conexão (~0,7 MB/s), então arquivo grande vem em 8 pedaços ao mesmo tempo.
+ */
+async function baixar(mes: string, arquivo: string, opcoes: OpcoesRede): Promise<string> {
   const f = opcoes.fetch ?? fetch;
-  const auth = Buffer.from(`${RECEITA_COMPARTILHAMENTO}:`).toString("base64");
-  const r = await f(`${RECEITA_WEBDAV}/${mes}/${arquivo}`, { headers: { authorization: `Basic ${auth}` } });
-  if (!r.ok || !r.body) throw new Error(`Receita respondeu ${r.status} pra ${mes}/${arquivo}`);
-  const origem = Readable.fromWeb(r.body as never);
-  const inflar = createInflateRaw();
-  // O .zip termina com o índice depois dos dados: quando o deflate acaba, paramos de baixar.
-  inflar.on("end", () => origem.destroy());
-  origem.on("error", (e) => inflar.destroy(e));
-  inflar.setEncoding("latin1");
-  origem.pipe(new CabecalhoZip()).pipe(inflar);
-  for await (const linha of createInterface({ input: inflar, crlfDelay: Infinity })) yield linha;
+  const url = `${RECEITA_WEBDAV}/${mes}/${arquivo}`;
+  const sonda = await f(url, { headers: { authorization: autorizacao(), range: "bytes=0-0" } });
+  await sonda.body?.cancel();
+  if (!sonda.ok) throw new Error(`Receita respondeu ${sonda.status} pra ${mes}/${arquivo}`);
+  const tamanho = Number(sonda.headers.get("content-range")?.split("/")[1] ?? 0);
+  const pasta = await mkdtemp(join(tmpdir(), "receita-"));
+  const caminho = join(pasta, arquivo);
+  const arquivoLocal = await open(caminho, "w");
+  try {
+    const partes = tamanho > 64e6 ? 8 : 1;
+    const passo = Math.ceil(tamanho / partes);
+    await Promise.all(Array.from({ length: partes }, async (_, i) => {
+      const fimParte = Math.min(tamanho, (i + 1) * passo) - 1;
+      let pos = i * passo;
+      for (let tentativa = 1; pos <= fimParte; tentativa++) {
+        try {
+          const r = await f(url, { headers: { authorization: autorizacao(), range: `bytes=${pos}-${fimParte}` } });
+          if (r.status !== 206 || !r.body) throw new Error(`status ${r.status}`);
+          for await (const pedaco of r.body as unknown as AsyncIterable<Uint8Array>) {
+            await arquivoLocal.write(pedaco, 0, pedaco.length, pos);
+            pos += pedaco.length;
+          }
+        } catch (e) {
+          // Conexão caiu no meio: continua de onde parou (até 5 vezes por pedaço).
+          if (tentativa >= 5) throw new Error(`Falha baixando ${arquivo} (${String(e)})`);
+          await new Promise((ok) => setTimeout(ok, 2000 * tentativa));
+        }
+      }
+    }));
+  } catch (e) {
+    await rm(pasta, { recursive: true, force: true });
+    throw e;
+  } finally {
+    await arquivoLocal.close();
+  }
+  return caminho;
+}
+
+/** Baixa um .zip da Receita e entrega as linhas do CSV (latin1). O arquivo temporário é apagado no fim. */
+export async function* linhasDoArquivo(mes: string, arquivo: string, opcoes: OpcoesRede = {}): AsyncGenerator<string> {
+  const caminho = await baixar(mes, arquivo, opcoes);
+  try {
+    const inflar = createInflateRaw();
+    inflar.setEncoding("latin1");
+    const origem = createReadStream(caminho);
+    // O .zip termina com o índice depois dos dados: quando o deflate acaba, paramos de ler.
+    inflar.on("end", () => origem.destroy());
+    origem.on("error", (e) => inflar.destroy(e));
+    origem.pipe(new CabecalhoZip()).pipe(inflar);
+    for await (const linha of createInterface({ input: inflar, crlfDelay: Infinity })) yield linha;
+  } finally {
+    await rm(join(caminho, ".."), { recursive: true, force: true });
+  }
 }
 
 /** Último mês publicado (pasta AAAA-MM mais recente). */
 export async function ultimoMes(opcoes: { fetch?: typeof fetch } = {}): Promise<string> {
   const f = opcoes.fetch ?? fetch;
-  const auth = Buffer.from(`${RECEITA_COMPARTILHAMENTO}:`).toString("base64");
-  const r = await f(`${RECEITA_WEBDAV}/`, { method: "PROPFIND", headers: { authorization: `Basic ${auth}`, depth: "1" } });
+  const r = await f(`${RECEITA_WEBDAV}/`, { method: "PROPFIND", headers: { authorization: autorizacao(), depth: "1" } });
   const meses = [...(await r.text()).matchAll(/\/(\d{4}-\d{2})\//g)].map((m) => m[1]!).sort();
   if (!meses.length) throw new Error("Não achei os meses publicados pela Receita (o endereço pode ter mudado).");
   return meses.at(-1)!;
@@ -212,8 +266,8 @@ async function emParalelo<T>(itens: T[], limite: number, tarefa: (item: T) => Pr
 }
 
 /**
- * Passa pelos 10 arquivos de Estabelecimentos ao mesmo tempo (a Receita limita a
- * velocidade por conexão, então em paralelo é ~10x mais rápido) e depois pelos de
+ * Passa pelos 10 arquivos de Estabelecimentos (baixados em pedaços paralelos: a Receita
+ * limita a velocidade por conexão) e depois pelos de
  * Empresas, pra pegar a razão social. Cada passada lê o Brasil inteiro, então dá pra
  * pedir várias cidades da mesma UF de uma vez sem custo extra. Leva uns 15-20 min.
  */
@@ -222,7 +276,8 @@ export async function buscarNaReceita(
   opcoes: { fetch?: typeof fetch; mes?: string; aoAvancar?: (msg: string) => void; conexoes?: number } = {},
 ): Promise<Map<string, ResultadoReceita>> {
   const avisar = opcoes.aoAvancar ?? (() => {});
-  const conexoes = opcoes.conexoes ?? 10;
+  // 2 arquivos por vez × 8 pedaços = 16 conexões: rápido sem martelar o servidor do governo.
+  const conexoes = opcoes.conexoes ?? 2;
   const lista = Array.isArray(cidades) ? cidades : [cidades];
   const mes = opcoes.mes ?? (await ultimoMes(opcoes));
   const ufAlvo = uf.toUpperCase();
@@ -284,6 +339,94 @@ export async function buscarNaReceita(
     });
   }
   return resultados;
+}
+
+/** Barbearia de qualquer cidade do Brasil, já com nome da cidade e avisos calculados. */
+export type AchadoBrasil = ResultadoReceita["achados"][number] & { cidade: string };
+
+/** E-mail de escritório de contabilidade (cadastrado no lugar do dono). */
+const EMAIL_DE_CONTADOR = /contab|contador|escritorio|assessoria|consultoria/i;
+
+/**
+ * Todas as empresas do nicho no Brasil. Não segura tudo na memória: grava num arquivo
+ * temporário durante a leitura e entrega em lotes (`aoLote`) no fim. Telefone de contador
+ * aqui é o que se repete em 3+ empresas DO NICHO, ou e-mail de escritório (contar os
+ * telefones de todas as empresas do país não cabe na memória).
+ */
+export async function buscarNoBrasil(
+  nicho: string,
+  aoLote: (lote: AchadoBrasil[]) => void,
+  opcoes: OpcoesRede & { mes?: string; aoAvancar?: (msg: string) => void; conexoes?: number; tamanhoLote?: number } = {},
+): Promise<{ mes: string; total: number }> {
+  const avisar = opcoes.aoAvancar ?? (() => {});
+  const regra = NICHOS_RECEITA[nicho];
+  if (!regra) throw new Error(`Nicho "${nicho}" sem regra na Receita.`);
+  const mes = opcoes.mes ?? (await ultimoMes(opcoes));
+  const cidades = new Map<string, string>();
+  for await (const linha of linhasDoArquivo(mes, "Municipios.zip", opcoes)) {
+    const [codigo, nome] = lerLinhaCsv(linha);
+    if (codigo && nome) cidades.set(codigo, nome.replace(/\b(\p{L})(\p{L}*)/gu, (_, a: string, b: string) => a + b.toLowerCase()).replace(/\b(De|Da|Do|Das|Dos|E)\b/g, (m) => m.toLowerCase()));
+  }
+
+  const pasta = await mkdtemp(join(tmpdir(), "receita-brasil-"));
+  const temporario = join(pasta, "achados.ndjson");
+  const saida = createWriteStream(temporario);
+  const basicos = new Set<string>();
+  /** telefone → [primeira empresa, quantas empresas diferentes] */
+  const telefones = new Map<string, [string, number]>();
+  let prontos = 0;
+  let total = 0;
+  try {
+    await emParalelo([...Array(10).keys()], opcoes.conexoes ?? 2, async (i) => {
+      for await (const linha of linhasDoArquivo(mes, `Estabelecimentos${i}.zip`, opcoes)) {
+        if (!regra.cnaes.some((c) => linha.includes(c))) continue;
+        const e = estabelecimentoDaLinha(lerLinhaCsv(linha));
+        if (!e || !ehDoNicho(e, nicho)) continue;
+        total++;
+        basicos.add(e.cnpjBasico);
+        for (const t of e.telefones) {
+          const visto = telefones.get(t);
+          if (!visto) telefones.set(t, [e.cnpjBasico, 1]);
+          else if (visto[0] !== e.cnpjBasico) visto[1]++;
+        }
+        if (!saida.write(JSON.stringify(e) + "\n")) await new Promise((ok) => saida.once("drain", ok));
+      }
+      avisar(`Estabelecimentos: ${++prontos}/10 arquivos (${total} até agora)`);
+    });
+    await new Promise<void>((ok, erro) => saida.end((e?: Error | null) => (e ? erro(e) : ok())));
+
+    const razoes = new Map<string, string>();
+    prontos = 0;
+    await emParalelo([...Array(10).keys()], opcoes.conexoes ?? 2, async (i) => {
+      for await (const linha of linhasDoArquivo(mes, `Empresas${i}.zip`, opcoes)) {
+        const basico = linha.slice(1, 9);
+        if (!basicos.has(basico)) continue;
+        const [, razao] = lerLinhaCsv(linha);
+        if (razao) razoes.set(basico, razao.trim());
+      }
+      avisar(`Empresas (razão social): ${++prontos}/10 arquivos`);
+    });
+
+    const deContador = new Set([...telefones].filter(([, [, n]]) => n >= 3).map(([t]) => t));
+    const tamanhoLote = opcoes.tamanhoLote ?? 2000;
+    let lote: AchadoBrasil[] = [];
+    for await (const linha of createInterface({ input: createReadStream(temporario), crlfDelay: Infinity })) {
+      const e = JSON.parse(linha) as EstabelecimentoReceita;
+      e.razaoSocial = razoes.get(e.cnpjBasico);
+      const contadorPorEmail = !!e.email && EMAIL_DE_CONTADOR.test(e.email);
+      const m = melhorTelefone(e.telefones, deContador);
+      lote.push({
+        ...e, cidade: cidades.get(e.municipio) ?? e.municipio,
+        telefone: m.telefone, celular: m.celular, telefoneDeContador: m.contador || (contadorPorEmail && e.telefones.length > 0 && !m.celular),
+        nomeConfirma: nomeConfirmaNicho(e, nicho),
+      });
+      if (lote.length >= tamanhoLote) { aoLote(lote); lote = []; }
+    }
+    if (lote.length) aoLote(lote);
+    return { mes, total };
+  } finally {
+    await rm(pasta, { recursive: true, force: true });
+  }
 }
 
 /** MEI vem como "12.345.678 FULANO DE TAL": tira o número do começo. */

@@ -23,13 +23,16 @@ async function marcar(form: FormData) {
   revalidatePath("/painel");
 }
 
-export default async function Painel({ searchParams }: { searchParams: Promise<{ status?: string; nicho?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ status?: string; nicho?: string; cidade?: string; uf?: string }> }) {
   await exigirLogin();
   const sp = await searchParams;
   const banco = obterBanco();
   const status = STATUS.includes(sp.status as Status) ? (sp.status as Status) : undefined;
-  const leads = banco.listar({ status, nicho: sp.nicho || undefined, limite: 200 });
-  const resumo = banco.resumo();
+  const cidade = sp.cidade?.trim() || undefined;
+  const uf = sp.uf?.trim().toUpperCase() || undefined;
+  const leads = banco.listar({ status, nicho: sp.nicho || undefined, cidade, uf, limite: 200 });
+  const resumo = banco.resumo({ cidade, uf });
+  const filtro = (s?: string) => `/painel?${new URLSearchParams({ ...(s ? { status: s } : {}), ...(cidade ? { cidade } : {}), ...(uf ? { uf } : {}) })}`;
   const hoje = banco.contatadosHoje();
   const podeContatar = hoje < config.limiteDiario;
   const inscricoes = banco.inscricoes();
@@ -42,13 +45,19 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         Contatos hoje: <strong>{hoje}/{config.limiteDiario}</strong>
         {!podeContatar && " — limite do dia atingido. Volte amanhã: número novo que manda muito é banido."}
       </p>
+      <form className="formulario linha" method="get">
+        <input name="cidade" defaultValue={cidade} placeholder="Cidade" aria-label="Cidade" />
+        <input name="uf" defaultValue={uf} placeholder="UF" aria-label="UF" maxLength={2} />
+        {status && <input type="hidden" name="status" value={status} />}
+        <button type="submit">Filtrar</button>
+      </form>
       <p>
         {STATUS.map((s) => (
-          <a key={s} href={`/painel?status=${s}`} className="etiqueta" style={{ marginRight: 8 }}>
+          <a key={s} href={filtro(s)} className="etiqueta" style={{ marginRight: 8 }}>
             {ROTULO[s]}: {resumo[s]}
           </a>
         ))}
-        <a href="/painel">todos</a>
+        <a href={filtro()}>todos</a>
       </p>
 
       {inscricoes.length > 0 && (
