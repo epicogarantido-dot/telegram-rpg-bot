@@ -18,10 +18,12 @@ export function linkMapa(b: Pick<Barbearia, "nome" | "endereco" | "cidade">): st
 }
 
 /**
- * Mapa do Google Maps pra pôr na página (iframe, sem chave nem custo). Pino no endereço; sem
- * endereço (prévia), mostra a cidade. Sem nenhum dos dois, não tem mapa.
+ * Mapa do Google Maps pra pôr na página (iframe, sem chave nem custo). Pino no endereço. Só a
+ * cidade, sem endereço, vale só na prévia/demonstração (`demoAte`); site de cliente sem endereço
+ * fica sem mapa.
  */
-export function mapaEmbutido(b: Pick<Barbearia, "endereco" | "cidade">): string | undefined {
+export function mapaEmbutido(b: Pick<Barbearia, "endereco" | "cidade" | "demoAte">): string | undefined {
+  if (!b.endereco && !b.demoAte) return undefined;
   const q = [b.endereco, b.cidade].filter(Boolean).join(", ");
   if (!q) return undefined;
   return `https://www.google.com/maps?${new URLSearchParams({ q, z: b.endereco ? "16" : "13", hl: "pt-BR", output: "embed" })}`;

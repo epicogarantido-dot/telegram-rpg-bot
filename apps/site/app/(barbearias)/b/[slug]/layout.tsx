@@ -122,7 +122,10 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
       </main>
       <footer className="b-rodape">
         <span>{b.nome}{b.cidade ? ` · ${b.cidade}` : ""}</span>
-        <a href="/barbeiros" className="b-assinatura">Você é barbeiro? Tenha um site assim</a>
+        {/* Site de cliente não leva propaganda nossa: o convite pra ter um site assim fica só nos exemplos e prévias. */}
+        {b.demoAte
+          ? <a href="/barbeiros" className="b-assinatura">Você é barbeiro? Tenha um site assim</a>
+          : <Link href={`${base}/privacidade`} className="b-assinatura">Privacidade</Link>}
       </footer>
       {noAr && <Efeitos tema={b.tema} />}
       {noAr && (

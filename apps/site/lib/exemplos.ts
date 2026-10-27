@@ -100,6 +100,20 @@ export function porFotosPadrao(destinoId: number, tema: string): void {
   }
 }
 
+/**
+ * Arquivos das fotos dos sites de exemplo (o banco de fotos). Conta nova começa com elas; enquanto
+ * estiverem no site de um cliente, o site não pode chamá-las de "feitos aqui".
+ */
+export function arquivosDoAcervo(): Set<string> {
+  const banco = obterAgenda();
+  const arquivos = new Set<string>();
+  for (const slug of Object.values(sitesDeExemplo())) {
+    const b = banco.barbeariaPorSlug(slug);
+    if (b) for (const f of banco.fotos(b.id)) arquivos.add(f.arquivo);
+  }
+  return arquivos;
+}
+
 export function ehSiteDeExemplo(slug: string): boolean {
   return Object.values(sitesDeExemplo()).includes(slug);
 }

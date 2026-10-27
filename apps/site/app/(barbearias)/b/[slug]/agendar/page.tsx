@@ -8,6 +8,7 @@ import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { ehCorte, fotosDosServicos, urlFoto } from "@/lib/barbearias";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
+import { arquivosDoAcervo } from "@/lib/exemplos";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
 import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
@@ -177,6 +178,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     ].filter((g) => g.itens.length > 0);
     const inspiracao = fotosSite.filter((f) => ["degrade", "corte", "navalhado", "barba", "infantil"].includes(f.categoria)).slice(0, 10);
     const pares = banco.paresAntesDepois(b.id).slice(0, 2);
+    const acervo = b.demoAte ? new Set<string>() : arquivosDoAcervo();
     return (
       <div className="b-secao b-agendar b-vitrine">
         <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Qual vai ser o visual de hoje?" />
@@ -190,7 +192,8 @@ export default async function Agendar({ params, searchParams }: { params: Promis
                 </li>
               ))}
             </ul>
-            <figcaption>Feitos aqui. O próximo pode ser o seu.</figcaption>
+            {/* "Feitos aqui" só com foto da casa; foto do banco de exemplos (conta nova) não é trabalho dela. */}
+            <figcaption>{b.demoAte || inspiracao.every((f) => !acervo.has(f.arquivo)) ? "Feitos aqui. O próximo pode ser o seu." : "Escolha o seu próximo visual."}</figcaption>
           </figure>
         )}
         {pares.length > 0 && (
@@ -355,7 +358,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <input id="nome" name="nome" required maxLength={80} autoComplete="name" />
           <label htmlFor="telefone">Seu WhatsApp com DDD</label>
           <input id="telefone" name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" aria-describedby="telefone-dica" />
-          <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário. <a href="/privacidade" target="_blank">Privacidade</a>.</small>
+          <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário. <a href={`/b/${slug}/privacidade`} target="_blank">Privacidade</a>.</small>
           {servico.emDomicilio && (
             <>
               <label htmlFor="endereco">Endereço do atendimento</label>

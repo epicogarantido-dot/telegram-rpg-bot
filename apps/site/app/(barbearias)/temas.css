@@ -1061,3 +1061,11 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-mapa iframe { filter: grayscale(1) invert(0.92) contrast(0.9); }
 .site-b[data-tema="atemporal"] .b-mapa iframe { filter: grayscale(1); }
 .site-b[data-tema="tecnico"] .b-mapa { border: 0; box-shadow: var(--sombra); border-radius: 22px; }
+
+/* Página de texto do site da barbearia (privacidade). */
+.b-texto { max-width: 720px; }
+.site-b .b-texto h1 { font-size: clamp(2rem, 6vw, 3rem); margin: 0 0 24px; }
+.site-b .b-texto h2 { font-size: clamp(1.3rem, 3.5vw, 1.7rem); margin: 36px 0 12px; text-align: left; }
+.site-b .b-texto h2::after { display: none; }
+.b-texto p { color: var(--suave); line-height: 1.7; }
+.b-texto a { color: var(--texto); text-underline-offset: 4px; }
