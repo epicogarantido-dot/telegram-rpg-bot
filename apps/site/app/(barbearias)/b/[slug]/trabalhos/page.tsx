@@ -4,7 +4,6 @@ import { CATEGORIAS_FOTO, categoriaValida } from "@aprenda/agenda";
 import { obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
-import { arquivosDoAcervo } from "@/lib/exemplos";
 
 export const dynamic = "force-dynamic";
 
@@ -26,13 +25,10 @@ export default async function Trabalhos({ params, searchParams }: {
   const fotos = filtro ? todas.filter((f) => f.categoria === filtro) : todas;
   const categorias = CATEGORIAS_FOTO.filter((c) => todas.some((f) => f.categoria === c.id));
   const base = `/b/${b.slug}`;
-  // Site de cliente ainda com fotos do banco de exemplos: não chama de "Trabalhos" o que não é dele.
-  const acervo = b.demoAte ? new Set<string>() : arquivosDoAcervo();
-  const titulo = todas.filter((f) => acervo.has(f.arquivo)).length > todas.length / 2 ? "Inspiração" : "Trabalhos";
 
   return (
     <section className="b-secao">
-      <h1>{titulo}</h1>
+      <h1>Trabalhos</h1>
       {categorias.length > 1 && (
         <nav className="b-filtros" aria-label="Filtrar por tipo">
           <Link href={`${base}/trabalhos`} aria-current={!filtro ? "page" : undefined}>Todos</Link>

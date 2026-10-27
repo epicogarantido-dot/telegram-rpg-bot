@@ -7,7 +7,6 @@ import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { Frase } from "@/componentes/barbearia/Frase";
 import { frasesDoTema } from "@/lib/frases";
-import { arquivosDoAcervo } from "@/lib/exemplos";
 import { obterAgenda, reais } from "@/lib/agenda";
 import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
@@ -88,9 +87,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const fotoCasa = ambientes.at(-1) ?? capa;
   const fotoChamada = ambientes.length > 1 ? ambientes[0] : capa;
   const agendarHref = `${base}/agendar`;
-  // Site de cliente ainda com fotos do banco de exemplos: não chama de "Trabalhos" o que não é dele.
-  const acervo = b.demoAte ? new Set<string>() : arquivosDoAcervo();
-  const tituloTrabalhos = trabalhos.filter((f) => acervo.has(f.arquivo)).length > trabalhos.length / 2 ? "Inspiração" : "Trabalhos";
   const frases = frasesDoTema(tema);
   // Fundo das frases: fotos que lembram barbearia (ambiente, depois ferramentas, depois a capa).
   // Começa pelas que ainda não apareceram grandes; com poucas, repete.
@@ -239,7 +235,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       {trabalhos.length > 0 && (
         <CarrosselB
           id="trabalhos"
-          titulo={tituloTrabalhos}
+          titulo="Trabalhos"
           className="b-carrossel-trabalhos"
           rodape={
             <nav className="b-filtros" aria-label="Trabalhos por tipo">
