@@ -301,7 +301,7 @@ function EsperandoPessoa({ atendimentos }: { atendimentos: Atendimento[] }) {
       <h2 id="pessoa-titulo" style={{ marginTop: 0 }}>Esperando uma pessoa no WhatsApp ({atendimentos.length})</h2>
       <p><small>Responda pelo celular do chip do bot, na conversa da pessoa. Quando você responde por lá, o pedido sai daqui sozinho.</small></p>
       {atendimentos.map((a) => (
-        <form key={a.id} action={resolverAtendimento} style={{ borderTop: "1px solid currentColor", paddingTop: 10, marginTop: 10 }}>
+        <form key={a.id} action={resolverAtendimento} style={{ borderTop: "1px solid var(--borda)", paddingTop: 10, marginTop: 10 }}>
           <input type="hidden" name="telefone" value={a.telefone} />
           <p style={{ margin: 0 }}>
             <strong>{a.nome ?? "Sem nome"}</strong> · {a.telefone.replace(/^55(\d{2})(\d+)(\d{4})$/, "($1) $2-$3")}

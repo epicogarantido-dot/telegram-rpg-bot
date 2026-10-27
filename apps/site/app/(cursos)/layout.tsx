@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import "../globals.css";
-import "./atemporal.css";
+import "./imperial.css";
 
 export const metadata: Metadata = {
   // Endereço público, pra prévia do WhatsApp achar as fotos (og:image precisa de URL completa).
@@ -12,10 +12,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
+  // Tema escuro do Salão Imperial (Cerimônia): a barra do celular acompanha o fundo.
+  themeColor: "#120b14",
+  colorScheme: "dark",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

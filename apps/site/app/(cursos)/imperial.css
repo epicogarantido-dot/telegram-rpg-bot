@@ -1,0 +1,136 @@
+/* Site de cursos e leads vestido com o tema "Cerimônia" dos sites das barbearias
+   (temas.css, data-tema="cerimonia"; é o tema da demonstração "Salão Imperial"):
+   ameixa quase preta com brilho no topo, tudo em Jost, títulos finos em caixa alta
+   bem espaçada, botões em pílula brancos. Só vale dentro de body.site-cursos.
+   Diferenças conscientes do tema: título de curso, matéria e lição fica em caixa
+   normal (texto longo em caixa alta cansa a leitura) e não há a entrada desfocada
+   do tema: no site de cursos, movimento só em resposta a um toque. */
+@import "@fontsource/jost/300.css";
+@import "@fontsource/jost/400.css";
+@import "@fontsource/jost/500.css";
+@import "@fontsource/jost/600.css";
+
+.site-cursos {
+  --fonte-titulo: "Jost", system-ui, sans-serif;
+  --fonte-texto: "Jost", system-ui, sans-serif;
+  /* Tokens do tema Cerimônia. É um tema escuro: não muda com o modo claro do celular. */
+  --fundo: #120b14; --fundo-2: #1d1320; --cartao: #1a111c;
+  --texto: #f5f0f6; --suave: #b9adbd; --borda: rgb(255 255 255 / 0.16); --linha: rgb(255 255 255 / 0.28);
+  --destaque: #ffffff; --destaque-forte: #e8e0ea; --destaque-claro: #2a1d2d; --sobre-destaque: #120b14;
+  --acento: #e9d9ee; --acento-claro: #2a1d2d;
+  --raio: 14px; --raio-p: 10px;
+  --sombra: none; --sombra-forte: none;
+  --erro: #ffb4c0; --erro-fundo: #3a1520; --erro-borda: #7a2c3d;
+  color-scheme: dark;
+  background: radial-gradient(90% 520px at 50% 0%, #3b2342, #120b14 70%) no-repeat, #120b14;
+  color: var(--texto);
+  font-size: 18px;
+}
+html:has(body.site-cursos) { background: #120b14; }
+
+/* Títulos: finos. Os de abertura e de seção em caixa alta espaçada, como no tema. */
+.site-cursos :is(h1, h2, h3) { font-family: var(--fonte-titulo); font-weight: 300; line-height: 1.2; letter-spacing: 0.01em; }
+.site-cursos h3 { font-weight: 500; font-size: 1.1rem; }
+.site-cursos main > h1:first-child, .site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) h1,
+.site-cursos :is(.venda-recursos, .venda-cursos, .venda-plano, .venda-perguntas, .venda-comunidade, .carrossel) h2 {
+  text-transform: uppercase; letter-spacing: 0.14em;
+}
+.site-cursos a { color: var(--texto); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.site-cursos a:hover { color: var(--acento); }
+/* .site-cursos a pesa mais que .botao: devolve a cor certa dos botões. */
+.site-cursos :is(.botao, .botao:hover) { color: var(--sobre-destaque); }
+.site-cursos :focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+.site-cursos ::selection { background: #5a3763; color: #fff; }
+
+/* ---------- topo: nome espaçado e fio fino embaixo, como no tema ---------- */
+.site-cursos .barra-topo { background: rgb(18 11 20 / 0.86); backdrop-filter: blur(8px); border-bottom: 1px solid rgb(255 255 255 / 0.18); }
+.site-cursos .marca { font: 300 0.95rem var(--fonte-texto); text-transform: uppercase; letter-spacing: 0.3em; color: var(--texto); }
+.site-cursos .marca-icone { display: none; }
+.site-cursos .topo nav a { color: var(--texto); font-size: 15px; letter-spacing: 0.04em; }
+.site-cursos .topo nav a:hover { background: var(--destaque-claro); }
+.site-cursos .topo nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; }
+.site-cursos .nav-destaque { background: var(--destaque) !important; color: var(--sobre-destaque) !important; border-radius: 999px !important; }
+.site-cursos .rodape { background: transparent; border-top: 1px solid var(--borda); color: var(--suave); }
+
+/* ---------- abertura centrada, sobre o brilho ameixa do fundo ---------- */
+.site-cursos :is(.heroi, .venda-heroi-texto, .revista-cabeca) { text-align: center; }
+.site-cursos .heroi { padding: 72px 0 56px; background: none; }
+.site-cursos .heroi::before { display: none; }
+.site-cursos .heroi :is(p, .acoes, .busca, .selo, .heroi-temas) { margin-inline: auto; justify-content: center; }
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) h1 { font-weight: 300; }
+.site-cursos .heroi h1 { font-size: clamp(2rem, 6vw, 3.8rem); line-height: 1.12; }
+.site-cursos .heroi h1 em { font-style: normal; color: inherit; }
+.site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) :is(p, .suave) { color: var(--suave); }
+.site-cursos .heroi + .vantagens { margin-top: 32px; }
+.site-cursos .venda-heroi { padding: 56px 0; }
+.site-cursos .venda-heroi-texto :is(p, .acoes) { margin-inline: auto; justify-content: center; }
+.site-cursos .venda-celular { border-color: rgb(255 255 255 / 0.2); }
+.site-cursos .revista-cabeca { margin: 0 auto 8px; padding: 56px 0 40px; }
+.site-cursos .revista-cabeca > * { margin-inline: auto; }
+.site-cursos .revista-cabeca h1 { font-size: clamp(1.9rem, 5.5vw, 3.2rem); }
+
+/* ---------- botões: pílula branca e pílula de contorno, letra espaçada ---------- */
+.site-cursos :is(.botao, .botao-sec, .busca button, .formulario button, .botao-concluir) {
+  border-radius: 999px; text-transform: uppercase; letter-spacing: 0.2em; font-size: 14px; font-weight: 600; padding: 14px 24px;
+}
+.site-cursos :is(.botao, .busca button, .formulario button, .botao-concluir) { background: var(--destaque); color: var(--sobre-destaque); border: 1px solid var(--destaque); }
+.site-cursos :is(.botao, .busca button, .formulario button, .botao-concluir):hover { background: var(--destaque-forte); }
+.site-cursos .botao-sec { background: transparent; color: var(--texto); border: 1px solid rgb(255 255 255 / 0.5); }
+.site-cursos .botao-sec:hover { background: rgb(255 255 255 / 0.08); color: var(--texto); border-color: #fff; }
+.site-cursos .etiqueta { background: transparent; color: var(--texto); border: 1px solid var(--borda); border-radius: 999px; font-weight: 500; }
+.site-cursos .etiqueta:hover { border-color: var(--linha); }
+.site-cursos .selo { background: none; padding: 0; color: var(--suave); letter-spacing: 0.06em; }
+.site-cursos .chip-icone, .site-cursos .chip-icone.acento { background: var(--destaque-claro); border: 1px solid var(--borda); color: var(--acento); }
+
+/* ---------- campos ---------- */
+.site-cursos :is(.formulario input:not([type="checkbox"]), .formulario select, .formulario textarea, .busca input) {
+  background: var(--cartao); color: var(--texto); border: 1px solid var(--linha); border-radius: var(--raio-p); box-shadow: none;
+}
+.site-cursos .busca input { border-radius: 999px; }
+.site-cursos :is(input, textarea)::placeholder { color: var(--suave); opacity: 1; }
+.site-cursos .busca input:focus { box-shadow: 0 0 0 1px var(--acento); }
+
+/* ---------- cartões: superfície um tom acima do fundo, fio translúcido ---------- */
+.site-cursos .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: none; }
+.site-cursos a.cartao:hover { transform: none; border-color: var(--linha); box-shadow: none; }
+.site-cursos a.cartao:hover h3 { text-decoration: underline; text-underline-offset: 4px; }
+.site-cursos .cartao h3 { font-weight: 400; font-size: 1.25rem; }
+.site-cursos .modulos section { border-color: var(--borda); background: var(--cartao); }
+.site-cursos .atribuicao { background: var(--fundo-2); border-color: var(--borda); border-left: 3px solid var(--acento); }
+.site-cursos .licao blockquote { border-left-color: var(--acento); color: var(--suave); }
+.site-cursos .licao :is(code, pre) { background: var(--fundo-2); color: var(--texto); }
+.site-cursos .licao h4 { font-weight: 600; font-size: 1.15rem; margin: 28px 0 0; }
+.site-cursos .licao h4 + p { margin-top: 2px; color: var(--suave); }
+.site-cursos .progresso-licao.cta { background: var(--fundo-2); }
+.site-cursos .barra-progresso { background: var(--destaque-claro); }
+.site-cursos .barra-progresso span { background: var(--acento); }
+.site-cursos :is(.revista-lista, .venda-cursos ul) { border-top-color: var(--borda); }
+.site-cursos .revista-lista :is(li, a) { border-color: var(--borda); }
+.site-cursos .revista-lista strong { font-weight: 400; font-size: 1.35rem; }
+.site-cursos .revista-tipo { color: var(--suave); text-transform: uppercase; letter-spacing: 0.16em; font-size: 12px; font-weight: 500; }
+.site-cursos .venda-cursos strong { font-weight: 400; font-size: 1.15rem; }
+.site-cursos .venda-plano { background: var(--cartao); border-color: var(--borda); border-radius: var(--raio); }
+.site-cursos .venda-valor strong { font-weight: 300; }
+.site-cursos .venda-recurso h3 svg { color: var(--acento); }
+.site-cursos .venda-perguntas details { border-color: var(--borda); }
+.site-cursos .artigo-serie { border-color: var(--borda); background: var(--cartao); }
+.site-cursos .artigo-foto figcaption { color: var(--suave); }
+.site-cursos :is(.erro) { color: var(--erro); background: var(--erro-fundo); border-color: var(--erro-borda); }
+
+/* ---------- carrossel e propaganda ---------- */
+.site-cursos .carrossel-setas button { border-radius: 999px; border-color: var(--linha); background: transparent; color: var(--texto); }
+.site-cursos .carrossel-setas button:hover:not(:disabled) { background: rgb(255 255 255 / 0.08); }
+.site-cursos .cartao-materia h3 { font-size: 1.3rem; }
+.site-cursos .propaganda { background: radial-gradient(120% 140% at 50% 0%, #3b2342, #1a111c 70%); color: var(--texto); border: 1px solid var(--borda); }
+.site-cursos .propaganda h2 { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 300; }
+.site-cursos .propaganda :is(.propaganda-de, .propaganda-preco) { color: var(--suave); opacity: 1; }
+.site-cursos .licao-trancada { border-color: var(--borda); background: var(--cartao); }
+
+@media (max-width: 560px) {
+  .site-cursos .marca { letter-spacing: 0.22em; }
+  .site-cursos .heroi { padding: 48px 0 40px; }
+  .site-cursos .venda-heroi, .site-cursos .revista-cabeca { padding: 40px 0 32px; }
+}
+@media (max-width: 420px) {
+  .site-cursos :is(.botao, .botao-sec) { letter-spacing: 0.12em; padding-inline: 18px; }
+}
