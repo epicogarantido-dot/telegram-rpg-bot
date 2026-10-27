@@ -115,3 +115,39 @@ export function eventoDoHorario(b: Barbearia, sp: { servico?: string; profission
   const evento = montarEvento(b, { servico: servico.nome, profissional: prof.nome, inicio: `${sp.data}T${sp.hora}`, duracaoMin: servico.duracaoMin });
   return { evento, servico, prof };
 }
+
+/** Corte de cabelo (vai pro grupo "Cortes" no site), pelo nome do serviço. */
+export function ehCorte(nome: string): boolean {
+  return /corte|degrad|fade|navalh|social|tesoura|m[aá]quina|infantil|cabelo|freestyle|disfarçado|undercut|moicano/i.test(nome);
+}
+
+/**
+ * Uma foto pra cada serviço, pelo nome ("barba" → fotos de barba...). Evita repetir enquanto
+ * houver foto que ainda não foi usada; sem palavra conhecida, usa os cortes e depois o resto.
+ */
+export function fotosDosServicos<F extends { arquivo: string; categoria: string }>(nomes: string[], fotos: F[]): (F | undefined)[] {
+  const usadas = new Set<string>();
+  const regras: [RegExp, string[]][] = [
+    [/sobrancelha/i, ["sobrancelha"]],
+    [/infantil|crian|kids/i, ["infantil", "corte"]],
+    [/navalh|risco|desenho/i, ["navalhado", "degrade"]],
+    [/degrad|fade|freestyle|pezinho|acabamento/i, ["degrade", "corte"]],
+    [/barba|bigode|toalha|cavanhaque|pigment/i, ["barba"]],
+    [/corte|cabelo|social|tesoura|m[aá]quina/i, ["corte", "degrade"]],
+    [/produto|pomada|hidrata|luzes|platin|selagem|relaxa/i, ["produtos", "corte"]],
+  ];
+  const pegar = (categorias: string[]) => {
+    for (const c of categorias) {
+      const da = fotos.filter((f) => f.categoria === c);
+      const livre = da.find((f) => !usadas.has(f.arquivo)) ?? da[0];
+      if (livre) return livre;
+    }
+    return undefined;
+  };
+  return nomes.map((nome) => {
+    const regra = regras.find(([r]) => r.test(nome));
+    const f = pegar(regra ? regra[1] : ["corte", "degrade", "barba"]) ?? fotos.find((x) => !usadas.has(x.arquivo) && x.categoria !== "produtos");
+    if (f) usadas.add(f.arquivo);
+    return f;
+  });
+}

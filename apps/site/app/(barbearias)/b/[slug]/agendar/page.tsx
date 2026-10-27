@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
-import { ChevronRight } from "lucide-react";
+import { Check, Scissors, Sparkles } from "lucide-react";
 import { agoraNoFuso, CATEGORIAS_REFERENCIA, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { urlFoto } from "@/lib/barbearias";
+import { ehCorte, fotosDosServicos, urlFoto } from "@/lib/barbearias";
+import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
 import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
@@ -162,53 +163,128 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     return `${base}?${q}`;
   };
 
-  // ---------- Passo 1: serviço ----------
+  // Foto de cada serviço (pelo nome) e os trabalhos da casa pra inspirar a escolha.
+  const fotosSite = banco.fotos(b.id).filter((f) => f.categoria !== "equipe" && !f.antesDe);
+  const todosServicos = banco.servicos(b.id, true);
+  const fotosLista = fotosDosServicos(todosServicos.map((s) => s.nome), fotosSite);
+  const fotoDe = new Map(todosServicos.map((s, i) => [s.id, fotosLista[i]]));
+
+  // ---------- Passo 1: serviço (vitrine com foto) ----------
   if (!servico) {
+    const grupos = [
+      { titulo: "Cortes", itens: servicos.filter((s) => ehCorte(s.nome)) },
+      { titulo: "Barba e cuidados", itens: servicos.filter((s) => !ehCorte(s.nome)) },
+    ].filter((g) => g.itens.length > 0);
+    const inspiracao = fotosSite.filter((f) => ["degrade", "corte", "navalhado", "barba", "infantil"].includes(f.categoria)).slice(0, 10);
+    const pares = banco.paresAntesDepois(b.id).slice(0, 2);
     return (
-      <div className="b-secao b-agendar">
-        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="O que vai ser?" />
-        <ul className="b-lista-servicos">
-          {servicos.map((s) => (
-            <li key={s.id}>
-              <Link href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [] })}>
-                <span className="b-lista-nome">{s.nome}{s.emDomicilio && <small className="b-servico-domicilio">Vou até você</small>}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
-                <span className="b-lista-info">{s.duracaoMin} min</span>
-                {b.mostrarPrecos && <span className="b-lista-preco">{reais(s.precoCentavos)}</span>}
-                <ChevronRight size={18} aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <div className="b-secao b-agendar b-vitrine">
+        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Qual vai ser o visual de hoje?" />
+        {inspiracao.length >= 3 && (
+          <figure className="b-inspiracao">
+            <ul aria-label="Cortes feitos aqui">
+              {inspiracao.map((f) => (
+                <li key={f.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? "Corte feito na barbearia"} loading="lazy" width={f.largura} height={f.altura} />
+                </li>
+              ))}
+            </ul>
+            <figcaption>Feitos aqui. O próximo pode ser o seu.</figcaption>
+          </figure>
+        )}
+        {pares.length > 0 && (
+          <div className="b-comparadores b-comparadores-topo">
+            {pares.map((p) => (
+              <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
+            ))}
+          </div>
+        )}
+        {grupos.map((g) => (
+          <section key={g.titulo} aria-label={g.titulo}>
+            {grupos.length > 1 && <h2>{g.titulo}</h2>}
+            <ul className="b-vitrine-grade">
+              {g.itens.map((s) => {
+                const f = fotoDe.get(s.id);
+                return (
+                  <li key={s.id}>
+                    <Link href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [] })} className="b-vitrine-item">
+                      <span className="b-vitrine-foto">
+                        {f
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                          : <Scissors size={36} aria-hidden />}
+                      </span>
+                      <span className="b-vitrine-texto">
+                        <strong>{s.nome}</strong>
+                        {s.descricao && <small>{s.descricao}</small>}
+                        <span className="b-vitrine-info">
+                          <span>{s.duracaoMin} min{s.emDomicilio ? " · vou até você" : ""}</span>
+                          {b.mostrarPrecos && <b>{reais(s.precoCentavos)}</b>}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
     );
   }
 
-  // ---------- Passo 1, parte 2: adicionais ----------
+  // ---------- Passo 1, parte 2: adicionais (com foto) ----------
   if (!respondeu) {
+    const fotoServico = fotoDe.get(servico.id);
     return (
-      <div className="b-secao b-agendar">
-        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Quer adicionar algo?" />
-        <p className="b-escolhido">
-          {servico.nome} · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
-          {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
-        </p>
+      <div className="b-secao b-agendar b-vitrine">
+        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Completa o visual?" />
+        <div className="b-escolhido b-escolhido-foto">
+          {fotoServico && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={urlFoto(fotoServico.arquivo, "p")} alt="" width={64} height={64} />
+          )}
+          <p>
+            <strong>{servico.nome}</strong> · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
+            {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
+          </p>
+        </div>
+        <p className="b-dica">Já que você vem, sai daqui com tudo alinhado. Toque no que quiser junto.</p>
         <form method="get" action={base} className="b-adicionais">
           <input type="hidden" name="servico" value={servico.id} />
           {filtro && <input type="hidden" name="profissional" value={filtro.id} />}
           <input type="hidden" name="ad" value="1" />
-          <p className="b-dica">Aproveite o horário: marque o que quiser fazer junto. Se não quiser nada, é só ver os horários.</p>
-          <fieldset>
+          <fieldset className="b-vitrine-grade b-vitrine-extras">
             <legend className="b-so-leitor">Adicionais</legend>
-            {possiveis.map((a) => (
-              <label key={a.id} className="b-adicional">
-                <input type="checkbox" name="extra" value={a.id} defaultChecked={pedidos.includes(a.id)} />
-                <span className="b-lista-nome">{a.nome}{a.descricao && <small className="b-servico-desc">{a.descricao}</small>}</span>
-                <span className="b-lista-info">+{a.duracaoMin} min</span>
-                {b.mostrarPrecos && <span className="b-lista-preco">+{reais(a.precoCentavos)}</span>}
-              </label>
-            ))}
+            {possiveis.map((a) => {
+              const f = fotoDe.get(a.id);
+              return (
+                <label key={a.id} className="b-vitrine-item b-extra">
+                  <input type="checkbox" name="extra" value={a.id} defaultChecked={pedidos.includes(a.id)} />
+                  <span className="b-vitrine-foto">
+                    {f
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                      : <Sparkles size={32} aria-hidden />}
+                    <span className="b-extra-marca" aria-hidden><Check size={18} /></span>
+                  </span>
+                  <span className="b-vitrine-texto">
+                    <strong>{a.nome}</strong>
+                    {a.descricao && <small>{a.descricao}</small>}
+                    <span className="b-vitrine-info">
+                      <span>+{a.duracaoMin} min</span>
+                      {b.mostrarPrecos && <b>+{reais(a.precoCentavos)}</b>}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </fieldset>
-          <button className="b-botao">Ver horários</button>
+          <div className="b-extras-acoes">
+            <button className="b-botao">Continuar</button>
+            <Link href={link({ ad: "1", extra: [] })} className="b-extras-pular">Só {servico.nome.toLowerCase()}, ver horários</Link>
+          </div>
         </form>
       </div>
     );

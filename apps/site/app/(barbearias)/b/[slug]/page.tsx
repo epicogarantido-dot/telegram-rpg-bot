@@ -6,7 +6,7 @@ import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { obterAgenda, reais } from "@/lib/agenda";
-import { dadosEstruturados, linkMapa, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
+import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +66,19 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
   const vagas = agenda && servicos[0] ? proximasVagas(banco, b.id, servicos[0].id, equipe.map((p) => p.id), hoje.slice(0, 10)) : null;
   const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
-  const fotoServico = fotosDosServicos(servicos.map((s) => s.nome), trabalhos);
+  const fotosLista = fotosDosServicos(servicos.map((s) => s.nome), trabalhos);
+  const fotoServico = new Map(servicos.map((s, i) => [s.id, fotosLista[i]]));
+  const gruposServicos = [
+    { id: "servicos", titulo: "Cortes", itens: servicos.filter((s) => ehCorte(s.nome)) },
+    { id: "barba", titulo: "Barba e cuidados", itens: servicos.filter((s) => !ehCorte(s.nome)) },
+  ].filter((g) => g.itens.length > 0);
+  // Sem nenhum corte no cardápio, o primeiro grupo vira "Serviços" (e mantém a âncora #servicos).
+  if (gruposServicos[0] && gruposServicos[0].id !== "servicos") gruposServicos[0] = { ...gruposServicos[0], id: "servicos", titulo: "Serviços" };
+  // Mosaico: a capa de novo (é a foto mais bonita do site) e dois cortes.
+  const mosaico = [
+    ...(capa ? [capa] : []),
+    ...trabalhos.filter((f) => ["degrade", "corte", "navalhado", "barba"].includes(f.categoria)).slice(-2),
+  ];
   // Fotos do ambiente pra "Conheça a casa" e pro fundo da chamada final, sem repetir quando dá.
   const ambientes = trabalhos.filter((f) => f.categoria === "ambiente");
   const fotoCasa = ambientes.at(-1) ?? capa;
@@ -126,7 +138,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           </div>
           {vagas && servicos[0] && (
             <div className="b-vagas" aria-labelledby="vagas-titulo">
-              <h2 id="vagas-titulo">Horários livres {vagas.quando} pra {servicos[0].nome.toLowerCase()}</h2>
+              <h2 id="vagas-titulo">{vagas.itens.length <= 3 ? "Últimos horários" : "Horários livres"} {vagas.quando} pra {servicos[0].nome.toLowerCase()}</h2>
               <ul>
                 {vagas.itens.map((v) => (
                   <li key={v.hora}>
@@ -152,15 +164,16 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
-      {servicos.length > 0 && (
+      {gruposServicos.map((g, gi) => (
         <CarrosselB
-          id="servicos"
-          titulo="Serviços"
+          key={g.id}
+          id={g.id}
+          titulo={g.titulo}
           className="b-carrossel-servicos"
-          apoio={agenda ? "Escolha o serviço e marque na hora." : undefined}
+          apoio={gi === 0 && agenda ? "Escolha o seu. O resto é com a gente." : undefined}
         >
-          {servicos.map((s, i) => {
-            const f = fotoServico[i];
+          {g.itens.map((s) => {
+            const f = fotoServico.get(s.id);
             return (
               <article key={s.id} className="b-cartao-servico">
                 <div className="b-cartao-foto">
@@ -177,23 +190,28 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
                     {s.emDomicilio && <span>Vou até você</span>}
                     {b.mostrarPrecos && <strong className="b-servico-preco">{reais(s.precoCentavos)}</strong>}
                   </p>
-                  {agenda && <Link href={`${agendarHref}?servico=${s.id}`} className="b-botao b-botao-pequeno" aria-label={`Agendar ${s.nome}`}>Agendar</Link>}
+                  {agenda && <Link href={`${agendarHref}?servico=${s.id}`} className="b-botao b-botao-pequeno" aria-label={`Agendar ${s.nome}`}>{ehCorte(s.nome) ? "Quero esse" : "Agendar"}</Link>}
                 </div>
               </article>
             );
           })}
         </CarrosselB>
-      )}
+      ))}
 
-      {agenda && (
-        <section className="b-secao b-como" aria-labelledby="como-titulo">
-          <h2 id="como-titulo">Como marcar</h2>
-          <ol className="b-passos">
-            <li><strong>Escolha o serviço</strong><span>Corte, barba ou os dois, com o preço e o tempo de cada um.</span></li>
-            <li><strong>Escolha o dia e o horário</strong><span>Só aparece horário livre. Com quem você preferir, ou com quem estiver livre.</span></li>
-            <li><strong>Pronto, está marcado</strong><span>Você recebe um link pra pôr na agenda do celular, remarcar ou cancelar.</span></li>
-          </ol>
-          <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>
+      {mosaico.length >= 3 && (
+        <section className="b-mosaico" aria-labelledby="mosaico-titulo">
+          <div className="b-mosaico-principal">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={urlFoto(mosaico[0]!.arquivo)} alt={mosaico[0]!.legenda ?? ""} loading="lazy" width={mosaico[0]!.largura} height={mosaico[0]!.altura} />
+            <div className="b-mosaico-texto">
+              <h2 id="mosaico-titulo">Você sai daqui outro.</h2>
+              {agenda && <Link href={agendarHref} className="b-botao b-botao-grande">Escolher meu corte</Link>}
+            </div>
+          </div>
+          {mosaico.slice(1).map((f) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={f.id} src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? ""} loading="lazy" width={f.largura} height={f.altura} />
+          ))}
         </section>
       )}
 
@@ -278,8 +296,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
           )}
           <div className="b-chamada-texto">
-            <h2 id="chamada-titulo">Seu horário na {b.nome}</h2>
-            <p>Marque pelo site em menos de um minuto, sem criar conta.</p>
+            <h2 id="chamada-titulo">Seu próximo corte já tem horário.</h2>
+            <p>Garanta o seu em menos de um minuto, sem criar conta.</p>
             <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>
           </div>
         </section>
@@ -317,37 +335,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       </section>
     </>
   );
-}
-
-/**
- * Uma foto pra cada serviço, pelo nome ("barba" → fotos de barba...). Evita repetir enquanto
- * houver foto que ainda não foi usada; sem palavra conhecida, usa os cortes e depois o resto.
- */
-function fotosDosServicos<F extends { arquivo: string; categoria: string }>(nomes: string[], fotos: F[]): (F | undefined)[] {
-  const usadas = new Set<string>();
-  const regras: [RegExp, string[]][] = [
-    [/sobrancelha/i, ["sobrancelha"]],
-    [/infantil|crian|kids/i, ["infantil", "corte"]],
-    [/navalh|risco|desenho/i, ["navalhado", "degrade"]],
-    [/degrad|fade|freestyle/i, ["degrade", "corte"]],
-    [/barba|bigode|toalha/i, ["barba"]],
-    [/corte|cabelo|social|tesoura|m[aá]quina/i, ["corte", "degrade"]],
-    [/produto|pomada|hidrata|pigment|luzes|platin|selagem|relaxa/i, ["produtos", "corte"]],
-  ];
-  const pegar = (categorias: string[]) => {
-    for (const c of categorias) {
-      const da = fotos.filter((f) => f.categoria === c);
-      const livre = da.find((f) => !usadas.has(f.arquivo)) ?? da[0];
-      if (livre) return livre;
-    }
-    return undefined;
-  };
-  return nomes.map((nome) => {
-    const regra = regras.find(([r]) => r.test(nome));
-    const f = pegar(regra ? regra[1] : ["corte", "degrade", "barba"]) ?? fotos.find((x) => !usadas.has(x.arquivo) && x.categoria !== "produtos");
-    if (f) usadas.add(f.arquivo);
-    return f;
-  });
 }
 
 /** Separa o nome em palavras (pra quebrar linha só entre elas) com o índice global de cada letra. */

@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { gravarFoto, processarFoto, TEMAS, type Barbearia } from "@aprenda/agenda";
 import { PASTA_CURSOS } from "@aprenda/catalogo";
 import { obterAgenda } from "./agenda";
+import { porCardapio } from "./cardapio";
 
 /**
  * Sites de exemplo, um por estilo, pra mostrar ao barbeiro um site de verdade no ar (o
@@ -145,7 +146,7 @@ export async function criarSitesDeExemplo(): Promise<number> {
   }
   for (const slug of Object.values(existentes)) {
     const b = banco.barbeariaPorSlug(slug);
-    if (b) porFotosNaEquipe(b.id);
+    if (b) { porFotosNaEquipe(b.id); porCardapio(b.id); }
   }
   banco.definirConfiguracao(CHAVE_FOTOS, JSON.stringify(fotos.map((f) => f.arquivo)));
   return criados;

@@ -141,9 +141,10 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
               <form action={criarExemplos}>
                 <button className="botao">Criar {faltam === TEMAS.length ? "os" : "os que faltam:"} {faltam} sites de exemplo</button>
               </form>
-            ) : fotosNovas > 0 && (
+            ) : (
+              // Pode rodar quantas vezes quiser: só põe o que falta (fotos novas, cardápio, fotos da equipe).
               <form action={criarExemplos}>
-                <button className="botao">Pôr {fotosNovas} fotos novas nos exemplos</button>
+                <button className="botao">{fotosNovas > 0 ? `Pôr ${fotosNovas} fotos novas nos exemplos` : "Atualizar os sites de exemplo"}</button>
               </form>
             )}
           </>

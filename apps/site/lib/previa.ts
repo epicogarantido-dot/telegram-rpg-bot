@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { ErroAgenda, type Barbearia } from "@aprenda/agenda";
 import { obterAgenda } from "./agenda";
+import { porCardapio } from "./cardapio";
 import { criarSitesDeExemplo, porFotosPadrao, sitesDeExemplo } from "./exemplos";
 
 /**
@@ -23,6 +24,7 @@ export async function criarPrevia(dados: { nome: string; cidade?: string; tema: 
   if (!sitesDeExemplo()[dados.tema]) await criarSitesDeExemplo();
   const { barbearia, convite } = banco.criarDemonstracao({ nome: dados.nome.slice(0, 60), tema: dados.tema, cidade: dados.cidade?.slice(0, 60), dias: PREVIA_DIAS });
   porFotosPadrao(barbearia.id, dados.tema);
+  porCardapio(barbearia.id);
   banco.consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
   (await cookies()).set(COOKIE_PREVIA, convite, {
     httpOnly: true,
