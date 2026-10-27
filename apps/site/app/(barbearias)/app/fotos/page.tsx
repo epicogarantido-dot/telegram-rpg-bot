@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { Star, Trash2, Upload } from "lucide-react";
 import { apagarFoto, CATEGORIAS_FOTO, gravarFoto, MAX_FOTOS, processarFoto } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { CampoFoto } from "@/componentes/CampoFoto";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
 
@@ -72,7 +73,7 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
 
       <form action={enviar} className="formulario formulario-largo envio-fotos">
         <label>Fotos (até 12 por vez)
-          <input type="file" name="fotos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
+          <CampoFoto name="fotos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
         </label>
         <label>Tipo
           <select name="categoria" defaultValue="degrade">

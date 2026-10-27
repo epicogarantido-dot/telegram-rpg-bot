@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 import { apagarComprovante, ErroAgenda, formatarData, gerarPixCopiaECola, gravarComprovante, MAX_BYTES_COMPROVANTE, prepararComprovante } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { CampoFoto } from "@/componentes/CampoFoto";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
@@ -108,7 +109,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
                 <input type="hidden" name="id" value={pagamento.id} />
                 <label>
                   Comprovante do Pix <small>(print da tela ou PDF)</small>
-                  <input type="file" name="comprovante" accept="image/*,application/pdf" />
+                  <CampoFoto name="comprovante" accept="image/*,application/pdf" ladoMaximo={2400} />
                 </label>
                 {pagamento.status !== "informado" && <input name="pagador" placeholder="Nome de quem pagou (ajuda a conferir)" maxLength={80} />}
                 <BotaoEnviar carregando="Enviando…">{pagamento.status === "informado" ? "Enviar comprovante" : "Já paguei"}</BotaoEnviar>
