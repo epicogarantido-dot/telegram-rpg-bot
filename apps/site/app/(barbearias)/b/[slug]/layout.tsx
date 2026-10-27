@@ -52,6 +52,12 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
             vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
           </p>
           <a className="b-demo-botao" href={`/montar?tema=${b.tema}`}>Quero um site assim</a>
+          <details className="b-demo-estilos">
+            <summary>Ver outros estilos</summary>
+            <nav aria-label="Outros estilos de site">
+              {TEMAS.filter((t) => t.id !== b.tema).map((t) => <a key={t.id} href={`/exemplo/${t.id}`}>{t.nome}</a>)}
+            </nav>
+          </details>
         </aside>
       ) : previa ? (
         <aside className="b-demo" aria-label="Aviso de prévia">

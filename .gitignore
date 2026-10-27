@@ -4,6 +4,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.saas.example
 # sessão do WhatsApp: é a "senha" do número. NUNCA commitar.
 apps/bot/auth/
 data/cache/

@@ -24,8 +24,10 @@ export function proxy(req: NextRequest) {
     if (saas && DO_SAAS.some((r) => r.test(pathname))) return NextResponse.redirect(`${saas}${pathname}${search}`, 307);
   } else if (modo === "saas" && DO_LEADS.some((r) => r.test(pathname))) {
     const leads = limpar(process.env.LEADS_URL);
-    // A porta de entrada do SaaS é a montagem do site; o resto vai pro site de leads.
-    if (pathname === "/" || !leads) return NextResponse.redirect(new URL(`/montar${search}`, req.url), 307);
+    // A porta de entrada do SaaS é o próprio produto: um site de barbearia de exemplo (estilo em
+    // SITE_INICIAL, padrão Cerimônia). Sem app de leads, o resto cai na montagem do site.
+    if (pathname === "/") return NextResponse.redirect(new URL(`/exemplo/${process.env.SITE_INICIAL || "cerimonia"}${search}`, req.url), 307);
+    if (!leads) return NextResponse.redirect(new URL(`/montar${search}`, req.url), 307);
     return NextResponse.redirect(`${leads}${pathname}${search}`, 307);
   }
   return NextResponse.next();

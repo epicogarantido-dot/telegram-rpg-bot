@@ -89,6 +89,6 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 `.env` de cada um (modelo pronto do SaaS: `.env.saas.example`):
 
 - **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`. Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
-- **SaaS:** `LEADS_URL=https://<app-leads>.squareweb.app`, `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*`.
+- **SaaS:** `LEADS_URL=https://<app-leads>.squareweb.app`, `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*` e, se quiser, `SITE_INICIAL` (o estilo do site de exemplo que abre no endereço principal; padrão `cerimonia`).
 
 O banco da agenda (barbearias, pagamentos, fotos) mora no app SaaS; o de leads (prospecção, contagem por origem) no app de leads. Backup da agenda: `/painel/backup` no SaaS.
