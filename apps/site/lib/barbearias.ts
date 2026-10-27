@@ -130,7 +130,7 @@ export function eventoDoHorario(b: Barbearia, sp: { servico?: string; profission
 
 /** Corte de cabelo (vai pro grupo "Cortes" no site), pelo nome do serviço. */
 export function ehCorte(nome: string): boolean {
-  return /corte|degrad|fade|navalh|social|tesoura|m[aá]quina|infantil|cabelo|freestyle|disfarçado|undercut|moicano/i.test(nome);
+  return /corte|degrad|fade|taper|navalhado|social|americano|militar|tesoura|m[aá]quina|infantil|cabelo|freestyle|disfar[cç]ado|undercut|moicano|mullet|crop|buzz|topete|pompadour/i.test(nome);
 }
 
 /**
@@ -142,10 +142,10 @@ export function fotosDosServicos<F extends { arquivo: string; categoria: string 
   const regras: [RegExp, string[]][] = [
     [/sobrancelha/i, ["sobrancelha"]],
     [/infantil|crian|kids/i, ["infantil", "corte"]],
-    [/navalh|risco|desenho/i, ["navalhado", "degrade"]],
-    [/degrad|fade|freestyle|pezinho|acabamento/i, ["degrade", "corte"]],
+    [/navalh|risco|desenho|moicano/i, ["navalhado", "degrade"]],
+    [/degrad|fade|taper|freestyle|pezinho|acabamento|disfar/i, ["degrade", "corte"]],
     [/barba|bigode|toalha|cavanhaque|pigment/i, ["barba"]],
-    [/corte|cabelo|social|tesoura|m[aá]quina/i, ["corte", "degrade"]],
+    [/corte|cabelo|social|americano|militar|tesoura|m[aá]quina|crop|buzz|mullet|topete|pompadour|undercut/i, ["corte", "degrade"]],
     [/produto|pomada|hidrata|luzes|platin|selagem|relaxa/i, ["produtos", "corte"]],
   ];
   const pegar = (categorias: string[]) => {

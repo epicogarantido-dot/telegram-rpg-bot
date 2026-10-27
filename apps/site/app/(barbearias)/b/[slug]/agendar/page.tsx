@@ -5,6 +5,7 @@ import { Check, Scissors, Sparkles } from "lucide-react";
 import { agoraNoFuso, CATEGORIAS_REFERENCIA, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { ehCorte, fotosDosServicos, urlFoto } from "@/lib/barbearias";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
@@ -231,49 +232,44 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     return (
       <div className="b-secao b-agendar b-vitrine">
         <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Qual corte vai ser?" />
-        <p className="b-dica">Deslize e toque no seu. Depois você escolhe barba, sobrancelha e o horário.</p>
-        <ul className="b-escolha-corte" aria-label="Cortes">
+        <CarrosselB id="cortes" rotulo="Cortes" className="b-escolha-corte" apoio="Deslize e toque no seu. Depois vêm barba, sobrancelha e o horário.">
           {naoCortes.length > 0 && (
-            <li>
-              <Link href={link({ servico: "sem", data: undefined, ad: undefined, extra: [], foto: undefined })} className="b-vitrine-item b-nao-cortar">
-                <span className="b-vitrine-foto">
-                  {semCorte
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={urlFoto(semCorte.arquivo, "p")} alt="" loading="lazy" width={semCorte.largura} height={semCorte.altura} />
-                    : <Sparkles size={36} aria-hidden />}
-                </span>
-                <span className="b-vitrine-texto">
-                  <strong>Não vou cortar</strong>
-                  <small>Só {naoCortes.slice(0, 3).map((s) => s.nome.toLowerCase()).join(", ")}{naoCortes.length > 3 ? "…" : ""}</small>
-                </span>
-              </Link>
-            </li>
+            <Link href={link({ servico: "sem", data: undefined, ad: undefined, extra: [], foto: undefined })} className="b-vitrine-item b-nao-cortar">
+              <span className="b-vitrine-foto">
+                {semCorte
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={urlFoto(semCorte.arquivo, "p")} alt="" loading="lazy" width={semCorte.largura} height={semCorte.altura} />
+                  : <Sparkles size={36} aria-hidden />}
+              </span>
+              <span className="b-vitrine-texto">
+                <strong>Não vou cortar</strong>
+                <small>Só {naoCortes.slice(0, 3).map((s) => s.nome.toLowerCase()).join(", ")}{naoCortes.length > 3 ? "…" : ""}</small>
+              </span>
+            </Link>
           )}
           {cortes.map((s) => {
             const f = fotoDe.get(s.id);
             const referencia = f && CATEGORIAS_REFERENCIA.includes(f.categoria) ? f.arquivo : undefined;
             return (
-              <li key={s.id}>
-                <Link href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [], foto: referencia })} className="b-vitrine-item">
-                  <span className="b-vitrine-foto">
-                    {f
-                      // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
-                      : <Scissors size={36} aria-hidden />}
+              <Link key={s.id} href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [], foto: referencia })} className="b-vitrine-item">
+                <span className="b-vitrine-foto">
+                  {f
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                    : <Scissors size={36} aria-hidden />}
+                </span>
+                <span className="b-vitrine-texto">
+                  <strong>{s.nome}</strong>
+                  {s.descricao && <small>{s.descricao}</small>}
+                  <span className="b-vitrine-info">
+                    <span>{s.duracaoMin} min{s.emDomicilio ? " · vou até você" : ""}</span>
+                    {b.mostrarPrecos && <b>{reais(s.precoCentavos)}</b>}
                   </span>
-                  <span className="b-vitrine-texto">
-                    <strong>{s.nome}</strong>
-                    {s.descricao && <small>{s.descricao}</small>}
-                    <span className="b-vitrine-info">
-                      <span>{s.duracaoMin} min{s.emDomicilio ? " · vou até você" : ""}</span>
-                      {b.mostrarPrecos && <b>{reais(s.precoCentavos)}</b>}
-                    </span>
-                  </span>
-                </Link>
-              </li>
+                </span>
+              </Link>
             );
           })}
-        </ul>
+        </CarrosselB>
       </div>
     );
   }

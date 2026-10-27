@@ -97,10 +97,8 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
         <Link href={base} className="b-nome">{b.nome}</Link>
         {noAr && (
           <nav aria-label="Seções">
-            <Link href={`${base}/trabalhos`}>Trabalhos</Link>
-            <Link href={`${base}#servicos`}>Serviços</Link>
             <Link href={`${base}#equipe`}>Equipe</Link>
-            <Link href={`${base}#contato`}>Contato</Link>
+            <Link href={`${base}#contato`}>Onde estamos</Link>
             {agenda && <Link href={`${base}/agendar`} className="b-botao b-botao-pequeno">Agendar</Link>}
           </nav>
         )}

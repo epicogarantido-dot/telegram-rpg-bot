@@ -4,13 +4,15 @@ import { Children, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 /**
- * Carrossel das seções do site da barbearia (serviços, trabalhos, equipe). Rola com o dedo,
+ * Carrossel do site da barbearia (hoje, a escolha do corte no agendar). Rola com o dedo,
  * trackpad ou setas; não anda sozinho. Com "reduzir movimento" o salto das setas é instantâneo.
  * O visual vem do tema (temas.css), então o mesmo carrossel veste os 6 estilos.
  */
-export function CarrosselB({ id, titulo, apoio, rodape, className, children }: {
+export function CarrosselB({ id, titulo, rotulo, apoio, rodape, className, children }: {
   id: string;
-  titulo: string;
+  /** Título visível (h2). Sem ele, o carrossel usa `rotulo` só pra leitor de tela. */
+  titulo?: string;
+  rotulo?: string;
   /** Linha curta embaixo do título. */
   apoio?: React.ReactNode;
   /** Link ou botão depois do trilho (ex.: "Ver todos os trabalhos"). */
@@ -48,10 +50,13 @@ export function CarrosselB({ id, titulo, apoio, rodape, className, children }: {
 
   const soUmaTela = inicio && fim;
   return (
-    <section className={`b-secao b-carrossel ${className ?? ""}`} id={id} aria-labelledby={`${id}-titulo`} aria-roledescription="carrossel">
+    <section
+      className={`b-secao b-carrossel ${className ?? ""}`} id={id} aria-roledescription="carrossel"
+      {...(titulo ? { "aria-labelledby": `${id}-titulo` } : { "aria-label": rotulo })}
+    >
       <div className="b-carrossel-cabeca">
         <div>
-          <h2 id={`${id}-titulo`}>{titulo}</h2>
+          {titulo && <h2 id={`${id}-titulo`}>{titulo}</h2>}
           {apoio && <p className="b-carrossel-apoio">{apoio}</p>}
         </div>
         {!soUmaTela && (

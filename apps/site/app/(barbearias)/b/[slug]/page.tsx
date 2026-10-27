@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, AtSign, CalendarCheck, Clock, MapPin, MessageCircle, Navigation, Phone, Scissors, Users } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_FOTO, CATEGORIAS_REFERENCIA, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { AtSign, CalendarCheck, Clock, MapPin, MessageCircle, Navigation, Phone, Users } from "lucide-react";
+import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
-import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { Frase } from "@/componentes/barbearia/Frase";
 import { frasesDoTema } from "@/lib/frases";
 import { obterAgenda, reais } from "@/lib/agenda";
-import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
+import { dadosEstruturados, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +23,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     // Imagem que aparece quando o link é mandado no WhatsApp.
     openGraph: { title: b.nome, description: descricao, type: "website", ...(capa && { images: [urlAbsoluta(urlFoto(capa.arquivo))] }) },
   };
-}
-
-function primeiroNome(nome: string) {
-  return nome.split(" ")[0];
 }
 
 export default async function SiteBarbearia({ params }: { params: Promise<{ slug: string }> }) {
@@ -67,16 +62,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const fila = agora.aberto ? banco.filaAgora(b) : undefined;
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
   const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
-  const vagas = agenda && servicos[0] ? proximasVagas(banco, b.id, servicos[0].id, equipe.map((p) => p.id), hoje.slice(0, 10)) : null;
   const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
-  const fotosLista = fotosDosServicos(servicos.map((s) => s.nome), trabalhos);
-  const fotoServico = new Map(servicos.map((s, i) => [s.id, fotosLista[i]]));
-  // Um carrossel só: "Não vou cortar" (porta pra quem quer só barba e cuidados) e depois os cortes.
-  // Sem agenda (só ordem de chegada), mostra o cardápio todo, sem botão.
-  const cortes = servicos.filter((s) => ehCorte(s.nome));
-  const naoCortes = servicos.filter((s) => !ehCorte(s.nome));
-  const vitrine = agenda && cortes.length > 0 ? cortes : servicos;
-  const fotoNaoCortar = naoCortes[0] && fotoServico.get(naoCortes[0].id);
   // Mosaico: a capa de novo (é a foto mais bonita do site) e dois cortes.
   const mosaico = [
     ...(capa ? [capa] : []),
@@ -149,19 +135,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
               : mapa && <a href={mapa} className="b-botao b-botao-grande" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
             {b.telefone && <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>}
           </div>
-          {vagas && servicos[0] && (
-            <div className="b-vagas" aria-labelledby="vagas-titulo">
-              <h2 id="vagas-titulo">{vagas.itens.length <= 3 ? "Últimos horários" : "Horários livres"} {vagas.quando} pra {servicos[0].nome.toLowerCase()}</h2>
-              <ul>
-                {vagas.itens.map((v) => (
-                  <li key={v.hora}>
-                    <Link href={`${agendarHref}?servico=${servicos[0]!.id}&com=${v.profissionalId}&data=${vagas.data}&hora=${v.hora}`} aria-label={`Marcar ${vagas.quando} às ${v.hora}`}>{v.hora}</Link>
-                  </li>
-                ))}
-              </ul>
-              <Link href={agendarHref} className="b-vagas-mais">Outros dias e serviços</Link>
-            </div>
-          )}
           <ul className="b-info-rapida">
             <li className={`b-estado ${agora.aberto ? "aberto" : ""}`}><Clock size={16} aria-hidden /> {agora.texto}</li>
             {b.endereco && <li><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</li>}
@@ -179,55 +152,21 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       <Frase texto={frases[0]} foto={fotoFrase(0)} />
 
-      {servicos.length > 0 && (
-        <CarrosselB
-          id="servicos"
-          titulo={agenda && cortes.length > 0 ? "Qual corte vai ser?" : "Serviços"}
-          className="b-carrossel-servicos"
-          apoio={agenda && cortes.length > 0 ? "Escolha o seu. Barba, sobrancelha e o horário vêm depois." : undefined}
-        >
-          {[
-            ...(agenda && cortes.length > 0 && naoCortes.length > 0 ? [(
-              <article key="sem" className="b-cartao-servico b-cartao-nao-cortar">
-                <div className="b-cartao-foto">
-                  {fotoNaoCortar
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={urlFoto(fotoNaoCortar.arquivo, "p")} alt="" loading="lazy" width={fotoNaoCortar.largura} height={fotoNaoCortar.altura} />
-                    : <Scissors size={40} aria-hidden />}
-                </div>
-                <div className="b-cartao-corpo">
-                  <h3>Não vou cortar</h3>
-                  <p className="b-cartao-desc">Só {naoCortes.slice(0, 3).map((s) => s.nome.toLowerCase()).join(", ")}{naoCortes.length > 3 ? " e mais" : ""}.</p>
-                  <Link href={`${agendarHref}?servico=sem`} className="b-botao b-botao-pequeno">Ver opções</Link>
-                </div>
-              </article>
-            )] : []),
-            ...vitrine.map((s) => {
-              const f = fotoServico.get(s.id);
-              const referencia = f && CATEGORIAS_REFERENCIA.includes(f.categoria) && ehCorte(s.nome) ? `&foto=${encodeURIComponent(f.arquivo)}` : "";
-              return (
-                <article key={s.id} className="b-cartao-servico">
-                  <div className="b-cartao-foto">
-                    {f
-                      // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
-                      : <Scissors size={40} aria-hidden />}
-                  </div>
-                  <div className="b-cartao-corpo">
-                    <h3>{s.nome}</h3>
-                    {s.descricao && <p className="b-cartao-desc">{s.descricao}</p>}
-                    <p className="b-cartao-info">
-                      <span>{s.duracaoMin} min</span>
-                      {s.emDomicilio && <span>Vou até você</span>}
-                      {b.mostrarPrecos && <strong className="b-servico-preco">{reais(s.precoCentavos)}</strong>}
-                    </p>
-                    {agenda && <Link href={`${agendarHref}?servico=${s.id}${referencia}`} className="b-botao b-botao-pequeno" aria-label={`Quero ${s.nome}`}>Quero esse</Link>}
-                  </div>
-                </article>
-              );
-            }),
-          ]}
-        </CarrosselB>
+      {/* A página inicial só vende a ideia e leva pro "Agendar"; a escolha do corte fica no agendar.
+          Quem atende só por ordem de chegada não tem agendar: aí o cardápio aparece aqui. */}
+      {!agenda && servicos.length > 0 && (
+        <section className="b-secao" id="servicos">
+          <h2>Serviços</h2>
+          <ul className="b-servicos">
+            {servicos.map((s) => (
+              <li key={s.id}>
+                <span className="b-servico-nome">{s.nome}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
+                <span className="b-servico-tempo">{s.duracaoMin} min</span>
+                {b.mostrarPrecos && <span className="b-servico-preco">{reais(s.precoCentavos)}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {mosaico.length >= 3 && (
@@ -237,7 +176,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img src={urlFoto(mosaico[0]!.arquivo)} alt={mosaico[0]!.legenda ?? ""} loading="lazy" width={mosaico[0]!.largura} height={mosaico[0]!.altura} />
             <div className="b-mosaico-texto">
               <h2 id="mosaico-titulo">Você sai daqui outro.</h2>
-              {agenda && <Link href={agendarHref} className="b-botao b-botao-grande">Escolher meu corte</Link>}
+              {agenda && <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>}
             </div>
           </div>
           {mosaico.slice(1).map((f) => (
@@ -248,30 +187,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       )}
 
       <Frase texto={frases[1]} foto={fotoFrase(1)} />
-
-      {trabalhos.length > 0 && (
-        <CarrosselB
-          id="trabalhos"
-          titulo="Trabalhos"
-          className="b-carrossel-trabalhos"
-          rodape={
-            <nav className="b-filtros" aria-label="Trabalhos por tipo">
-              {categoriasUsadas.filter((c) => c.id !== "ambiente" && c.id !== "produtos").map((c) => (
-                <Link key={c.id} href={`${base}/trabalhos?categoria=${c.id}`}>{c.nome}</Link>
-              ))}
-              <Link href={`${base}/trabalhos`}>Ver todos <ArrowRight size={14} aria-hidden /></Link>
-            </nav>
-          }
-        >
-          {trabalhos.slice(0, 12).map((f) => (
-            <figure key={f.id} className="b-foto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? CATEGORIAS_FOTO.find((c) => c.id === f.categoria)?.nome ?? "Trabalho"} loading="lazy" width={f.largura} height={f.altura} />
-              {f.legenda && <figcaption>{f.legenda}</figcaption>}
-            </figure>
-          ))}
-        </CarrosselB>
-      )}
 
       {tema === "potencia" && pares.length > 0 && (
         <section className="b-secao" id="antes-depois">
@@ -285,19 +200,21 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       )}
 
       {equipe.length > 0 && (
-        <CarrosselB id="equipe" titulo="Equipe" className="b-carrossel-equipe">
-          {equipe.map((p) => (
-            <article key={p.id} className="b-pessoa">
-              {p.fotoArquivo
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={urlFoto(p.fotoArquivo, "p")} alt={p.nome} loading="lazy" />
-                : <div className="b-pessoa-inicial" aria-hidden="true">{p.nome[0]}</div>}
-              <h3>{p.nome}</h3>
-              {p.especialidade && <p>{p.especialidade}</p>}
-              {agenda && <Link href={`${agendarHref}?profissional=${p.id}`} className="b-botao-sec">Agendar com {primeiroNome(p.nome)}</Link>}
-            </article>
-          ))}
-        </CarrosselB>
+        <section className="b-secao" id="equipe" aria-labelledby="equipe-titulo">
+          <h2 id="equipe-titulo">Quem vai te atender</h2>
+          <div className="b-equipe">
+            {equipe.map((p, i) => (
+              <article key={p.id} className="b-pessoa" data-revelar style={{ "--ordem": i % 4 } as React.CSSProperties}>
+                {p.fotoArquivo
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={urlFoto(p.fotoArquivo, "p")} alt={p.nome} loading="lazy" />
+                  : <div className="b-pessoa-inicial" aria-hidden="true">{p.nome[0]}</div>}
+                <h3>{p.nome}</h3>
+                {p.especialidade && <p>{p.especialidade}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
       <Frase texto={frases[2]} foto={fotoFrase(2)} />
@@ -391,25 +308,4 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 function palavrasComLetras(nome: string): { c: string; i: number }[][] {
   let i = 0;
   return nome.split(/\s+/).filter(Boolean).map((p) => [...p].map((c) => ({ c, i: i++ })));
-}
-
-/**
- * Primeiros horários livres a partir de hoje (o primeiro dia com vaga, até 7 dias) somando
- * todos os profissionais. Cada horário já leva quem está livre nele.
- */
-function proximasVagas(banco: BancoAgenda, barbeariaId: number, servicoId: number, profissionais: number[], hoje: Data) {
-  for (let i = 0; i < 7; i++) {
-    const data = somarDias(hoje, i);
-    const dia = diaDaSemana(data);
-    const quando = i === 0 ? "hoje" : i === 1 ? "amanhã" : `${dia === 0 || dia === 6 ? "no" : "na"} ${nomeDia(dia).toLowerCase()}`;
-    const livres = new Map<string, number>();
-    for (const p of profissionais) {
-      for (const h of banco.horariosLivres(barbeariaId, p, servicoId, data)) if (!livres.has(h)) livres.set(h, p);
-    }
-    if (livres.size > 0) {
-      const itens = [...livres].sort(([a], [b]) => a.localeCompare(b)).slice(0, 6).map(([hora, profissionalId]) => ({ hora, profissionalId }));
-      return { quando, data, itens };
-    }
-  }
-  return null;
 }

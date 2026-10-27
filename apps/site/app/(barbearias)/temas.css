@@ -368,7 +368,6 @@ a.b-dia:focus-visible, .b-horas a:focus-visible, .b-chips a:focus-visible { outl
 .site-b[data-tema="atemporal"] .b-heroi .b-botao { background: #fff; color: #000 !important; border-color: #fff; }
 .site-b[data-tema="atemporal"] .b-heroi .b-botao-sec { color: #fff; }
 .site-b[data-tema="atemporal"] .b-heroi h1 { font-style: italic; }
-.site-b[data-tema="atemporal"] :is(.b-heroi-midia, .b-foto, .b-pessoa, .b-cartao-foto, .b-casa-foto, .b-chamada) img { filter: grayscale(1); }
 .site-b[data-tema="atemporal"] .b-foto { outline: 1px solid #000; outline-offset: -8px; }
 
 /* ---------- 3. Cerimônia (efeitos 2) ---------- */
@@ -501,27 +500,6 @@ a.b-dia:focus-visible, .b-horas a:focus-visible, .b-chips a:focus-visible { outl
 .site-b[data-tema="extravagancia"] .b-faixa span::after { content: "◆"; margin-left: 44px; font-size: 0.6em; vertical-align: middle; }
 .site-b[data-tema="extravagancia"] .b-servico-preco { color: var(--destaque-forte); font-family: "Bodoni Moda", serif; }
 
-/* Vagas de hoje: horários reais, um toque leva direto pra confirmação. */
-.b-vagas {
-  max-width: 1120px; margin: 32px auto 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
-  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-}
-.b-vagas h2 { margin: 0; font-size: 1.1rem; letter-spacing: normal; text-transform: none; font-style: normal; font-weight: 600; font-family: var(--fonte-texto); }
-.b-vagas ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.b-vagas li a {
-  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; text-decoration: none;
-  font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid var(--borda); border-radius: var(--t-botao-raio);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-.b-vagas li a:hover { background: var(--destaque); color: var(--sobre-destaque); border-color: var(--destaque); }
-.b-vagas li a:focus-visible, .b-vagas-mais:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
-.b-vagas-mais { font-size: 14px; color: var(--suave); text-underline-offset: 4px; }
-.site-b[data-tema="tecnico"] .b-vagas li a { background: var(--cartao); border-color: transparent; box-shadow: var(--sombra); }
-.site-b[data-tema="potencia"] .b-vagas li a { font: 800 italic 1.3rem "Barlow Condensed", sans-serif; }
-.site-b[data-tema="extravagancia"] .b-vagas { justify-content: center; text-align: center; }
-.site-b[data-tema="extravagancia"] .b-vagas li a { border-color: var(--destaque); color: var(--destaque-forte); }
-.site-b[data-tema="cerimonia"] .b-vagas { justify-content: center; }
-
 /* Texto só pra leitor de tela. */
 .b-so-leitor {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -594,7 +572,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    ====================================================================== */
 @media (prefers-reduced-motion: no-preference) {
   /* Todos os temas: troca de cor e sublinhado respondem ao toque (nível 1); a foto da abertura troca esmaecendo. */
-  .b-carrossel-setas button, .b-cartao-servico { transition: background 0.2s, border-color 0.2s, opacity 0.2s, transform 0.25s ease; }
   .b-servico-acao, .b-contatos a { transition: color 0.2s; }
 
   /* Nível 2+: fotos reagem ao toque. */
@@ -799,19 +776,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    ====================================================================== */
 .b-botao-grande { min-height: 54px; padding: 14px 28px; font-size: 16px; }
 
-/* Horários livres dentro da abertura: um toque e já vai pra confirmação. */
-.b-heroi .b-vagas { max-width: none; margin: 6px 0 0; padding: 0; gap: 10px 14px; }
-.b-heroi .b-vagas h2 { flex-basis: 100%; font-size: 15px; font-weight: 600; }
-.site-b:not([data-tema="tecnico"]) .b-heroi .b-vagas li a {
-  color: #fff; border-color: rgb(255 255 255 / 0.4); background: rgb(255 255 255 / 0.1);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-}
-.site-b:not([data-tema="tecnico"]) .b-heroi .b-vagas li a:hover { background: #fff; color: #111; border-color: #fff; }
-.site-b[data-tema="potencia"] .b-heroi .b-vagas li a:hover { background: var(--destaque); color: #0a0a0a; border-color: var(--destaque); }
-.site-b[data-tema="extravagancia"] .b-heroi .b-vagas li a { border-color: var(--destaque); color: var(--destaque-forte); }
-.b-heroi .b-vagas-mais { color: inherit; opacity: 0.85; }
-@media (max-width: 560px) { .b-heroi .b-vagas li:nth-child(n + 5) { display: none; } }
-
 /* Carrossel das seções */
 .b-carrossel-cabeca { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 24px; }
 .site-b .b-carrossel-cabeca h2 { margin: 0; text-align: left; }
@@ -840,26 +804,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-carrossel-rodape { margin-top: 20px; }
 .b-carrossel-rodape .b-filtros { margin: 0; }
 .b-filtros a { display: inline-flex; align-items: center; gap: 4px; }
-
-/* Serviços em cartões com foto */
-.b-cartao-servico {
-  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
-  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
-}
-.b-cartao-foto { aspect-ratio: 4 / 3; overflow: hidden; display: grid; place-items: center; background: var(--fundo-2); color: var(--suave); }
-.b-cartao-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.b-cartao-corpo { display: grid; gap: 8px; align-content: start; padding: 18px 18px 20px; }
-.site-b .b-cartao-corpo h3 { margin: 0; font-size: 1.4rem; line-height: 1.15; }
-.b-cartao-desc { margin: 0; color: var(--suave); font-size: 14px; line-height: 1.45; }
-.b-cartao-info { margin: 4px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; color: var(--suave); font-size: 14px; }
-.b-cartao-info .b-servico-preco { margin-left: auto; color: var(--texto); font-size: 1.25rem; }
-.b-cartao-corpo .b-botao { justify-self: stretch; margin-top: 8px; }
-
-/* Trabalhos e equipe no carrossel */
-.b-carrossel-trabalhos .b-carrossel-trilho { --larg: clamp(220px, 68vw, 320px); }
-.b-carrossel-trabalhos .b-foto img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
-.b-carrossel-equipe .b-carrossel-trilho { --larg: clamp(210px, 62vw, 280px); }
-.b-carrossel-equipe .b-pessoa img, .b-carrossel-equipe .b-pessoa-inicial { height: auto; aspect-ratio: 4 / 5; }
 
 /* Mosaico: a capa grande e dois cortes, com uma frase e o botão por cima da grande. */
 .b-mosaico {
@@ -912,20 +856,12 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-contato-lado { display: grid; gap: 24px; align-content: start; }
 
 /* Ajustes por tema nas seções novas */
-.site-b[data-tema="tecnico"] .b-cartao-servico { border: 0; box-shadow: var(--sombra); }
 .site-b[data-tema="tecnico"] .b-carrossel-trilho { padding-block: 8px 20px; }
-.site-b[data-tema="tecnico"] .b-carrossel-equipe .b-pessoa { padding: 10px 10px 18px; }
 .site-b[data-tema="tecnico"] .b-chamada { margin: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); border-radius: 28px; }
-.site-b[data-tema="potencia"] .b-cartao-servico { border-color: var(--borda); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%); }
-.site-b[data-tema="potencia"] .b-cartao-corpo h3 { font-size: 2rem; }
 .site-b[data-tema="potencia"] .b-chamada h2 { font-size: clamp(3rem, 10vw, 6rem); line-height: 0.9; }
-.site-b[data-tema="extravagancia"] .b-cartao-servico { border-color: var(--destaque); }
-.site-b[data-tema="extravagancia"] .b-cartao-foto { border-bottom: 1px solid var(--destaque); }
 .site-b[data-tema="extravagancia"] .b-chamada { border-block: 1px solid var(--destaque); }
 .site-b[data-tema="extravagancia"] .b-chamada h2 { color: var(--destaque-forte); }
 .site-b[data-tema="extravagancia"] .b-casa h2::after { margin-left: 0; }
-.site-b[data-tema="cerimonia"] .b-cartao-servico { background: rgb(255 255 255 / 0.03); }
-.site-b[data-tema="atemporal"] .b-cartao-servico { border-color: #000; }
 
 /* ======================================================================
    AGENDAR: VITRINE (passo 1 e adicionais com foto)
@@ -1060,15 +996,10 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-texto p { color: var(--suave); line-height: 1.7; }
 .b-texto a { color: var(--texto); text-underline-offset: 4px; }
 
-/* Passo 1 do agendar: um carrossel só ("Não vou cortar" e depois os cortes). */
-.b-escolha-corte {
-  list-style: none; margin: 20px -16px 0; padding: 4px 16px 16px;
-  display: grid; grid-auto-flow: column; grid-auto-columns: clamp(220px, 68vw, 300px); gap: 12px;
-  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; overscroll-behavior-x: contain; scrollbar-width: none;
-}
-.b-escolha-corte::-webkit-scrollbar { display: none; }
-.b-escolha-corte > li { scroll-snap-align: start; }
-@media (min-width: 1040px) { .b-escolha-corte { margin-inline: 0; padding-inline: 0; } }
+/* Passo 1 do agendar: um carrossel só ("Não vou cortar" e depois os cortes), com setas no computador. */
+.site-b .b-agendar .b-escolha-corte { max-width: none; padding: 0; margin-top: 12px; }
+.b-escolha-corte .b-carrossel-cabeca { margin-bottom: 14px; }
+.b-escolha-corte .b-carrossel-trilho { --larg: clamp(220px, 68vw, 290px); }
 .b-escolha-corte .b-vitrine-texto strong { font-size: 1.5rem; }
 /* "Não vou cortar": mesma forma, foto mais apagada, pra ficar claro que é a outra porta. */
 .b-nao-cortar .b-vitrine-foto img { filter: grayscale(0.6) brightness(0.7); }
@@ -1084,6 +1015,8 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 }
 .b-referencia-escolhida img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--raio-p); flex: none; }
 .b-referencia-escolhida p { margin: 0; }
-.site-b[data-tema="atemporal"] :is(.b-escolha-corte img, .b-referencia-escolhida img) { filter: grayscale(1); }
-.b-cartao-nao-cortar .b-cartao-foto img { filter: grayscale(0.6) brightness(0.75); }
-.b-cartao-nao-cortar { border-style: dashed; }
+.site-b[data-tema="atemporal"] .b-referencia-escolhida img { filter: grayscale(1); }
+
+/* Equipe em grade (a página inicial não tem mais carrossel). */
+.b-equipe .b-pessoa img, .b-equipe .b-pessoa-inicial { height: auto; aspect-ratio: 4 / 5; }
+@media (max-width: 560px) { .b-equipe { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
