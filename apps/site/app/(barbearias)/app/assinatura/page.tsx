@@ -75,15 +75,11 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
           <h1 id="recebido-titulo">Pedido recebido!</h1>
           <p>
             Obrigado, {barbearia.nome}. Nossa equipe vai conferir o pagamento e <strong>entrar em contato com você pelo
-            WhatsApp</strong> ({formatarTelefone(barbearia.telefone)}) pra colocar o site no ar. Normalmente é no mesmo dia.
+            WhatsApp</strong>, no número {formatarTelefone(barbearia.telefone)}. Normalmente é no mesmo dia.
           </p>
           <p className="suave">
-            Enquanto isso, se quiser, já pode deixar o site com a sua cara: trocar as fotos, a apresentação e os preços.
-            Nada disso aparece pros clientes antes de o site ir pro ar.
-          </p>
-          <p className="acoes">
-            <Link href="/app/fotos" className="botao">Trocar as fotos</Link>
-            <a href={`/b/${barbearia.slug}`} className="botao-sec" target="_blank" rel="noopener noreferrer">Ver meu site</a>
+            Na conversa a gente pega as suas fotos, serviços, preços e horários e monta o seu site de verdade.
+            Você não precisa fazer mais nada por aqui.
           </p>
           {!pagamento.comprovante && (
             <form action={jaPaguei} className="formulario">
@@ -112,8 +108,8 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       <h1>{barbearia.emMontagem ? (bemvindo ? "Conta criada! Último passo: o pagamento" : "Pagamento do seu site") : "Assinatura"}</h1>
       {barbearia.emMontagem && ativo ? (
         <aside className="aviso-novo">
-          Pague pelo Pix e mande o comprovante aqui embaixo. Depois disso, nossa equipe confere e entra em contato com você
-          pelo WhatsApp pra colocar o site da {barbearia.nome} no ar.
+          Pague pelo Pix e mande o comprovante aqui embaixo. Depois disso, nossa equipe confere e chama você no WhatsApp
+          pra montar o site da {barbearia.nome} com as suas fotos e preços e colocar no ar.
         </aside>
       ) : barbearia.emMontagem ? (
         <aside className="erro">
@@ -147,7 +143,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
             <p>1. Abra o app do seu banco e escaneie o QR code, ou use o Pix copia e cola:</p>
             <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
             <p>Identificador: <code>{pagamento.txid}</code></p>
-            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia, e você recebe um aviso no celular{barbearia.emMontagem ? " quando o site for pro ar" : ""}.</p>
+            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia{barbearia.emMontagem ? ", e chama você no WhatsApp" : ", e você recebe um aviso no celular"}.</p>
             {pagamento.status === "informado" && (
               <p className="atribuicao">
                 ⏳ {pagamento.comprovante ? "Recebemos seu comprovante" : "Recebemos seu aviso"}
@@ -166,7 +162,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
               </form>
             )}
             <p className="suave pequeno">
-              Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.
+              {!barbearia.emMontagem && <>Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.</>}
               {configPix.whatsappAdmin && (
                 <>{" "}Problema com o Pix?{" "}
                   <a target="_blank" rel="noopener noreferrer"

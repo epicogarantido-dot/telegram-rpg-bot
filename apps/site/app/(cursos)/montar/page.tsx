@@ -66,7 +66,7 @@ export default async function Montar({ searchParams }: { searchParams: Promise<{
           </div>
         </fieldset>
         <BotaoEnviar className="montar-enviar" carregando="Montando o seu site…">Ver o meu site</BotaoEnviar>
-        <p className="suave montar-nota">As fotos começam com trabalhos de exemplo. Se gostar, você troca pelas suas no painel.</p>
+        <p className="suave montar-nota">As fotos são de exemplo. No site de verdade, a nossa equipe põe as suas.</p>
       </form>
     </div>
   );

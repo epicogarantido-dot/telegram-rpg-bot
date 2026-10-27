@@ -56,8 +56,8 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
       ) : previa ? (
         <aside className="b-demo" aria-label="Aviso de prévia">
           <p>
-            <strong>Este é o site da {b.nome}.</strong> As fotos são de exemplo: se gostar, você troca pelas suas,
-            confere serviços e preços e só então ele vai pro ar.
+            <strong>Assim fica o site da {b.nome}.</strong> As fotos são de exemplo: no site de verdade, a nossa
+            equipe põe as suas fotos, serviços e preços.
           </p>
           <form action={trocarEstiloDaPrevia} className="b-demo-estilo">
             <input type="hidden" name="id" value={b.id} />
@@ -72,11 +72,10 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
       ) : dono ? (
         <aside className="b-demo" aria-label="Aviso de site em montagem">
           <p>
-            <strong>Só você está vendo.</strong> O site ainda não foi publicado: os clientes veem quando o pagamento
-            for confirmado.
+            <strong>Só você está vendo esta prévia.</strong> Depois do pagamento, a nossa equipe monta o site de
+            verdade com você.
           </p>
-          <a className="b-demo-botao-sec" href="/app">Voltar ao painel</a>
-          <a className="b-demo-botao" href="/app/assinatura">Publicar meu site</a>
+          <a className="b-demo-botao" href="/app/assinatura">Ver o pagamento</a>
         </aside>
       ) : b.demoAte && (
         <aside className="b-demo" aria-label="Aviso de demonstração">

@@ -21,7 +21,7 @@ export default async function LayoutPainel({ children }: { children: React.React
             <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
             {barbearia?.nome ?? "Agenda da barbearia"}
           </Link>
-          {barbearia && (
+          {barbearia && !barbearia.emMontagem && (
             <nav aria-label="Painel">
               <Link href="/app"><CalendarDays className="icone" aria-hidden /> Agenda</Link>
               <Link href="/app/site"><LayoutTemplate className="icone" aria-hidden /> Meu site</Link>

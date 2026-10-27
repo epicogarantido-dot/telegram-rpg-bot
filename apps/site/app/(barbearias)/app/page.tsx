@@ -175,28 +175,13 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         <h1>{barbearia.nome}</h1>
         <form action={sair}><button className="botao-sec">Sair</button></form>
       </div>
-      {barbearia.emMontagem ? (
-        <section className="montagem" aria-labelledby="montagem-titulo">
-          <h2 id="montagem-titulo">{sp.novo ? `Bem-vindo, ${usuario.nome}! ` : ""}Deixe o site do seu jeito</h2>
-          <p>
-            Só você está vendo o seu site por enquanto. Você tem até {formatarData(barbearia.acessoAte)} pra montar;
-            quando quiser, publique e os clientes já podem marcar.
-          </p>
-          <ol>
-            <li><Link href="/app/fotos">Troque as fotos de exemplo pelos seus trabalhos</Link></li>
-            <li><Link href="/app/site">Escreva a apresentação e escolha o estilo</Link></li>
-            <li><Link href="/app/config">Confira serviços, preços, equipe e horários</Link></li>
-            <li><a href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">Veja como está ficando</a></li>
-          </ol>
-          <Link href="/app/assinatura" className="botao">Publicar meu site</Link>
-        </section>
-      ) : sp.novo && (
+      {sp.novo && (
         <aside className="atribuicao">
           🎉 Conta criada, {usuario.nome}! Já deixamos serviços e horários de exemplo (ter a sáb, 9h–19h).
           Ajuste em <Link href="/app/config">Configurações</Link> e mande o link abaixo pros clientes.
         </aside>
       )}
-      {!barbearia.emMontagem && diasRestantes <= 3 && (
+      {diasRestantes <= 3 && (
         <aside className="atribuicao">
           ⏳ Seu acesso vence {diasRestantes === 1 ? "hoje" : `em ${diasRestantes} dias`}.{" "}
           <Link href="/app/assinatura">Renovar com Pix</Link> pra não bloquear sua agenda.

@@ -57,7 +57,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
           <h1>Falta pouco pro site da {demo.nome} ser seu</h1>
           <p>
             Você fica com <a href={`/b/${demo.slug}`} target="_blank" rel="noopener noreferrer">este site</a>, no mesmo endereço e no mesmo estilo.
-            Crie seu acesso; no próximo passo é o pagamento pelo Pix, e a nossa equipe entra em contato com você pelo WhatsApp pra colocar o site no ar.
+            Crie seu acesso; no próximo passo é o pagamento pelo Pix, e a nossa equipe entra em contato com você pelo WhatsApp pra montar o site com as suas fotos e preços e colocar no ar.
           </p>
         </>
       ) : (

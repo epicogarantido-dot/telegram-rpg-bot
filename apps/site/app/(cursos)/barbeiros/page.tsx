@@ -119,7 +119,7 @@ const SUA_MARCA = [
 const PERGUNTAS = [
   ["Vai ficar igual ao site de outra barbearia?", "Não. O estilo é só a moldura: o que aparece são as suas fotos, o seu nome, a sua equipe e os seus preços. Duas barbearias no mesmo estilo ficam tão diferentes quanto o trabalho de cada uma."],
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
-  ["Posso ver como fica antes de pagar?", "Pode. Diga o nome da barbearia e escolha o estilo: o site abre pronto na hora, sem cadastro. Se gostar, você cria o acesso, troca as fotos pelas suas e confere tudo. Só paga quando quiser publicar."],
+  ["Posso ver como fica antes de pagar?", "Pode. Diga o nome da barbearia e escolha o estilo: o site abre pronto na hora, sem cadastro. Se gostar, faz o cadastro e o pagamento, e a nossa equipe chama você no WhatsApp pra montar o site com as suas fotos, serviços e preços."],
   ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
   ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Na véspera, o painel lista quem vem amanhã pra você lembrar pelo WhatsApp. Quem falta fica marcado, entra nos números do mês, e quem marca e some você pode bloquear."],
@@ -251,7 +251,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
           </div>
           <ul>
-            <li>Você vê o site pronto e monta tudo antes de pagar. Paga pra publicar.</li>
+            <li>Você vê como fica antes de pagar. Depois do pagamento, a nossa equipe monta o site com você.</li>
             <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
             <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>

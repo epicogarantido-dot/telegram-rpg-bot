@@ -33,10 +33,14 @@ export async function exigirBarbeiro(): Promise<{ usuario: Usuario; barbearia: B
   return { usuario, barbearia: obterAgenda().barbeariaPorId(usuario.barbeariaId)! };
 }
 
-/** Como exigirBarbeiro, mas manda pra tela de pagamento se o acesso venceu. */
+/**
+ * Como exigirBarbeiro, mas manda pra tela de pagamento se o acesso venceu ou se a conta ainda não
+ * pagou (em montagem): quem comprou pelo site de leads só paga e aguarda; o site de verdade a
+ * equipe monta à parte, então não adianta editar nada aqui antes.
+ */
 export async function exigirAcessoAtivo(): Promise<{ usuario: Usuario; barbearia: Barbearia }> {
   const sessao = await exigirBarbeiro();
-  if (!obterAgenda().acessoAtivo(sessao.barbearia)) redirect("/app/assinatura");
+  if (sessao.barbearia.emMontagem || !obterAgenda().acessoAtivo(sessao.barbearia)) redirect("/app/assinatura");
   return sessao;
 }
 

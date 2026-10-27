@@ -96,3 +96,7 @@ matéria) → `/barbeiros` → `/app/cadastro`. Não tem bot nem login de aluno.
 site (`?origem=convite`) e o convite do grupo (`COMUNIDADE_LINK`). Nunca na 1ª mensagem: link pra
 quem não conversou com você é o que o WhatsApp mais trata como spam. No grupo, use os posts prontos
 de `/painel/divulgacao`, um por dia, e veja lá quais trouxeram visita e cadastro.
+
+## Depois do "Quero este site" (27/10/2026)
+
+O barbeiro faz o cadastro e paga (Pix + comprovante) e vê "Pedido recebido!". Ele não edita nada: em `/painel/assinaturas` aparece o pedido com o comprovante e o link "Chamar no WhatsApp". Na conversa você pega fotos, serviços, preços e horários, monta o site e confirma o pagamento (o site vai pro ar).
