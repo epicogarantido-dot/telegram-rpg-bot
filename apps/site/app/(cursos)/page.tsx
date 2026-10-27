@@ -42,8 +42,8 @@ export default async function Inicio() {
 
       {/* Os estilos de verdade que o barbeiro escolhe, com os prints dos sites de demonstração. */}
       <Carrossel
-        titulo="Site e agenda pra barbearia"
-        descricao={<>Escolha a cara da sua barbearia: {TEMAS.length} estilos prontos, com suas fotos e seus serviços. O cliente marca horário sozinho, a qualquer hora.</>}
+        titulo="Um site com a cara da sua barbearia"
+        descricao={<>Não é site padrão: é a sua marca. As suas fotos, o seu nome, a sua equipe e os seus preços, num dos {TEMAS.length} estilos. O cliente vê o seu trabalho e marca horário sozinho.</>}
       >
         {TEMAS.map((t) => (
           <Link key={t.id} href="/barbeiros#estilos" className="estilo-slide">

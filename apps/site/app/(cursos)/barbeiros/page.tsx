@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BarChart3, BellRing, CalendarCheck, Repeat, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, CalendarCheck, Camera, Link2, Palette, Repeat, Scissors, ShieldCheck, Smartphone, Store, Users } from "lucide-react";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
 import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
@@ -84,7 +84,39 @@ const RECURSOS = [
   },
 ] as const;
 
+/**
+ * O que é do barbeiro no site: tudo aqui existe de verdade no painel (/app/site, /app/fotos,
+ * /app/config). Não prometer o que não existe (logo próprio, cor livre, domínio próprio).
+ */
+const SUA_MARCA = [
+  {
+    icone: Camera, titulo: "Suas fotos, seu portfólio",
+    texto: "Até 80 fotos dos seus trabalhos, separadas em degradê, navalhado, barba, infantil, ambiente e equipe. Você escolhe a foto de capa e mostra antes e depois lado a lado.",
+  },
+  {
+    icone: Store, titulo: "Seu nome, sua história",
+    texto: "O nome da barbearia em destaque, a sua frase de apresentação, a cidade, os anos de casa, o seu Instagram e a oferta que você quiser mostrar.",
+  },
+  {
+    icone: Users, titulo: "Sua equipe",
+    texto: "Cada barbeiro com foto e especialidade. O cliente vê quem é quem e escolhe com quem quer cortar.",
+  },
+  {
+    icone: Scissors, titulo: "Seus serviços, seus preços",
+    texto: "Cada serviço com o seu tempo, o seu preço e o que inclui. Barba e sobrancelha como adicionais. Preço à mostra ou só na hora: você decide.",
+  },
+  {
+    icone: Palette, titulo: "O estilo da sua marca",
+    texto: "Seis estilos, do clássico ao ousado. Escolha o que combina com a sua barbearia e troque quando quiser, sem perder nenhuma foto.",
+  },
+  {
+    icone: Link2, titulo: "Um endereço só seu",
+    texto: "Um link com o nome da sua barbearia pra pôr na bio do Instagram, no Google e no WhatsApp. É ali que o cliente vê seu trabalho e marca.",
+  },
+] as const;
+
 const PERGUNTAS = [
+  ["Vai ficar igual ao site de outra barbearia?", "Não. O estilo é só a moldura: o que aparece são as suas fotos, o seu nome, a sua equipe e os seus preços. Duas barbearias no mesmo estilo ficam tão diferentes quanto o trabalho de cada uma."],
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
   ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
@@ -105,10 +137,10 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
     <div className="venda">
       <section className="venda-heroi">
         <div className="venda-heroi-texto">
-          <h1>Seu site e sua agenda, prontos hoje.</h1>
+          <h1>Um site com a cara da sua barbearia.</h1>
           <p>
-            O cliente vê seus cortes, vê os horários livres e marca sozinho. Você para de responder
-            &quot;tem horário?&quot; no meio do corte.
+            Não é modelo com o nome trocado: são as suas fotos, o seu nome, a sua equipe e os seus preços,
+            no estilo da sua marca. E o cliente vê os horários livres e marca sozinho.
           </p>
           <div className="acoes">
             <Link href="/app/cadastro" className="botao">Criar minha agenda <ArrowRight size={18} aria-hidden /></Link>
@@ -121,7 +153,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
         </figure>
       </section>
 
-      <Carrossel id="estilos" titulo="Escolha a cara da sua barbearia" descricao="Seis estilos prontos, com suas fotos e seus serviços. Dá pra trocar quando quiser.">
+      <Carrossel id="estilos" titulo="Escolha a cara da sua barbearia" descricao="Escolha o que combina com a sua marca. Nas fotos estão barbearias de exemplo: no seu, entram o seu nome, os seus trabalhos e os seus serviços.">
         {TEMAS.map((t) => (
           <figure key={t.id} className="estilo-slide">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -130,6 +162,26 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           </figure>
         ))}
       </Carrossel>
+
+      <section className="venda-recursos venda-marca" aria-labelledby="marca-titulo">
+        <h2 id="marca-titulo">Não é um site padrão. É a sua marca.</h2>
+        <p className="venda-marca-intro">
+          Quem abre o seu link vê a sua barbearia, do jeito que você quer apresentar: o seu trabalho na frente,
+          o seu nome em cima. E é tudo seu pra mudar, pelo celular, a hora que quiser. Fez um corte bonito
+          hoje? Em um minuto ele está no site.
+        </p>
+        <div className="venda-recursos-grade">
+          {SUA_MARCA.map(({ icone: Icone, titulo, texto }) => (
+            <div key={titulo} className="venda-recurso">
+              <h3><Icone size={20} aria-hidden /> {titulo}</h3>
+              <p>{texto}</p>
+            </div>
+          ))}
+        </div>
+        <p className="venda-marca-acao">
+          <Link href="/app/cadastro" className="botao">Montar o meu site <ArrowRight size={18} aria-hidden /></Link>
+        </p>
+      </section>
 
       <section className="venda-recursos" aria-labelledby="recursos-titulo">
         <h2 id="recursos-titulo">O que muda no seu dia</h2>

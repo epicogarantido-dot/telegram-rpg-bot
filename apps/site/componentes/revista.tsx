@@ -50,11 +50,11 @@ export function PropagandaSaas() {
     <aside className="propaganda" aria-labelledby="propaganda-titulo">
       <div className="propaganda-texto">
         <p className="propaganda-de">Do Aprenda Livre, pra quem tem barbearia</p>
-        <h2 id="propaganda-titulo">Seu site e sua agenda, prontos hoje.</h2>
+        <h2 id="propaganda-titulo">Um site com a cara da sua barbearia.</h2>
         <ul>
+          <li>As suas fotos, o seu nome e a sua equipe: não é modelo pronto.</li>
           <li>O cliente vê seus cortes e marca sozinho, a qualquer hora.</li>
-          <li>Aviso no seu celular a cada horário novo.</li>
-          <li>Seis estilos de site; você muda tudo pelo celular.</li>
+          <li>Seis estilos pra sua marca; você muda tudo pelo celular.</li>
         </ul>
         <p className="propaganda-preco">
           {reais(adesao)} na contratação (já com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
