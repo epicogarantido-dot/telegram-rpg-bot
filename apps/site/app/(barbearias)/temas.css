@@ -134,19 +134,42 @@
 .b-chegada { margin: 0; font-weight: 600; }
 .b-info-rapida a { text-decoration: none; }
 
-/* Herói empilhado (padrão): foto grande em cima, texto embaixo. */
-.b-heroi-midia { aspect-ratio: 16 / 9; max-height: 72svh; width: 100%; }
-@media (max-width: 760px) { .b-heroi-midia { aspect-ratio: 4 / 5; max-height: 62svh; } }
+/* Herói: foto ocupando a tela, texto por cima (todos os temas, menos o Luxo Técnico, que é
+   claro e divide a tela em foto e texto). O topo fica transparente sobre a foto. */
+.site-b:not([data-tema="tecnico"]) .b-heroi {
+  min-height: min(92svh, 860px); margin-top: -74px; color: #fff;
+  --suave: rgb(255 255 255 / 0.82); --borda: rgb(255 255 255 / 0.35); --texto: #fff;
+}
+.site-b:not([data-tema="tecnico"]) .b-heroi-midia { position: absolute; inset: 0; }
+.site-b:not([data-tema="tecnico"]) .b-heroi-midia::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--t-sobreposicao, linear-gradient(180deg, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.78)));
+}
+.site-b:not([data-tema="tecnico"]) .b-heroi-texto { padding-top: 120px; padding-bottom: 56px; align-content: end; }
+.site-b:not([data-tema="tecnico"]):has(.b-heroi) > .b-topo { color: #fff; }
+.site-b:is([data-tema="silencioso"], [data-tema="atemporal"]) :is(.b-heroi, .b-chamada) { --destaque: #fff; --destaque-forte: #e9e9e9; --sobre-destaque: #111; --acento: #fff; }
+.site-b[data-tema="tecnico"] .b-chamada { --destaque: #fff; --destaque-forte: #e3e9f4; --sobre-destaque: #0f1d3a; }
+.site-b[data-tema="silencioso"] { --t-sobreposicao: linear-gradient(180deg, rgb(0 0 0 / 0.25) 0%, rgb(0 0 0 / 0.15) 35%, rgb(0 0 0 / 0.8) 100%); }
+.site-b[data-tema="atemporal"] { --t-sobreposicao: linear-gradient(180deg, rgb(0 0 0 / 0.4), rgb(0 0 0 / 0.85)); }
+.site-b:is([data-tema="silencioso"], [data-tema="atemporal"]):has(.b-heroi) > .b-topo .b-botao { background: #fff; color: #111 !important; border-color: #fff; }
 
-/* Herói sobreposto (temas escuros): foto ocupa o fundo, texto por cima. */
-.site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-heroi { min-height: min(86svh, 820px); margin-top: -74px; }
-.site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-heroi-midia {
-  position: absolute; inset: 0; aspect-ratio: auto; max-height: none;
+/* Fotos da abertura, uma por vez. */
+.b-slides { position: relative; overflow: hidden; touch-action: pan-y; }
+.b-slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.b-slides img.ativa { opacity: 1; }
+.b-slides-pontos {
+  position: absolute; z-index: 2; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 18px;
+  display: flex; gap: 4px;
 }
-.site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-heroi-midia::after {
-  content: ""; position: absolute; inset: 0; background: var(--t-sobreposicao);
+.b-slides-pontos button {
+  width: 28px; height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center;
 }
-.site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-heroi-texto { padding-top: 120px; }
+.b-slides-pontos button::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgb(255 255 255 / 0.5); transition: width 0.25s, background 0.25s; }
+.b-slides-pontos button[aria-current="true"]::before { width: 22px; background: #fff; }
+.b-slides-pontos button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; border-radius: 6px; }
+.site-b[data-tema="tecnico"] .b-slides-pontos button::before { background: rgb(15 29 58 / 0.25); }
+.site-b[data-tema="tecnico"] .b-slides-pontos button[aria-current="true"]::before { background: var(--destaque); }
+.site-b[data-tema="tecnico"] .b-heroi-midia { position: relative; aspect-ratio: 4 / 5; max-height: 62svh; width: 100%; }
 
 /* ---------- faixa, oferta ---------- */
 .b-faixa { display: none; overflow: hidden; white-space: nowrap; }
@@ -368,9 +391,7 @@ a.b-dia:focus-visible, .b-horas a:focus-visible, .b-chips a:focus-visible { outl
 .site-b[data-tema="atemporal"] .b-heroi .b-botao { background: #fff; color: #000 !important; border-color: #fff; }
 .site-b[data-tema="atemporal"] .b-heroi .b-botao-sec { color: #fff; }
 .site-b[data-tema="atemporal"] .b-heroi h1 { font-style: italic; }
-.site-b[data-tema="atemporal"] :is(.b-heroi-midia, .b-foto, .b-pessoa) img { filter: grayscale(1); }
-.site-b[data-tema="atemporal"] #servicos { background: #000; color: #fff; max-width: none; --borda: #333; --suave: #bdbdbd; }
-.site-b[data-tema="atemporal"] #servicos > * { max-width: 1088px; margin-inline: auto; }
+.site-b[data-tema="atemporal"] :is(.b-heroi-midia, .b-foto, .b-pessoa, .b-cartao-foto, .b-casa-foto, .b-chamada) img { filter: grayscale(1); }
 .site-b[data-tema="atemporal"] .b-foto { outline: 1px solid #000; outline-offset: -8px; }
 
 /* ---------- 3. Cerimônia (efeitos 2) ---------- */
@@ -595,7 +616,9 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    EFEITOS — só com movimento liberado; cada tema respeita o próprio teto
    ====================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  /* Todos os temas: troca de cor e sublinhado respondem ao toque (nível 1). */
+  /* Todos os temas: troca de cor e sublinhado respondem ao toque (nível 1); a foto da abertura troca esmaecendo. */
+  .b-slides img { transition: opacity 0.9s ease; }
+  .b-carrossel-setas button, .b-cartao-servico { transition: background 0.2s, border-color 0.2s, opacity 0.2s, transform 0.25s ease; }
   .b-servico-acao, .b-contatos a { transition: color 0.2s; }
 
   /* Nível 2+: fotos reagem ao toque. */
@@ -787,3 +810,126 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-referencia:has(input:checked) { border-color: var(--destaque); box-shadow: 0 0 0 2px var(--destaque); }
 .b-referencia:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
 .b-servico-domicilio { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 12px; font-weight: 600; border: 1px solid currentColor; border-radius: 999px; vertical-align: middle; }
+
+/* ======================================================================
+   SEÇÕES DA PÁGINA INICIAL (valem pros 6 temas; cada tema ajusta embaixo)
+   ====================================================================== */
+.b-botao-grande { min-height: 54px; padding: 14px 28px; font-size: 16px; }
+
+/* Horários livres dentro da abertura: um toque e já vai pra confirmação. */
+.b-heroi .b-vagas { max-width: none; margin: 6px 0 0; padding: 0; gap: 10px 14px; }
+.b-heroi .b-vagas h2 { flex-basis: 100%; font-size: 15px; font-weight: 600; }
+.site-b:not([data-tema="tecnico"]) .b-heroi .b-vagas li a {
+  color: #fff; border-color: rgb(255 255 255 / 0.4); background: rgb(255 255 255 / 0.1);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.site-b:not([data-tema="tecnico"]) .b-heroi .b-vagas li a:hover { background: #fff; color: #111; border-color: #fff; }
+.site-b[data-tema="potencia"] .b-heroi .b-vagas li a:hover { background: var(--destaque); color: #0a0a0a; border-color: var(--destaque); }
+.site-b[data-tema="extravagancia"] .b-heroi .b-vagas li a { border-color: var(--destaque); color: var(--destaque-forte); }
+.b-heroi .b-vagas-mais { color: inherit; opacity: 0.85; }
+@media (max-width: 560px) { .b-heroi .b-vagas li:nth-child(n + 5) { display: none; } }
+
+/* Carrossel das seções */
+.b-carrossel-cabeca { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 24px; }
+.site-b .b-carrossel-cabeca h2 { margin: 0; text-align: left; }
+.b-carrossel-apoio { margin: 8px 0 0; color: var(--suave); }
+.b-carrossel-setas { display: flex; gap: 8px; flex-shrink: 0; }
+.b-carrossel-setas button {
+  width: 48px; height: 48px; display: grid; place-items: center; cursor: pointer;
+  border-radius: var(--t-botao-raio); border: 1px solid var(--borda); background: transparent; color: var(--texto);
+}
+.b-carrossel-setas button:hover:not(:disabled) { border-color: var(--texto); }
+.b-carrossel-setas button:disabled { opacity: 0.3; cursor: default; }
+.b-carrossel-setas button:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+.b-carrossel-trilho {
+  --larg: clamp(240px, 74vw, 330px);
+  list-style: none; margin: 0; padding: 4px 0 12px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--larg); gap: 16px;
+  overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.b-carrossel-trilho::-webkit-scrollbar { display: none; }
+.b-carrossel-trilho > li { scroll-snap-align: start; display: flex; min-width: 0; }
+.b-carrossel-trilho > li > * { flex: 1; min-width: 0; }
+@media (max-width: 760px) {
+  .b-carrossel-trilho { margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }
+  .b-carrossel-setas { display: none; }
+}
+.b-carrossel-rodape { margin-top: 20px; }
+.b-carrossel-rodape .b-filtros { margin: 0; }
+.b-filtros a { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Serviços em cartões com foto */
+.b-cartao-servico {
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+}
+.b-cartao-foto { aspect-ratio: 4 / 3; overflow: hidden; display: grid; place-items: center; background: var(--fundo-2); color: var(--suave); }
+.b-cartao-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.b-cartao-corpo { display: grid; gap: 8px; align-content: start; padding: 18px 18px 20px; }
+.site-b .b-cartao-corpo h3 { margin: 0; font-size: 1.4rem; line-height: 1.15; }
+.b-cartao-desc { margin: 0; color: var(--suave); font-size: 14px; line-height: 1.45; }
+.b-cartao-info { margin: 4px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; color: var(--suave); font-size: 14px; }
+.b-cartao-info .b-servico-preco { margin-left: auto; color: var(--texto); font-size: 1.25rem; }
+.b-cartao-corpo .b-botao { justify-self: stretch; margin-top: 8px; }
+
+/* Trabalhos e equipe no carrossel */
+.b-carrossel-trabalhos .b-carrossel-trilho { --larg: clamp(220px, 68vw, 320px); }
+.b-carrossel-trabalhos .b-foto img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
+.b-carrossel-equipe .b-carrossel-trilho { --larg: clamp(210px, 62vw, 280px); }
+.b-carrossel-equipe .b-pessoa img, .b-carrossel-equipe .b-pessoa-inicial { height: auto; aspect-ratio: 4 / 5; }
+
+/* Como marcar: três passos de verdade, por isso numerados. */
+.b-passos { list-style: none; counter-reset: passo; margin: 0 0 32px; padding: 0; display: grid; gap: 24px; }
+@media (min-width: 760px) { .b-passos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; } }
+.b-passos li { counter-increment: passo; display: grid; gap: 6px; padding-top: 18px; border-top: 1px solid var(--borda); }
+.b-passos li::before {
+  content: counter(passo); font: var(--t-titulo-peso) var(--t-titulo-estilo) 2.6rem/1 var(--fonte-titulo); color: var(--acento);
+}
+.b-passos strong { font-size: 1.15rem; }
+.b-passos span { color: var(--suave); font-size: 15px; }
+.site-b:is([data-tema="cerimonia"], [data-tema="extravagancia"]) .b-como { text-align: center; }
+.site-b:is([data-tema="cerimonia"], [data-tema="extravagancia"]) .b-passos li { justify-items: center; }
+
+/* A casa: foto do ambiente, apresentação e números. */
+.b-casa { display: grid; gap: 32px; align-items: center; }
+@media (min-width: 860px) { .b-casa { grid-template-columns: 1fr 1fr; gap: 56px; } }
+.b-casa-foto { overflow: hidden; border-radius: var(--t-foto-raio); aspect-ratio: 4 / 5; max-height: 640px; }
+.b-casa-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.site-b .b-casa h2 { text-align: left; }
+.b-casa-bio { margin: 0; font-size: 1.25rem; line-height: 1.5; max-width: 40ch; }
+.b-casa .b-numeros { max-width: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
+.b-casa .b-numeros div { display: flex; flex-direction: column-reverse; gap: 2px; padding-top: 14px; border-top: 1px solid var(--borda); }
+.b-casa .b-numeros dt { color: var(--suave); font-size: 15px; }
+.b-casa .b-numeros dd { margin: 0; font: var(--t-titulo-peso) var(--t-titulo-estilo) clamp(2.4rem, 5vw, 3.2rem)/1 var(--fonte-titulo); font-variant-numeric: tabular-nums; }
+.b-casa-insta { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; font-weight: 600; text-underline-offset: 4px; }
+
+/* Chamada final com foto de fundo. */
+.b-chamada { position: relative; display: grid; place-items: center; min-height: 440px; overflow: hidden; text-align: center; color: #fff; isolation: isolate; }
+.b-chamada > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.b-chamada::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.75)); }
+.b-chamada-texto { display: grid; justify-items: center; gap: 14px; max-width: 680px; padding: 80px 16px; }
+.site-b .b-chamada h2 { margin: 0; font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.05; color: #fff; }
+.site-b .b-chamada h2::after { display: none; }
+.b-chamada p { margin: 0 0 8px; color: rgb(255 255 255 / 0.85); font-size: 1.1rem; }
+
+/* Horários e contato */
+.b-horarios tr.hoje th, .b-horarios tr.hoje td { color: var(--texto); font-weight: 600; }
+.b-contato-lado { display: grid; gap: 24px; align-content: start; }
+
+/* Ajustes por tema nas seções novas */
+.site-b[data-tema="tecnico"] .b-cartao-servico { border: 0; box-shadow: var(--sombra); }
+.site-b[data-tema="tecnico"] .b-carrossel-trilho { padding-block: 8px 20px; }
+.site-b[data-tema="tecnico"] .b-carrossel-equipe .b-pessoa { padding: 10px 10px 18px; }
+.site-b[data-tema="tecnico"] .b-chamada { margin: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); border-radius: 28px; }
+.site-b[data-tema="potencia"] .b-cartao-servico { border-color: var(--borda); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%); }
+.site-b[data-tema="potencia"] .b-cartao-corpo h3 { font-size: 2rem; }
+.site-b[data-tema="potencia"] .b-chamada h2 { font-size: clamp(3rem, 10vw, 6rem); line-height: 0.9; }
+.site-b[data-tema="extravagancia"] .b-cartao-servico { border-color: var(--destaque); }
+.site-b[data-tema="extravagancia"] .b-cartao-foto { border-bottom: 1px solid var(--destaque); }
+.site-b[data-tema="extravagancia"] .b-chamada { border-block: 1px solid var(--destaque); }
+.site-b[data-tema="extravagancia"] .b-chamada h2 { color: var(--destaque-forte); }
+.site-b[data-tema="extravagancia"] .b-casa h2::after { margin-left: 0; }
+.site-b[data-tema="cerimonia"] .b-cartao-servico { background: rgb(255 255 255 / 0.03); }
+.site-b[data-tema="atemporal"] .b-cartao-servico { border-color: #000; }
+.site-b[data-tema="atemporal"] .b-como { background: #000; color: #fff; max-width: none; --borda: #333; --suave: #bdbdbd; --acento: #fff; --destaque: #fff; --sobre-destaque: #000; --destaque-forte: #e5e5e5; }
+.site-b[data-tema="atemporal"] .b-como { padding-inline: max(16px, calc((100% - 1088px) / 2)); }

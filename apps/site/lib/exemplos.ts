@@ -143,6 +143,22 @@ export async function criarSitesDeExemplo(): Promise<number> {
     banco.definirConfiguracao(CHAVE, JSON.stringify(existentes));
     criados++;
   }
+  for (const slug of Object.values(existentes)) {
+    const b = banco.barbeariaPorSlug(slug);
+    if (b) porFotosNaEquipe(b.id);
+  }
   banco.definirConfiguracao(CHAVE_FOTOS, JSON.stringify(fotos.map((f) => f.arquivo)));
   return criados;
+}
+
+/** Profissional do exemplo sem foto ganha um retrato do espaço "equipe" (um diferente pra cada). */
+function porFotosNaEquipe(barbeariaId: number): void {
+  const banco = obterAgenda();
+  const retratos = banco.fotos(barbeariaId).filter((f) => f.categoria === "equipe");
+  const usados = new Set(banco.profissionais(barbeariaId).map((p) => p.fotoArquivo).filter(Boolean));
+  const livres = retratos.filter((f) => !usados.has(f.arquivo));
+  for (const p of banco.profissionais(barbeariaId)) {
+    const foto = !p.fotoArquivo && livres.shift();
+    if (foto) banco.atualizarProfissional(barbeariaId, p.id, { fotoArquivo: foto.arquivo });
+  }
 }
