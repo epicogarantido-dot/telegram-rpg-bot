@@ -122,6 +122,41 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .propaganda h2 { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 300; }
 .site-cursos .propaganda :is(.propaganda-de, .propaganda-preco) { color: var(--suave); opacity: 1; }
 
+/* ---------- /montar: o barbeiro escolhe nome e estilo e vê o site pronto ---------- */
+.site-cursos .montar { max-width: 980px; margin: 0 auto; padding: 56px 0 72px; }
+.site-cursos .montar-cabeca { text-align: center; margin-bottom: 36px; }
+.site-cursos .montar-cabeca h1 { font-size: clamp(1.8rem, 5vw, 3rem); text-transform: uppercase; letter-spacing: 0.14em; margin: 0 0 14px; }
+.site-cursos .montar-cabeca p { color: var(--suave); max-width: 56ch; margin: 0 auto; }
+.site-cursos .montar-form { max-width: none; gap: 32px; }
+.site-cursos .montar-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 720px; width: 100%; margin: 0 auto; }
+.site-cursos .montar-estilos { border: 0; padding: 0; margin: 0; min-width: 0; }
+.site-cursos .montar-estilos legend { font-weight: 500; font-size: 15px; padding: 0; margin-bottom: 14px; }
+.site-cursos .montar-estilos legend small { color: var(--suave); font-weight: 400; }
+.site-cursos .montar-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.site-cursos .montar .montar-estilo {
+  position: relative; display: grid; gap: 12px; align-content: start; padding: 10px 10px 14px; cursor: pointer;
+  border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); font-weight: 400;
+}
+/* O rádio fica escondido mas recebe o foco: quem usa teclado vê o contorno no cartão inteiro. */
+.site-cursos .montar .montar-estilo input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.site-cursos .montar-estilo:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 3px; }
+.site-cursos .montar-estilo:hover { border-color: var(--linha); }
+.site-cursos .montar-estilo:has(input:checked) { border-color: #fff; box-shadow: inset 0 0 0 1px #fff; }
+.site-cursos .montar-estilo img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: top; border-radius: var(--raio-p); display: block; }
+.site-cursos .montar-estilo span { display: grid; gap: 2px; padding: 0 4px; color: var(--suave); font-size: 14px; line-height: 1.4; }
+.site-cursos .montar-estilo strong { color: var(--texto); font-weight: 500; font-size: 1.05rem; }
+.site-cursos .montar-estilo:has(input:checked) strong::after { content: " · escolhido"; color: var(--suave); font-weight: 400; font-size: 0.85rem; }
+.site-cursos .montar-enviar { justify-self: center; min-width: min(320px, 100%); }
+.site-cursos .montar-nota { text-align: center; margin: -16px 0 0; font-size: 15px; }
+
+@media (max-width: 720px) {
+  .site-cursos .montar { padding: 36px 0 48px; }
+  .site-cursos .montar-campos { grid-template-columns: 1fr; }
+  .site-cursos .montar-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  /* No celular a lista de estilos é longa: o botão acompanha a rolagem. */
+  .site-cursos .montar-enviar { position: sticky; bottom: 12px; z-index: 3; width: 100%; box-shadow: 0 8px 24px rgb(0 0 0 / 0.45); }
+}
+
 @media (max-width: 560px) {
   .site-cursos .marca { letter-spacing: 0.22em; }
   .site-cursos .heroi { padding: 48px 0 40px; }

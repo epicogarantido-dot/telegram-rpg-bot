@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ErroAgenda, planoDoAmbiente } from "@aprenda/agenda";
+import { ErroAgenda, MONTAGEM_DIAS, planoDoAmbiente } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
@@ -41,10 +41,10 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
     <>
       {demo ? (
         <>
-          <h1>Deixe o site da {demo.nome} no seu nome</h1>
+          <h1>Falta pouco pro site da {demo.nome} ser seu</h1>
           <p>
             Você fica com <a href={`/b/${demo.slug}`} target="_blank" rel="noopener noreferrer">este site</a>, no mesmo endereço e no mesmo estilo.
-            Depois é só trocar as fotos de exemplo pelas suas e conferir serviços e horários no painel.
+            Crie seu acesso e entre no painel pra trocar as fotos de exemplo pelas suas e conferir serviços e horários.
           </p>
         </>
       ) : (
@@ -55,7 +55,10 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         </>
       )}
       <p className="suave">
-        Contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix. Você cria a conta agora e o site é liberado assim que o pagamento é confirmado.
+        {plano.testeDias > 0
+          ? <>Grátis por {plano.testeDias} dias. Depois, </>
+          : <>Criar a conta e montar o site não custa nada: você tem {MONTAGEM_DIAS} dias pra deixar tudo do seu jeito, e só você vê. Pra publicar, </>}
+        contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
       </p>
       {erro && <p className="erro">{erro}</p>}
       <form action={cadastrar} className="formulario">
@@ -67,7 +70,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <input name="senha" type="password" placeholder="Senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
         <CampoOrigem />
         <small className="suave">Ao criar a conta você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
-        <button type="submit">{demo ? "Quero este site" : "Criar minha agenda"}</button>
+        <button type="submit">{demo ? "Criar meu acesso" : "Criar minha agenda"}</button>
       </form>
       <p>Já tem conta? <Link href="/app/entrar">Entrar</Link></p>
     </>

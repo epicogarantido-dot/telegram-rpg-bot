@@ -39,9 +39,18 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      {ativo && <p><Link href="/app">← Voltar pra agenda</Link></p>}
-      <h1>Assinatura</h1>
-      {ativo ? (
+      {ativo && <p><Link href="/app">← Voltar pro painel</Link></p>}
+      <h1>{barbearia.emMontagem ? "Publicar meu site" : "Assinatura"}</h1>
+      {barbearia.emMontagem && ativo ? (
+        <aside className="aviso-novo">
+          Pague pelo Pix e avise aqui embaixo. Assim que a gente conferir (normalmente no mesmo dia), o site da{" "}
+          {barbearia.nome} vai pro ar e os clientes já podem marcar. Até lá você continua montando normalmente.
+        </aside>
+      ) : barbearia.emMontagem ? (
+        <aside className="erro">
+          O prazo pra montar o site acabou. Pague pelo Pix pra publicar: nada do que você montou foi apagado.
+        </aside>
+      ) : ativo ? (
         <p>✅ Acesso liberado até <strong>{formatarData(barbearia.acessoAte)}</strong>. Pode renovar antes: os dias se somam.</p>
       ) : nuncaPagou ? (
         <aside className="aviso-novo">

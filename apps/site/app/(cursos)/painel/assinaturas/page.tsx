@@ -124,7 +124,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
           <div key={b.id} className="item-config">
             <span>
               {ativo ? "🟢" : "🔴"} <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} ·{" "}
-              {ativo ? `até ${formatarData(b.acessoAte)}` : `bloqueada desde ${formatarData(b.acessoAte)}`}
+              {b.emMontagem ? (ativo ? `montando o site até ${formatarData(b.acessoAte)} (ainda não publicado)` : `não pagou; prazo de montagem acabou em ${formatarData(b.acessoAte)}`) : ativo ? `até ${formatarData(b.acessoAte)}` : `bloqueada desde ${formatarData(b.acessoAte)}`}
             </span>
             <span className="acoes">
               <form action={linkDeSenha}>

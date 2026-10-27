@@ -29,6 +29,14 @@ export default function Privacidade() {
         número, sem guardar quem você é, seu IP ou cookie de rastreio.
       </p>
 
+      <h2>Prévia do site da sua barbearia</h2>
+      <p>
+        Quando você monta uma prévia em &quot;Quero meu site&quot;, guardamos o nome e a cidade da barbearia que você
+        digitou, por 7 dias, pra mostrar o site. Um cookie neste aparelho lembra qual prévia é a sua (é ele que mostra
+        &quot;Quero este site&quot;). Pra segurar abuso, contamos quantas prévias cada aparelho monta por dia, com o
+        aparelho guardado só como código embaralhado.
+      </p>
+
       <h2>Comunidade de barbeiros</h2>
       <p>
         Se você se inscreve na comunidade, guardamos nome, WhatsApp e, se informar, o nome do negócio e a cidade, com a sua

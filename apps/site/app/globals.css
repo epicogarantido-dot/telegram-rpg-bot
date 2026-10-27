@@ -179,6 +179,11 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .formulario.linha { grid-template-columns: 1fr; margin-top: 12px; }
 @media (min-width: 640px) { .formulario.linha { grid-template-columns: 2fr 1fr 1fr auto; max-width: none; } }
 .erro { color: var(--erro); background: var(--erro-fundo); border: 1px solid var(--erro-borda); padding: 12px 16px; border-radius: var(--raio-p); }
+/* Painel de conta nova: o passo a passo até publicar o site. */
+.montagem { border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); padding: 18px 20px; margin: 12px 0 20px; }
+.montagem h2 { margin: 0 0 6px; font-size: 1.25rem; }
+.montagem p { margin: 0 0 10px; color: var(--suave); }
+.montagem ol { margin: 0 0 16px; padding-left: 22px; display: grid; gap: 6px; }
 .aviso-novo { background: var(--destaque-claro); border: 1px solid color-mix(in srgb, var(--destaque) 30%, transparent); padding: 12px 16px; border-radius: var(--raio-p); }
 
 /* ---------- cursos e lições ---------- */

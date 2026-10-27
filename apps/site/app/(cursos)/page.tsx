@@ -34,7 +34,7 @@ export default async function Inicio() {
         </p>
         <div className="acoes-heroi">
           <Link href="/cursos" className="botao">Ver os cursos grátis</Link>
-          <Link href="/barbeiros" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></Link>
+          <Link href="/montar" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></Link>
         </div>
       </section>
 

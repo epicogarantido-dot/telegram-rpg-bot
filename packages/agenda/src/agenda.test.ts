@@ -187,21 +187,36 @@ describe("assinatura", () => {
       clienteNome: "Cliente", clienteTelefone: "5519988887777", agora: dia("2026-11-03") })).toThrow(/indisponível/);
   });
 
-  it("sem teste, nasce bloqueado; 'já paguei' não libera; só o admin libera", () => {
+  it("sem teste, nasce em montagem: painel liberado, site só pro dono; 'já paguei' não publica; só o admin publica", () => {
     const { b, id } = conta(0);
     const barb = () => b.barbeariaPorId(id)!;
-    expect(b.acessoAtivo(barb(), dia("2026-10-27"))).toBe(false);
+    expect(barb().emMontagem).toBe(true);
+    expect(barb().acessoAte).toBe("2026-11-09"); // 14 dias pra montar
+    expect(b.acessoAtivo(barb(), dia("2026-10-27"))).toBe(true);
+    const prof = b.profissionais(id)[0]!;
+    const serv = b.servicos(id)[0]!;
+    const marcar = (peloBarbeiro: boolean) => b.agendar({ barbeariaId: id, profissionalId: prof.id, servicoId: serv.id, data: "2026-10-28", hora: peloBarbeiro ? "10:00" : "11:00",
+      clienteNome: "Cliente", clienteTelefone: "5519988887777", agora: dia("2026-10-27"), peloBarbeiro });
+    expect(() => marcar(false)).toThrow(/não foi publicado/);
+    expect(marcar(true)).toBeGreaterThan(0);
 
     const p = b.pagamentoAberto(id);
     expect(b.pagamentoAberto(id).id).toBe(p.id); // não duplica
     b.informarPagamento(id, p.id, "José Silva");
-    expect(b.acessoAtivo(barb(), dia("2026-10-27"))).toBe(false);
+    expect(barb().emMontagem).toBe(true);
     expect(b.pagamentosPendentes()[0]!.status).toBe("informado");
 
-    b.confirmarPagamento(p.id, dia("2026-10-27"));
-    expect(barb().acessoAte).toBe("2026-11-25");
+    // Publica no dia da confirmação: os dias de montagem que sobravam não se somam.
+    b.confirmarPagamento(p.id, dia("2026-10-30"));
+    expect(barb().emMontagem).toBe(false);
+    expect(barb().acessoAte).toBe("2026-11-28");
     expect(() => b.confirmarPagamento(p.id)).toThrow(ErroAgenda);
     expect(b.pagamentoAberto(id).id).not.toBe(p.id);
+  });
+
+  it("montagem sem pagamento vence e bloqueia", () => {
+    const { b, id } = conta(0);
+    expect(b.acessoAtivo(b.barbeariaPorId(id)!, dia("2026-11-10"))).toBe(false);
   });
 
   it("renovação antecipada soma ao fim do período atual", () => {
@@ -278,6 +293,40 @@ describe("site da barbearia", () => {
     expect(b.removerFoto(a.id, id1!)).toBe(f1);
     expect(b.profissionais(a.id)[0]!.fotoArquivo).toBeNull();
     expect(b.fotoExiste(f1)).toBe(false);
+  });
+
+  it("fotos copiadas dividem o arquivo: apagar de um site não apaga do disco enquanto outro usa", () => {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const ex = b.criarDemonstracao({ nome: "Exemplo", tema: "silencioso" }).barbearia;
+    const f = b.registrarFoto(ex.id, { categoria: "ambiente", largura: 1600, altura: 900 });
+    b.definirCapa(ex.id, b.fotos(ex.id)[0]!.id);
+    const previa = b.criarDemonstracao({ nome: "Prévia", tema: "silencioso" }).barbearia;
+    b.copiarFotos(ex.id, previa.id);
+    expect(b.fotos(previa.id)).toMatchObject([{ arquivo: f, capa: 1 }]);
+    expect(b.removerFoto(previa.id, b.fotos(previa.id)[0]!.id)).toBeUndefined();
+    expect(b.fotoExiste(f)).toBe(true);
+    expect(b.removerFoto(ex.id, b.fotos(ex.id)[0]!.id)).toBe(f);
+  });
+
+  it("banco antigo com arquivo UNIQUE é refeito sem perder fotos", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { DatabaseSync } = await import("node:sqlite");
+    const arq = join(mkdtempSync(join(tmpdir(), "fotos-")), "a.db");
+    const b1 = new BancoAgenda(arq, PLANO_LIBERADO);
+    const a = b1.criarDemonstracao({ nome: "Casa A", tema: "silencioso" }).barbearia;
+    const f = b1.registrarFoto(a.id, { categoria: "corte", largura: 1, altura: 1 });
+    // Simula o banco de antes: a tabela com a restrição antiga.
+    const db = new DatabaseSync(arq);
+    const { sql } = db.prepare("SELECT sql FROM sqlite_master WHERE name = 'fotos'").get() as { sql: string };
+    db.exec("ALTER TABLE fotos RENAME TO v; " + sql.replace("arquivo TEXT NOT NULL", "arquivo TEXT NOT NULL UNIQUE") + "; INSERT INTO fotos SELECT * FROM v; DROP TABLE v;");
+    db.close();
+    const b2 = new BancoAgenda(arq, PLANO_LIBERADO);
+    expect(b2.fotos(a.id).map((x) => x.arquivo)).toEqual([f]);
+    const outra = b2.criarDemonstracao({ nome: "Casa B", tema: "silencioso" }).barbearia;
+    b2.copiarFotos(a.id, outra.id);
+    expect(b2.fotos(outra.id).map((x) => x.arquivo)).toEqual([f]);
   });
 
   it("processa imagem: redimensiona, vira WebP e tira o GPS", async () => {
@@ -724,8 +773,8 @@ describe("demonstração pra mostrar ao barbeiro", () => {
     const r = b.assumirDemonstracao(convite, { telefone: "5555999990001", nome: "José", email: "ze@exemplo.com", senha: "senha-boa-123", agora });
     expect(r.barbearia).toMatchObject({ id: barbearia.id, slug: "barbearia-do-ze", tema: "atemporal", telefone: "5555999990001" });
     expect(r.barbearia.demoAte).toBeUndefined();
-    // Sem período grátis: nasce bloqueada até o Pix ser confirmado.
-    expect(b.acessoAtivo(r.barbearia, agora)).toBe(false);
+    // Sem período grátis: entra em montagem até o Pix ser confirmado.
+    expect(r.barbearia.emMontagem).toBe(true);
     expect(b.profissionais(barbearia.id).map((p) => p.nome)).toEqual(["José"]);
     expect(() => b.assumirDemonstracao(convite, { telefone: "1", nome: "Outro", email: "o@exemplo.com", senha: "senha-boa-123", agora })).toThrow(/venceu ou já foi usado/);
   });

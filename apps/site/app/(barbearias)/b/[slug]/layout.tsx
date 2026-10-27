@@ -9,11 +9,16 @@ import { Efeitos } from "@/componentes/barbearia/Efeitos";
 import { QueroEsteSite } from "@/componentes/barbearia/QueroEsteSite";
 import { dataPorExtenso } from "@/lib/datas";
 import { ehSiteDeExemplo } from "@/lib/exemplos";
+import { conviteDaPrevia } from "@/lib/previa";
+import { ehOBarbeiro } from "@/lib/protecao";
+import { TEMAS } from "@aprenda/agenda";
+import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { trocarEstiloDaPrevia } from "./acoes-previa";
 
-/** Demonstração não vai pro Google (nem o site, nem as páginas internas). */
+/** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const b = obterAgenda().barbeariaPorSlug((await params).slug);
-  return b?.demoAte ? { robots: { index: false, follow: false } } : {};
+  return b?.demoAte || b?.emMontagem ? { robots: { index: false, follow: false } } : {};
 }
 
 /**
@@ -28,6 +33,11 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   const ativo = banco.acessoAtivo(b);
   // Demonstração vencida some de vez (não tem dono pra quem "falar direto").
   if (b.demoAte && !ativo) notFound();
+  // Prévia que o barbeiro montou neste aparelho em /montar (o convite está no cookie).
+  const previa = b.demoAte ? await conviteDaPrevia(b.id) : undefined;
+  // Em montagem (conta nova que ainda não pagou), só o dono logado vê o site.
+  const dono = b.emMontagem && await ehOBarbeiro(b.id);
+  const noAr = ativo && (!b.emMontagem || dono);
   const base = `/b/${b.slug}`;
   const agenda = b.atendimento !== "chegada";
   const mapa = linkMapa(b);
@@ -41,7 +51,32 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
             <strong>Site de exemplo</strong> do estilo que você está vendo. Barbearia e fotos são ilustrativas e a marcação
             vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
           </p>
-          <a className="b-demo-botao" href="/barbeiros">Quero um site assim</a>
+          <a className="b-demo-botao" href={`/montar?tema=${b.tema}`}>Quero um site assim</a>
+        </aside>
+      ) : previa ? (
+        <aside className="b-demo" aria-label="Aviso de prévia">
+          <p>
+            <strong>Este é o site da {b.nome}.</strong> As fotos são de exemplo: se gostar, você troca pelas suas,
+            confere serviços e preços e só então ele vai pro ar.
+          </p>
+          <form action={trocarEstiloDaPrevia} className="b-demo-estilo">
+            <input type="hidden" name="id" value={b.id} />
+            <label htmlFor="previa-tema">Estilo</label>
+            <select id="previa-tema" name="tema" defaultValue={b.tema}>
+              {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+            <BotaoEnviar className="b-demo-botao-sec" carregando="Trocando…">Trocar</BotaoEnviar>
+          </form>
+          <a className="b-demo-botao" href={`/app/cadastro?demo=${encodeURIComponent(previa)}`}>Quero este site</a>
+        </aside>
+      ) : dono ? (
+        <aside className="b-demo" aria-label="Aviso de site em montagem">
+          <p>
+            <strong>Só você está vendo.</strong> O site ainda não foi publicado: os clientes veem quando o pagamento
+            for confirmado.
+          </p>
+          <a className="b-demo-botao-sec" href="/app">Voltar ao painel</a>
+          <a className="b-demo-botao" href="/app/assinatura">Publicar meu site</a>
         </aside>
       ) : b.demoAte && (
         <aside className="b-demo" aria-label="Aviso de demonstração">
@@ -55,7 +90,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
     <div className="site-b" data-tema={b.tema} data-efeitos={nivelEfeitos(b.tema)}>
       <header className="b-topo">
         <Link href={base} className="b-nome">{b.nome}</Link>
-        {ativo && (
+        {noAr && (
           <nav aria-label="Seções">
             <Link href={`${base}/trabalhos`}>Trabalhos</Link>
             <Link href={`${base}#servicos`}>Serviços</Link>
@@ -66,7 +101,13 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
         )}
       </header>
       <main className="b-conteudo">
-        {ativo ? children : (
+        {noAr ? children : ativo ? (
+          <section className="b-secao b-indisponivel">
+            <h1>{b.nome}</h1>
+            <p>O site da {b.nome} está ficando pronto. Enquanto isso, fale direto com a barbearia:</p>
+            {b.telefone && <a className="b-botao" href={whats} target="_blank" rel="noopener noreferrer">WhatsApp da barbearia</a>}
+          </section>
+        ) : (
           <section className="b-secao b-indisponivel">
             <h1>{b.nome}</h1>
             <p>O site está temporariamente indisponível. Fale direto com a barbearia:</p>
@@ -78,8 +119,8 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
         <span>{b.nome}{b.cidade ? ` · ${b.cidade}` : ""}</span>
         <Link href="/barbeiros" className="b-assinatura">Você é barbeiro? Tenha um site assim</Link>
       </footer>
-      {ativo && <Efeitos tema={b.tema} />}
-      {ativo && (
+      {noAr && <Efeitos tema={b.tema} />}
+      {noAr && (
         <nav className="b-barra-celular" aria-label="Ações rápidas">
           {agenda
             ? <Link href={`${base}/agendar`} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar</Link>

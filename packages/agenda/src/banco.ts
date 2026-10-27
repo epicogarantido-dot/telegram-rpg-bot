@@ -48,6 +48,11 @@ export interface Barbearia {
    * ainda). Vale até este dia; agendar fica desligado. Vira o site dele com `assumirDemonstracao`.
    */
   demoAte?: Data;
+  /**
+   * Conta nova que ainda não pagou: o barbeiro monta o site no painel (fotos, equipe, preços) e
+   * só ele vê a página pública. O primeiro Pix confirmado publica (`confirmarPagamento`).
+   */
+  emMontagem: boolean;
   /** Link da página de avaliação no Google (o barbeiro cola uma vez em Configurações). */
   linkAvaliacao?: string;
   /** Em quantos dias o cliente costuma voltar, quando ele ainda não tem histórico. */
@@ -110,6 +115,8 @@ export interface NumerosDoMes {
 
 /** Quantos dias uma demonstração fica no ar. */
 export const DEMONSTRACAO_DIAS = 14;
+/** Dias que uma conta nova (sem período grátis) tem pra montar o site antes de pagar. */
+export const MONTAGEM_DIAS = 14;
 
 export type Atendimento = "agenda" | "chegada" | "ambos";
 export const INTERVALOS = [15, 20, 30, 60, 90, 120] as const;
@@ -226,12 +233,12 @@ export function planoDoAmbiente(): Plano {
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
   "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, folga_min AS folgaMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
-  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias";
+  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias, montagem AS emMontagem";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
 function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
   if (!linha) return undefined;
-  const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1 } as Record<string, unknown>;
+  const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1, emMontagem: linha.emMontagem === 1 } as Record<string, unknown>;
   for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte", "linkAvaliacao"]) if (b[k] === null) b[k] = undefined;
   return b as Barbearia & T;
 }
@@ -355,6 +362,7 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
+    this.garantirColuna("barbearias", "montagem", "INTEGER NOT NULL DEFAULT 0");
     this.garantirColuna("servicos", "descricao", "TEXT");
     this.garantirColuna("servicos", "em_domicilio", "INTEGER NOT NULL DEFAULT 0");
     this.migrarAdicionais();
@@ -368,13 +376,15 @@ export class BancoAgenda {
       CREATE TABLE IF NOT EXISTS fotos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
-        arquivo TEXT NOT NULL UNIQUE, categoria TEXT NOT NULL, legenda TEXT,
+        arquivo TEXT NOT NULL, categoria TEXT NOT NULL, legenda TEXT,
         largura INTEGER NOT NULL, altura INTEGER NOT NULL, capa INTEGER NOT NULL DEFAULT 0,
         criado_em TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria);
     `);
     this.garantirColuna("fotos", "antes_de", "TEXT");
+    this.migrarFotosCompartilhadas();
+    this.db.exec("CREATE INDEX IF NOT EXISTS fotos_arquivo ON fotos(arquivo)");
     // Link do cliente: o banco guarda só o hash do token (como nas sessões).
     this.garantirColuna("agendamentos", "token_cliente", "TEXT");
     this.db.exec("CREATE INDEX IF NOT EXISTS agendamentos_token ON agendamentos(token_cliente)");
@@ -468,6 +478,26 @@ export class BancoAgenda {
   }
 
   /** Ponto de partida pra barbearia já sair usando: dá pra editar tudo no painel. */
+  /**
+   * Bancos antigos criaram `fotos.arquivo` como UNIQUE; a prévia montada pelo barbeiro divide o
+   * arquivo de exemplo entre sites (`copiarFotos`). O SQLite não tira restrição: refaz a tabela.
+   */
+  private migrarFotosCompartilhadas(): void {
+    const { sql } = this.db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'fotos'").get() as { sql: string };
+    if (!/arquivo TEXT NOT NULL UNIQUE/.test(sql)) return;
+    this.db.exec("BEGIN");
+    try {
+      this.db.exec("ALTER TABLE fotos RENAME TO fotos_antiga");
+      this.db.exec(sql.replace("arquivo TEXT NOT NULL UNIQUE", "arquivo TEXT NOT NULL"));
+      this.db.exec("INSERT INTO fotos SELECT * FROM fotos_antiga; DROP TABLE fotos_antiga;");
+      this.db.exec("CREATE INDEX IF NOT EXISTS fotos_barbearia ON fotos(barbearia_id, categoria)");
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
   private semearBarbearia(barbeariaId: number, profissional: string): void {
     this.db.prepare("INSERT INTO profissionais (barbearia_id, nome) VALUES (?, ?)").run(barbeariaId, profissional);
     for (const [nome, dur, preco, adicional] of [["Corte", 30, 4000, 0], ["Barba", 30, 3000, 1], ["Corte + barba", 60, 6500, 0]] as const) {
@@ -479,19 +509,26 @@ export class BancoAgenda {
     }
   }
 
-  /** acesso_ate de conta nova = último dia liberado; teste de N dias inclui o dia de hoje (0 = já nasce bloqueada). */
-  private acessoInicial(agora?: Date): Data {
-    return somarDias(agoraNoFuso("America/Sao_Paulo", agora).slice(0, 10), this.plano.testeDias - 1);
+  /**
+   * Conta nova: com teste grátis de N dias, já nasce publicada até o fim do teste (contando hoje).
+   * Sem teste, nasce em montagem: MONTAGEM_DIAS pra arrumar o site no painel, que só o dono vê.
+   */
+  private acessoInicial(agora?: Date): { acessoAte: Data; montagem: number } {
+    const hoje = agoraNoFuso("America/Sao_Paulo", agora).slice(0, 10);
+    return this.plano.testeDias > 0
+      ? { acessoAte: somarDias(hoje, this.plano.testeDias - 1), montagem: 0 }
+      : { acessoAte: somarDias(hoje, MONTAGEM_DIAS - 1), montagem: 1 };
   }
 
   criarConta(dados: { nomeBarbearia: string; telefone: string; nome: string; email: string; senha: string; agora?: Date }): { barbearia: Barbearia; token: string } {
     const email = this.validarConta(dados);
     const agora = new Date().toISOString();
     const slug = this.slugLivre(dados.nomeBarbearia);
+    const inicial = this.acessoInicial(dados.agora);
     this.db.exec("BEGIN");
     try {
-      const b = this.db.prepare("INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate) VALUES (?, ?, ?, ?, ?)")
-        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora, this.acessoInicial(dados.agora));
+      const b = this.db.prepare("INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, montagem) VALUES (?, ?, ?, ?, ?, ?)")
+        .run(slug, dados.nomeBarbearia.trim(), dados.telefone, agora, inicial.acessoAte, inicial.montagem);
       const barbeariaId = Number(b.lastInsertRowid);
       const u = this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(barbeariaId, dados.nome.trim(), email, hashSenha(dados.senha), agora);
@@ -544,16 +581,17 @@ export class BancoAgenda {
   /**
    * O barbeiro gostou e quer o site: a demonstração vira a barbearia dele, com o mesmo endereço
    * (/b/<slug>), estilo e fotos de exemplo (que ele troca pelas dele). O acesso segue o plano
-   * como uma conta nova: sem período grátis, só libera depois do Pix confirmado.
+   * como uma conta nova: sem período grátis, entra em montagem e publica com o Pix confirmado.
    */
   assumirDemonstracao(convite: string, dados: { telefone: string; nome: string; email: string; senha: string; nomeBarbearia?: string; agora?: Date }): { barbearia: Barbearia; token: string } {
     const demo = this.demonstracaoPorConvite(convite, dados.agora);
     if (!demo) throw new ErroAgenda("Esse convite de demonstração venceu ou já foi usado.");
     const email = this.validarConta(dados);
+    const inicial = this.acessoInicial(dados.agora);
     this.db.exec("BEGIN");
     try {
-      this.db.prepare(`UPDATE barbearias SET nome = ?, telefone = ?, acesso_ate = ?, demo_ate = NULL, demo_token_hash = NULL WHERE id = ?`)
-        .run(dados.nomeBarbearia?.trim() || demo.nome, dados.telefone, this.acessoInicial(dados.agora), demo.id);
+      this.db.prepare(`UPDATE barbearias SET nome = ?, telefone = ?, acesso_ate = ?, montagem = ?, demo_ate = NULL, demo_token_hash = NULL WHERE id = ?`)
+        .run(dados.nomeBarbearia?.trim() || demo.nome, dados.telefone, inicial.acessoAte, inicial.montagem, demo.id);
       const u = this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(demo.id, dados.nome.trim(), email, hashSenha(dados.senha), new Date().toISOString());
       this.db.prepare("UPDATE profissionais SET nome = ? WHERE barbearia_id = ? AND nome = 'Barbeiro'").run(dados.nome.trim(), demo.id);
@@ -902,6 +940,7 @@ export class BancoAgenda {
     const b = this.barbeariaPorId(dados.barbeariaId);
     if (!b || !this.acessoAtivo(b, dados.agora)) throw new ErroAgenda("Agenda temporariamente indisponível.");
     if (b.demoAte) throw new ErroAgenda("Este site é uma demonstração: os horários são de exemplo e não dá pra marcar.");
+    if (b.emMontagem && !dados.peloBarbeiro) throw new ErroAgenda("Este site ainda não foi publicado: a marcação abre quando ele for pro ar.");
     const prof = this.profissionais(dados.barbeariaId, true).find((p) => p.id === dados.profissionalId);
     const servico = this.servicos(dados.barbeariaId, true).find((s) => s.id === dados.servicoId);
     if (!prof || !servico) throw new ErroAgenda("Serviço ou profissional indisponível.");
@@ -1416,8 +1455,9 @@ export class BancoAgenda {
       if (!p || (p.status !== "aberto" && p.status !== "informado")) throw new ErroAgenda("Pagamento já decidido ou inexistente.");
       const b = this.barbeariaPorId(p.barbeariaId)!;
       const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
-      const base = b.acessoAte >= hoje ? somarDias(b.acessoAte, 1) : hoje;
-      this.db.prepare("UPDATE barbearias SET acesso_ate = ? WHERE id = ?").run(somarDias(base, p.dias - 1), b.id);
+      // Os dias de montagem não contam: o mês pago começa no dia em que o site vai pro ar.
+      const base = !b.emMontagem && b.acessoAte >= hoje ? somarDias(b.acessoAte, 1) : hoje;
+      this.db.prepare("UPDATE barbearias SET acesso_ate = ?, montagem = 0 WHERE id = ?").run(somarDias(base, p.dias - 1), b.id);
       this.db.prepare("UPDATE pagamentos SET status = 'confirmado', decidido_em = ? WHERE id = ?").run(new Date().toISOString(), pagamentoId);
       this.db.exec("COMMIT");
     } catch (e) {
@@ -1492,14 +1532,27 @@ export class BancoAgenda {
     }
   }
 
-  /** Apaga o registro e devolve o arquivo pra quem chamou remover do disco. */
+  /**
+   * Apaga o registro e devolve o arquivo pra quem chamou remover do disco. Foto de exemplo
+   * copiada (`copiarFotos`) divide o arquivo com outros sites: aí só some o registro.
+   */
   removerFoto(barbeariaId: number, id: number): string | undefined {
     const f = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
     if (!f) return undefined;
     this.db.prepare("UPDATE profissionais SET foto_arquivo = NULL WHERE barbearia_id = ? AND foto_arquivo = ?").run(barbeariaId, f.arquivo);
     this.db.prepare("UPDATE fotos SET antes_de = NULL WHERE barbearia_id = ? AND antes_de = ?").run(barbeariaId, f.arquivo);
     this.db.prepare("DELETE FROM fotos WHERE id = ?").run(id);
-    return f.arquivo;
+    return this.db.prepare("SELECT 1 FROM fotos WHERE arquivo = ?").get(f.arquivo) ? undefined : f.arquivo;
+  }
+
+  /**
+   * Copia as fotos (e a capa) de um site pra outro sem duplicar arquivo no disco: os dois
+   * registros apontam pro mesmo arquivo. Usado na prévia montada pelo próprio barbeiro.
+   */
+  copiarFotos(origemId: number, destinoId: number): void {
+    this.db.prepare(`INSERT INTO fotos (barbearia_id, arquivo, categoria, legenda, largura, altura, capa, criado_em)
+      SELECT ?, arquivo, categoria, legenda, largura, altura, capa, ? FROM fotos WHERE barbearia_id = ? ORDER BY id`)
+      .run(destinoId, new Date().toISOString(), origemId);
   }
 
   /**

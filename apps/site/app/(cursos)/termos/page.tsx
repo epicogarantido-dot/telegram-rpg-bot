@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { planoDoAmbiente } from "@aprenda/agenda";
+import { MONTAGEM_DIAS, planoDoAmbiente } from "@aprenda/agenda";
 import { reais } from "@/lib/agenda";
 import { contatoResponsavel } from "@/lib/contato";
 
@@ -39,7 +39,8 @@ export default function Termos() {
       <ul>
         <li>{reais(adesao)} na contratação, que já inclui os primeiros {plano.dias} dias.</li>
         <li>Depois, {reais(plano.valorCentavos)} a cada {plano.dias} dias.</li>
-        <li>Pagamento só por Pix. O acesso é liberado quando a gente confere o Pix, normalmente no mesmo dia.</li>
+        <li>Antes de pagar, você pode criar a conta e montar o site por {MONTAGEM_DIAS} dias. Nesse tempo só você vê o site e os clientes ainda não marcam.</li>
+        <li>Pagamento só por Pix. O site vai pro ar quando a gente confere o Pix, normalmente no mesmo dia.</li>
         <li>Sem fidelidade e sem multa. Se o pagamento não vier, o painel e o site ficam pausados até você pagar de novo; nada é apagado nesse tempo.</li>
         <li>Se o preço mudar, avisamos antes, e vale a partir do próximo pagamento.</li>
       </ul>
