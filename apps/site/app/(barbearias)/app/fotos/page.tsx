@@ -1,19 +1,43 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Star, Trash2, Upload } from "lucide-react";
-import { apagarFoto, CATEGORIAS_FOTO, gravarFoto, MAX_FOTOS, processarFoto } from "@aprenda/agenda";
+import { ImagePlus, Star, Trash2, Upload } from "lucide-react";
+import { apagarFoto, CATEGORIAS_FOTO, ErroAgenda, gravarFoto, MAX_FOTOS, processarFoto, type Foto } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
+import { acervo } from "@/lib/exemplos";
 
-export const metadata = { title: "Fotos", robots: { index: false } };
+export const metadata = { title: "Fotos do site", robots: { index: false } };
 export const dynamic = "force-dynamic";
+
+/** O que cada espaço do site mostra, dito do jeito que o barbeiro enxerga o site. */
+const ESPACOS: Record<string, string> = {
+  ambiente: "A barbearia por dentro: cadeira, bancada, fachada.",
+  degrade: "Seus degradês. Viram o filtro Degradê em Trabalhos.",
+  corte: "Cortes na tesoura e na máquina.",
+  barba: "Barba feita, desenhada, na toalha quente.",
+  navalhado: "Navalhados e desenhos.",
+  sobrancelha: "Sobrancelha feita na navalha ou na pinça.",
+  infantil: "Corte das crianças.",
+  produtos: "O que você usa ou vende: pomadas, óleos, perfumes.",
+  equipe: "Fotos da equipe. Pra pôr no perfil de cada um, escolha em Configurações → Profissionais.",
+};
+
+/** A mesma foto do acervo pode estar em arquivos diferentes (um por site de exemplo): compara pelo jeito dela. */
+const assinatura = (f: Pick<Foto, "legenda" | "largura" | "altura" | "categoria">) => `${f.categoria}|${f.legenda ?? ""}|${f.largura}x${f.altura}`;
+
+function voltar(ancora: string, extra = ""): never {
+  revalidatePath("/app/fotos");
+  redirect(`/app/fotos${extra}#${ancora}`);
+}
 
 async function enviar(form: FormData) {
   "use server";
   const { barbearia } = await exigirAcessoAtivo();
   const banco = obterAgenda();
+  const categoria = String(form.get("categoria") ?? "corte");
+  const paraCapa = form.get("capa") === "1";
   const arquivos = form.getAll("fotos").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 12);
   if (arquivos.length === 0) redirect("/app/fotos?erro=Escolha%20pelo%20menos%20uma%20foto.");
   let enviadas = 0;
@@ -22,19 +46,38 @@ async function enviar(form: FormData) {
     try {
       const foto = await processarFoto(Buffer.from(await arq.arrayBuffer()));
       const nome = banco.registrarFoto(barbearia.id, {
-        categoria: String(form.get("categoria") ?? "corte"), legenda: String(form.get("legenda") ?? ""),
-        largura: foto.largura, altura: foto.altura,
+        categoria, legenda: String(form.get("legenda") ?? ""), largura: foto.largura, altura: foto.altura,
       });
       gravarFoto(nome, foto);
+      if (paraCapa) banco.definirCapa(barbearia.id, banco.fotoDaBarbearia(barbearia.id, nome)!.id);
       enviadas++;
     } catch (e) {
       erro = `${arq.name}: ${mensagemDeErro(e)}`;
       break;
     }
   }
-  revalidatePath("/app/fotos");
   revalidatePath(`/b/${barbearia.slug}`);
-  redirect(`/app/fotos?enviadas=${enviadas}${erro ? `&erro=${encodeURIComponent(erro)}` : ""}`);
+  voltar(paraCapa ? "capa" : categoria, `?enviadas=${enviadas}${erro ? `&erro=${encodeURIComponent(erro)}` : ""}`);
+}
+
+/** Põe no site uma foto do acervo (sem reprocessar: divide o arquivo). Se `capa`, vira a capa. */
+async function doAcervo(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const banco = obterAgenda();
+  const origem = acervo(barbearia.tema);
+  const paraCapa = form.get("capa") === "1";
+  let ancora = paraCapa ? "capa" : String(form.get("categoria") ?? "");
+  try {
+    if (!origem) throw new ErroAgenda("As fotos padrão não estão disponíveis agora.");
+    const id = banco.usarFotoDoAcervo(barbearia.id, origem.id, Number(form.get("foto")));
+    if (paraCapa) banco.definirCapa(barbearia.id, id);
+    ancora ||= banco.fotos(barbearia.id).find((f) => f.id === id)?.categoria ?? "";
+  } catch (e) {
+    redirect(`/app/fotos?erro=${encodeURIComponent(mensagemDeErro(e))}`);
+  }
+  revalidatePath(`/b/${barbearia.slug}`);
+  voltar(ancora);
 }
 
 async function editar(form: FormData) {
@@ -43,9 +86,12 @@ async function editar(form: FormData) {
   const id = Number(form.get("id"));
   const banco = obterAgenda();
   const acao = String(form.get("acao"));
+  let ancora = String(form.get("categoria") ?? "");
   try {
-    if (acao === "capa") banco.definirCapa(barbearia.id, id);
-    else if (acao === "apagar") {
+    if (acao === "capa") {
+      banco.definirCapa(barbearia.id, id);
+      ancora = "capa";
+    } else if (acao === "apagar") {
       const arquivo = banco.removerFoto(barbearia.id, id);
       if (arquivo) apagarFoto(arquivo);
     } else {
@@ -55,62 +101,139 @@ async function editar(form: FormData) {
   } catch (e) {
     redirect(`/app/fotos?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
-  revalidatePath("/app/fotos");
   revalidatePath(`/b/${barbearia.slug}`);
+  voltar(ancora);
+}
+
+/** Miniatura que é um botão: escolher do acervo ou das próprias fotos. */
+function Escolha({ foto, acao, campos, rotulo }: { foto: Foto; acao: (f: FormData) => Promise<void>; campos: Record<string, string | number>; rotulo: string }) {
+  return (
+    <form action={acao} className="escolha">
+      {Object.entries(campos).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+      <button type="submit" aria-label={`${rotulo}: ${foto.legenda ?? "foto"}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={urlFoto(foto.arquivo, "p")} alt="" loading="lazy" />
+        <span>{rotulo}</span>
+      </button>
+    </form>
+  );
 }
 
 export default async function Fotos({ searchParams }: { searchParams: Promise<{ erro?: string; enviadas?: string }> }) {
   const { barbearia } = await exigirAcessoAtivo();
   const sp = await searchParams;
-  const fotos = obterAgenda().fotos(barbearia.id);
+  const banco = obterAgenda();
+  const fotos = banco.fotos(barbearia.id);
+  const capa = fotos.find((f) => f.capa) ?? fotos.find((f) => f.categoria === "ambiente") ?? fotos[0];
+  // Acervo: fotos padrão que ainda não estão no site dele.
+  const origem = acervo(barbearia.tema);
+  const usadas = new Set(fotos.map(assinatura));
+  const doAcervoLivres = origem && origem.id !== barbearia.id ? banco.fotos(origem.id).filter((f) => !usadas.has(assinatura(f))) : [];
 
   return (
     <>
-      <h1>Fotos</h1>
-      <p className="suave">Fotos dos seus cortes, da barba, do ambiente e da equipe. A marcada com estrela vira a capa do site. Pra mostrar um antes e depois, escolha na foto do "antes" qual é a do "depois". {fotos.length}/{MAX_FOTOS}</p>
+      <h1>Fotos do site</h1>
+      <p className="suave">
+        Cada espaço do seu site e as fotos que estão nele agora. Troque pelas suas ou escolha uma das nossas.
+        Mudou aqui, mudou no site. {fotos.length}/{MAX_FOTOS} fotos.
+      </p>
       {sp.enviadas && Number(sp.enviadas) > 0 && <p className="atribuicao" role="status">{sp.enviadas} foto(s) enviada(s).</p>}
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
 
-      <form action={enviar} className="formulario formulario-largo envio-fotos">
-        <label>Fotos (até 12 por vez)
-          <CampoFoto name="fotos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
-        </label>
-        <label>Tipo
-          <select name="categoria" defaultValue="degrade">
-            {CATEGORIAS_FOTO.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
-        </label>
-        <label>Legenda (opcional)<input name="legenda" maxLength={80} placeholder="Ex.: Degradê navalhado" /></label>
-        <BotaoEnviar carregando="Enviando…"><Upload size={18} aria-hidden /> Enviar fotos</BotaoEnviar>
-        <small className="suave">As fotos são otimizadas e a localização gravada pelo celular é removida antes de publicar.</small>
-      </form>
+      <nav className="espacos-atalhos" aria-label="Espaços do site">
+        <a href="#capa">Capa</a>
+        {CATEGORIAS_FOTO.map((c) => <a key={c.id} href={`#${c.id}`}>{c.nome}</a>)}
+      </nav>
 
-      <div className="grade-fotos">
-        {fotos.map((f) => (
-          <div key={f.id} className={`cartao foto-item ${f.capa ? "capa" : ""}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? ""} loading="lazy" />
-            <form action={editar} className="foto-campos">
-              <input type="hidden" name="id" value={f.id} />
-              <select name="categoria" defaultValue={f.categoria} aria-label="Tipo">
-                {CATEGORIAS_FOTO.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-              <input name="legenda" defaultValue={f.legenda ?? ""} maxLength={80} placeholder="Legenda" aria-label="Legenda" />
-              <select name="antesDe" defaultValue={f.antesDe ?? ""} aria-label="Esta foto é o antes de qual foto?">
-                <option value="">Não é foto de "antes"</option>
-                {fotos.filter((o) => o.id !== f.id && o.categoria !== "equipe").map((o, i) => (
-                  <option key={o.arquivo} value={o.arquivo}>Antes de: {o.legenda || `foto ${fotos.length - i}`}</option>
-                ))}
-              </select>
-              <div className="acoes">
-                <button className="botao-sec" name="acao" value="salvar">Salvar</button>
-                <button className="botao-sec" name="acao" value="capa" disabled={!!f.capa}><Star size={16} aria-hidden /> {f.capa ? "É a capa" : "Usar de capa"}</button>
-                <button className="botao-sec perigo" name="acao" value="apagar" aria-label="Apagar foto"><Trash2 size={16} aria-hidden /></button>
-              </div>
-            </form>
+      <section className="espaco" id="capa" aria-labelledby="capa-titulo">
+        <h2 id="capa-titulo">Capa <small>a foto grande do topo do site</small></h2>
+        {capa ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="espaco-capa" src={urlFoto(capa.arquivo)} alt={capa.legenda ?? "Capa atual"} />
+        ) : <p className="espaco-vazio">Sem capa ainda. O site abre só com o nome.</p>}
+        <details className="espaco-mais">
+          <summary><ImagePlus size={18} aria-hidden /> Trocar a capa</summary>
+          <form action={enviar} className="formulario">
+            <input type="hidden" name="categoria" value="ambiente" />
+            <input type="hidden" name="capa" value="1" />
+            <label>Enviar uma foto minha
+              <CampoFoto name="fotos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required />
+            </label>
+            <BotaoEnviar carregando="Enviando…"><Upload size={18} aria-hidden /> Usar de capa</BotaoEnviar>
+          </form>
+          {(fotos.length > 1 || doAcervoLivres.length > 0) && <p className="espaco-ou">Ou escolha uma:</p>}
+          <div className="escolha-grade">
+            {fotos.filter((f) => f.id !== capa?.id && f.categoria !== "equipe").map((f) => (
+              <Escolha key={f.id} foto={f} acao={editar} campos={{ id: f.id, acao: "capa" }} rotulo="Sua" />
+            ))}
+            {doAcervoLivres.filter((f) => f.categoria === "ambiente" || f.largura > f.altura).map((f) => (
+              <Escolha key={f.id} foto={f} acao={doAcervo} campos={{ foto: f.id, capa: "1" }} rotulo="Nossa" />
+            ))}
           </div>
-        ))}
-      </div>
+        </details>
+      </section>
+
+      {CATEGORIAS_FOTO.map((c) => {
+        const daqui = fotos.filter((f) => f.categoria === c.id);
+        const livres = doAcervoLivres.filter((f) => f.categoria === c.id);
+        return (
+          <section key={c.id} className="espaco" id={c.id} aria-labelledby={`${c.id}-titulo`}>
+            <h2 id={`${c.id}-titulo`}>{c.nome} <small>{daqui.length > 0 ? `${daqui.length} no site` : "vazio"}</small></h2>
+            <p className="suave pequeno">{ESPACOS[c.id]}</p>
+            <div className="espaco-fotos">
+              {daqui.length === 0 && <p className="espaco-vazio">Nada aqui ainda: este filtro só aparece no site quando tiver foto.</p>}
+              {daqui.map((f) => (
+                <figure key={f.id} className={`espaco-foto ${f.id === capa?.id ? "capa" : ""}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? c.nome} loading="lazy" />
+                  <figcaption>{f.id === capa?.id ? "Capa · " : ""}{f.legenda || c.nome}</figcaption>
+                  <details>
+                    <summary>Editar</summary>
+                    <form action={editar} className="foto-campos">
+                      <input type="hidden" name="id" value={f.id} />
+                      <select name="categoria" defaultValue={f.categoria} aria-label="Espaço">
+                        {CATEGORIAS_FOTO.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
+                      </select>
+                      <input name="legenda" defaultValue={f.legenda ?? ""} maxLength={80} placeholder="Legenda" aria-label="Legenda" />
+                      <select name="antesDe" defaultValue={f.antesDe ?? ""} aria-label="Esta foto é o antes de qual foto?">
+                        <option value="">Não é foto de &quot;antes&quot;</option>
+                        {fotos.filter((o) => o.id !== f.id && o.categoria !== "equipe").map((o, i) => (
+                          <option key={o.arquivo} value={o.arquivo}>Antes de: {o.legenda || `foto ${fotos.length - i}`}</option>
+                        ))}
+                      </select>
+                      <div className="acoes">
+                        <button className="botao-sec" name="acao" value="salvar">Salvar</button>
+                        <button className="botao-sec" name="acao" value="capa" disabled={f.id === capa?.id}><Star size={16} aria-hidden /> Capa</button>
+                        <button className="botao-sec perigo" name="acao" value="apagar"><Trash2 size={16} aria-hidden /> Tirar do site</button>
+                      </div>
+                    </form>
+                  </details>
+                </figure>
+              ))}
+              <details className="espaco-mais espaco-adicionar">
+                <summary><ImagePlus size={18} aria-hidden /> Adicionar foto</summary>
+                <form action={enviar} className="formulario">
+                  <input type="hidden" name="categoria" value={c.id} />
+                  <label>Enviar fotos minhas <small>(até 12 de uma vez)</small>
+                    <CampoFoto name="fotos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
+                  </label>
+                  <input name="legenda" maxLength={80} placeholder={`Legenda (opcional), ex.: ${c.nome}`} aria-label="Legenda" />
+                  <BotaoEnviar carregando="Enviando…"><Upload size={18} aria-hidden /> Enviar</BotaoEnviar>
+                </form>
+                {livres.length > 0 && (
+                  <>
+                    <p className="espaco-ou">Ou escolha uma das nossas:</p>
+                    <div className="escolha-grade">
+                      {livres.map((f) => <Escolha key={f.id} foto={f} acao={doAcervo} campos={{ foto: f.id, categoria: c.id }} rotulo="Pôr no site" />)}
+                    </div>
+                  </>
+                )}
+              </details>
+            </div>
+          </section>
+        );
+      })}
+      <p className="suave pequeno">As fotos são otimizadas e a localização gravada pelo celular é removida antes de publicar.</p>
     </>
   );
 }

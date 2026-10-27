@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
 import { ErroAgenda, type Barbearia } from "@aprenda/agenda";
 import { obterAgenda } from "./agenda";
-import { criarSitesDeExemplo, sitesDeExemplo } from "./exemplos";
+import { criarSitesDeExemplo, porFotosPadrao, sitesDeExemplo } from "./exemplos";
 
 /**
  * Prévia montada pelo próprio barbeiro em /montar: uma demonstração com o nome dele, no estilo
- * que escolheu, com as fotos do site de exemplo daquele estilo (o arquivo é dividido, não
- * copiado: `copiarFotos`). Sem dono, sem marcação, fora do Google. O convite fica num cookie
+ * que escolheu, com as fotos padrão (`porFotosPadrao`: capa e até 2 por espaço, arquivo dividido
+ * com o acervo). Sem dono, sem marcação, fora do Google. O convite fica num cookie
  * deste aparelho; é ele que mostra "Quero este site" e deixa trocar o estilo.
  */
 export const COOKIE_PREVIA = "previa_convite";
@@ -20,14 +20,9 @@ export async function criarPrevia(dados: { nome: string; cidade?: string; tema: 
   if (banco.contarTentativas(chave, 24 * 60) >= MAX_PREVIAS_DIA) {
     throw new ErroAgenda("Muitas prévias montadas deste aparelho hoje. Abra a última que você fez ou tente amanhã.");
   }
-  let exemplos = sitesDeExemplo();
-  if (!exemplos[dados.tema]) {
-    await criarSitesDeExemplo();
-    exemplos = sitesDeExemplo();
-  }
+  if (!sitesDeExemplo()[dados.tema]) await criarSitesDeExemplo();
   const { barbearia, convite } = banco.criarDemonstracao({ nome: dados.nome.slice(0, 60), tema: dados.tema, cidade: dados.cidade?.slice(0, 60), dias: PREVIA_DIAS });
-  const exemplo = exemplos[dados.tema] ? banco.barbeariaPorSlug(exemplos[dados.tema]!) : undefined;
-  if (exemplo) banco.copiarFotos(exemplo.id, barbearia.id);
+  porFotosPadrao(barbearia.id, dados.tema);
   banco.consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
   (await cookies()).set(COOKIE_PREVIA, convite, {
     httpOnly: true,

@@ -1568,6 +1568,26 @@ export class BancoAgenda {
   }
 
   /**
+   * O barbeiro escolhe uma foto do acervo (as fotos de um site de exemplo) pra um espaço do site
+   * dele: entra como foto dele, dividindo o arquivo. `acervoId` vem do servidor (o exemplo), nunca
+   * do formulário: só dá pra pegar foto do acervo, não de outra barbearia. Devolve o id novo.
+   */
+  usarFotoDoAcervo(barbeariaId: number, acervoId: number, fotoId: number, categoria?: string): number {
+    const f = this.db.prepare("SELECT arquivo, categoria, legenda, largura, altura FROM fotos WHERE id = ? AND barbearia_id = ?")
+      .get(fotoId, acervoId) as { arquivo: string; categoria: string; legenda: string | null; largura: number; altura: number } | undefined;
+    if (!f) throw new ErroAgenda("Foto não encontrada.");
+    const ja = this.db.prepare("SELECT id FROM fotos WHERE barbearia_id = ? AND arquivo = ?").get(barbeariaId, f.arquivo) as { id: number } | undefined;
+    if (ja) return ja.id;
+    const cat = categoria ?? f.categoria;
+    if (!categoriaValida(cat)) throw new ErroAgenda("Categoria inválida.");
+    const { n } = this.db.prepare("SELECT COUNT(*) AS n FROM fotos WHERE barbearia_id = ?").get(barbeariaId) as { n: number };
+    if (n >= MAX_FOTOS) throw new ErroAgenda(`Limite de ${MAX_FOTOS} fotos. Apague algumas antes de pôr mais.`);
+    const r = this.db.prepare("INSERT INTO fotos (barbearia_id, arquivo, categoria, legenda, largura, altura, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(barbeariaId, f.arquivo, cat, f.legenda, f.largura, f.altura, new Date().toISOString());
+    return Number(r.lastInsertRowid);
+  }
+
+  /**
    * Copia as fotos (e a capa) de um site pra outro sem duplicar arquivo no disco: os dois
    * registros apontam pro mesmo arquivo. Usado na prévia montada pelo próprio barbeiro.
    */

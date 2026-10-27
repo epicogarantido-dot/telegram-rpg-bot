@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { gravarFoto, processarFoto, TEMAS } from "@aprenda/agenda";
+import { gravarFoto, processarFoto, TEMAS, type Barbearia } from "@aprenda/agenda";
 import { PASTA_CURSOS } from "@aprenda/catalogo";
 import { obterAgenda } from "./agenda";
 
@@ -60,6 +60,33 @@ export async function fotosNovasParaExemplos(): Promise<number> {
   const lista = await fotosDoBanco();
   const postas = fotosJaPostas(lista);
   return lista.filter((f) => !postas.has(f.arquivo)).length;
+}
+
+/**
+ * Acervo de fotos padrão: o site de exemplo do estilo pedido (ou o primeiro que houver). É de
+ * onde a conta nova tira as fotos iniciais e o painel oferece fotos pra cada espaço do site.
+ */
+export function acervo(tema?: string): Barbearia | undefined {
+  const exemplos = sitesDeExemplo();
+  const slug = (tema && exemplos[tema]) || Object.values(exemplos)[0];
+  return slug ? obterAgenda().barbeariaPorSlug(slug) : undefined;
+}
+
+/** Fotos com que um site novo começa: a capa e até 2 por espaço. O resto do acervo fica pra escolher no painel. */
+export const FOTOS_PADRAO_POR_ESPACO = 2;
+
+export function porFotosPadrao(destinoId: number, tema: string): void {
+  const origem = acervo(tema);
+  if (!origem) return;
+  const banco = obterAgenda();
+  const porEspaco = new Map<string, number>();
+  for (const f of banco.fotos(origem.id)) {
+    const n = porEspaco.get(f.categoria) ?? 0;
+    if (!f.capa && n >= FOTOS_PADRAO_POR_ESPACO) continue;
+    porEspaco.set(f.categoria, n + 1);
+    const id = banco.usarFotoDoAcervo(destinoId, origem.id, f.id);
+    if (f.capa) banco.definirCapa(destinoId, id);
+  }
 }
 
 export function ehSiteDeExemplo(slug: string): boolean {

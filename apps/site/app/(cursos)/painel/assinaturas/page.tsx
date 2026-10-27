@@ -101,6 +101,14 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 </a>
               </div>
             ) : p.status === "informado" && <p><small>Sem comprovante: confira só pelo extrato.</small></p>}
+            {(() => {
+              const b = banco.barbeariaPorId(p.barbeariaId);
+              return b?.telefone && (
+                <p><a href={linkWhatsapp(b.telefone, `Oi! Aqui é da equipe do Aprenda Livre. Recebemos o pedido do site da ${b.nome}.`)} target="_blank" rel="noopener noreferrer">
+                  Chamar {b.nome} no WhatsApp
+                </a></p>
+              );
+            })()}
           </div>
           <div className="acoes">
             <form action={decidir}>

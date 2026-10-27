@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 import { apagarComprovante, ErroAgenda, formatarData, gerarPixCopiaECola, gravarComprovante, MAX_BYTES_COMPROVANTE, prepararComprovante } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+
+/** 5555999991234 → (55) 99999-1234 */
+function formatarTelefone(t: string): string {
+  const local = t.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  return local.length >= 10 ? `(${local.slice(0, 2)}) ${local.slice(2, -4)}-${local.slice(-4)}` : t;
+}
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
@@ -41,9 +47,9 @@ async function jaPaguei(form: FormData) {
   revalidatePath("/app/assinatura");
 }
 
-export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string; bemvindo?: string }> }) {
   const { barbearia } = await exigirBarbeiro();
-  const { erro } = await searchParams;
+  const { erro, bemvindo } = await searchParams;
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
   const pagamento = banco.pagamentoAberto(barbearia.id);
@@ -56,14 +62,58 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
     : "";
   const qr = copiaECola ? await QRCode.toString(copiaECola, { type: "svg", margin: 1, width: 240 }) : "";
 
+  // Conta nova que já pagou (ou disse que pagou): agora é com a equipe, que chama no WhatsApp.
+  if (barbearia.emMontagem && pagamento.status === "informado") {
+    return (
+      <>
+        <ol className="passos-compra" aria-label="Etapas">
+          <li className="feito">Seu site</li>
+          <li className="feito">Cadastro</li>
+          <li className="feito">Pagamento</li>
+        </ol>
+        <section className="pedido-recebido" aria-labelledby="recebido-titulo">
+          <h1 id="recebido-titulo">Pedido recebido!</h1>
+          <p>
+            Obrigado, {barbearia.nome}. Nossa equipe vai conferir o pagamento e <strong>entrar em contato com você pelo
+            WhatsApp</strong> ({formatarTelefone(barbearia.telefone)}) pra colocar o site no ar. Normalmente é no mesmo dia.
+          </p>
+          <p className="suave">
+            Enquanto isso, se quiser, já pode deixar o site com a sua cara: trocar as fotos, a apresentação e os preços.
+            Nada disso aparece pros clientes antes de o site ir pro ar.
+          </p>
+          <p className="acoes">
+            <Link href="/app/fotos" className="botao">Trocar as fotos</Link>
+            <a href={`/b/${barbearia.slug}`} className="botao-sec" target="_blank" rel="noopener noreferrer">Ver meu site</a>
+          </p>
+          {!pagamento.comprovante && (
+            <form action={jaPaguei} className="formulario">
+              <input type="hidden" name="id" value={pagamento.id} />
+              <label>
+                Ainda não mandou o comprovante? <small>(ajuda a liberar mais rápido)</small>
+                <CampoFoto name="comprovante" accept="image/*,application/pdf" ladoMaximo={2400} required />
+              </label>
+              <BotaoEnviar carregando="Enviando…">Enviar comprovante</BotaoEnviar>
+            </form>
+          )}
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
-      {ativo && <p><Link href="/app">← Voltar pro painel</Link></p>}
-      <h1>{barbearia.emMontagem ? "Publicar meu site" : "Assinatura"}</h1>
+      {barbearia.emMontagem ? (
+        <ol className="passos-compra" aria-label="Etapas">
+          <li className="feito">Seu site</li>
+          <li className="feito">Cadastro</li>
+          <li aria-current="step">Pagamento</li>
+        </ol>
+      ) : ativo && <p><Link href="/app">← Voltar pro painel</Link></p>}
+      <h1>{barbearia.emMontagem ? (bemvindo ? "Conta criada! Último passo: o pagamento" : "Pagamento do seu site") : "Assinatura"}</h1>
       {barbearia.emMontagem && ativo ? (
         <aside className="aviso-novo">
-          Pague pelo Pix e mande o comprovante aqui embaixo. Assim que a gente conferir (normalmente no mesmo dia), o site da{" "}
-          {barbearia.nome} vai pro ar e os clientes já podem marcar. Até lá você continua montando normalmente.
+          Pague pelo Pix e mande o comprovante aqui embaixo. Depois disso, nossa equipe confere e entra em contato com você
+          pelo WhatsApp pra colocar o site da {barbearia.nome} no ar.
         </aside>
       ) : barbearia.emMontagem ? (
         <aside className="erro">

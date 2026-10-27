@@ -341,6 +341,23 @@ describe("site da barbearia", () => {
     expect(b.removerFoto(ex.id, b.fotos(ex.id)[0]!.id)).toBe(f);
   });
 
+  it("acervo: o barbeiro usa uma foto do exemplo; não pega de outra barbearia; não repete", () => {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const acervo = b.criarDemonstracao({ nome: "Acervo", tema: "silencioso" }).barbearia;
+    const fa = b.registrarFoto(acervo.id, { categoria: "barba", legenda: "Barba", largura: 10, altura: 10 });
+    const outra = b.criarConta({ nomeBarbearia: "Outra", telefone: "5519900000009", nome: "O", email: "o9@x.com", senha: "segredo123" }).barbearia;
+    b.registrarFoto(outra.id, { categoria: "corte", largura: 10, altura: 10 });
+    const minha = b.criarConta({ nomeBarbearia: "Minha", telefone: "5519900000008", nome: "M", email: "m8@x.com", senha: "segredo123" }).barbearia;
+    const idAcervo = b.fotos(acervo.id)[0]!.id;
+    const id = b.usarFotoDoAcervo(minha.id, acervo.id, idAcervo);
+    expect(b.fotos(minha.id)).toMatchObject([{ id, arquivo: fa, categoria: "barba", legenda: "Barba" }]);
+    expect(b.usarFotoDoAcervo(minha.id, acervo.id, idAcervo)).toBe(id);
+    // A foto da outra barbearia não é do acervo: não passa, mesmo sabendo o id.
+    expect(() => b.usarFotoDoAcervo(minha.id, acervo.id, b.fotos(outra.id)[0]!.id)).toThrow(/não encontrada/);
+    expect(b.removerFoto(minha.id, id)).toBeUndefined();
+    expect(b.fotoExiste(fa)).toBe(true);
+  });
+
   it("banco antigo com arquivo UNIQUE é refeito sem perder fotos", async () => {
     const { mkdtempSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
