@@ -23,6 +23,8 @@ export function Efeitos({ tema }: { tema: string }) {
     if (tema === "cerimonia") limpar.push(galeriaComSetas(raiz, semMovimento));
 
     if (!semMovimento) {
+      // Todos os temas: fotos, cartões e frases aparecem quando entram na tela.
+      limpar.push(revelarAoRolar(raiz));
       if (tema === "potencia") {
         limpar.push(faixaQueAcelera(raiz));
         limpar.push(faiscas(raiz, "#d7ff1e"));
@@ -34,6 +36,25 @@ export function Efeitos({ tema }: { tema: string }) {
   }, [tema, caminho]);
 
   return null;
+}
+
+/**
+ * Marca `.visto` em cada `[data-revelar]` quando ele entra na tela (uma vez só). O CSS só esconde
+ * antes disso quando a raiz tem `.b-anima`, que entra aqui: sem JavaScript, nada fica escondido.
+ */
+function revelarAoRolar(raiz: HTMLElement): () => void {
+  const els = [...raiz.querySelectorAll<HTMLElement>("[data-revelar]")];
+  const vigia = new IntersectionObserver((entradas) => {
+    for (const e of entradas) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add("visto");
+      vigia.unobserve(e.target);
+    }
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+  // O que já está na tela ao abrir aparece junto, sem esperar rolar.
+  els.forEach((el) => vigia.observe(el));
+  raiz.classList.add("b-anima");
+  return () => { vigia.disconnect(); raiz.classList.remove("b-anima"); };
 }
 
 /** Roda `passo(dt)` a cada quadro só enquanto `alvo` estiver visível e a aba aberta. */

@@ -66,7 +66,9 @@ export function CarrosselB({ id, titulo, apoio, rodape, className, children }: {
         )}
       </div>
       <ul className="b-carrossel-trilho" id={`${id}-trilho`} ref={trilho}>
-        {itens.map((item, i) => <li key={i} aria-label={`${i + 1} de ${itens.length}`}>{item}</li>)}
+        {itens.map((item, i) => (
+          <li key={i} aria-label={`${i + 1} de ${itens.length}`} data-revelar style={{ "--ordem": i % 4 } as React.CSSProperties}>{item}</li>
+        ))}
       </ul>
       {rodape && <div className="b-carrossel-rodape">{rodape}</div>}
     </section>

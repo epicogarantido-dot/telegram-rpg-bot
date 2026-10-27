@@ -5,6 +5,8 @@ import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, somarDias, type Ban
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
+import { Frase } from "@/componentes/barbearia/Frase";
+import { frasesDoTema } from "@/lib/frases";
 import { obterAgenda, reais } from "@/lib/agenda";
 import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
@@ -84,6 +86,9 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const fotoCasa = ambientes.at(-1) ?? capa;
   const fotoChamada = ambientes.length > 1 ? ambientes[0] : capa;
   const agendarHref = `${base}/agendar`;
+  const frases = frasesDoTema(tema);
+  // Fundo da última frase: uma foto do ambiente que ainda não apareceu grande.
+  const fotoFrase = ambientes.find((f) => f !== fotoCasa && f !== fotoChamada) ?? fotoChamada;
 
   return (
     <>
@@ -164,6 +169,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
+      <Frase texto={frases[0]} />
+
       {gruposServicos.map((g, gi) => (
         <CarrosselB
           key={g.id}
@@ -199,7 +206,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       ))}
 
       {mosaico.length >= 3 && (
-        <section className="b-mosaico" aria-labelledby="mosaico-titulo">
+        <section className="b-mosaico" aria-labelledby="mosaico-titulo" data-revelar>
           <div className="b-mosaico-principal">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={urlFoto(mosaico[0]!.arquivo)} alt={mosaico[0]!.legenda ?? ""} loading="lazy" width={mosaico[0]!.largura} height={mosaico[0]!.altura} />
@@ -214,6 +221,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           ))}
         </section>
       )}
+
+      <Frase texto={frases[1]} />
 
       {trabalhos.length > 0 && (
         <CarrosselB
@@ -266,14 +275,16 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </CarrosselB>
       )}
 
+      <Frase texto={frases[2]} foto={fotoFrase} />
+
       <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (
-          <div className="b-casa-foto">
+          <div className="b-casa-foto" data-revelar>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={urlFoto(fotoCasa.arquivo)} alt={fotoCasa.legenda ?? `Ambiente da ${b.nome}`} loading="lazy" width={fotoCasa.largura} height={fotoCasa.altura} />
           </div>
         )}
-        <div className="b-casa-texto">
+        <div className="b-casa-texto" data-revelar>
           <h2 id="casa-titulo">Conheça a casa</h2>
           {b.bio && <p className="b-casa-bio">{b.bio}</p>}
           {numeros.length > 0 && (
@@ -295,7 +306,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             // eslint-disable-next-line @next/next/no-img-element
             <img src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
           )}
-          <div className="b-chamada-texto">
+          <div className="b-chamada-texto" data-revelar>
             <h2 id="chamada-titulo">Seu próximo corte já tem horário.</h2>
             <p>Garanta o seu em menos de um minuto, sem criar conta.</p>
             <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>

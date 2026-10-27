@@ -157,10 +157,17 @@
 .b-slides { position: relative; overflow: hidden; touch-action: pan-y; }
 .b-slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
 .b-slides img.ativa { opacity: 1; }
-.b-slides-pontos {
+.b-slides-controles {
   position: absolute; z-index: 2; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 8px;
-  display: flex; gap: 4px;
+  display: flex; align-items: center; gap: 6px;
 }
+.b-slides-pontos { display: flex; gap: 4px; }
+.b-slides-pausa {
+  width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; padding: 0;
+  border-radius: 999px; border: 1px solid rgb(255 255 255 / 0.45); background: rgb(0 0 0 / 0.3); color: #fff;
+}
+.b-slides-pausa:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.site-b[data-tema="tecnico"] .b-slides-pausa { border-color: rgb(15 29 58 / 0.3); background: rgb(255 255 255 / 0.7); color: var(--destaque); }
 .b-slides-pontos button {
   width: 32px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center;
 }
@@ -587,7 +594,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    ====================================================================== */
 @media (prefers-reduced-motion: no-preference) {
   /* Todos os temas: troca de cor e sublinhado respondem ao toque (nível 1); a foto da abertura troca esmaecendo. */
-  .b-slides img { transition: opacity 0.9s ease; }
   .b-carrossel-setas button, .b-cartao-servico { transition: background 0.2s, border-color 0.2s, opacity 0.2s, transform 0.25s ease; }
   .b-servico-acao, .b-contatos a { transition: color 0.2s; }
 
@@ -602,7 +608,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   .site-b[data-tema="cerimonia"] .b-heroi-texto > * { animation: surgir-desfocado 1.8s ease both; }
   .site-b[data-tema="cerimonia"] .b-heroi-texto > :nth-child(2) { animation-delay: 0.25s; }
   .site-b[data-tema="cerimonia"] .b-heroi-texto > :nth-child(n + 3) { animation-delay: 0.6s; }
-  .site-b[data-tema="cerimonia"] .b-heroi-midia img { animation: aproximar 22s ease-out both; }
 
   /* Luxo Técnico: cartões afundam ao toque; a textura acompanha a rolagem. */
   .site-b[data-tema="tecnico"] :is(.b-servicos li, .b-pessoa) { transition: transform 0.25s ease, box-shadow 0.25s ease; }
@@ -626,7 +631,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   .site-b[data-tema="potencia"] .b-faixa > div { animation: correr 22s linear infinite; }
   .site-b[data-tema="potencia"] .b-botao:not(.b-ima):hover { transform: translateX(4px); }
   @supports (animation-timeline: scroll()) {
-    .site-b[data-tema="potencia"] .b-heroi-midia img { animation: parallax-foto linear both; animation-timeline: scroll(root); animation-range: 0 900px; }
   }
 
   /* Extravagância: brilho dourado atravessa o título; moldura acende; parallax. */
@@ -646,7 +650,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   .site-b[data-tema="extravagancia"] .b-foto:hover { box-shadow: 0 0 0 1px #e8c766, 0 0 28px rgb(232 199 102 / 0.35); }
   .site-b[data-tema="extravagancia"] .b-botao:hover { filter: brightness(1.12); }
   @supports (animation-timeline: scroll()) {
-    .site-b[data-tema="extravagancia"] .b-heroi-midia img { animation: parallax-foto linear both; animation-timeline: scroll(root); animation-range: 0 900px; }
     /* Camadas em velocidades diferentes: texto sobe mais devagar que a foto, moldura fica no meio. */
     .site-b[data-tema="extravagancia"] .b-heroi-texto { animation: parallax-texto linear both; animation-timeline: scroll(root); animation-range: 0 700px; }
     .site-b[data-tema="extravagancia"] .b-galeria .b-foto img { animation: zoom-entrando linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
@@ -693,16 +696,14 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
     transition: background-size 0.3s ease;
   }
   .site-b[data-tema="silencioso"] :is(.b-topo nav a:not(.b-botao), .b-secao-cabeca a, .b-contatos a):hover { background-size: 100% 1px; }
-  .site-b[data-tema="silencioso"] :is(.b-foto, .b-pessoa, .b-heroi-midia) img { animation: aparecer 0.2s ease both; }
+  .site-b[data-tema="silencioso"] :is(.b-foto, .b-pessoa) img { animation: aparecer 0.2s ease both; }
 }
 
 @keyframes surgir-desfocado { from { opacity: 0; filter: blur(8px); transform: translateY(8px); } to { opacity: 1; filter: none; transform: none; } }
-@keyframes aproximar { from { transform: scale(1.08); } to { transform: scale(1); } }
 @keyframes textura-desce { to { background-position: 0 160px, 0 0; } }
 @keyframes arrancada { from { opacity: 0; transform: translateX(-12%) skewX(-12deg); } to { opacity: 1; transform: none; } }
 @keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes correr { to { transform: translateX(-33.333%); } }
-@keyframes parallax-foto { to { transform: translateY(120px) scale(1.06); } }
 @keyframes brilho-ouro { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @keyframes linha-de-chegada { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes faisca { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: var(--dx) var(--dy); } }
@@ -977,3 +978,63 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   .b-vitrine-item:hover .b-vitrine-foto img { transform: scale(1.04); }
   .b-extra-marca { transition: background 0.15s, border-color 0.15s; }
 }
+
+/* ======================================================================
+   MOVIMENTO: capa como vídeo, coisas aparecendo ao rolar, frases
+   ====================================================================== */
+/* Frases entre as seções */
+.b-frase {
+  position: relative; display: grid; place-items: center; overflow: hidden; isolation: isolate;
+  padding: clamp(72px, 14vw, 140px) max(20px, env(safe-area-inset-right, 0px)) clamp(72px, 14vw, 140px) max(20px, env(safe-area-inset-left, 0px));
+  text-align: center;
+}
+.b-frase p {
+  margin: 0; max-width: 18ch; text-wrap: balance;
+  font: var(--t-titulo-peso) var(--t-titulo-estilo) clamp(2rem, 6.5vw, 4.6rem)/1.08 var(--fonte-titulo);
+  text-transform: var(--t-titulo-caixa); letter-spacing: var(--t-titulo-espaco);
+}
+.b-frase-palavra { display: inline-block; white-space: pre; }
+.b-frase-foto { color: #fff; min-height: min(80svh, 640px); }
+.b-frase-foto img { position: absolute; inset: -12% 0; width: 100%; height: 124%; object-fit: cover; z-index: -2; }
+.b-frase-foto::after { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / 0.55); }
+.site-b[data-tema="potencia"] .b-frase p { font-size: clamp(2.8rem, 10vw, 6.4rem); line-height: 0.92; }
+.site-b[data-tema="potencia"] .b-frase:not(.b-frase-foto) { color: var(--destaque); text-shadow: 0 0 28px rgb(215 255 30 / 0.35); }
+.site-b[data-tema="extravagancia"] .b-frase p { color: var(--destaque-forte); }
+.site-b[data-tema="extravagancia"] .b-frase { border-block: 1px solid var(--borda); }
+.site-b[data-tema="cerimonia"] .b-frase p { font-size: clamp(1.6rem, 4.6vw, 3.2rem); line-height: 1.25; }
+.site-b[data-tema="atemporal"] .b-frase:not(.b-frase-foto) { background: #000; color: #fff; }
+.site-b[data-tema="atemporal"] .b-frase-foto img { filter: grayscale(1); }
+.site-b[data-tema="tecnico"] .b-frase:not(.b-frase-foto) p { color: var(--destaque); }
+.site-b[data-tema="tecnico"] .b-frase-foto { margin-inline: max(16px, env(safe-area-inset-left, 0px)); border-radius: 28px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Capa: uma foto esmaece na outra enquanto a da vez se aproxima devagar, como num vídeo. */
+  .b-slides img { transition: opacity 1.4s ease; }
+  .b-slides img:is(.ativa, .saindo) { animation: ken-burns var(--tempo, 8s) linear both; }
+
+  /* Aparecer ao rolar (só com .b-anima, que o JavaScript liga). */
+  .b-anima [data-revelar] {
+    transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition-delay: calc(var(--ordem, 0) * 90ms);
+  }
+  .b-anima [data-revelar]:not(.visto) { opacity: 0; transform: translateY(32px); }
+  /* Fotos grandes abrem como cortina, de baixo pra cima, com a foto se acomodando. */
+  .b-anima :is(.b-casa-foto, .b-mosaico)[data-revelar] img { transition: clip-path 1.2s cubic-bezier(0.6, 0, 0.2, 1), transform 1.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .b-anima :is(.b-casa-foto, .b-mosaico)[data-revelar]:not(.visto) img { clip-path: inset(100% 0 0 0); transform: scale(1.18); }
+  .b-anima .b-mosaico[data-revelar] > img:nth-of-type(1) { transition-delay: 0.15s; }
+  .b-anima .b-mosaico[data-revelar] > img:nth-of-type(2) { transition-delay: 0.3s; }
+  .b-anima :is(.b-casa-foto, .b-mosaico)[data-revelar]:not(.visto) { transform: none; opacity: 1; }
+  /* Frases: a seção não some; as palavras chegam uma a uma. */
+  .b-anima .b-frase[data-revelar]:not(.visto) { opacity: 1; transform: none; }
+  .b-anima .b-frase .b-frase-palavra { transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.7s ease; transition-delay: calc(var(--i) * 90ms); }
+  .b-anima .b-frase:not(.visto) .b-frase-palavra { opacity: 0; transform: translateY(0.5em); filter: blur(8px); }
+  /* Foto atrás da frase corre mais devagar que a página. */
+  @supports (animation-timeline: view()) {
+    .b-frase-foto img { animation: frase-parallax linear both; animation-timeline: view(); }
+  }
+}
+@keyframes ken-burns {
+  from { transform: scale(1.16) translate(calc(var(--dir, 1) * -2.5%), -1.5%); }
+  to { transform: scale(1.02) translate(calc(var(--dir, 1) * 1%), 0.5%); }
+}
+@keyframes frase-parallax { from { transform: translateY(-8%); } to { transform: translateY(8%); } }
