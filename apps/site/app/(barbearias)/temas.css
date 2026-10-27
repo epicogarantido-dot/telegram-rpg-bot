@@ -1038,3 +1038,14 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   to { transform: scale(1.02) translate(calc(var(--dir, 1) * 1%), 0.5%); }
 }
 @keyframes frase-parallax { from { transform: translateY(-8%); } to { transform: translateY(8%); } }
+
+/* Mapa (Google Maps) em "Horários e onde estamos", com "Como chegar" por cima. */
+.b-mapa { position: relative; overflow: hidden; border-radius: var(--t-foto-raio); border: 1px solid var(--borda); background: var(--fundo-2); }
+.b-mapa iframe { display: block; width: 100%; height: clamp(280px, 70vw, 380px); border: 0; }
+/* No celular: endereço, botões e mapa antes da tabela de horários. */
+@media (max-width: 759px) { .b-contato-lado { order: -1; } }
+.b-mapa-botao { position: absolute; left: 16px; bottom: 16px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.3); }
+/* Nos temas escuros o mapa fica escuro também (inverte as cores e tira a saturação). */
+.site-b:is([data-tema="cerimonia"], [data-tema="potencia"], [data-tema="extravagancia"]) .b-mapa iframe { filter: grayscale(1) invert(0.92) contrast(0.9); }
+.site-b[data-tema="atemporal"] .b-mapa iframe { filter: grayscale(1); }
+.site-b[data-tema="tecnico"] .b-mapa { border: 0; box-shadow: var(--sombra); border-radius: 22px; }

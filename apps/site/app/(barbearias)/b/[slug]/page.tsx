@@ -8,7 +8,7 @@ import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { Frase } from "@/componentes/barbearia/Frase";
 import { frasesDoTema } from "@/lib/frases";
 import { obterAgenda, reais } from "@/lib/agenda";
-import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
+import { dadosEstruturados, ehCorte, fotosDosServicos, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +61,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const expedientes = banco.expedientes(b.id);
   const agora = situacaoAgora(b, expedientes);
   const mapa = linkMapa(b);
+  const mapaNaPagina = mapaEmbutido(b);
   const agenda = b.atendimento !== "chegada";
   // Fila só faz sentido com a barbearia aberta e informada há pouco.
   const fila = agora.aberto ? banco.filaAgora(b) : undefined;
@@ -322,7 +323,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       )}
 
       <section className="b-secao" id="contato">
-        <h2>Horários e contato</h2>
+        <h2>Horários e onde estamos</h2>
         <div className="b-contato">
           <table className="b-horarios">
             <tbody>
@@ -346,8 +347,22 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             </ul>
             <div className="b-acoes">
               {agenda && <Link href={agendarHref} className="b-botao">Agendar horário</Link>}
-              {mapa && <a href={mapa} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
+              {mapa && !mapaNaPagina && <a href={mapa} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>}
             </div>
+            {mapaNaPagina && (
+              <div className="b-mapa" data-revelar>
+                <iframe
+                  src={mapaNaPagina}
+                  title={`Mapa: onde fica a ${b.nome}`}
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+                {mapa && (
+                  <a href={mapa} className="b-botao b-mapa-botao" target="_blank" rel="noopener noreferrer"><Navigation size={18} aria-hidden /> Como chegar</a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>

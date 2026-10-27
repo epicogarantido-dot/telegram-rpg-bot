@@ -69,6 +69,11 @@ export default function Privacidade() {
         Pra evitar trote, o sistema conta quantos horários cada número e cada aparelho marcam. O aparelho e o IP são
         guardados só como código embaralhado, que não dá pra transformar de volta.
       </p>
+      <p>
+        A página de cada barbearia mostra onde ela fica com um mapa do Google Maps. O mapa é carregado do Google quando
+        você chega nessa parte da página, e o Google trata essa visita pela política de privacidade dele. Nós não
+        mandamos nenhum dado seu pro mapa: só o endereço da barbearia.
+      </p>
 
       <h2>Com quem os dados ficam</h2>
       <p>

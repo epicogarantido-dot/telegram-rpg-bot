@@ -11,6 +11,16 @@ import { porCardapio } from "./cardapio";
  * ninguém consegue entrar e mudar nada, a marcação vai até o último passo mas não grava,
  * e o aviso no topo diz que é exemplo. Fotos de `data/demo-fotos` (Unsplash), que vêm no zip.
  */
+/** Endereços ilustrativos (rua do centro de Campinas, sem número) só pro mapa do exemplo ter onde apontar. */
+const ENDERECOS: Record<string, string> = {
+  silencioso: "Rua Barão de Jaguara, Centro",
+  atemporal: "Rua Conceição, Centro",
+  cerimonia: "Rua General Osório, Centro",
+  tecnico: "Avenida Francisco Glicério, Centro",
+  potencia: "Rua Dr. Quirino, Centro",
+  extravagancia: "Rua Ferreira Penteado, Centro",
+};
+
 const PERFIS: Record<string, { nome: string; bio: string; oferta?: string; desde?: number; capa: string }> = {
   silencioso: { nome: "Norte Barbearia", bio: "Corte preciso. Uma cadeira, horário marcado.", capa: "ambiente-15126904.jpg" },
   atemporal: { nome: "Maison Lâmina", bio: "O clássico nunca sai de moda. Cortes sociais, barba e dia do noivo.", capa: "barba-15039519.jpg" },
@@ -146,7 +156,12 @@ export async function criarSitesDeExemplo(): Promise<number> {
   }
   for (const slug of Object.values(existentes)) {
     const b = banco.barbeariaPorSlug(slug);
-    if (b) { porFotosNaEquipe(b.id); porCardapio(b.id); }
+    if (b) {
+      porFotosNaEquipe(b.id);
+      porCardapio(b.id);
+      const endereco = ENDERECOS[b.tema];
+      if (!b.endereco && endereco) banco.atualizarBarbearia(b.id, { nome: b.nome, telefone: b.telefone, endereco });
+    }
   }
   banco.definirConfiguracao(CHAVE_FOTOS, JSON.stringify(fotos.map((f) => f.arquivo)));
   return criados;

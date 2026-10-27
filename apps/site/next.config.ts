@@ -36,6 +36,8 @@ const config: NextConfig = {
           "img-src 'self' data: https:",
           "font-src 'self'",
           "connect-src 'self'",
+          // Mapa do Google Maps na página de cada barbearia.
+          "frame-src https://www.google.com https://maps.google.com",
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self'",

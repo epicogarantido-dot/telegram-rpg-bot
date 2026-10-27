@@ -17,6 +17,16 @@ export function linkMapa(b: Pick<Barbearia, "nome" | "endereco" | "cidade">): st
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
+/**
+ * Mapa do Google Maps pra pôr na página (iframe, sem chave nem custo). Pino no endereço; sem
+ * endereço (prévia), mostra a cidade. Sem nenhum dos dois, não tem mapa.
+ */
+export function mapaEmbutido(b: Pick<Barbearia, "endereco" | "cidade">): string | undefined {
+  const q = [b.endereco, b.cidade].filter(Boolean).join(", ");
+  if (!q) return undefined;
+  return `https://www.google.com/maps?${new URLSearchParams({ q, z: b.endereco ? "16" : "13", hl: "pt-BR", output: "embed" })}`;
+}
+
 export function nivelEfeitos(tema: string): number {
   return TEMAS.find((t) => t.id === tema)?.efeitos ?? 1;
 }
