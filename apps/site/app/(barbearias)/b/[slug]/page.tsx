@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, AtSign, CalendarCheck, Clock, MapPin, MessageCircle, Navigation, Phone, Scissors, Users } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_FOTO, CATEGORIAS_REFERENCIA, diaDaSemana, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
@@ -71,12 +71,12 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
   const fotosLista = fotosDosServicos(servicos.map((s) => s.nome), trabalhos);
   const fotoServico = new Map(servicos.map((s, i) => [s.id, fotosLista[i]]));
-  const gruposServicos = [
-    { id: "servicos", titulo: "Cortes", itens: servicos.filter((s) => ehCorte(s.nome)) },
-    { id: "barba", titulo: "Barba e cuidados", itens: servicos.filter((s) => !ehCorte(s.nome)) },
-  ].filter((g) => g.itens.length > 0);
-  // Sem nenhum corte no cardápio, o primeiro grupo vira "Serviços" (e mantém a âncora #servicos).
-  if (gruposServicos[0] && gruposServicos[0].id !== "servicos") gruposServicos[0] = { ...gruposServicos[0], id: "servicos", titulo: "Serviços" };
+  // Um carrossel só: "Não vou cortar" (porta pra quem quer só barba e cuidados) e depois os cortes.
+  // Sem agenda (só ordem de chegada), mostra o cardápio todo, sem botão.
+  const cortes = servicos.filter((s) => ehCorte(s.nome));
+  const naoCortes = servicos.filter((s) => !ehCorte(s.nome));
+  const vitrine = agenda && cortes.length > 0 ? cortes : servicos;
+  const fotoNaoCortar = naoCortes[0] && fotoServico.get(naoCortes[0].id);
   // Mosaico: a capa de novo (é a foto mais bonita do site) e dois cortes.
   const mosaico = [
     ...(capa ? [capa] : []),
@@ -179,39 +179,56 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       <Frase texto={frases[0]} foto={fotoFrase(0)} />
 
-      {gruposServicos.map((g, gi) => (
+      {servicos.length > 0 && (
         <CarrosselB
-          key={g.id}
-          id={g.id}
-          titulo={g.titulo}
+          id="servicos"
+          titulo={agenda && cortes.length > 0 ? "Qual corte vai ser?" : "Serviços"}
           className="b-carrossel-servicos"
-          apoio={gi === 0 && agenda ? "Escolha o seu. O resto é com a gente." : undefined}
+          apoio={agenda && cortes.length > 0 ? "Escolha o seu. Barba, sobrancelha e o horário vêm depois." : undefined}
         >
-          {g.itens.map((s) => {
-            const f = fotoServico.get(s.id);
-            return (
-              <article key={s.id} className="b-cartao-servico">
+          {[
+            ...(agenda && cortes.length > 0 && naoCortes.length > 0 ? [(
+              <article key="sem" className="b-cartao-servico b-cartao-nao-cortar">
                 <div className="b-cartao-foto">
-                  {f
+                  {fotoNaoCortar
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                    ? <img src={urlFoto(fotoNaoCortar.arquivo, "p")} alt="" loading="lazy" width={fotoNaoCortar.largura} height={fotoNaoCortar.altura} />
                     : <Scissors size={40} aria-hidden />}
                 </div>
                 <div className="b-cartao-corpo">
-                  <h3>{s.nome}</h3>
-                  {s.descricao && <p className="b-cartao-desc">{s.descricao}</p>}
-                  <p className="b-cartao-info">
-                    <span>{s.duracaoMin} min</span>
-                    {s.emDomicilio && <span>Vou até você</span>}
-                    {b.mostrarPrecos && <strong className="b-servico-preco">{reais(s.precoCentavos)}</strong>}
-                  </p>
-                  {agenda && <Link href={`${agendarHref}?servico=${s.id}`} className="b-botao b-botao-pequeno" aria-label={`Agendar ${s.nome}`}>{ehCorte(s.nome) ? "Quero esse" : "Agendar"}</Link>}
+                  <h3>Não vou cortar</h3>
+                  <p className="b-cartao-desc">Só {naoCortes.slice(0, 3).map((s) => s.nome.toLowerCase()).join(", ")}{naoCortes.length > 3 ? " e mais" : ""}.</p>
+                  <Link href={`${agendarHref}?servico=sem`} className="b-botao b-botao-pequeno">Ver opções</Link>
                 </div>
               </article>
-            );
-          })}
+            )] : []),
+            ...vitrine.map((s) => {
+              const f = fotoServico.get(s.id);
+              const referencia = f && CATEGORIAS_REFERENCIA.includes(f.categoria) && ehCorte(s.nome) ? `&foto=${encodeURIComponent(f.arquivo)}` : "";
+              return (
+                <article key={s.id} className="b-cartao-servico">
+                  <div className="b-cartao-foto">
+                    {f
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                      : <Scissors size={40} aria-hidden />}
+                  </div>
+                  <div className="b-cartao-corpo">
+                    <h3>{s.nome}</h3>
+                    {s.descricao && <p className="b-cartao-desc">{s.descricao}</p>}
+                    <p className="b-cartao-info">
+                      <span>{s.duracaoMin} min</span>
+                      {s.emDomicilio && <span>Vou até você</span>}
+                      {b.mostrarPrecos && <strong className="b-servico-preco">{reais(s.precoCentavos)}</strong>}
+                    </p>
+                    {agenda && <Link href={`${agendarHref}?servico=${s.id}${referencia}`} className="b-botao b-botao-pequeno" aria-label={`Quero ${s.nome}`}>Quero esse</Link>}
+                  </div>
+                </article>
+              );
+            }),
+          ]}
         </CarrosselB>
-      ))}
+      )}
 
       {mosaico.length >= 3 && (
         <section className="b-mosaico" aria-labelledby="mosaico-titulo" data-revelar>

@@ -932,16 +932,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
    ====================================================================== */
 .site-b .b-agendar.b-vitrine { max-width: 1120px; }
 .site-b[data-tema] .b-vitrine h2 { margin: 36px 0 14px; }
-.b-inspiracao { margin: 20px 0 8px; }
-.b-inspiracao ul {
-  list-style: none; margin: 0 -16px; padding: 0 16px; display: grid; grid-auto-flow: column; grid-auto-columns: clamp(104px, 28vw, 150px); gap: 8px;
-  overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
-}
-.b-inspiracao ul::-webkit-scrollbar { display: none; }
-.b-inspiracao li { scroll-snap-align: start; }
-.b-inspiracao img { width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; display: block; border-radius: var(--t-foto-raio); }
-.b-inspiracao figcaption { margin-top: 10px; color: var(--suave); font-size: 15px; }
-
 .b-vitrine-grade { list-style: none; margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 760px) { .b-vitrine-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
 @media (min-width: 1040px) { .b-vitrine-grade { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -981,7 +971,7 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-extras-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
 .b-extras-acoes .b-botao { min-width: 200px; }
 .b-extras-pular { color: var(--suave); text-underline-offset: 4px; font-size: 15px; }
-.site-b[data-tema="atemporal"] .b-vitrine-foto img, .site-b[data-tema="atemporal"] .b-inspiracao img { filter: grayscale(1); }
+.site-b[data-tema="atemporal"] .b-vitrine-foto img { filter: grayscale(1); }
 .site-b[data-tema="potencia"] .b-vitrine-item { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%); }
 .site-b[data-tema="extravagancia"] .b-vitrine-item { border: 1px solid var(--destaque); }
 .site-b[data-tema="extravagancia"] .b-vitrine-texto strong { color: var(--destaque-forte); }
@@ -1069,3 +1059,31 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .site-b .b-texto h2::after { display: none; }
 .b-texto p { color: var(--suave); line-height: 1.7; }
 .b-texto a { color: var(--texto); text-underline-offset: 4px; }
+
+/* Passo 1 do agendar: um carrossel só ("Não vou cortar" e depois os cortes). */
+.b-escolha-corte {
+  list-style: none; margin: 20px -16px 0; padding: 4px 16px 16px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: clamp(220px, 68vw, 300px); gap: 12px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.b-escolha-corte::-webkit-scrollbar { display: none; }
+.b-escolha-corte > li { scroll-snap-align: start; }
+@media (min-width: 1040px) { .b-escolha-corte { margin-inline: 0; padding-inline: 0; } }
+.b-escolha-corte .b-vitrine-texto strong { font-size: 1.5rem; }
+/* "Não vou cortar": mesma forma, foto mais apagada, pra ficar claro que é a outra porta. */
+.b-nao-cortar .b-vitrine-foto img { filter: grayscale(0.6) brightness(0.7); }
+.b-nao-cortar::before {
+  content: ""; position: absolute; inset: 10px; z-index: 0; pointer-events: none;
+  border: 1px dashed rgb(255 255 255 / 0.55); border-radius: max(calc(var(--raio) - 6px), 0px);
+}
+
+/* Passo 3: o corte escolhido na vitrine, que vai junto com o horário. */
+.b-referencia-escolhida {
+  display: flex; align-items: center; gap: 14px; margin: 10px 0 4px; padding: 12px;
+  border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao);
+}
+.b-referencia-escolhida img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--raio-p); flex: none; }
+.b-referencia-escolhida p { margin: 0; }
+.site-b[data-tema="atemporal"] :is(.b-escolha-corte img, .b-referencia-escolhida img) { filter: grayscale(1); }
+.b-cartao-nao-cortar .b-cartao-foto img { filter: grayscale(0.6) brightness(0.75); }
+.b-cartao-nao-cortar { border-style: dashed; }
