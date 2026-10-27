@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Globe2, HeartHandshake, Languages, Scissors, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, Globe2, HeartHandshake, Languages, Search, ShieldCheck } from "lucide-react";
 import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
-import { DemoBarbearia } from "@/componentes/DemoBarbearia";
+import { TEMAS } from "@aprenda/agenda";
 import { CartaoCurso } from "@/componentes/cursos";
 import { Carrossel } from "@/componentes/Carrossel";
 import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
@@ -64,17 +64,22 @@ export default async function Inicio() {
         </Carrossel>
       )}
 
-      <section className="vitrine">
-        <div>
-          <span className="selo"><Scissors className="icone" aria-hidden /> Para barbearias</span>
-          <h2>Seu trabalho num site bonito, com agenda online.</h2>
-          <p className="suave">
-            Mostre seus cortes como num book, e deixe o cliente marcar horário sozinho, a qualquer hora.
-          </p>
-          <Link href="/barbeiros" className="botao">Conhecer <ArrowRight size={18} aria-hidden /></Link>
-        </div>
-        <DemoBarbearia />
-      </section>
+      {/* Os estilos de verdade que o barbeiro escolhe, com os prints dos sites de demonstração. */}
+      <Carrossel
+        titulo="Site e agenda pra barbearia"
+        descricao={<>Escolha a cara da sua barbearia: {TEMAS.length} estilos prontos, com suas fotos e seus serviços. O cliente marca horário sozinho, a qualquer hora.</>}
+      >
+        {TEMAS.map((t) => (
+          <Link key={t.id} href="/barbeiros#estilos" className="estilo-slide">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
+            <span className="estilo-slide-legenda"><strong>{t.nome}</strong><span>{t.resumo}</span></span>
+          </Link>
+        ))}
+      </Carrossel>
+      <p className="vitrine-acao">
+        <Link href="/barbeiros" className="botao">Conhecer <ArrowRight size={18} aria-hidden /></Link>
+      </p>
     </>
   );
 }
