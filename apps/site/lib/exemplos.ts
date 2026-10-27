@@ -28,6 +28,8 @@ const EQUIPE = [
 /** Os exemplos ficam no ar por 10 anos (o aviso não mostra a data, só que é exemplo). */
 const DIAS_NO_AR = 3650;
 const CHAVE = "sites_exemplo";
+/** Fotos do banco (data/demo-fotos) que já entraram nos exemplos: as novas entram depois, pelo mesmo botão. */
+const CHAVE_FOTOS = "fotos_exemplo";
 const PASTA_FOTOS_DEMO = join(dirname(PASTA_CURSOS), "demo-fotos");
 
 /** tema → slug dos exemplos que existem e estão no ar. */
@@ -40,18 +42,55 @@ export function sitesDeExemplo(): Record<string, string> {
   }));
 }
 
+type FotoDemo = { arquivo: string; categoria: string; legenda?: string; licenca?: string };
+
+async function fotosDoBanco(): Promise<FotoDemo[]> {
+  return JSON.parse(await readFile(join(PASTA_FOTOS_DEMO, "fotos.json"), "utf8")) as FotoDemo[];
+}
+
+/** Fotos já postas nos exemplos. Sem registro, vale o primeiro lote (as do Unsplash, sem campo `licenca`). */
+function fotosJaPostas(lista: FotoDemo[]): Set<string> {
+  const salvas = obterAgenda().configuracao(CHAVE_FOTOS);
+  return new Set(salvas ? JSON.parse(salvas) as string[] : lista.filter((f) => !f.licenca).map((f) => f.arquivo));
+}
+
+/** Quantas fotos do banco ainda não estão nos exemplos que já existem. */
+export async function fotosNovasParaExemplos(): Promise<number> {
+  if (Object.keys(sitesDeExemplo()).length === 0) return 0;
+  const lista = await fotosDoBanco();
+  const postas = fotosJaPostas(lista);
+  return lista.filter((f) => !postas.has(f.arquivo)).length;
+}
+
 export function ehSiteDeExemplo(slug: string): boolean {
   return Object.values(sitesDeExemplo()).includes(slug);
 }
 
-/** Cria os exemplos que faltam (rodar de novo não duplica). Devolve quantos criou. */
+/**
+ * Cria os exemplos que faltam e põe nos que já existem as fotos novas do banco (rodar de novo
+ * não duplica). As prévias de /montar copiam as fotos do exemplo, então ganham as novas também.
+ * Devolve quantos sites criou.
+ */
 export async function criarSitesDeExemplo(): Promise<number> {
   const banco = obterAgenda();
   const existentes = sitesDeExemplo();
-  const fotos = JSON.parse(await readFile(join(PASTA_FOTOS_DEMO, "fotos.json"), "utf8")) as { arquivo: string; categoria: string; legenda?: string }[];
+  const fotos = await fotosDoBanco();
+  const postas = fotosJaPostas(fotos);
+  const novas = fotos.filter((f) => !postas.has(f.arquivo));
+  const precisam = new Set([...(Object.keys(existentes).length < TEMAS.length ? fotos : novas).map((f) => f.arquivo)]);
   // Cada foto passa por processarFoto uma vez só e vale pros 6 sites (no servidor da Square é lento).
   const prontas = new Map<string, Awaited<ReturnType<typeof processarFoto>>>();
-  for (const f of fotos) prontas.set(f.arquivo, await processarFoto(await readFile(join(PASTA_FOTOS_DEMO, f.arquivo))));
+  for (const f of fotos) if (precisam.has(f.arquivo)) prontas.set(f.arquivo, await processarFoto(await readFile(join(PASTA_FOTOS_DEMO, f.arquivo))));
+  const registrar = (barbeariaId: number, f: FotoDemo) => {
+    const proc = prontas.get(f.arquivo)!;
+    const arquivo = banco.registrarFoto(barbeariaId, { categoria: f.categoria, legenda: f.legenda, largura: proc.largura, altura: proc.altura });
+    gravarFoto(arquivo, proc);
+    return arquivo;
+  };
+  for (const slug of Object.values(existentes)) {
+    const b = banco.barbeariaPorSlug(slug);
+    if (b) for (const f of novas) registrar(b.id, f);
+  }
   let criados = 0;
   for (const tema of TEMAS) {
     const perfil = PERFIS[tema.id];
@@ -67,9 +106,7 @@ export async function criarSitesDeExemplo(): Promise<number> {
     }
     let capa: string | undefined;
     for (const f of fotos) {
-      const proc = prontas.get(f.arquivo)!;
-      const arquivo = banco.registrarFoto(b.id, { categoria: f.categoria, legenda: f.legenda, largura: proc.largura, altura: proc.altura });
-      gravarFoto(arquivo, proc);
+      const arquivo = registrar(b.id, f);
       if (f.arquivo === perfil.capa) capa = arquivo;
     }
     const foto = banco.fotos(b.id).find((f) => f.arquivo === capa);
@@ -79,5 +116,6 @@ export async function criarSitesDeExemplo(): Promise<number> {
     banco.definirConfiguracao(CHAVE, JSON.stringify(existentes));
     criados++;
   }
+  banco.definirConfiguracao(CHAVE_FOTOS, JSON.stringify(fotos.map((f) => f.arquivo)));
   return criados;
 }

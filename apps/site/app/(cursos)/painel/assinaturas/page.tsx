@@ -6,7 +6,7 @@ import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { exigirLogin } from "@/lib/painel";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { urlDoSite } from "@/lib/membros";
-import { criarSitesDeExemplo, sitesDeExemplo } from "@/lib/exemplos";
+import { criarSitesDeExemplo, fotosNovasParaExemplos, sitesDeExemplo } from "@/lib/exemplos";
 import { avisarPagamento } from "@/lib/avisos";
 import { TEMAS } from "@aprenda/agenda";
 
@@ -69,6 +69,7 @@ async function criarExemplos() {
 
 export default async function Assinaturas({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   await exigirLogin();
+  const fotosNovas = await fotosNovasParaExemplos();
   const { erro } = await searchParams;
   const banco = obterAgenda();
   const pendentes = banco.pagamentosPendentes();
@@ -128,9 +129,13 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 <li key={t.id}>{t.nome}: <a href={`/b/${exemplos[t.id]}`} target="_blank" rel="noopener noreferrer">/b/{exemplos[t.id]}</a></li>
               ))}
             </ul>
-            {faltam > 0 && (
+            {faltam > 0 ? (
               <form action={criarExemplos}>
                 <button className="botao">Criar {faltam === TEMAS.length ? "os" : "os que faltam:"} {faltam} sites de exemplo</button>
+              </form>
+            ) : fotosNovas > 0 && (
+              <form action={criarExemplos}>
+                <button className="botao">Pôr {fotosNovas} fotos novas nos exemplos</button>
               </form>
             )}
           </>

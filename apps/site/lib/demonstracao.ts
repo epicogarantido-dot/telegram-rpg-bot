@@ -6,6 +6,7 @@ import { nomeParaMensagem, type Lead } from "@aprenda/prospeccao";
 import { obterAgenda } from "./agenda";
 import { urlDoSite } from "./membros";
 import { obterBanco } from "./painel";
+import { sitesDeExemplo } from "./exemplos";
 
 /** Fotos de exemplo (Unsplash) que vêm com o projeto: `data/demo-fotos/fotos.json`. */
 const PASTA_FOTOS_DEMO = join(dirname(PASTA_CURSOS), "demo-fotos");
@@ -29,6 +30,14 @@ export async function criarDemonstracaoParaLead(lead: Lead, tema: string): Promi
     cidade: lead.cidade ? nomeParaMensagem(lead.cidade) : undefined,
     lead: lead.placeId,
   });
+  // Com o site de exemplo do estilo no ar, divide as fotos dele (não reprocessa nada).
+  const exemplo = sitesDeExemplo()[tema];
+  const origem = exemplo ? agenda.barbeariaPorSlug(exemplo) : undefined;
+  if (origem) {
+    agenda.copiarFotos(origem.id, barbearia.id);
+    obterBanco().guardarDemonstracao(lead.placeId, barbearia.slug, convite);
+    return linkDaDemonstracao(barbearia.slug, convite);
+  }
   const fotos = JSON.parse(await readFile(join(PASTA_FOTOS_DEMO, "fotos.json"), "utf8")) as FotoDemo[];
   let capa: string | undefined;
   for (const f of fotos) {

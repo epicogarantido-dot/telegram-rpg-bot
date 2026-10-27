@@ -26,6 +26,7 @@ export const CATEGORIAS_FOTO = [
   { id: "barba", nome: "Barba" },
   { id: "navalhado", nome: "Navalhado" },
   { id: "infantil", nome: "Infantil" },
+  { id: "sobrancelha", nome: "Sobrancelha" },
   { id: "produtos", nome: "Produtos" },
   { id: "equipe", nome: "Equipe" },
 ] as const;

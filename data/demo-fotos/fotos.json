@@ -68,5 +68,124 @@
     "categoria": "produtos",
     "legenda": "Produtos",
     "credito": "https://unsplash.com/photos/1587909209111-5097ee578ec3"
+  },
+  {
+    "arquivo": "ambiente-71bdc173.jpg",
+    "categoria": "ambiente",
+    "legenda": "Cadeira clássica",
+    "credito": "https://stocksnap.io/photo/barbershop-chair-7M505B7MYV",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "ambiente-b40e92be.jpg",
+    "categoria": "ambiente",
+    "legenda": "Atendimento",
+    "credito": "https://stocksnap.io/photo/barber-window-5EDKE1CZWR",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "ambiente-c7206fe7.jpg",
+    "categoria": "ambiente",
+    "legenda": "Nossas tesouras",
+    "credito": "https://stocksnap.io/photo/barbershop-scissors-R9YRHH2JQY",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "produtos-eaae07c7.jpg",
+    "categoria": "produtos",
+    "legenda": "Navalha e pincel",
+    "credito": "https://stocksnap.io/photo/barbershop-brush-GZP9ZEQPFL",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "corte-f46a2485.jpg",
+    "categoria": "corte",
+    "legenda": "Acabamento na máquina",
+    "credito": "https://stocksnap.io/photo/barber-cutting-O6KYUCUFY4",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "corte-6aef6102.jpg",
+    "categoria": "corte",
+    "legenda": "Topete",
+    "credito": "https://stocksnap.io/photo/man-guy-JNNTXSXGOO",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "corte-09a8a4ef.jpg",
+    "categoria": "corte",
+    "legenda": "Corte na tesoura",
+    "credito": "https://stocksnap.io/photo/hairdresser-cut-S7UEWWIRTD",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "corte-bbc787aa.jpg",
+    "categoria": "corte",
+    "legenda": "Social penteado",
+    "credito": "https://stocksnap.io/photo/people-man-BHVAKDIMHU",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "degrade-e30f5ff8.jpg",
+    "categoria": "degrade",
+    "legenda": "Degradê com topete",
+    "credito": "https://stocksnap.io/photo/people-man-LXQU6N0DL9",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "navalhado-e5ed2437.jpg",
+    "categoria": "navalhado",
+    "legenda": "Desenho na navalha",
+    "credito": "https://stocksnap.io/photo/people-man-W5T564U6YN",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "barba-003bc20d.jpg",
+    "categoria": "barba",
+    "legenda": "Barba na navalha",
+    "credito": "https://stocksnap.io/photo/barber-razor-06HGN8LMUX",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "barba-53811f2e.jpg",
+    "categoria": "barba",
+    "legenda": "Barba feita",
+    "credito": "https://stocksnap.io/photo/people-man-NR1P43DL18",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "barba-cfa0f314.jpg",
+    "categoria": "barba",
+    "legenda": "Barba cheia",
+    "credito": "https://stocksnap.io/photo/beard-hair-4EF3FFEA23",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "barba-5b744b8e.jpg",
+    "categoria": "barba",
+    "legenda": "Barba desenhada",
+    "credito": "https://stocksnap.io/photo/guy-man-ENVZ1J56G8",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "barba-8f17e02b.jpg",
+    "categoria": "barba",
+    "legenda": "Barba aparada",
+    "credito": "https://stocksnap.io/photo/man-music-JSDMDDA208",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "sobrancelha-4cd35162.jpg",
+    "categoria": "sobrancelha",
+    "legenda": "Sobrancelha",
+    "credito": "https://stocksnap.io/photo/people-man-X8XXH4Z20B",
+    "licenca": "CC0"
+  },
+  {
+    "arquivo": "sobrancelha-04f3c449.jpg",
+    "categoria": "sobrancelha",
+    "legenda": "Sobrancelha em dia",
+    "credito": "https://stocksnap.io/photo/eyes-eyeball-GMYRMPCC4W",
+    "licenca": "CC0"
   }
 ]
