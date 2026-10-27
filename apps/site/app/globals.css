@@ -252,8 +252,6 @@ a.estilo-slide:hover strong { text-decoration: underline; text-underline-offset:
 .estilo-slide .estilo-slide-legenda { display: grid; gap: 2px; color: var(--texto); }
 
 /* ---------- login / cadastro ---------- */
-.caixa-auth { max-width: 460px; margin: 24px auto; }
-.caixa-auth .formulario { max-width: none; margin: 16px 0; }
 .formulario label { display: grid; gap: 6px; font-weight: 500; color: var(--texto); font-size: 15px; }
 .formulario label small { color: var(--suave); font-weight: 400; }
 .formulario label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; color: var(--suave); font-size: 14px; }
@@ -271,27 +269,6 @@ a.estilo-slide:hover strong { text-decoration: underline; text-underline-offset:
 .pulso { width: 10px; height: 10px; border-radius: 50%; background: var(--destaque); animation: pulso 1.2s ease-in-out infinite; }
 @keyframes pulso { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 #concluir { text-align: center; }
-
-/* ---------- área do aluno ---------- */
-.barra-progresso { height: 10px; background: var(--fundo-2); border-radius: 999px; overflow: hidden; margin: 12px 0 6px; }
-.barra-progresso span { display: block; height: 100%; background: linear-gradient(90deg, var(--destaque), #6fcf9f); border-radius: inherit; transition: width 0.6s ease; }
-.progresso-licao { margin: 32px 0 8px; min-height: 52px; }
-.progresso-licao.cta { display: flex; gap: 10px; align-items: center; padding: 14px 18px; border-radius: var(--raio); background: var(--acento-claro); }
-.botao-concluir {
-  display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: var(--raio-p); cursor: pointer;
-  font: 600 16px var(--fonte-texto); border: 2px solid var(--destaque); background: var(--cartao); color: var(--destaque);
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-.botao-concluir:active { transform: scale(0.97); }
-.botao-concluir.feita { background: var(--destaque); color: var(--sobre-destaque); }
-.zona-perigo { margin-top: 56px; padding: 12px 16px; border: 1px solid var(--erro-borda); border-radius: var(--raio); }
-.zona-perigo summary { cursor: pointer; color: var(--erro); font-weight: 600; }
-.botao-perigo { background: var(--erro) !important; border-color: var(--erro) !important; color: #fff !important; }
-.nav-destaque { color: var(--destaque) !important; background: var(--destaque-claro); }
-
-@media (prefers-reduced-motion: reduce) {
-  .pulso, .girando { animation: none; }
-}
 
 /* ---------- parallax (CSS puro, sem JavaScript) ----------
    As camadas andam em velocidades diferentes conforme a rolagem: o brilho
@@ -549,29 +526,6 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .propaganda .botao-sec { background: transparent; color: var(--sobre-destaque); border-color: currentColor; }
 .propaganda-celular { display: none; width: 100%; height: auto; border-radius: 22px; border: 6px solid #2a2a2a; background: #2a2a2a; }
 @media (min-width: 760px) { .propaganda-celular { display: block; } }
-
-/* ---------- confirmar WhatsApp: um botão, o resto escondido em "não abriu?" ---------- */
-.confirmar .botao-whats { margin: 20px 0 4px; font-size: 18px; padding: 18px; }
-.confirmar-ajuda { margin: 16px 0; padding: 12px 0; border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
-.confirmar-ajuda summary { cursor: pointer; font-weight: 500; }
-.confirmar-ajuda p { margin: 12px 0 0; font-size: 15px; color: var(--suave); }
-.confirmar-ajuda .codigo { margin: 12px 0; }
-
-/* ---------- lição trancada (sem conta) ---------- */
-.licao-trancada { margin: 24px 0; padding: 28px 24px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); display: grid; gap: 12px; }
-.licao-trancada h2 { margin: 0; }
-.licao-trancada p { margin: 0; }
-.licao-trancada-icone { color: var(--suave); }
-.licao-trancada .acoes { margin-top: 8px; }
-
-/* ---------- entrar pelo WhatsApp ---------- */
-.entrar-whats { margin: 20px 0 8px; }
-.entrar-whats .botao-whats { width: 100%; font-size: 18px; padding: 18px; }
-.passos-entrar { margin: 16px 0; padding-left: 22px; display: grid; gap: 6px; color: var(--suave); font-size: 15px; }
-.minha-conta { margin-top: 48px; display: grid; gap: 12px; max-width: 560px; }
-.minha-conta h2 { margin: 0; }
-.linha-nome { grid-template-columns: 1fr; }
-@media (min-width: 560px) { .linha-nome { grid-template-columns: 1fr auto; align-items: end; } }
 
 /* ---------- painel: buscar leads ---------- */
 .busca-etapa { margin-top: 36px; display: grid; gap: 10px; }

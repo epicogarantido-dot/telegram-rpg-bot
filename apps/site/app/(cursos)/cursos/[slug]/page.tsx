@@ -27,7 +27,6 @@ export default async function PaginaCurso({ params }: { params: Promise<{ slug: 
       <h1>{curso.titulo}</h1>
       <p>{curso.resumo}</p>
       <Atribuicao curso={curso} />
-      <p className="suave pequeno">Pra ler as lições, entre com o seu WhatsApp: é grátis e sem senha.</p>
       <div className="modulos">
         {curso.modulos.map((m, i) => (
           <section key={m.id}>

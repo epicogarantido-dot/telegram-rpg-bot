@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { carregarCurso } from "@aprenda/catalogo";
+import { carregarCurso, permiteUsoComercial } from "@aprenda/catalogo";
 import { renderizarMarkdown } from "@/lib/markdown";
 import { Atribuicao } from "@/componentes/cursos";
-import { ProgressoLicao } from "@/componentes/ProgressoLicao";
-import { LicaoTrancada } from "@/componentes/LicaoTrancada";
-import { membroAtual } from "@/lib/membros";
+import { PropagandaSaas } from "@/componentes/revista";
 
 type Params = { slug: string; modulo: string; licao: string };
 
-// Dinâmica: o conteúdo só aparece pra quem entrou.
-export const dynamic = "force-dynamic";
+// Aberta pra todo mundo. Gerada na primeira visita e refeita a cada 10 min (preço da propaganda vem do .env).
+export const revalidate = 600;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const p = await params;
@@ -32,8 +30,6 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
   const anterior = sequencia[i - 1];
   const proxima = sequencia[i + 1];
   const href = (x: (typeof sequencia)[number]) => `/cursos/${curso.slug}/${x.modulo.id}/${x.licao.id}`;
-  // Lição só pra quem entrou pelo WhatsApp; a página do curso (resumo e lista) é que fica aberta.
-  const trancada = !(await membroAtual())?.verificado;
 
   return (
     <article className="licao">
@@ -41,19 +37,14 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
         <Link href={`/cursos/${curso.slug}`}>{curso.titulo}</Link> · {modulo.titulo}
       </p>
       <h1>{licao.titulo}</h1>
-      {trancada ? (
-        <LicaoTrancada caminho={href(sequencia[i]!)} totalLicoes={sequencia.length} />
-      ) : (
-        <>
-          <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />
-          <ProgressoLicao curso={curso.slug} licao={licao.id} />
-        </>
-      )}
+      <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(licao.conteudo) }} />
       <Atribuicao curso={curso} />
       <nav className="navegacao">
         {anterior ? <Link href={href(anterior)}>← {anterior.licao.titulo}</Link> : <span />}
         {proxima ? <Link href={href(proxima)}>{proxima.licao.titulo} →</Link> : <span />}
       </nav>
+      {/* Funil: quem leu a lição vê o site da barbearia. Nunca em curso CC BY-NC (sem anúncio ali). */}
+      {permiteUsoComercial(curso.fonte.licenca) && <PropagandaSaas />}
     </article>
   );
 }

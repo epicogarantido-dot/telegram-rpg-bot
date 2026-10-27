@@ -1,3 +1,7 @@
+> **Desligado em 27/10/2026.** O dono decidiu que não precisa de bot: o primeiro contato é manual,
+> o lead vai pro grupo e o site se vende sozinho. O código saiu do repositório (fica no histórico
+> do git). Este arquivo fica como registro do que foi aprendido, se um dia voltar.
+
 # Bot de WhatsApp (Baileys)
 
 O bot usa o [Baileys](https://github.com/WhiskeySockets/Baileys), que fala o

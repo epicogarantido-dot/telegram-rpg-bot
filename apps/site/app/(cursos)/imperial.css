@@ -56,7 +56,7 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos :is(.heroi, .venda-heroi-texto, .revista-cabeca) { text-align: center; }
 .site-cursos .heroi { padding: 72px 0 56px; background: none; }
 .site-cursos .heroi::before { display: none; }
-.site-cursos .heroi :is(p, .acoes, .busca, .selo, .heroi-temas) { margin-inline: auto; justify-content: center; }
+.site-cursos .heroi :is(p, .acoes, .acoes-heroi, .busca, .selo, .heroi-temas) { margin-inline: auto; justify-content: center; }
 .site-cursos :is(.heroi, .venda-heroi, .revista-cabeca) h1 { font-weight: 300; }
 .site-cursos .heroi h1 { font-size: clamp(2rem, 6vw, 3.8rem); line-height: 1.12; }
 .site-cursos .heroi h1 em { font-style: normal; color: inherit; }
@@ -70,11 +70,11 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .revista-cabeca h1 { font-size: clamp(1.9rem, 5.5vw, 3.2rem); }
 
 /* ---------- botões: pílula branca e pílula de contorno, letra espaçada ---------- */
-.site-cursos :is(.botao, .botao-sec, .busca button, .formulario button, .botao-concluir) {
+.site-cursos :is(.botao, .botao-sec, .busca button, .formulario button) {
   border-radius: 999px; text-transform: uppercase; letter-spacing: 0.2em; font-size: 14px; font-weight: 600; padding: 14px 24px;
 }
-.site-cursos :is(.botao, .busca button, .formulario button, .botao-concluir) { background: var(--destaque); color: var(--sobre-destaque); border: 1px solid var(--destaque); }
-.site-cursos :is(.botao, .busca button, .formulario button, .botao-concluir):hover { background: var(--destaque-forte); }
+.site-cursos :is(.botao, .busca button, .formulario button) { background: var(--destaque); color: var(--sobre-destaque); border: 1px solid var(--destaque); }
+.site-cursos :is(.botao, .busca button, .formulario button):hover { background: var(--destaque-forte); }
 .site-cursos .botao-sec { background: transparent; color: var(--texto); border: 1px solid rgb(255 255 255 / 0.5); }
 .site-cursos .botao-sec:hover { background: rgb(255 255 255 / 0.08); color: var(--texto); border-color: #fff; }
 .site-cursos .etiqueta { background: transparent; color: var(--texto); border: 1px solid var(--borda); border-radius: 999px; font-weight: 500; }
@@ -101,9 +101,6 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .licao :is(code, pre) { background: var(--fundo-2); color: var(--texto); }
 .site-cursos .licao h4 { font-weight: 600; font-size: 1.15rem; margin: 28px 0 0; }
 .site-cursos .licao h4 + p { margin-top: 2px; color: var(--suave); }
-.site-cursos .progresso-licao.cta { background: var(--fundo-2); }
-.site-cursos .barra-progresso { background: var(--destaque-claro); }
-.site-cursos .barra-progresso span { background: var(--acento); }
 .site-cursos :is(.revista-lista, .venda-cursos ul) { border-top-color: var(--borda); }
 .site-cursos .revista-lista :is(li, a) { border-color: var(--borda); }
 .site-cursos .revista-lista strong { font-weight: 400; font-size: 1.35rem; }
@@ -124,7 +121,6 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .propaganda { background: radial-gradient(120% 140% at 50% 0%, #3b2342, #1a111c 70%); color: var(--texto); border: 1px solid var(--borda); }
 .site-cursos .propaganda h2 { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 300; }
 .site-cursos .propaganda :is(.propaganda-de, .propaganda-preco) { color: var(--suave); opacity: 1; }
-.site-cursos .licao-trancada { border-color: var(--borda); background: var(--cartao); }
 
 @media (max-width: 560px) {
   .site-cursos .marca { letter-spacing: 0.22em; }

@@ -60,7 +60,7 @@ describe("banco", () => {
 });
 
 describe("mensagem", () => {
-  const cfg = { remetente: "João, do Aprenda Livre", botWhatsapp: "5555999990000" };
+  const cfg = { remetente: "João, do Aprenda Livre", siteUrl: "https://exemplo.com" };
   const agora = new Date("2026-10-26T12:00:00Z");
 
   it("arruma o nome em maiúsculas da Receita", () => {
@@ -90,7 +90,7 @@ describe("mensagem", () => {
     expect(mensagemSegunda({ nome: "Barbearia X" }, "chegada")).toContain("fila");
     expect(mensagemDemonstracao({ nome: "Barbearia X" }, "https://s/b/x?convite=a")).toContain("https://s/b/x?convite=a");
     expect(mensagemLembrete({ nome: "Barbearia X" })).toContain("SAIR");
-    expect(mensagemCursos(cfg)).toContain("https://wa.me/5555999990000");
+    expect(mensagemCursos(cfg)).toContain("https://exemplo.com/cursos");
     expect(mensagemCursos({ remetente: "João" })).toBeUndefined();
   });
 
@@ -125,21 +125,5 @@ describe("OpenStreetMap", () => {
     expect(r[0]!.endereco).toBe("Rua A, 10");
     expect(r[1]!.telefone).toBe("5519999991111");
     expect(r[1]!.mapsUrl).toBe("https://www.openstreetmap.org/way/2");
-  });
-});
-
-describe("atendimento por uma pessoa (pedido no bot)", () => {
-  it("guarda a dúvida, junta as mensagens seguintes e some ao resolver", () => {
-    const b = new BancoProspeccao(":memory:");
-    b.pedirPessoa("5555999998888", "quanto custa o site?", "João");
-    b.pedirPessoa("5555999998888", "e tem fidelidade?");
-    const [a] = b.atendimentosAbertos();
-    expect(a).toMatchObject({ telefone: "5555999998888", nome: "João" });
-    expect(a!.duvida).toBe("quanto custa o site?\ne tem fidelidade?");
-    b.resolverAtendimento("5555999998888");
-    expect(b.atendimentosAbertos()).toHaveLength(0);
-    // Pergunta nova depois de resolvido abre outro pedido.
-    b.pedirPessoa("5555999998888", "outra dúvida");
-    expect(b.atendimentosAbertos()).toHaveLength(1);
   });
 });

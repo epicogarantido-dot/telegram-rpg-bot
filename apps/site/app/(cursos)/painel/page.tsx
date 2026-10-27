@@ -3,12 +3,11 @@ import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
 import {
   STATUS, ehCelularBR, linkWhatsapp, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
-  mensagemSegunda, proximoPasso, DIAS_ATE_LEMBRETE, type Atendimento, type Lead, type Status,
+  mensagemSegunda, proximoPasso, DIAS_ATE_LEMBRETE, type Lead, type Status,
 } from "@aprenda/prospeccao";
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
-import { estadoDoBot, type EstadoBot } from "@/lib/bot";
 
 export const metadata = { title: "Painel de leads", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -175,7 +174,7 @@ function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeContatar: 
           </>
         )}
         {lead.status === "demo_enviada" && <Botao lead={lead} status="cliente">Virou cliente</Botao>}
-        {config.botWhatsapp && EM_CONVERSA.includes(lead.status) && <Enviar lead={lead} tipo="cursos">Presente: cursos grátis</Enviar>}
+        {config.siteUrl && EM_CONVERSA.includes(lead.status) && <Enviar lead={lead} tipo="cursos">Presente: cursos grátis</Enviar>}
         <Botao lead={lead} status="nao_contatar" perigo>Pediu SAIR</Botao>
       </div>
 
@@ -214,10 +213,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
   return (
     <>
-      <p><strong>Leads</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
+      <p><strong>Leads</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
-      <EstadoWhatsapp estado={estadoDoBot()} />
-      <EsperandoPessoa atendimentos={banco.atendimentosAbertos()} />
       <p>
         Primeiras mensagens hoje: <strong>{hoje}/{config.limiteDiario}</strong>
         {!podeContatar && " — limite do dia atingido. Volte amanhã: número que manda muito pra quem não responde é limitado ou banido."}
@@ -284,53 +281,4 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       </div>
     </>
   );
-}
-
-async function resolverAtendimento(form: FormData) {
-  "use server";
-  await exigirLogin();
-  obterBanco().resolverAtendimento(String(form.get("telefone")));
-  revalidatePath("/painel");
-}
-
-/** Quem pediu "falar com uma pessoa" no bot. A resposta sai do celular do chip do bot. */
-function EsperandoPessoa({ atendimentos }: { atendimentos: Atendimento[] }) {
-  if (atendimentos.length === 0) return null;
-  return (
-    <section className="cartao" aria-labelledby="pessoa-titulo">
-      <h2 id="pessoa-titulo" style={{ marginTop: 0 }}>Esperando uma pessoa no WhatsApp ({atendimentos.length})</h2>
-      <p><small>Responda pelo celular do chip do bot, na conversa da pessoa. Quando você responde por lá, o pedido sai daqui sozinho.</small></p>
-      {atendimentos.map((a) => (
-        <form key={a.id} action={resolverAtendimento} style={{ borderTop: "1px solid var(--borda)", paddingTop: 10, marginTop: 10 }}>
-          <input type="hidden" name="telefone" value={a.telefone} />
-          <p style={{ margin: 0 }}>
-            <strong>{a.nome ?? "Sem nome"}</strong> · {a.telefone.replace(/^55(\d{2})(\d+)(\d{4})$/, "($1) $2-$3")}
-            {" "}<small>· {new Date(a.criadoEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</small>
-          </p>
-          <p style={{ whiteSpace: "pre-wrap", margin: "6px 0" }}>{a.duvida}</p>
-          <BotaoEnviar className="botao-sec">Já respondi</BotaoEnviar>
-        </form>
-      ))}
-    </section>
-  );
-}
-
-/** Bot de WhatsApp que roda junto com o site: conectado, ou o código pra parear no celular. */
-function EstadoWhatsapp({ estado }: { estado: EstadoBot }) {
-  if (estado.estado === "desligado") {
-    return <p className="cartao"><strong>Bot do WhatsApp desligado.</strong> Pra ligar, coloque BOT_NUMERO (o chip do bot) nas variáveis do app e reinicie.</p>;
-  }
-  const quando = new Date(estado.em).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
-  if (estado.estado === "conectado") return <p className="cartao"><strong>WhatsApp do bot: conectado ✓</strong> <small>desde {quando}</small></p>;
-  if (estado.estado === "pareamento" && estado.codigo) {
-    return (
-      <div className="cartao">
-        <p><strong>Conectar o WhatsApp do bot:</strong> no celular do chip, abra WhatsApp → Aparelhos conectados → Conectar aparelho → Conectar com número de telefone, e digite:</p>
-        <p style={{ fontSize: "1.8rem", letterSpacing: "0.15em", fontVariantNumeric: "tabular-nums" }}><strong>{estado.codigo}</strong></p>
-        <p><small>Código de {quando}. Venceu? Recarregue esta página daqui a pouco: o bot pede outro sozinho. <a href="/painel">Atualizar</a></small></p>
-      </div>
-    );
-  }
-  const texto = { conectando: "conectando…", caiu: "a conexão caiu, tentando de novo", desconectado: "desconectado pelo celular; vai mostrar um código novo", pareamento: "pedindo o código…" }[estado.estado];
-  return <p className="cartao"><strong>WhatsApp do bot: {texto}</strong> <small>({quando}) · <a href="/painel">Atualizar</a></small></p>;
 }

@@ -4,7 +4,6 @@ import { ErroAgenda, planoDoAmbiente } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
-import { membroAtual } from "@/lib/membros";
 
 export const metadata = { title: "Criar conta — Agenda" };
 
@@ -34,10 +33,6 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
   const { erro, demo: convite } = await searchParams;
   const demo = obterAgenda().demonstracaoPorConvite(convite);
   const plano = planoDoAmbiente();
-  // Quem já entrou no site de cursos pelo WhatsApp não precisa digitar nome e número de novo.
-  const aluno = await membroAtual();
-  const nomeAluno = aluno && aluno.nome !== "Aluno" ? aluno.nome : undefined;
-  const whatsAluno = aluno?.telefone.startsWith("55") ? aluno.telefone.slice(2) : undefined;
   return (
     <>
       {demo ? (
@@ -62,8 +57,8 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
       <form action={cadastrar} className="formulario">
         {demo && <input type="hidden" name="demo" value={convite} />}
         <input name="barbearia" placeholder="Nome da barbearia" required maxLength={60} defaultValue={demo?.nome} />
-        <input name="telefone" placeholder="WhatsApp da barbearia (com DDD)" required inputMode="tel" defaultValue={whatsAluno} />
-        <input name="nome" placeholder="Seu nome" required maxLength={60} defaultValue={nomeAluno} />
+        <input name="telefone" placeholder="WhatsApp da barbearia (com DDD)" required inputMode="tel" />
+        <input name="nome" placeholder="Seu nome" required maxLength={60} />
         <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
         <input name="senha" type="password" placeholder="Senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
         <button type="submit">{demo ? "Quero este site" : "Criar minha agenda"}</button>

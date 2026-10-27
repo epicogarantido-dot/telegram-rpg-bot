@@ -44,36 +44,11 @@ pelo próprio servidor. Ela não vem no zip, o commit não apaga, e a chave é s
 do site atualizava. O `iniciar.cjs` apaga essa pasta a cada início, e as páginas estáticas
 têm `revalidate` de 10 min. Se algo parecer velho: confira `/api/versao` e reinicie.
 
-## Bot de WhatsApp junto com o site (padrão)
+## Sem bot (desde 27/10/2026)
 
-O zip do site já leva o bot (`bot/`). Pra ligar, basta uma chave no app do site:
-
-```
-BOT_NUMERO=5555999998888    # o chip do bot, só números
-```
-
-O `iniciar.cjs` sobe o site e o bot como processo filho (se o bot cair, liga de novo
-esperando mais a cada queda). O site passa a mostrar esse número no "Entrar pelo WhatsApp"
-(`BOT_WHATSAPP` vem dele), e o `BOT_SEGREDO`, se não estiver no `.env`, é sorteado a cada
-início. A sessão fica em `data/privado/whatsapp/`: commit e reinício não desconectam.
-Memória: suba o app pra 768 MB. Pareamento: nos logs aparece o código; no celular do bot,
-WhatsApp → Aparelhos conectados → Conectar com número de telefone. Se desconectar pelo
-celular, a sessão é apagada sozinha e o próximo início mostra um código novo.
-
-## Bot de WhatsApp (app separado, opcional)
-
-```bash
-npm run pacote:bot             # gera dist/aprenda-livre-bot.zip
-```
-
-- Suba como **outro app** (Upload na 1ª vez, Commit nas próximas). Precisa de `SITE_URL`,
-  `BOT_NUMERO` e `BOT_SEGREDO` (o mesmo do site).
-- Na 1ª vez, abra os logs do app: aparece o código de pareamento. No celular do bot,
-  WhatsApp → Aparelhos conectados → Conectar com número de telefone → digite o código.
-- A sessão fica em `dados/` no servidor (não vai no zip): commit novo não desconecta.
-- O bot não guarda dados: "entrar" e "SAIR" vão pro site (`/api/whatsapp/entrada` e
-  `/api/whatsapp/sair`). Se o site estiver fora, o SAIR fica em `dados/sair-pendentes.json`
-  e o bot reenvia a cada 10 min.
+O site não tem mais bot de WhatsApp nem login de aluno. Se o app ainda tinha `BOT_NUMERO`,
+`BOT_WHATSAPP` e `BOT_SEGREDO` nas variáveis, pode apagar; e no celular do chip, em Aparelhos
+conectados, desconecte o aparelho do bot. A pasta `data/privado/whatsapp/` pode ser apagada.
 
 ## O que a documentação da Square Cloud confirma (lida em 25/10/2026)
 

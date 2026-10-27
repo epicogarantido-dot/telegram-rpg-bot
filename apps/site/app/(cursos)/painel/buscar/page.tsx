@@ -69,7 +69,7 @@ export default async function Buscar({ searchParams }: { searchParams: Promise<{
   return (
     <>
       {estado.rodando && <meta httpEquiv="refresh" content="10" />}
-      <p><a href="/painel">Leads</a> · <strong>Buscar</strong> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a></p>
+      <p><a href="/painel">Leads</a> · <strong>Buscar</strong> · <a href="/painel/assinaturas">Assinaturas</a></p>
       <h1>Buscar barbearias</h1>
       <form className="formulario linha" method="get">
         <input name="cidade" defaultValue={cidade} aria-label="Cidade" placeholder="Cidade" required />

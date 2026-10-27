@@ -37,7 +37,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <p><Link href="/painel">Leads</Link> · <Link href="/painel/alunos">Alunos</Link> · <strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
+      <p><Link href="/painel">Leads</Link> · <strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Assinaturas</h1>
       {erro && <p className="erro">{erro}</p>}
 

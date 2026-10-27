@@ -11,6 +11,11 @@ const config: NextConfig = {
   poweredByHeader: false,
   // Envio de fotos dos barbeiros (várias de uma vez) passa por server action.
   experimental: { serverActions: { bodySizeLimit: "40mb" } },
+  // O site deixou de ter login de aluno (tudo aberto): endereços antigos vão pra página inicial.
+  async redirects() {
+    return ["/entrar", "/e/:token", "/minha-area", "/cadastro", "/confirmar", "/esqueci"]
+      .map((source) => ({ source, destination: "/", permanent: false }));
+  },
   async headers() {
     const seguranca = [
       // Não deixa outro site embutir o nosso num iframe (clickjacking).

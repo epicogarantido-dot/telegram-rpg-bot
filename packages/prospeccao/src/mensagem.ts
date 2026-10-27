@@ -8,8 +8,8 @@ import type { Lead } from "./banco.ts";
 export interface ConfigConvite {
   /** Quem assina: "João, do Aprenda Livre". */
   remetente: string;
-  /** Número do bot (só dígitos com DDI), pro presente dos cursos grátis. */
-  botWhatsapp?: string;
+  /** Endereço público do site (sem barra no fim), pro presente dos cursos grátis. */
+  siteUrl?: string;
 }
 
 export type Resposta = "whatsapp" | "chegada";
@@ -76,10 +76,10 @@ export function mensagemLembrete(lead: Pick<Lead, "nome">): string {
   return `Oi! Só pra não sumir: quer ver como ficaria o site da ${nomeParaMensagem(lead.nome)}? Se não for o momento, sem problema.\n\n${SAIR}`;
 }
 
-/** O presente: cursos grátis pelo bot. Único momento em que o número do bot aparece. */
+/** O presente: cursos grátis no site, abertos, sem cadastro. */
 export function mensagemCursos(cfg: ConfigConvite): string | undefined {
-  if (!cfg.botWhatsapp) return undefined;
-  return `Ah, e tem uns cursos grátis pra quem tem barbearia (preço e lucro, cliente que volta, dinheiro em ordem). É só mandar um *oi* pra este número que ele te manda o acesso: https://wa.me/${cfg.botWhatsapp}`;
+  if (!cfg.siteUrl) return undefined;
+  return `Ah, e tem uns cursos grátis pra quem tem barbearia (preço e lucro, cliente que volta, dinheiro em ordem). É aberto, sem cadastro: ${cfg.siteUrl}/cursos`;
 }
 
 /** Dias que a 1ª mensagem espera resposta antes do lembrete, e o lembrete antes de desistir. */
