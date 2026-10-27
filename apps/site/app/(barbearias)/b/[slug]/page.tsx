@@ -87,8 +87,15 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const fotoChamada = ambientes.length > 1 ? ambientes[0] : capa;
   const agendarHref = `${base}/agendar`;
   const frases = frasesDoTema(tema);
-  // Fundo da última frase: uma foto do ambiente que ainda não apareceu grande.
-  const fotoFrase = ambientes.find((f) => f !== fotoCasa && f !== fotoChamada) ?? fotoChamada;
+  // Fundo das frases: fotos que lembram barbearia (ambiente, depois ferramentas, depois a capa).
+  // Começa pelas que ainda não apareceram grandes; com poucas, repete.
+  const fundosFrase = [
+    ...ambientes.filter((f) => f !== fotoCasa && f !== fotoChamada),
+    ...trabalhos.filter((f) => f.categoria === "produtos"),
+    ...ambientes,
+    ...(capa ? [capa] : []),
+  ];
+  const fotoFrase = (i: number) => fundosFrase.length ? fundosFrase[i % fundosFrase.length] : undefined;
 
   return (
     <>
@@ -169,7 +176,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
-      <Frase texto={frases[0]} />
+      <Frase texto={frases[0]} foto={fotoFrase(0)} />
 
       {gruposServicos.map((g, gi) => (
         <CarrosselB
@@ -222,7 +229,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      <Frase texto={frases[1]} />
+      <Frase texto={frases[1]} foto={fotoFrase(1)} />
 
       {trabalhos.length > 0 && (
         <CarrosselB
@@ -275,7 +282,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </CarrosselB>
       )}
 
-      <Frase texto={frases[2]} foto={fotoFrase} />
+      <Frase texto={frases[2]} foto={fotoFrase(2)} />
 
       <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (

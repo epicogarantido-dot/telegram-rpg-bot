@@ -994,7 +994,7 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   text-transform: var(--t-titulo-caixa); letter-spacing: var(--t-titulo-espaco);
 }
 .b-frase-palavra { display: inline-block; white-space: pre; }
-.b-frase-foto { color: #fff; min-height: min(80svh, 640px); }
+.b-frase-foto { color: #fff; min-height: min(70svh, 560px); }
 .b-frase-foto img { position: absolute; inset: -12% 0; width: 100%; height: 124%; object-fit: cover; z-index: -2; }
 .b-frase-foto::after { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / 0.55); }
 .site-b[data-tema="potencia"] .b-frase p { font-size: clamp(2.8rem, 10vw, 6.4rem); line-height: 0.92; }
