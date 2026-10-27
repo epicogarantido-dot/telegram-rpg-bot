@@ -150,6 +150,8 @@ export interface Pagamento {
   dias: number;
   status: StatusPagamento;
   pagador?: string;
+  /** Arquivo do comprovante que o barbeiro mandou (só o admin vê). */
+  comprovante?: string;
   criadoEm: string;
   decididoEm?: string;
 }
@@ -244,7 +246,7 @@ function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined):
 }
 const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
 const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbearia, p.txid, p.valor_centavos AS valorCentavos,
-  p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
+  p.dias, p.status, p.pagador, p.comprovante, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
 
 const DURACAO_SESSAO_DIAS = 30;
 /** Quanto tempo vale o link de troca de senha. */
@@ -363,6 +365,7 @@ export class BancoAgenda {
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
     this.garantirColuna("barbearias", "montagem", "INTEGER NOT NULL DEFAULT 0");
+    this.garantirColuna("pagamentos", "comprovante", "TEXT");
     this.garantirColuna("servicos", "descricao", "TEXT");
     this.garantirColuna("servicos", "em_domicilio", "INTEGER NOT NULL DEFAULT 0");
     this.migrarAdicionais();
@@ -1431,6 +1434,25 @@ export class BancoAgenda {
     const r = this.db.prepare(`UPDATE pagamentos SET status = 'informado', pagador = ?
       WHERE id = ? AND barbearia_id = ? AND status IN ('aberto', 'informado')`).run(pagador.trim().slice(0, 80) || null, pagamentoId, barbeariaId);
     if (r.changes === 0) throw new ErroAgenda("Pagamento não encontrado.");
+  }
+
+  /**
+   * Liga o comprovante (já gravado em disco) ao pagamento em aberto e põe na fila do admin.
+   * Não libera nada. Devolve o comprovante anterior, se havia, pra quem chamou apagar.
+   */
+  anexarComprovante(barbeariaId: number, pagamentoId: number, arquivo: string, pagador: string): string | undefined {
+    const antes = this.db.prepare("SELECT comprovante FROM pagamentos WHERE id = ? AND barbearia_id = ? AND status IN ('aberto', 'informado')")
+      .get(pagamentoId, barbeariaId) as { comprovante: string | null } | undefined;
+    if (!antes) throw new ErroAgenda("Pagamento não encontrado.");
+    this.db.prepare("UPDATE pagamentos SET status = 'informado', comprovante = ?, pagador = COALESCE(?, pagador) WHERE id = ?")
+      .run(arquivo, pagador.trim().slice(0, 80) || null, pagamentoId);
+    return antes.comprovante ?? undefined;
+  }
+
+  pagamento(pagamentoId: number): Pagamento | undefined {
+    const p = this.db.prepare(`SELECT ${COLUNAS_PAGAMENTO} FROM pagamentos p JOIN barbearias b ON b.id = p.barbearia_id WHERE p.id = ?`)
+      .get(pagamentoId) as Pagamento | undefined;
+    return p && { ...p, pagador: p.pagador ?? undefined, comprovante: p.comprovante ?? undefined };
   }
 
   pagamentosDaBarbearia(barbeariaId: number): Pagamento[] {

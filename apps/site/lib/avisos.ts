@@ -108,3 +108,18 @@ export async function avisarRajada(barbeariaId: number): Promise<void> {
     tag: "rajada",
   });
 }
+
+/** O admin decidiu o Pix: o barbeiro fica sabendo sem precisar abrir o painel pra conferir. */
+export async function avisarPagamento(barbeariaId: number, d: { confirmado: boolean; publicou: boolean; ate?: string; nome: string }): Promise<void> {
+  const aviso: Aviso = !d.confirmado
+    ? { titulo: "Pagamento não confirmado", corpo: "Não achamos o seu Pix. Abra a assinatura pra conferir ou mandar o comprovante de novo.", url: "/app/assinatura", tag: "pagamento" }
+    : d.publicou
+      ? { titulo: "Seu site está no ar! 🎉", corpo: `Pagamento confirmado. Os clientes já podem ver o site da ${d.nome} e marcar horário.`, url: "/app", tag: "pagamento" }
+      : { titulo: "Pagamento confirmado", corpo: `Acesso renovado${d.ate ? ` até ${formatarData(d.ate)}` : ""}. Obrigado!`, url: "/app/assinatura", tag: "pagamento" };
+  try {
+    await enviar(barbeariaId, aviso);
+  } catch (e) {
+    // Aviso é cortesia: falhar aqui não pode desfazer a decisão do admin.
+    console.error("Falha ao avisar pagamento:", e);
+  }
+}

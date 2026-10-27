@@ -225,6 +225,39 @@ describe("assinatura", () => {
     expect(b.barbeariaPorId(id)!.acessoAte).toBe("2026-12-02");
   });
 
+  it("comprovante: entra na fila do admin, não libera, troca devolve o anterior e outra barbearia não anexa", () => {
+    const { b, id } = conta(0);
+    const outra = b.criarConta({ nomeBarbearia: "C", telefone: "5519900000002", nome: "Ana", email: "c@x.com", senha: "segredo123" });
+    const p = b.pagamentoAberto(id);
+    expect(() => b.anexarComprovante(outra.barbearia.id, p.id, "x", "")).toThrow(ErroAgenda);
+    expect(b.anexarComprovante(id, p.id, "1-aaaaaaaaaaaaaaaa.webp", "José")).toBeUndefined();
+    expect(b.pagamento(p.id)).toMatchObject({ status: "informado", comprovante: "1-aaaaaaaaaaaaaaaa.webp", pagador: "José" });
+    expect(b.anexarComprovante(id, p.id, "1-bbbbbbbbbbbbbbbb.pdf", "")).toBe("1-aaaaaaaaaaaaaaaa.webp");
+    expect(b.pagamento(p.id)!.pagador).toBe("José");
+    expect(b.barbeariaPorId(id)!.emMontagem).toBe(true);
+    b.confirmarPagamento(p.id);
+    expect(() => b.anexarComprovante(id, p.id, "1-cccccccccccccccc.pdf", "")).toThrow(/não encontrado/);
+  });
+
+  it("comprovante: PDF pelo começo do arquivo, foto vira WebP, lixo é recusado, nome fora do padrão não lê", async () => {
+    const { prepararComprovante, gravarComprovante, lerComprovante } = await import("./comprovantes.ts");
+    const sharp = (await import("sharp")).default;
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const pasta = mkdtempSync(join(tmpdir(), "comp-"));
+    expect((await prepararComprovante(Buffer.from("%PDF-1.7 ..."))).ext).toBe("pdf");
+    const png = await sharp({ create: { width: 300, height: 900, channels: 3, background: "#fff" } }).png().toBuffer();
+    const foto = await prepararComprovante(png);
+    expect(foto.ext).toBe("webp");
+    await expect(prepararComprovante(Buffer.from("<script>alert(1)</script>"))).rejects.toThrow(/foto|PDF/);
+    await expect(prepararComprovante(Buffer.alloc(0))).rejects.toThrow(/vazio/);
+    const nome = gravarComprovante(7, foto, pasta);
+    expect(nome).toMatch(/^7-[0-9a-f]{16}\.webp$/);
+    expect(lerComprovante(nome, pasta)?.length).toBe(foto.dados.length);
+    expect(lerComprovante("../agenda.db", pasta)).toBeUndefined();
+  });
+
   it("barbearia não informa pagamento de outra; recusa e bloqueio manual", () => {
     const { b, id } = conta(7);
     const outra = b.criarConta({ nomeBarbearia: "C", telefone: "5519900000002", nome: "Ana", email: "a@x.com", senha: "segredo123" });

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
-import { formatarData, gerarPixCopiaECola } from "@aprenda/agenda";
+import { apagarComprovante, ErroAgenda, formatarData, gerarPixCopiaECola, gravarComprovante, MAX_BYTES_COMPROVANTE, prepararComprovante } from "@aprenda/agenda";
+import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
@@ -11,11 +12,28 @@ export const dynamic = "force-dynamic";
 
 const ROTULO = { aberto: "aguardando pagamento", informado: "aguardando confirmação", confirmado: "confirmado", recusado: "recusado" };
 
+/**
+ * "Já paguei", com ou sem comprovante. Não libera nada: põe na fila do admin, que confere o
+ * extrato (e o comprovante, se veio) em /painel/assinaturas.
+ */
 async function jaPaguei(form: FormData) {
   "use server";
   const { barbearia } = await exigirBarbeiro();
+  const banco = obterAgenda();
+  const id = Number(form.get("id"));
+  const pagador = String(form.get("pagador") ?? "");
+  const arquivo = form.get("comprovante");
   try {
-    obterAgenda().informarPagamento(barbearia.id, Number(form.get("id")), String(form.get("pagador") ?? ""));
+    if (arquivo instanceof File && arquivo.size > 0) {
+      // Confere de quem é o pagamento ANTES de gravar: senão sobrava arquivo órfão no disco.
+      if (banco.pagamentoAberto(barbearia.id).id !== id) throw new ErroAgenda("Pagamento não encontrado.");
+      if (arquivo.size > MAX_BYTES_COMPROVANTE) throw new ErroAgenda("Arquivo grande demais (máximo 8 MB).");
+      const nome = gravarComprovante(id, await prepararComprovante(Buffer.from(await arquivo.arrayBuffer())));
+      const anterior = banco.anexarComprovante(barbearia.id, id, nome, pagador);
+      if (anterior) apagarComprovante(anterior);
+    } else {
+      banco.informarPagamento(barbearia.id, id, pagador);
+    }
   } catch (e) {
     redirect(`/app/assinatura?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
@@ -43,7 +61,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       <h1>{barbearia.emMontagem ? "Publicar meu site" : "Assinatura"}</h1>
       {barbearia.emMontagem && ativo ? (
         <aside className="aviso-novo">
-          Pague pelo Pix e avise aqui embaixo. Assim que a gente conferir (normalmente no mesmo dia), o site da{" "}
+          Pague pelo Pix e mande o comprovante aqui embaixo. Assim que a gente conferir (normalmente no mesmo dia), o site da{" "}
           {barbearia.nome} vai pro ar e os clientes já podem marcar. Até lá você continua montando normalmente.
         </aside>
       ) : barbearia.emMontagem ? (
@@ -78,24 +96,35 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
             <p>1. Abra o app do seu banco e escaneie o QR code, ou use o Pix copia e cola:</p>
             <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
             <p>Identificador: <code>{pagamento.txid}</code></p>
-            <p>2. Depois de pagar, avise aqui. A liberação é feita após conferência, normalmente no mesmo dia.</p>
-            {pagamento.status === "informado" ? (
-              <p className="atribuicao">⏳ Recebemos seu aviso{pagamento.pagador ? ` (pagador: ${pagamento.pagador})` : ""}. Aguardando confirmação.</p>
-            ) : (
-              <form action={jaPaguei} className="formulario">
-                <input type="hidden" name="id" value={pagamento.id} />
-                <input name="pagador" placeholder="Nome de quem pagou (ajuda a conferir)" maxLength={80} />
-                <button>Já paguei</button>
-              </form>
-            )}
-            {configPix.whatsappAdmin && (
-              <p>
-                <a target="_blank" rel="noopener noreferrer"
-                  href={linkWhatsapp(configPix.whatsappAdmin, `Olá! Paguei a assinatura da ${barbearia.nome} (identificador ${pagamento.txid}). Segue o comprovante:`)}>
-                  Enviar comprovante pelo WhatsApp
-                </a>
+            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia, e você recebe um aviso no celular{barbearia.emMontagem ? " quando o site for pro ar" : ""}.</p>
+            {pagamento.status === "informado" && (
+              <p className="atribuicao">
+                ⏳ {pagamento.comprovante ? "Recebemos seu comprovante" : "Recebemos seu aviso"}
+                {pagamento.pagador ? ` (pagador: ${pagamento.pagador})` : ""}. Aguardando confirmação.
               </p>
             )}
+            {!pagamento.comprovante && (
+              <form action={jaPaguei} className="formulario">
+                <input type="hidden" name="id" value={pagamento.id} />
+                <label>
+                  Comprovante do Pix <small>(print da tela ou PDF)</small>
+                  <input type="file" name="comprovante" accept="image/*,application/pdf" />
+                </label>
+                {pagamento.status !== "informado" && <input name="pagador" placeholder="Nome de quem pagou (ajuda a conferir)" maxLength={80} />}
+                <BotaoEnviar carregando="Enviando…">{pagamento.status === "informado" ? "Enviar comprovante" : "Já paguei"}</BotaoEnviar>
+              </form>
+            )}
+            <p className="suave pequeno">
+              Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.
+              {configPix.whatsappAdmin && (
+                <>{" "}Problema com o Pix?{" "}
+                  <a target="_blank" rel="noopener noreferrer"
+                    href={linkWhatsapp(configPix.whatsappAdmin, `Olá! Estou com dúvida no pagamento da ${barbearia.nome} (identificador ${pagamento.txid}).`)}>
+                    Fale com a gente no WhatsApp
+                  </a>.
+                </>
+              )}
+            </p>
           </div>
         </div>
       )}

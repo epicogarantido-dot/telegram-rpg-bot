@@ -43,7 +43,13 @@ const config: NextConfig = {
         ].join("; "),
       });
     }
-    return [{ source: "/:caminho*", headers: seguranca }];
+    return [
+      { source: "/:caminho*", headers: seguranca },
+      // Comprovante de Pix (foto ou PDF mandado pelo barbeiro): abre isolado, sem rodar nada.
+      ...(process.env.NODE_ENV === "production"
+        ? [{ source: "/painel/comprovante/:nome", headers: [{ key: "Content-Security-Policy", value: "sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; object-src 'self'" }] }]
+        : []),
+    ];
   },
 };
 

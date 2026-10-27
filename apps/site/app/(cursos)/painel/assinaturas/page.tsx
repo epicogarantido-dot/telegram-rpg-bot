@@ -7,6 +7,7 @@ import { exigirLogin } from "@/lib/painel";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { urlDoSite } from "@/lib/membros";
 import { criarSitesDeExemplo, sitesDeExemplo } from "@/lib/exemplos";
+import { avisarPagamento } from "@/lib/avisos";
 import { TEMAS } from "@aprenda/agenda";
 
 export const metadata = { title: "Assinaturas", robots: { index: false } };
@@ -16,11 +17,20 @@ async function decidir(form: FormData) {
   "use server";
   await exigirLogin();
   const id = Number(form.get("id"));
+  const banco = obterAgenda();
+  const confirmado = form.get("acao") === "confirmar";
+  const p = banco.pagamento(id);
+  const antes = p && banco.barbeariaPorId(p.barbeariaId);
   try {
-    if (form.get("acao") === "confirmar") obterAgenda().confirmarPagamento(id);
-    else obterAgenda().recusarPagamento(id);
+    if (confirmado) banco.confirmarPagamento(id);
+    else banco.recusarPagamento(id);
   } catch (e) {
     redirect(`/painel/assinaturas?erro=${encodeURIComponent(mensagemDeErro(e))}`);
+  }
+  // Avisa no celular do barbeiro (se ele ligou os avisos): site no ar, renovação ou Pix não achado.
+  if (p && antes) {
+    const depois = banco.barbeariaPorId(p.barbeariaId);
+    await avisarPagamento(p.barbeariaId, { confirmado, publicou: antes.emMontagem, ate: depois?.acessoAte, nome: antes.nome });
   }
   revalidatePath("/painel/assinaturas");
 }
@@ -76,10 +86,20 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
       {pendentes.map((p) => (
         <div key={p.id} className="cartao lead">
           <div>
-            <span className="etiqueta">{p.status === "informado" ? "disse que pagou" : "QR gerado"}</span>{" "}
+            <span className="etiqueta">{p.comprovante ? "mandou comprovante" : p.status === "informado" ? "disse que pagou" : "QR gerado"}</span>{" "}
             <strong>{p.barbearia}</strong> · {reais(p.valorCentavos)} · {p.dias} dias
             <br />
             <small>Identificador <code>{p.txid}</code> · pagador: {p.pagador ?? "-"} · {p.criadoEm.slice(0, 16).replace("T", " ")}</small>
+            {p.comprovante ? (
+              <div className="comprovante">
+                <a href={`/painel/comprovante/${p.comprovante}`} target="_blank" rel="noopener noreferrer">
+                  {p.comprovante.endsWith(".pdf")
+                    ? "Abrir o comprovante (PDF)"
+                    // eslint-disable-next-line @next/next/no-img-element
+                    : <img src={`/painel/comprovante/${p.comprovante}`} alt={`Comprovante de ${p.barbearia}`} loading="lazy" />}
+                </a>
+              </div>
+            ) : p.status === "informado" && <p><small>Sem comprovante: confira só pelo extrato.</small></p>}
           </div>
           <div className="acoes">
             <form action={decidir}>

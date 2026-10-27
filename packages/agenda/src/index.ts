@@ -6,3 +6,4 @@ export * from "./senha.ts";
 export * from "./temas.ts";
 export * from "./imagens.ts";
 export * from "./calendario.ts";
+export * from "./comprovantes.ts";
