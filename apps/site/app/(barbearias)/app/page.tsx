@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { BarChart3, CalendarCheck, CalendarOff, CalendarPlus, Star, MessageCircle, UserX } from "lucide-react";
-import { encerrarSessaoAgenda, exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { CalendarCheck, CalendarOff, CalendarPlus, Star, MessageCircle, Smartphone, UserX, Users } from "lucide-react";
+import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { situacaoAgora, urlFoto } from "@/lib/barbearias";
@@ -138,13 +139,7 @@ async function mudarFila(form: FormData) {
   revalidatePath("/app");
 }
 
-async function sair() {
-  "use server";
-  await encerrarSessaoAgenda();
-  redirect("/app/entrar");
-}
-
-export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string; bloquear?: string }> }) {
   const { barbearia, usuario } = await exigirAcessoAtivo();
   const sp = await searchParams;
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
@@ -167,13 +162,25 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
   const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1)).filter((a) => a.status === "confirmado") : [];
   // Quem já tem o próximo horário marcado (pra não oferecer "marcar o próximo" de novo).
+  // Resumo de hoje (vale mesmo olhando outro dia na lista).
+  const doDia = (data === hoje ? agenda : banco.agendamentosDoDia(barbearia.id, hoje)).filter((a) => a.status !== "cancelado");
+  const porVir = doDia.filter((a) => a.status === "confirmado" && a.inicio > agoraLocal);
+  const proximoCliente = porVir[0];
+  const precos = new Map(banco.servicos(barbearia.id).map((s) => [s.id, s.precoCentavos]));
+  const previstoHoje = doDia.filter((a) => a.status === "confirmado")
+    .reduce((t, a) => t + (precos.get(a.servicoId) ?? 0) + (a.adicionais ?? []).reduce((x, id) => x + (precos.get(id) ?? 0), 0), 0);
+  const mes = banco.numerosDoMes(barbearia.id, hoje.slice(0, 7));
+  const fotos = banco.fotos(barbearia.id);
+  const capa = fotos.find((f) => f.capa) ?? fotos[0];
   const proximo = new Map(agenda.filter((a) => a.status === "confirmado").map((a) => [a.id, banco.proximoDoCliente(barbearia.id, a.clienteTelefone)]));
 
   return (
     <>
-      <div className="linha-topo">
-        <h1>{barbearia.nome}</h1>
-        <form action={sair}><button className="botao-sec">Sair</button></form>
+      <div className="painel-ola">
+        <div>
+          <h1>{saudacao(agoraLocal)}, {usuario.nome.split(" ")[0]}!</h1>
+          <p>{formatarData(hoje)}</p>
+        </div>
       </div>
       {sp.novo && (
         <aside className="atribuicao">
@@ -187,14 +194,50 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           <Link href="/app/assinatura">Renovar com Pix</Link> pra não bloquear sua agenda.
         </aside>
       )}
-      <p>
-        Seu site: <a href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkPublico}</a>
-        {" · "}<Link href="/app/config">Configurações</Link>
-        {" · "}<Link href="/app/assinatura">Assinatura</Link>
-        {" · "}<Link href="/app/numeros"><BarChart3 size={14} aria-hidden /> Números do mês</Link>
-        {" · "}<Link href="/app/planos">Planos</Link>
-        {" · "}<Link href="/app/clientes">Clientes que sumiram{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
-      </p>
+
+      <dl className="resumo-dia" aria-label="Resumo de hoje">
+        <div className="resumo-destaque">
+          <dt>Próximo cliente</dt>
+          <dd>{proximoCliente ? proximoCliente.inicio.slice(11, 16) : "—"}<small>{proximoCliente ? `${proximoCliente.clienteNome.split(" ")[0]} · ${proximoCliente.servico}` : "Ninguém mais hoje"}</small></dd>
+        </div>
+        <div>
+          <dt>Marcados hoje</dt>
+          <dd>{doDia.length}<small>{porVir.length === 0 ? "nenhum por vir" : `${porVir.length} ainda por vir`}</small></dd>
+        </div>
+        <div>
+          <dt>Previsto hoje</dt>
+          <dd>{reais(previstoHoje)}</dd>
+        </div>
+        <div>
+          <dt>No mês até agora</dt>
+          <dd>{reais(mes.faturamentoCentavos)}<small>{mes.atendidos} {mes.atendidos === 1 ? "atendimento" : "atendimentos"}</small></dd>
+        </div>
+      </dl>
+
+      <section className="cartao-site" aria-label="Seu site">
+        {capa
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={96} height={96} />
+          : <span />}
+        <div className="cartao-site-texto">
+          <p><strong>Seu site está no ar.</strong> Mande o link pros clientes marcarem sozinhos.</p>
+          <a className="link-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkPublico.replace(/^https?:\/\//, "")}</a>
+          <div className="cartao-site-acoes">
+            <BotaoCopiar texto={linkPublico} />
+            <a className="botao-sec" target="_blank" rel="noopener noreferrer"
+              href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkPublico}`)}`}>
+              <MessageCircle size={16} aria-hidden /> Mandar no WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <div className="atalhos">
+        <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
+        <Link href={`/app?data=${data}&bloquear=1#folgas`}><CalendarOff size={20} aria-hidden /> Bloquear horário</Link>
+        <Link href="/app/calendario"><Smartphone size={20} aria-hidden /> Agenda no celular</Link>
+        <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
+      </div>
 
       <Hoje barbeariaId={barbearia.id} />
 
@@ -235,7 +278,6 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
       <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
 
-      <p className="pequeno"><Link href="/app/calendario">Ver a agenda no calendário do celular (iPhone ou Google Agenda)</Link></p>
 
       <nav className="navegacao">
         <Link href={`/app?data=${somarDias(data, -1)}`}>← dia anterior</Link>
@@ -277,7 +319,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             )}
           </div>
         ))}
-        <details className="bloquear-horario">
+        <details className="bloquear-horario" open={sp.bloquear === "1"}>
           <summary className="botao-sec"><CalendarOff size={16} aria-hidden /> Bloquear um horário (folga, médico…)</summary>
           <form action={bloquearHorario} className="formulario">
             <label>Dia<input type="date" name="dia" defaultValue={data} min={hoje} required /></label>
@@ -300,8 +342,9 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </details>
       </section>
 
-      {agenda.length === 0 && <p>Nenhum agendamento neste dia.</p>}
-      <p><Link className="botao" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={18} aria-hidden /> Marcar horário pra um cliente</Link></p>
+      {agenda.length === 0 && (
+        <p className="suave">Nenhum horário marcado neste dia. <Link href={`/b/${barbearia.slug}/agendar`}>Marcar um horário pra um cliente</Link></p>
+      )}
       {sp.bloqueado !== undefined && (
         <p className="atribuicao" role="status">
           Número bloqueado{Number(sp.bloqueado) > 0 ? ` e ${sp.bloqueado} horário(s) futuro(s) cancelado(s)` : ""}. Ele não consegue mais marcar pelo site.
@@ -449,4 +492,9 @@ function Hoje({ barbeariaId }: { barbeariaId: number }) {
       )}
     </section>
   );
+}
+
+function saudacao(agora: string): string {
+  const h = Number(agora.slice(11, 13));
+  return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
 }

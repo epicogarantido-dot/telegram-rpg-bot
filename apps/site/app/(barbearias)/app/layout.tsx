@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { CalendarDays, Images, LayoutTemplate, Settings, Wallet } from "lucide-react";
+import { CalendarDays, ExternalLink } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
+import { urlFoto } from "@/lib/barbearias";
+import { NavPainel } from "@/componentes/barbearia/NavPainel";
+import "./painel.css";
 
 // O painel pode ser instalado no celular como app (avisos de horário novo).
 export const metadata = {
@@ -11,28 +14,61 @@ export const metadata = {
 };
 
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
-  const usuario = obterAgenda().usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
-  const barbearia = usuario && obterAgenda().barbeariaPorId(usuario.barbeariaId);
+  const banco = obterAgenda();
+  const usuario = banco.usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
+  const barbearia = usuario && banco.barbeariaPorId(usuario.barbeariaId);
+
+  // Fora da conta (entrar, cadastro) ou com o site ainda em montagem: topo simples, sem menu.
+  if (!barbearia || barbearia.emMontagem) {
+    return (
+      <>
+        <div className="barra-topo">
+          <header className="topo">
+            <Link href="/app" className="marca">
+              <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
+              {barbearia?.nome ?? "Agenda da barbearia"}
+            </Link>
+          </header>
+        </div>
+        <main>{children}</main>
+      </>
+    );
+  }
+
+  const fotos = banco.fotos(barbearia.id);
+  const capa = fotos.find((f) => f.capa) ?? fotos[0];
   return (
-    <>
-      <div className="barra-topo">
-        <header className="topo">
-          <Link href="/app" className="marca">
-            <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
-            {barbearia?.nome ?? "Agenda da barbearia"}
-          </Link>
-          {barbearia && !barbearia.emMontagem && (
-            <nav aria-label="Painel">
-              <Link href="/app"><CalendarDays className="icone" aria-hidden /> Agenda</Link>
-              <Link href="/app/site"><LayoutTemplate className="icone" aria-hidden /> Meu site</Link>
-              <Link href="/app/fotos"><Images className="icone" aria-hidden /> Fotos</Link>
-              <Link href="/app/config"><Settings className="icone" aria-hidden /> Configurações</Link>
-              <Link href="/app/assinatura"><Wallet className="icone" aria-hidden /> Assinatura</Link>
-            </nav>
-          )}
-        </header>
-      </div>
-      <main>{children}</main>
-    </>
+    <div className="painel">
+      <aside className="painel-lado">
+        <Link href="/app" className="painel-marca">
+          {capa
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={44} height={44} />
+            : <span className="painel-marca-inicial" aria-hidden>{barbearia.nome[0]}</span>}
+          <span>
+            <strong>{barbearia.nome}</strong>
+            <small>Painel da barbearia</small>
+          </span>
+        </Link>
+        <NavPainel modo="lado" />
+        <a className="painel-ver-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">
+          <ExternalLink size={16} aria-hidden /> Ver meu site
+        </a>
+      </aside>
+      <header className="painel-topo-celular">
+        <Link href="/app" className="painel-marca">
+          {capa
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={36} height={36} />
+            : <span className="painel-marca-inicial" aria-hidden>{barbearia.nome[0]}</span>}
+          <strong>{barbearia.nome}</strong>
+        </Link>
+        <a className="painel-ver-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">
+          <ExternalLink size={16} aria-hidden /> Ver site
+        </a>
+      </header>
+      <main className="painel-conteudo">{children}</main>
+      <NavPainel modo="abas" />
+    </div>
   );
 }

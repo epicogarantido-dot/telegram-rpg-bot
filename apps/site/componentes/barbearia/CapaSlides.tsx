@@ -6,8 +6,9 @@ export type Slide = { src: string; alt: string; largura?: number; altura?: numbe
 
 /**
  * Fotos da abertura, uma por vez, trocando com um esmaecer. Passa sozinha só quando o tema
- * permite (`passar` em ms), a aba está aberta e ninguém pediu "reduzir movimento"; para
- * enquanto o mouse está em cima. Bolinhas e deslizar o dedo trocam na hora.
+ * permite (`passar` em ms), a aba está aberta e ninguém pediu "reduzir movimento"; dá uma
+ * volta e para na primeira foto (nada se mexe pra sempre) e para antes se o mouse está em
+ * cima ou a pessoa tocou. Bolinhas e deslizar o dedo trocam na hora.
  */
 export function CapaSlides({ slides, passar }: { slides: Slide[]; passar?: number }) {
   const [atual, setAtual] = useState(0);
@@ -18,7 +19,12 @@ export function CapaSlides({ slides, passar }: { slides: Slide[]; passar?: numbe
   useEffect(() => {
     if (!passar || total < 2 || parado) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => { if (!document.hidden) setAtual((a) => (a + 1) % total); }, passar);
+    let passos = 0;
+    const id = setInterval(() => {
+      if (document.hidden) return;
+      setAtual((a) => (a + 1) % total);
+      if (++passos >= total) clearInterval(id);
+    }, passar);
     return () => clearInterval(id);
   }, [passar, total, parado]);
 
