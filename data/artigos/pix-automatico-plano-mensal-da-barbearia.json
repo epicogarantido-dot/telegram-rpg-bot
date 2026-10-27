@@ -1,0 +1,40 @@
+{
+  "slug": "pix-automatico-plano-mensal-da-barbearia",
+  "titulo": "Pix Automático: o plano mensal da barbearia sem cobrar o cliente todo mês",
+  "resumo": "O cliente autoriza uma vez no app do banco e a mensalidade sai sozinha. Quem pode receber, quanto custa, o que o cliente controla e o passo a passo pra montar o seu plano.",
+  "tipo": "guia",
+  "publicadoEm": "2026-10-27",
+  "tags": [
+    "barbearia",
+    "pix",
+    "plano mensal",
+    "dinheiro",
+    "guia"
+  ],
+  "imagem": {
+    "arquivo": "/revista/pix-automatico-plano-mensal-da-barbearia.webp",
+    "alt": "Barbeiro atendendo um cliente de capa listrada, visto pela vitrine da barbearia",
+    "credito": "StockSnap",
+    "licenca": "CC0",
+    "fonte": "https://stocksnap.io/photo/barber-window-5EDKE1CZWR"
+  },
+  "conteudo": "Muita barbearia já vende plano mensal: o cliente paga um valor fixo e corta duas, três, quatro vezes no mês. O plano é bom pros dois lados, mas tem um ponto fraco: todo mês alguém precisa lembrar de cobrar, e o cliente precisa lembrar de pagar. Desde 16 de junho de 2025 existe um jeito de tirar essa conversa do caminho, criado pelo próprio Banco Central: o **Pix Automático**.\n\n### O que é\n\nO cliente autoriza uma vez, no aplicativo do banco dele, e a partir daí a cobrança sai sozinha na data combinada, sem ele ter que fazer um Pix a cada mês. É o mesmo princípio do débito automático da conta de luz, só que pelo Pix. O Banco Central diz que ele serve pra cobranças periódicas: semanais, mensais, trimestrais, semestrais ou anuais. Plano de barbearia cabe certinho aí.\n\nLançado como opcional em junho de 2025, ele virou obrigatório em 13 de outubro: pelas regras do Banco Central, toda instituição que oferece conta com Pix tem que deixar o cliente pagar com Pix Automático. Ou seja, praticamente qualquer cliente seu consegue autorizar, pelo app do banco que ele já usa.\n\n### Quem pode receber\n\nAqui está o detalhe que mais pega o barbeiro: **só recebe pelo Pix Automático quem tem CNPJ, e ativo há mais de seis meses**. A regra veio da Resolução BCB nº 482, de junho de 2025, pra dificultar golpe com empresa recém-aberta. O MEI tem CNPJ, então serve. Quem atende só como pessoa física, com chave no CPF, fica de fora. Pra isso existe o Pix agendado, que o próprio cliente programa, mas aí o controle fica todo com ele.\n\nO outro detalhe: pro lado de quem recebe, oferecer o produto é opcional. O seu banco pode ter ou não, e pode cobrar uma tarifa de você. Pro cliente, cobrar tarifa é proibido.\n\n### O que o cliente controla\n\nÉ isso que faz o cliente topar. Na autorização, ele pode pôr um valor máximo: se a cobrança vier acima, ela simplesmente não acontece. Ele vê todas as autorizações num menu próprio do app, chamado \"Pix Automático\", e pode cancelar quando quiser. E cada débito é agendado de 2 a 10 dias antes da data, justamente pra ele se programar.\n\nSe faltar saldo no dia, o banco do cliente tenta de novo à noite e manda uma notificação pra ele. Novas tentativas nos dias seguintes só acontecem se a autorização previr isso. E se não der, nada impede de vocês acertarem aquele mês por outro meio, como um Pix comum. A autorização continua valendo pros meses seguintes.\n\n### Passo a passo pra montar o seu plano\n\n1. **Pergunte no seu banco** (o da conta da barbearia) se ele oferece Pix Automático pra recebedor e quanto cobra. Se não oferecer, vale comparar com outro banco digital.\n2. **Feche as regras do plano no papel.** Quantos cortes por mês, se barba entra, se passa pro mês seguinte o que não usou, em que dias vale. Conta de exemplo: corte a R$ 40; plano de 2 cortes por R$ 70. O cliente economiza R$ 10, e você recebe adiantado, sabe quanto entra e garante a volta dele.\n3. **Escolha o dia da cobrança com o cliente.** Escolha bem: o dia que vale é o da autorização e não muda depois. Pra trocar, é preciso cancelar e autorizar de novo.\n4. **Mande a solicitação pelo banco.** Dependendo do banco, o cliente confirma por uma notificação no app ou lendo um QR Code. Em uma das formas, ele já paga o primeiro mês na hora e autoriza os próximos no mesmo passo.\n\n### Cuidados\n\nExplique o plano antes, com calma, e deixe as regras escritas onde o cliente veja. Assinatura que o cliente não entendeu vira cancelamento no segundo mês. Combine também o que acontece quando o preço sobe: se a nova mensalidade passar do valor máximo que ele autorizou, a cobrança não sai até ele mudar o limite no app.\n\nE não esqueça de anotar quem é mensalista. Na hora de marcar, o barbeiro precisa saber de cara quem já pagou o mês. Pra calcular o valor do plano sem perder dinheiro, o curso [Preço e lucro na barbearia](/cursos/preco-e-lucro-na-barbearia) ajuda a fazer a conta.\n\nO plano mensal sempre foi uma boa ideia que dava trabalho pra cobrar. Com o Pix Automático, o trabalho fica com o banco.",
+  "fontes": [
+    {
+      "titulo": "Banco Central — FAQ Pix Automático (participantes)",
+      "url": "https://www.bcb.gov.br/content/estabilidadefinanceira/pix/pix-automatico-FAQ-participantes.pdf"
+    },
+    {
+      "titulo": "Banco Central — Fórum Pix, 26/06/2025 (Resolução BCB nº 482: CNPJ ativo há mais de 6 meses)",
+      "url": "https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Forum_Pix_Plenaria/20252606-Forum_Pix.pdf"
+    },
+    {
+      "titulo": "Agência Brasil — Bancos passam a oferecer Pix Automático a partir desta segunda (16/06/2025)",
+      "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2025-06/bancos-passam-oferecer-pix-automatico-partir-desta-segunda"
+    },
+    {
+      "titulo": "Agência Brasil — Pix Automático torna-se obrigatório a partir desta segunda (13/10/2025)",
+      "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2025-10/pix-automatico-torna-se-obrigatorio-partir-desta-segunda"
+    }
+  ]
+}

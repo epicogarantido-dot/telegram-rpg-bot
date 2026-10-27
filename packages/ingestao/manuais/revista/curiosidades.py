@@ -391,4 +391,54 @@ fontes=[
 ])
 
 
-ARTIGOS = [POSTE, IMPOSTO, SANGRADORES, GILLETTE, QUARTETO, MOVEMBER, CADEIRA, BARBA_VAI_E_VOLTA, FIGARO]
+# 27/10/2026 — Companhia dos Barbeiros de Londres: página "History of the Company" do site oficial
+# (barberscompany.org, lida pela API do site) e Wikipedia (só contexto: Holbein e Thomas Vicary).
+BARBEIROS_CIRURGIOES = cur(
+slug="quando-barbeiro-e-cirurgiao-eram-a-mesma-profissao",
+titulo="Quando barbeiro e cirurgião eram a mesma profissão: a Companhia de Londres",
+resumo="Em 1540, uma lei inglesa juntou barbeiros e cirurgiões numa companhia só e dividiu o trabalho: um não fazia o serviço do outro, mas os dois podiam arrancar dente. A história, de 1308 até hoje.",
+publicadoEm="2026-10-27",
+tags=["barbearia", "história", "curiosidade", "londres"],
+conteudo="""Em 1540, o Parlamento inglês aprovou uma lei com uma regra que hoje parece piada: cirurgião não podia fazer barba nem cortar cabelo, barbeiro não podia operar, mas **os dois podiam arrancar dente**. A lei criou a Companhia dos Barbeiros e Cirurgiões de Londres, e a história dela explica por que, durante séculos, o barbeiro foi também o homem da lâmina na medicina.
+
+### Uma corporação de 1308
+
+As corporações de ofício de Londres, as "livery companies", nasceram na Idade Média pra regular a concorrência, manter o padrão do trabalho e cuidar dos próprios membros. A primeira menção à dos barbeiros é de 1308, quando um tal Richard le Barbour foi escolhido pelos vereadores da cidade pra manter a ordem entre os colegas. A ordem que ele recebeu era fiscalizar o ofício todo mês e levar às autoridades quem estivesse manchando o nome da profissão.
+
+Já em 1312 aparece o primeiro cirurgião registrado como membro. Não era acaso: segundo a própria Companhia, no século 13 o papa Honório III proibiu religiosos de praticar medicina, e os barbeiros dos mosteiros, acostumados com a navalha, passaram a fazer pequenas cirurgias. O conhecimento saiu dos mosteiros e chegou aos barbeiros das cidades.
+
+### A briga com os cirurgiões
+
+Em Londres cresceu, ao lado, uma Fraternidade dos Cirurgiões, com estatuto aprovado em 1435, que reivindicava o direito de operar. Deu briga. Em 1462, o rei Eduardo IV deu aos barbeiros a primeira carta real, com poder de fiscalizar a prática da cirurgia na cidade e de afastar charlatães.
+
+A paz definitiva, ou quase, veio com a lei de 1540, que juntou as duas corporações e dividiu o trabalho. A mesma lei dava à Companhia quatro corpos de condenados à forca por ano, pra aulas de anatomia. Era o começo da cirurgia como profissão estudada.
+
+A união foi celebrada num quadro de Hans Holbein, o pintor da corte de Henrique VIII, que mostra o rei entregando a carta da Companhia ao seu primeiro mestre, o cirurgião Thomas Vicary. O quadro está até hoje na sede, o Barber-Surgeons' Hall.
+
+### O divórcio de 1745
+
+O casamento nunca foi tranquilo, e durou cerca de 200 anos. Em 1745, a pedido dos cirurgiões, uma nova lei separou os dois. Os cirurgiões formaram a própria companhia, que mais tarde viraria o Royal College of Surgeons of England, uma das instituições mais respeitadas da cirurgia no mundo.
+
+O curioso é o que aconteceu depois: a Companhia dos Barbeiros foi perdendo a ligação com a barbearia, e hoje é uma entidade de caridade ligada à medicina e à cirurgia. Desde 1919, quando criou uma palestra anual em homenagem a Thomas Vicary, voltou a receber cirurgiões como membros. Os barbeiros de hoje, ironicamente, quase não aparecem por lá.
+
+### A mesma história no Brasil e no poste
+
+O poste listrado na porta é herança desse tempo, como contamos em [Por que o poste da barbearia é listrado](/revista/por-que-o-poste-da-barbearia-e-listrado). E no Brasil a história teve a sua versão: os [barbeiros sangradores](/revista/barbeiros-sangradores-no-brasil-imperial), que no tempo do Império faziam sangria, tiravam dente e cortavam cabelo.
+
+### Como usar isso na sua barbearia
+
+**Assunto pronto na cadeira.** "Você sabia que, em 1540, uma lei inglesa proibiu o cirurgião de fazer barba e deixou os dois arrancarem dente?" Rende conversa até o fim do corte.
+
+**Post de história.** Uma série curta no Instagram, "a profissão mais antiga do bairro", com o poste, os sangradores e a Companhia de Londres, mostra que a barbearia tem tradição, e não só tendência.
+
+**A ideia por trás da corporação.** Os barbeiros de 1308 se juntaram pra manter o padrão do ofício e expulsar quem sujava o nome da profissão. Um grupo de barbeiros da cidade, trocando indicação e combinando boas práticas, é a versão de hoje da mesma ideia. A nossa [comunidade de barbeiros](/barbeiros#comunidade) nasceu pra isso.
+
+Setecentos anos depois, a navalha continua a mesma. O que mudou foi quem segura o bisturi.""",
+fontes=[
+    {"titulo": "The Worshipful Company of Barbers — History of the Company", "url": "https://barberscompany.org/history-of-the-company/"},
+    {"titulo": "Wikipedia — Worshipful Company of Barbers", "url": "https://en.wikipedia.org/wiki/Worshipful_Company_of_Barbers"},
+],
+)
+
+
+ARTIGOS = [POSTE, IMPOSTO, SANGRADORES, GILLETTE, QUARTETO, MOVEMBER, CADEIRA, BARBA_VAI_E_VOLTA, FIGARO, BARBEIROS_CIRURGIOES]

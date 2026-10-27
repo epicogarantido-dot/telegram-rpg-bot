@@ -1,0 +1,36 @@
+{
+  "slug": "tabela-de-precos-da-barbearia-o-que-a-lei-pede",
+  "titulo": "Tabela de preços da barbearia: o que a lei pede e o desconto no Pix",
+  "resumo": "A lei manda o preço dos serviços ficar à vista, legível, enquanto a barbearia estiver aberta. E deixa cobrar diferente no Pix e no cartão, desde que o desconto esteja escrito. Como fazer a sua tabela.",
+  "tipo": "guia",
+  "publicadoEm": "2026-10-27",
+  "tags": [
+    "barbearia",
+    "preço",
+    "consumidor",
+    "lei",
+    "guia"
+  ],
+  "imagem": {
+    "arquivo": "/revista/tabela-de-precos-da-barbearia-o-que-a-lei-pede.webp",
+    "alt": "Bancada de barbearia antiga com cadeira de barbeiro, frascos e tesouras sobre o mármore",
+    "credito": "StockSnap",
+    "licenca": "CC0",
+    "fonte": "https://stocksnap.io/photo/barbershop-chair-7M505B7MYV"
+  },
+  "conteudo": "\"Quanto tá o corte?\" Se o cliente precisa perguntar, a barbearia já está em falta com a lei. Não é implicância: o direito de saber o preço antes de comprar é do Código de Defesa do Consumidor, e duas normas explicam como isso funciona na prática. A boa notícia é que cumprir custa uma folha bem feita, e ainda ajuda a vender.\n\n### O que diz a lei\n\nA Lei nº 10.962, de 2004, regula como os preços aparecem pro consumidor. Pra serviço, que não tem etiqueta, ela permite a **relação de preços**: uma lista escrita, clara e acessível. É a tabela na parede.\n\nO Decreto nº 5.903, de 2006, detalha o resto. O preço precisa ser correto, claro, preciso, ostensivo e legível, e o decreto explica cada palavra: claro é entender na hora, sem abreviação e sem precisar fazer conta; legível é visível e que não apaga. Três regras do decreto valem ouro pra barbearia:\n\n- os preços ficam **sempre visíveis enquanto o estabelecimento estiver aberto**;\n- a lista fica com a frente virada pro cliente, pra ele ver sem precisar pedir;\n- o preço é informado pelo **total à vista**. Se você parcela, informa também o total parcelado, o número e o valor das parcelas e os juros.\n\n### O que é infração\n\nO mesmo decreto lista o que não pode, e a lista parece feita pra placa de barbearia: letras de tamanhos diferentes que dificultam a leitura, cor da letra parecida com a do fundo, preço apagado ou rasurado, mostrar só o valor da parcela, dar dois preços diferentes pro mesmo serviço e escrever na vertical ou torto. Quem descumpre fica sujeito às sanções do Código de Defesa do Consumidor.\n\nAquele quadro de giz com \"Corte ~~35~~ 40\" escrito por cima, ou a placa preta com letra cinza-escura, é exatamente o que a regra quer evitar.\n\n### Pode cobrar diferente no Pix e no cartão?\n\nPode. A Lei nº 13.455, de 2017, autoriza preço diferente conforme o prazo ou o meio de pagamento. Então \"corte R$ 40, ou R$ 38 no Pix\" é permitido. A mesma lei pôs uma condição na Lei 10.962: o desconto tem que estar informado **em local e formato visíveis**. Desconto que só existe se o cliente perguntar não vale.\n\n### Como montar a sua tabela\n\n1. **Um serviço por linha, com o preço total.** Corte, barba, sobrancelha, combos. Se o combo é mais barato que a soma, ele vende sozinho.\n2. **Letra grande e do mesmo tamanho, com contraste forte**: preto no branco ou branco no preto.\n3. **Diga o que está incluído** quando não for óbvio: \"Corte + lavagem\", \"Barba com toalha quente\".\n4. **Desconto no Pix ou à vista, escrito na própria tabela.**\n5. **Pendure onde o cliente vê antes de sentar**: na entrada ou no balcão. Atrás da cadeira, só o barbeiro enxerga.\n6. **Preço novo, tabela nova.** Nada de riscar e escrever por cima.\n\nE repita os mesmos preços onde o cliente marca horário. Preço diferente no site, no Instagram e na parede é o tipo de coisa que dá discussão no caixa. Se você ainda está decidindo quanto cobrar, o curso [Preço e lucro na barbearia](/cursos/preco-e-lucro-na-barbearia) ajuda a fechar a conta.\n\nUma tabela clara não serve só pro fiscal. O cliente que vê o preço do combo e da barba ali do lado é o cliente que pede mais um serviço.",
+  "fontes": [
+    {
+      "titulo": "Lei nº 10.962, de 11 de outubro de 2004 — texto atualizado na Câmara dos Deputados",
+      "url": "https://www2.camara.leg.br/legin/fed/lei/2004/lei-10962-11-outubro-2004-534307-normaatualizada-pl.html"
+    },
+    {
+      "titulo": "Decreto nº 5.903, de 20 de setembro de 2006 — texto atualizado na Câmara dos Deputados",
+      "url": "https://www2.camara.leg.br/legin/fed/decret/2006/decreto-5903-20-setembro-2006-545543-normaatualizada-pe.pdf"
+    },
+    {
+      "titulo": "Lei nº 13.455, de 26 de junho de 2017 — Câmara dos Deputados",
+      "url": "https://www2.camara.leg.br/legin/fed/lei/2017/lei-13455-26-junho-2017-785093-publicacaooriginal-153193-pl.html"
+    }
+  ]
+}

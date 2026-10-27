@@ -39,6 +39,11 @@ Checagem: agente `checador-fatos`, `npm test -w @aprenda/catalogo` e `npm run co
 | ✅ 26/10 | Guia | Perfil da Empresa no Google (Central de Ajuda) | cria, verifica e põe 9 fotos no perfil |
 | ✅ 26/10 | Guia | Barbeiro parceiro: Lei do Salão-Parceiro e STF | põe a parceria no papel e homologa |
 | ✅ 26/10 | Curiosidade | 18 de janeiro, Dia Nacional do Barbeiro (Lei 12.592) | põe a data no calendário |
+| ✅ 27/10 | Guia | Pix Automático pro plano mensal (FAQ do BC, Res. BCB 482) | oferece plano mensal cobrado sozinho |
+| ✅ 27/10 | Guia | Nota fiscal do MEI (Receita, NT NFS-e 2023.001) | emite NFS-e pelo emissor nacional e pega cliente empresa |
+| ✅ 27/10 | Guia | Tabela de preços e desconto no Pix (Lei 10.962, Dec. 5.903, Lei 13.455) | refaz a tabela na parede com o desconto escrito |
+| ✅ 27/10 | Guia | LGPD e a lista de clientes (Lei 13.709, Res. ANPD 2/2022) | limpa a lista e põe "SAIR" nas mensagens |
+| ✅ 27/10 | Curiosidade | Barbeiros e cirurgiões: a Companhia de Londres (1308–1745) | conta a história na cadeira |
 | ⬜ | Série ep. 10 | Nova York (Paul Mole's?) ou Coreia (yibalso): fontes fracas, procurar melhores | — |
 | ⬜ | Curiosidade | A barbearia mais antiga do Brasil | — |
 | ⬜ | Curiosidade | Barbeiros famosos da história (e clientes famosos) | — |

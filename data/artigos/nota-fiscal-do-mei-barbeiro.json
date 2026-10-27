@@ -1,0 +1,36 @@
+{
+  "slug": "nota-fiscal-do-mei-barbeiro",
+  "titulo": "Nota fiscal do MEI barbeiro: quando é obrigatória e como emitir de graça",
+  "resumo": "Pro cliente pessoa física, o MEI não precisa emitir. Pra empresa, precisa, e só pelo emissor nacional. O que diz a Receita, o passo a passo pelo celular e o que guardar todo mês.",
+  "tipo": "guia",
+  "publicadoEm": "2026-10-27",
+  "tags": [
+    "barbearia",
+    "mei",
+    "nota fiscal",
+    "impostos",
+    "guia"
+  ],
+  "imagem": {
+    "arquivo": "/revista/nota-fiscal-do-mei-barbeiro.webp",
+    "alt": "Pincel de barbear numa cuia de metal, navalhas e pentes de máquina arrumados sobre uma toalha escura",
+    "credito": "StockSnap",
+    "licenca": "CC0",
+    "fonte": "https://stocksnap.io/photo/barbershop-brush-GZP9ZEQPFL"
+  },
+  "conteudo": "Um dia aparece o pedido: uma empresa quer contratar corte pros funcionários, um hotel quer um barbeiro pros hóspedes, uma produtora precisa de você num ensaio de fotos. E vem a pergunta: \"você emite nota?\". Se você é MEI, a resposta é sim, e dá pra fazer pelo celular, de graça, em poucos minutos.\n\n### Quando o MEI é obrigado a emitir\n\nA regra está no Perguntas e Respostas do MEI da Receita Federal (atualizado em abril de 2025, com base no art. 106 da Resolução CGSN nº 140): o MEI **fica dispensado de emitir nota pro consumidor pessoa física**, mas é obrigado quando quem contrata tem CNPJ.\n\nTraduzindo pra barbearia: o cliente que senta na cadeira e paga o corte não exige nota. Se ele pedir, você pode emitir, mas não é obrigação. Já o serviço prestado pra uma empresa, seja ela um salão parceiro, uma academia que oferece corte aos alunos ou uma empresa que contrata um dia de barbearia pros funcionários, precisa de nota.\n\n### Onde emitir: só no emissor nacional\n\nDesde 1º de setembro de 2023, a nota de serviço do MEI (a NFS-e) é emitida exclusivamente no sistema nacional, segundo a Nota Técnica 2023.001 do Comitê Gestor da NFS-e. Não vale mais o site da prefeitura. Todo MEI do país já está habilitado, sem cadastro prévio e sem depender do município.\n\nExistem três jeitos:\n\n- **Emissor web**, gratuito, no Portal da NFS-e (nfse.gov.br/EmissorNacional);\n- **Aplicativo NFS-e Mobile**, gratuito, na App Store e no Google Play;\n- **Por sistema próprio (API)**, pra quem usa programa de emissão. Só esse caminho exige certificado digital.\n\n### Como entrar\n\nO jeito mais simples é com a conta gov.br do CPF do dono do MEI. O sistema reconhece sozinho que você é o responsável pelo CNPJ. A conta gov.br precisa ser nível **prata ou ouro**; se a sua for bronze, dá pra subir de nível no próprio app gov.br. A outra opção é criar usuário e senha no portal, que pede alguns dados de conferência, como o recibo do Imposto de Renda ou o título de eleitor.\n\nO passo a passo fica no próprio Portal da NFS-e (gov.br/nfse), na área \"MEI e demais empresas\".\n\n### O que mais o MEI precisa guardar\n\nEmitir a nota não é a única tarefa. A Receita lista as obrigações do MEI, e duas delas andam junto com a nota:\n\n**Relatório Mensal de Receitas Brutas.** Todo mês, anote quanto entrou. As notas que você emitiu e as notas do que comprou (produtos, pomada, lâmina) ficam guardadas junto. Não precisa mandar pra ninguém: é pra mostrar se o Fisco pedir.\n\n**Compra sempre com nota.** Mesmo dispensado de emitir pro cliente pessoa física, o MEI tem que comprar mercadoria e serviço com documento fiscal. Guardar essas notas também te ajuda a saber quanto custa cada atendimento.\n\nE uma vez por ano tem a declaração anual do MEI, a DASN-Simei.\n\n### Por que vale a pena\n\nA nota abre uma porta que muito barbeiro deixa fechada: o cliente empresa. Evento corporativo, dia do noivo com padrinhos pagando pela empresa, parceria com academia, convênio com empresa do bairro. Esse cliente paga em dia e volta, mas só contrata quem emite nota.\n\nO limite de faturamento do MEI está mudando: explicamos em [MEI vai poder faturar mais](/revista/mei-vai-poder-faturar-mais-2027-2028). E pra organizar o resto da papelada, o curso [Abrir e organizar sua barbearia](/cursos/abrir-e-organizar-sua-barbearia) tem o caminho completo.\n\nDúvida sobre um caso específico, como cidade com regra própria de ISS, convênio ou valor alto: confirme com seu contador antes de fechar o serviço.",
+  "fontes": [
+    {
+      "titulo": "Receita Federal — Perguntas e Respostas MEI e Simei (atualizado em 29/04/2025)",
+      "url": "https://www8.receita.fazenda.gov.br/simplesnacional/arquivos/manual/perguntaomei.pdf"
+    },
+    {
+      "titulo": "NFS-e — Nota Técnica 2023.001: obrigatoriedade da NFS-e nacional para o MEI",
+      "url": "https://www.gov.br/nfse/pt-br/nt-2023-001-obrigatoriedade-da-nfs-e-nacional-para-o-mei.pdf"
+    },
+    {
+      "titulo": "Portal da NFS-e — MEI e demais empresas",
+      "url": "https://www.gov.br/nfse/pt-br/mei-e-demais-empresas"
+    }
+  ]
+}
