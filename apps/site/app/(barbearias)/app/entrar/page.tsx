@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ErroAgenda } from "@aprenda/agenda";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { chaveDoAparelho, chaveDoEmail } from "@/lib/protecao";
+import { contatoResponsavel } from "@/lib/contato";
 
 export const metadata = { title: "Entrar — Agenda" };
 
@@ -33,6 +34,7 @@ async function entrar(form: FormData) {
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const { erro } = await searchParams;
+  const contato = contatoResponsavel();
   return (
     <>
       <h1>Entrar na agenda</h1>
@@ -42,6 +44,13 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" />
         <button type="submit">Entrar</button>
       </form>
+      <p>
+        Esqueceu a senha?{" "}
+        {contato
+          ? <a href={`${contato.link}?text=${encodeURIComponent("Oi! Esqueci a senha da minha agenda no Aprenda Livre.")}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
+          : "Fale com quem te vendeu o site"}
+        {" "}e mandamos um link pra criar outra.
+      </p>
       <p>Ainda não tem? <Link href="/app/cadastro">Criar conta</Link></p>
     </>
   );

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
 import {
   STATUS, ehCelularBR, linkWhatsapp, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
-  mensagemSegunda, proximoPasso, DIAS_ATE_LEMBRETE, type Lead, type Status,
+  mensagemSegunda, mensagemSiteEGrupo, proximoPasso, DIAS_ATE_LEMBRETE, type Lead, type Status,
 } from "@aprenda/prospeccao";
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
@@ -27,7 +27,7 @@ const ROTULO: Record<Status, string> = {
 /** Etapas em que a conversa está viva e cabe montar ou mandar a demonstração. */
 const EM_CONVERSA: Status[] = ["contatado", "lembrete", "respondeu", "demo_enviada"];
 
-type Envio = "primeira" | "lembrete" | "segunda-whatsapp" | "segunda-chegada" | "demo" | "cursos";
+type Envio = "primeira" | "lembrete" | "segunda-whatsapp" | "segunda-chegada" | "demo" | "cursos" | "site-grupo";
 
 /**
  * Abre o WhatsApp com a mensagem da etapa e já avança o lead. Quem envia é a pessoa, no
@@ -65,6 +65,9 @@ async function enviar(form: FormData) {
       break;
     case "cursos":
       texto = mensagemCursos(config);
+      break;
+    case "site-grupo":
+      texto = mensagemSiteEGrupo(lead, config);
       break;
   }
   if (!texto) return;
@@ -122,7 +125,7 @@ function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeContatar: 
   const demo = lead.demoSlug && lead.demoConvite ? linkDaDemonstracao(lead.demoSlug, lead.demoConvite) : undefined;
   if (lead.status === "nao_contatar") return null;
   if (!celular) {
-    return <div className="acoes"><small>Sem celular: ache o WhatsApp em <a href="/painel/buscar">Buscar</a> e use "Completar".</small><Botao lead={lead} status="nao_contatar" perigo>Não contatar</Botao></div>;
+    return <div className="acoes"><small>Sem celular: ache o WhatsApp em <a href="/painel/buscar">Buscar</a> · <a href="/painel/divulgacao">Divulgação</a> e use "Completar".</small><Botao lead={lead} status="nao_contatar" perigo>Não contatar</Botao></div>;
   }
   return (
     <div className="etapas-lead">
@@ -174,6 +177,7 @@ function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeContatar: 
           </>
         )}
         {lead.status === "demo_enviada" && <Botao lead={lead} status="cliente">Virou cliente</Botao>}
+        {config.siteUrl && EM_CONVERSA.includes(lead.status) && <Enviar lead={lead} tipo="site-grupo">Site + grupo</Enviar>}
         {config.siteUrl && EM_CONVERSA.includes(lead.status) && <Enviar lead={lead} tipo="cursos">Presente: cursos grátis</Enviar>}
         <Botao lead={lead} status="nao_contatar" perigo>Pediu SAIR</Botao>
       </div>

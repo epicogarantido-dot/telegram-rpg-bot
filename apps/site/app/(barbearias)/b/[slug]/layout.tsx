@@ -8,6 +8,7 @@ import { linkMapa, nivelEfeitos } from "@/lib/barbearias";
 import { Efeitos } from "@/componentes/barbearia/Efeitos";
 import { QueroEsteSite } from "@/componentes/barbearia/QueroEsteSite";
 import { dataPorExtenso } from "@/lib/datas";
+import { ehSiteDeExemplo } from "@/lib/exemplos";
 
 /** Demonstração não vai pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -34,7 +35,15 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
 
   return (
     <>
-      {b.demoAte && (
+      {b.demoAte && ehSiteDeExemplo(b.slug) ? (
+        <aside className="b-demo" aria-label="Aviso de site de exemplo">
+          <p>
+            <strong>Site de exemplo</strong> do estilo que você está vendo. Barbearia e fotos são ilustrativas e a marcação
+            vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
+          </p>
+          <a className="b-demo-botao" href="/barbeiros">Quero um site assim</a>
+        </aside>
+      ) : b.demoAte && (
         <aside className="b-demo" aria-label="Aviso de demonstração">
           <p>
             <strong>Demonstração</strong> montada pelo Aprenda Livre pra mostrar como ficaria o site da {b.nome}.

@@ -240,6 +240,8 @@ const COLUNAS_PAGAMENTO = `p.id, p.barbearia_id AS barbeariaId, b.nome AS barbea
   p.dias, p.status, p.pagador, p.criado_em AS criadoEm, p.decidido_em AS decididoEm`;
 
 const DURACAO_SESSAO_DIAS = 30;
+/** Quanto tempo vale o link de troca de senha. */
+export const LINK_SENHA_HORAS = 24;
 
 function caminhoPadrao(): string {
   if (process.env.AGENDA_DB) return process.env.AGENDA_DB;
@@ -300,6 +302,10 @@ export class BancoAgenda {
         nome TEXT NOT NULL, email TEXT NOT NULL UNIQUE, senha_hash TEXT NOT NULL, criado_em TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS sessoes (
+        token_hash TEXT PRIMARY KEY, usuario_id INTEGER NOT NULL REFERENCES usuarios(id), expira_em TEXT NOT NULL
+      );
+      -- Link de troca de senha (o admin gera e manda pelo WhatsApp): uso único, só o hash fica aqui.
+      CREATE TABLE IF NOT EXISTS trocas_senha (
         token_hash TEXT PRIMARY KEY, usuario_id INTEGER NOT NULL REFERENCES usuarios(id), expira_em TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS profissionais (
@@ -582,6 +588,59 @@ export class BancoAgenda {
 
   sair(token: string): void {
     this.db.prepare("DELETE FROM sessoes WHERE token_hash = ?").run(hashToken(token));
+  }
+
+  // ---------- senha: trocar no painel ou por link que o admin manda ----------
+
+  /** Usuários (barbeiros) de uma barbearia, pro admin escolher de quem é o link. */
+  usuariosDaBarbearia(barbeariaId: number): Usuario[] {
+    return this.db.prepare("SELECT id, barbearia_id AS barbeariaId, nome, email FROM usuarios WHERE barbearia_id = ? ORDER BY id")
+      .all(barbeariaId) as unknown as Usuario[];
+  }
+
+  /**
+   * Link de troca de senha, pro barbeiro que esqueceu. O admin manda pelo WhatsApp dele.
+   * Vale LINK_SENHA_HORAS, uma vez só; gerar outro invalida o anterior.
+   */
+  criarLinkDeSenha(usuarioId: number, agora = new Date()): string {
+    if (!this.db.prepare("SELECT 1 FROM usuarios WHERE id = ?").get(usuarioId)) throw new ErroAgenda("Usuário não encontrado.");
+    const { token, hash } = novoToken();
+    this.db.prepare("DELETE FROM trocas_senha WHERE usuario_id = ?").run(usuarioId);
+    this.db.prepare("INSERT INTO trocas_senha (token_hash, usuario_id, expira_em) VALUES (?, ?, ?)")
+      .run(hash, usuarioId, new Date(agora.getTime() + LINK_SENHA_HORAS * 3_600_000).toISOString());
+    return token;
+  }
+
+  /** De quem é o link (sem gastar o link): pra página mostrar "Nova senha pra fulano". */
+  usuarioDoLinkDeSenha(token: string, agora = new Date()): Usuario | undefined {
+    if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return undefined;
+    return this.db.prepare(`SELECT u.id, u.barbearia_id AS barbeariaId, u.nome, u.email FROM trocas_senha t
+      JOIN usuarios u ON u.id = t.usuario_id WHERE t.token_hash = ? AND t.expira_em > ?`)
+      .get(hashToken(token), agora.toISOString()) as Usuario | undefined;
+  }
+
+  /** Troca a senha pelo link, gasta o link, derruba as sessões abertas e já entra. Devolve a sessão nova. */
+  trocarSenhaComLink(token: string, novaSenha: string, agora = new Date()): string {
+    const u = this.usuarioDoLinkDeSenha(token, agora);
+    if (!u) throw new ErroAgenda("Esse link venceu ou já foi usado. Peça outro.");
+    this.gravarSenha(u.id, novaSenha);
+    this.db.prepare("DELETE FROM trocas_senha WHERE usuario_id = ?").run(u.id);
+    return this.criarSessao(u.id);
+  }
+
+  /** Troca no painel, sabendo a senha atual. Derruba as outras sessões e devolve uma nova pra este aparelho. */
+  trocarSenha(usuarioId: number, atual: string, nova: string): string {
+    const u = this.db.prepare("SELECT senha_hash FROM usuarios WHERE id = ?").get(usuarioId) as { senha_hash: string } | undefined;
+    if (!u || !conferirSenha(atual, u.senha_hash)) throw new ErroAgenda("A senha atual não confere.");
+    this.gravarSenha(usuarioId, nova);
+    return this.criarSessao(usuarioId);
+  }
+
+  private gravarSenha(usuarioId: number, nova: string): void {
+    if (nova.length < 8) throw new ErroAgenda("A senha precisa ter pelo menos 8 caracteres.");
+    this.db.prepare("UPDATE usuarios SET senha_hash = ? WHERE id = ?").run(hashSenha(nova), usuarioId);
+    // Quem estava logado com a senha antiga (inclusive alguém que não devia) sai.
+    this.db.prepare("DELETE FROM sessoes WHERE usuario_id = ?").run(usuarioId);
   }
 
   // ---------- barbearia ----------

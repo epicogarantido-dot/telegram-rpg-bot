@@ -45,6 +45,8 @@ export const config = {
   /** Endereço do site, pro presente dos cursos grátis (abertos, sem cadastro). */
   siteUrl: process.env.SITE_URL?.replace(/\/$/, "") || undefined,
   linkComunidade: process.env.COMUNIDADE_LINK ?? "https://chat.whatsapp.com/SEU-LINK",
+  /** Grupo pra mensagem "Site + grupo": só se o link de verdade estiver no .env. */
+  linkGrupo: process.env.COMUNIDADE_LINK && !process.env.COMUNIDADE_LINK.includes("SEU-LINK") ? process.env.COMUNIDADE_LINK : undefined,
   nichoPlural: process.env.NICHO_PLURAL ?? "barbeiros",
   /** Contatos manuais por dia. Passar disso em número novo é pedir banimento. */
   limiteDiario: Number(process.env.LIMITE_DIARIO ?? 20),

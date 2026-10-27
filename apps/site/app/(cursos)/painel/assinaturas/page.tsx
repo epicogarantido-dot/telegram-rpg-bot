@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { formatarData } from "@aprenda/agenda";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { exigirLogin } from "@/lib/painel";
+import { linkWhatsapp } from "@aprenda/prospeccao";
+import { urlDoSite } from "@/lib/membros";
+import { criarSitesDeExemplo, sitesDeExemplo } from "@/lib/exemplos";
+import { TEMAS } from "@aprenda/agenda";
 
 export const metadata = { title: "Assinaturas", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -28,6 +32,31 @@ async function bloquear(form: FormData) {
   revalidatePath("/painel/assinaturas");
 }
 
+/**
+ * Barbeiro esqueceu a senha: gera um link de troca (24 h, uso único) e abre o SEU WhatsApp
+ * com a mensagem pronta pro número da barbearia. Quem envia é você.
+ */
+async function linkDeSenha(form: FormData) {
+  "use server";
+  await exigirLogin();
+  const banco = obterAgenda();
+  const b = banco.barbeariaPorId(Number(form.get("id")));
+  const usuario = b && banco.usuariosDaBarbearia(b.id)[0];
+  if (!b || !usuario) redirect(`/painel/assinaturas?erro=${encodeURIComponent("Barbearia sem conta de acesso.")}`);
+  const link = `${urlDoSite()}/app/senha/${banco.criarLinkDeSenha(usuario.id)}`;
+  const texto = `Oi, ${usuario.nome.split(" ")[0]}! Aqui está o link pra criar uma senha nova na agenda da ${b.nome}. Ele vale por 24 horas e funciona uma vez:\n\n${link}`;
+  redirect(linkWhatsapp(b.telefone, texto));
+}
+
+/** Cria os 6 sites de exemplo (um por estilo) que faltarem. */
+async function criarExemplos() {
+  "use server";
+  await exigirLogin();
+  await criarSitesDeExemplo();
+  revalidatePath("/painel/assinaturas");
+  revalidatePath("/");
+}
+
 export default async function Assinaturas({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   await exigirLogin();
   const { erro } = await searchParams;
@@ -37,7 +66,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <p><Link href="/painel">Leads</Link> · <strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
+      <p><Link href="/painel">Leads</Link> · <a href="/painel/divulgacao">Divulgação</a> · <strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Assinaturas</h1>
       {erro && <p className="erro">{erro}</p>}
 
@@ -67,6 +96,27 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
         </div>
       ))}
 
+      <h2>Sites de exemplo</h2>
+      <p><small>Um por estilo, pra mostrar um site de verdade na conversa. Sem login (ninguém mexe), a marcação não grava e o topo avisa que é exemplo. Aparecem nos carrosséis de estilos.</small></p>
+      {(() => {
+        const exemplos = sitesDeExemplo();
+        const faltam = TEMAS.filter((t) => !exemplos[t.id]).length;
+        return (
+          <>
+            <ul>
+              {TEMAS.filter((t) => exemplos[t.id]).map((t) => (
+                <li key={t.id}>{t.nome}: <a href={`/b/${exemplos[t.id]}`} target="_blank" rel="noopener noreferrer">/b/{exemplos[t.id]}</a></li>
+              ))}
+            </ul>
+            {faltam > 0 && (
+              <form action={criarExemplos}>
+                <button className="botao">Criar {faltam === TEMAS.length ? "os" : "os que faltam:"} {faltam} sites de exemplo</button>
+              </form>
+            )}
+          </>
+        );
+      })()}
+
       <h2>Barbearias ({barbearias.length})</h2>
       {barbearias.map((b) => {
         const ativo = banco.acessoAtivo(b);
@@ -76,12 +126,18 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
               {ativo ? "🟢" : "🔴"} <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} ·{" "}
               {ativo ? `até ${formatarData(b.acessoAte)}` : `bloqueada desde ${formatarData(b.acessoAte)}`}
             </span>
-            {ativo && (
-              <form action={bloquear}>
+            <span className="acoes">
+              <form action={linkDeSenha}>
                 <input type="hidden" name="id" value={b.id} />
-                <button className="botao-sec">Bloquear agora</button>
+                <button className="botao-sec">Link de nova senha</button>
               </form>
-            )}
+              {ativo && (
+                <form action={bloquear}>
+                  <input type="hidden" name="id" value={b.id} />
+                  <button className="botao-sec">Bloquear agora</button>
+                </form>
+              )}
+            </span>
           </div>
         );
       })}

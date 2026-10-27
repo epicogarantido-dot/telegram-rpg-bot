@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BancoProspeccao } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
-import { mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato, mensagemSegunda, nomeParaMensagem, proximoPasso } from "./mensagem.ts";
+import { mensagemCursos, mensagemDemonstracao, mensagemSiteEGrupo, mensagemLembrete, mensagemPrimeiroContato, mensagemSegunda, nomeParaMensagem, proximoPasso } from "./mensagem.ts";
 import { buscarNoOSM, montarConsulta } from "./openstreetmap.ts";
 import { ehCelularBR, linkWhatsapp, normalizarTelefone } from "./telefone.ts";
 
@@ -90,7 +90,7 @@ describe("mensagem", () => {
     expect(mensagemSegunda({ nome: "Barbearia X" }, "chegada")).toContain("fila");
     expect(mensagemDemonstracao({ nome: "Barbearia X" }, "https://s/b/x?convite=a")).toContain("https://s/b/x?convite=a");
     expect(mensagemLembrete({ nome: "Barbearia X" })).toContain("SAIR");
-    expect(mensagemCursos(cfg)).toContain("https://exemplo.com/cursos");
+    expect(mensagemCursos(cfg)).toContain("https://exemplo.com/cursos?origem=presente");
     expect(mensagemCursos({ remetente: "João" })).toBeUndefined();
   });
 
@@ -125,5 +125,32 @@ describe("OpenStreetMap", () => {
     expect(r[0]!.endereco).toBe("Rua A, 10");
     expect(r[1]!.telefone).toBe("5519999991111");
     expect(r[1]!.mapsUrl).toBe("https://www.openstreetmap.org/way/2");
+  });
+});
+
+describe("site + grupo e de onde vêm as visitas", () => {
+  it("mensagem com site e grupo só quando há site; grupo é opcional", () => {
+    const lead = { nome: "Barbearia do Zé - Centro" };
+    expect(mensagemSiteEGrupo(lead, { remetente: "João" })).toBeUndefined();
+    const so = mensagemSiteEGrupo(lead, { remetente: "João", siteUrl: "https://ex.com" })!;
+    expect(so).toContain("https://ex.com/?origem=convite");
+    expect(so).not.toContain("grupo");
+    expect(mensagemSiteEGrupo(lead, { remetente: "João", siteUrl: "https://ex.com", linkGrupo: "https://chat.whatsapp.com/abc" })).toContain("https://chat.whatsapp.com/abc");
+  });
+
+  it("conta visitas e cadastros por origem, ignora origem estranha", () => {
+    const b = new BancoProspeccao(":memory:");
+    const agora = new Date("2026-10-27T12:00:00Z");
+    expect(b.registrarOrigem("grupo-mei-2027", "visita", agora)).toBe(true);
+    b.registrarOrigem("grupo-mei-2027", "visita", agora);
+    b.registrarOrigem("grupo-mei-2027", "cadastro", agora);
+    b.registrarOrigem("cartao", "visita", agora);
+    expect(b.registrarOrigem("<script>", "visita", agora)).toBe(false);
+    expect(b.resumoOrigens(30, agora)).toEqual([
+      { origem: "grupo-mei-2027", visitas: 2, cadastros: 1 },
+      { origem: "cartao", visitas: 1, cadastros: 0 },
+    ]);
+    // Fora da janela não conta.
+    expect(b.resumoOrigens(30, new Date("2026-12-27T12:00:00Z"))).toEqual([]);
   });
 });

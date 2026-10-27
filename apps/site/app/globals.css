@@ -250,6 +250,8 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 a.estilo-slide { text-decoration: none; color: inherit; }
 a.estilo-slide:hover strong { text-decoration: underline; text-underline-offset: 4px; }
 .estilo-slide .estilo-slide-legenda { display: grid; gap: 2px; color: var(--texto); }
+.estilo-slide .estilo-slide-vivo { color: var(--texto); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; margin-top: 4px; }
+a.estilo-slide, div.estilo-slide { text-decoration: none; color: inherit; }
 
 /* ---------- login / cadastro ---------- */
 .formulario label { display: grid; gap: 6px; font-weight: 500; color: var(--texto); font-size: 15px; }
@@ -627,3 +629,9 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .config-servico .config-servico-domicilio { grid-column: 1 / -1; grid-row: 3; }
 .etiqueta-alerta { border-color: var(--erro); color: var(--erro); }
 .plano-vencido { border-color: var(--erro); }
+
+/* ---------- privacidade e termos: texto corrido, medida de leitura ---------- */
+.texto-legal { max-width: 68ch; }
+.texto-legal h2 { margin-top: 36px; }
+.texto-legal h3 { margin-top: 24px; }
+.texto-legal li { margin: 6px 0; }

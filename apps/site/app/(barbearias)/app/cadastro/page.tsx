@@ -4,6 +4,8 @@ import { ErroAgenda, planoDoAmbiente } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
+import { obterBanco } from "@/lib/painel";
+import { CampoOrigem } from "@/componentes/ContarOrigem";
 
 export const metadata = { title: "Criar conta — Agenda" };
 
@@ -22,6 +24,8 @@ async function cadastrar(form: FormData) {
     const dados = { nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") };
     token = demo ? obterAgenda().assumirDemonstracao(demo, dados).token : obterAgenda().criarConta(dados).token;
     obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
+    // De onde veio quem virou cliente (link do grupo, cartão, convite, demonstração): só a contagem.
+    obterBanco().registrarOrigem(campo("origem") || (demo ? "demonstracao" : "direto"), "cadastro");
   } catch (e) {
     redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}) })}`);
   }
@@ -61,6 +65,8 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <input name="nome" placeholder="Seu nome" required maxLength={60} />
         <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
         <input name="senha" type="password" placeholder="Senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
+        <CampoOrigem />
+        <small className="suave">Ao criar a conta você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
         <button type="submit">{demo ? "Quero este site" : "Criar minha agenda"}</button>
       </form>
       <p>Já tem conta? <Link href="/app/entrar">Entrar</Link></p>

@@ -279,7 +279,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <input id="nome" name="nome" required maxLength={80} autoComplete="name" />
           <label htmlFor="telefone">Seu WhatsApp com DDD</label>
           <input id="telefone" name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" aria-describedby="telefone-dica" />
-          <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário.</small>
+          <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário. <a href="/privacidade" target="_blank">Privacidade</a>.</small>
           {servico.emDomicilio && (
             <>
               <label htmlFor="endereco">Endereço do atendimento</label>

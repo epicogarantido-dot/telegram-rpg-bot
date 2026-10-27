@@ -45,6 +45,9 @@ export interface Lead extends Estabelecimento {
   demoConvite?: string;
 }
 
+/** Teto de origens diferentes por dia (ver `registrarOrigem`). */
+export const MAX_ORIGENS_DIA = 300;
+
 export interface Inscricao {
   id: number;
   nome: string;
@@ -97,6 +100,12 @@ export class BancoProspeccao {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL, telefone TEXT NOT NULL, negocio TEXT, cidade TEXT,
         interesse TEXT NOT NULL, criado_em TEXT NOT NULL
+      );
+      -- De onde vêm as visitas (link do grupo, cartão, convite): só a contagem do dia, sem
+      -- guardar quem visitou (nada de IP, cookie ou aparelho).
+      CREATE TABLE IF NOT EXISTS origens (
+        dia TEXT NOT NULL, origem TEXT NOT NULL, tipo TEXT NOT NULL, total INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (dia, origem, tipo)
       );
     `);
     // Colunas novas em bancos antigos.
@@ -305,5 +314,36 @@ export class BancoProspeccao {
   inscricoes(): Inscricao[] {
     return this.db.prepare(`SELECT id, nome, telefone, negocio, cidade, interesse, criado_em AS criadoEm
       FROM inscricoes ORDER BY id DESC`).all() as unknown as Inscricao[];
+  }
+
+  // ---------- de onde vêm as visitas (contagem agregada, sem dado pessoal) ----------
+
+  /**
+   * Soma 1 na origem do dia ("grupo-o-poste-da-barbearia", "cartao", "convite"). `tipo`:
+   * visita (abriu o site pelo link) ou cadastro (criou conta de barbearia vindo dele).
+   * Origem estranha é ignorada; e no máximo MAX_ORIGENS_DIA origens novas por dia, pra
+   * ninguém encher o banco inventando nomes.
+   */
+  registrarOrigem(origem: string, tipo: "visita" | "cadastro", agora = new Date()): boolean {
+    if (!/^[a-z0-9-]{2,60}$/.test(origem)) return false;
+    const dia = agora.toISOString().slice(0, 10);
+    const existe = this.db.prepare("SELECT 1 FROM origens WHERE dia = ? AND origem = ? AND tipo = ?").get(dia, origem, tipo);
+    if (!existe) {
+      const n = (this.db.prepare("SELECT COUNT(*) AS n FROM origens WHERE dia = ?").get(dia) as { n: number }).n;
+      if (n >= MAX_ORIGENS_DIA) return false;
+    }
+    this.db.prepare(`INSERT INTO origens (dia, origem, tipo, total) VALUES (?, ?, ?, 1)
+      ON CONFLICT (dia, origem, tipo) DO UPDATE SET total = total + 1`).run(dia, origem, tipo);
+    return true;
+  }
+
+  /** Visitas e cadastros por origem nos últimos `dias`, das que mais trouxeram gente. */
+  resumoOrigens(dias = 30, agora = new Date()): { origem: string; visitas: number; cadastros: number }[] {
+    const desde = new Date(agora.getTime() - (dias - 1) * 86_400_000).toISOString().slice(0, 10);
+    return this.db.prepare(`SELECT origem,
+        SUM(CASE WHEN tipo = 'visita' THEN total ELSE 0 END) AS visitas,
+        SUM(CASE WHEN tipo = 'cadastro' THEN total ELSE 0 END) AS cadastros
+      FROM origens WHERE dia >= ? GROUP BY origem ORDER BY cadastros DESC, visitas DESC, origem`)
+      .all(desde) as unknown as { origem: string; visitas: number; cadastros: number }[];
   }
 }

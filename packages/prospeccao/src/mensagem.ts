@@ -10,6 +10,8 @@ export interface ConfigConvite {
   remetente: string;
   /** Endereço público do site (sem barra no fim), pro presente dos cursos grátis. */
   siteUrl?: string;
+  /** Convite do grupo de barbeiros no WhatsApp (COMUNIDADE_LINK). */
+  linkGrupo?: string;
 }
 
 export type Resposta = "whatsapp" | "chegada";
@@ -76,10 +78,22 @@ export function mensagemLembrete(lead: Pick<Lead, "nome">): string {
   return `Oi! Só pra não sumir: quer ver como ficaria o site da ${nomeParaMensagem(lead.nome)}? Se não for o momento, sem problema.\n\n${SAIR}`;
 }
 
+/**
+ * Depois que o lead respondeu: o site (conteúdo grátis + o site da barbearia) e o grupo, numa
+ * mensagem só. Nunca na 1ª mensagem: link pra quem não conversou com você é o que o WhatsApp
+ * mais trata como spam.
+ */
+export function mensagemSiteEGrupo(lead: Pick<Lead, "nome">, cfg: ConfigConvite): string | undefined {
+  if (!cfg.siteUrl) return undefined;
+  const site = `${cfg.siteUrl}/?origem=convite`;
+  const grupo = cfg.linkGrupo ? `\n\nE tem o grupo de barbeiros, onde eu posto as matérias novas e dicas pra lotar a agenda. Se quiser entrar: ${cfg.linkGrupo}` : "";
+  return `Aqui o site: tem cursos e matérias grátis pra quem tem barbearia (preço, cliente que volta, divulgação), sem cadastro. E dá pra ver como ficaria um site com agenda pra ${nomeParaMensagem(lead.nome)}: ${site}${grupo}`;
+}
+
 /** O presente: cursos grátis no site, abertos, sem cadastro. */
 export function mensagemCursos(cfg: ConfigConvite): string | undefined {
   if (!cfg.siteUrl) return undefined;
-  return `Ah, e tem uns cursos grátis pra quem tem barbearia (preço e lucro, cliente que volta, dinheiro em ordem). É aberto, sem cadastro: ${cfg.siteUrl}/cursos`;
+  return `Ah, e tem uns cursos grátis pra quem tem barbearia (preço e lucro, cliente que volta, dinheiro em ordem). É aberto, sem cadastro: ${cfg.siteUrl}/cursos?origem=presente`;
 }
 
 /** Dias que a 1ª mensagem espera resposta antes do lembrete, e o lembrete antes de desistir. */

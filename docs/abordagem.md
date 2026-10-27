@@ -91,3 +91,8 @@ Primeiro contato manual (acima) → convite pro **grupo** de barbeiros → no gr
 cursos do site → no site, tudo aberto e sem cadastro, e todo caminho termina no site da barbearia
 (menu "Quero meu site", carrossel dos estilos na página inicial, propaganda no fim de cada lição e
 matéria) → `/barbeiros` → `/app/cadastro`. Não tem bot nem login de aluno.
+
+**Site + grupo** (botão no cartão do lead, só depois que ele respondeu): uma mensagem com o link do
+site (`?origem=convite`) e o convite do grupo (`COMUNIDADE_LINK`). Nunca na 1ª mensagem: link pra
+quem não conversou com você é o que o WhatsApp mais trata como spam. No grupo, use os posts prontos
+de `/painel/divulgacao`, um por dia, e veja lá quais trouxeram visita e cadastro.

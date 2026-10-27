@@ -7,6 +7,7 @@ import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "@/lib/painel";
 import { reais } from "@/lib/agenda";
 import { Carrossel } from "@/componentes/Carrossel";
+import { sitesDeExemplo } from "@/lib/exemplos";
 
 export const metadata = {
   title: "Site e agenda online para barbearias",
@@ -132,6 +133,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
   const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
   const artigos = (await carregarArtigos()).slice(0, 3);
+  const exemplos = sitesDeExemplo();
 
   return (
     <div className="venda">
@@ -154,13 +156,22 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
       </section>
 
       <Carrossel id="estilos" titulo="Escolha a cara da sua barbearia" descricao="Escolha o que combina com a sua marca. Nas fotos estão barbearias de exemplo: no seu, entram o seu nome, os seus trabalhos e os seus serviços.">
-        {TEMAS.map((t) => (
-          <figure key={t.id} className="estilo-slide">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
-            <figcaption><strong>{t.nome}</strong><span>{t.resumo}</span></figcaption>
-          </figure>
-        ))}
+        {TEMAS.map((t) => {
+          const conteudo = (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
+              <span className="estilo-slide-legenda">
+                <strong>{t.nome}</strong><span>{t.resumo}</span>
+                {exemplos[t.id] && <span className="estilo-slide-vivo">Abrir o exemplo no ar</span>}
+              </span>
+            </>
+          );
+          // Com o exemplo no ar, o slide abre o site de verdade (dá pra navegar e testar a marcação).
+          return exemplos[t.id]
+            ? <a key={t.id} href={`/b/${exemplos[t.id]}`} className="estilo-slide" target="_blank" rel="noopener">{conteudo}</a>
+            : <div key={t.id} className="estilo-slide">{conteudo}</div>;
+        })}
       </Carrossel>
 
       <section className="venda-recursos venda-marca" aria-labelledby="marca-titulo">
@@ -275,7 +286,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           <label>Cidade <small>(opcional)</small><input name="cidade" maxLength={100} /></label>
           <label className="check">
             <input type="checkbox" name="consentimento" value="sim" required />
-            <span>Autorizo receber mensagens pelo WhatsApp sobre a comunidade e o sistema. Posso sair quando quiser respondendo SAIR.</span>
+            <span>Autorizo receber mensagens pelo WhatsApp sobre a comunidade e o sistema. Posso sair quando quiser respondendo SAIR. <a href="/privacidade" target="_blank">Privacidade</a>.</span>
           </label>
           <button type="submit">Entrar na comunidade</button>
         </form>

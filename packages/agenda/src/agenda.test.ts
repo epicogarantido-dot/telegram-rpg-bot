@@ -982,3 +982,41 @@ describe("adicionais: barba, sobrancelha", () => {
     expect(b.adicionaisPara(a.id, corte.id).map((s) => s.nome)).toEqual(["Barba"]);
   });
 });
+
+describe("senha: trocar no painel e link de troca", () => {
+  function montar() {
+    const b = new BancoAgenda(":memory:", PLANO_LIBERADO);
+    const { barbearia, token } = b.criarConta({ nomeBarbearia: "A", telefone: "5519900000001", nome: "Zé", email: "ze@x.com", senha: "segredo123" });
+    const [u] = b.usuariosDaBarbearia(barbearia.id);
+    return { b, u: u!, sessao: token };
+  }
+
+  it("link de troca vale uma vez, troca a senha e derruba as sessões antigas", () => {
+    const { b, u, sessao } = montar();
+    const link = b.criarLinkDeSenha(u.id);
+    expect(b.usuarioDoLinkDeSenha(link)?.email).toBe("ze@x.com");
+    expect(() => b.trocarSenhaComLink(link, "curta")).toThrow(/8 caracteres/);
+    const nova = b.trocarSenhaComLink(link, "novasenha99");
+    expect(b.usuarioDaSessao(nova)?.id).toBe(u.id);
+    expect(b.usuarioDaSessao(sessao)).toBeUndefined();
+    expect(() => b.trocarSenhaComLink(link, "outrasenha1")).toThrow(/venceu ou já foi usado/);
+    expect(() => b.entrar("ze@x.com", "segredo123")).toThrow();
+    expect(b.entrar("ze@x.com", "novasenha99")).toBeTruthy();
+  });
+
+  it("link vence em 24 h e gerar outro invalida o anterior", () => {
+    const { b, u } = montar();
+    const agora = new Date("2026-10-27T12:00:00Z");
+    const velho = b.criarLinkDeSenha(u.id, agora);
+    const novo = b.criarLinkDeSenha(u.id, agora);
+    expect(b.usuarioDoLinkDeSenha(velho, agora)).toBeUndefined();
+    expect(b.usuarioDoLinkDeSenha(novo, new Date("2026-10-28T13:00:00Z"))).toBeUndefined();
+  });
+
+  it("trocar no painel pede a senha atual", () => {
+    const { b, u } = montar();
+    expect(() => b.trocarSenha(u.id, "errada000", "novasenha99")).toThrow(/atual/);
+    expect(b.trocarSenha(u.id, "segredo123", "novasenha99")).toBeTruthy();
+    expect(b.entrar("ze@x.com", "novasenha99")).toBeTruthy();
+  });
+});

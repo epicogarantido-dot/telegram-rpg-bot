@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ErroAgenda, FOLGAS, formatarData, INTERVALOS, nomeDia } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { exigirAcessoAtivo, gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
 export const metadata = { title: "Configurações", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -129,6 +129,22 @@ async function salvarExpediente(form: FormData) {
         : undefined);
     }
   });
+}
+
+/** Troca a senha sabendo a atual. Os outros aparelhos saem; este continua entrado. */
+async function trocarSenha(form: FormData) {
+  "use server";
+  const { usuario } = await exigirAcessoAtivo();
+  const nova = String(form.get("nova") ?? "");
+  let sessao: string;
+  try {
+    if (nova !== String(form.get("confirmar") ?? "")) throw new ErroAgenda("As duas senhas novas não são iguais.");
+    sessao = obterAgenda().trocarSenha(usuario.id, String(form.get("atual") ?? ""), nova);
+  } catch (e) {
+    redirect(`/app/config?erro=${encodeURIComponent(mensagemDeErro(e))}#senha`);
+  }
+  await gravarSessaoAgenda(sessao);
+  redirect(`/app/config?aviso=${encodeURIComponent("Senha trocada. Os outros aparelhos saíram da conta.")}#senha`);
 }
 
 export default async function Config({ searchParams }: { searchParams: Promise<{ erro?: string; aviso?: string }> }) {
@@ -290,6 +306,14 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
             <button className="botao-sec">Desbloquear</button>
           </form>
         ))}
+
+      <h2 id="senha">Trocar senha</h2>
+      <form action={trocarSenha} className="formulario">
+        <label>Senha atual<input name="atual" type="password" required autoComplete="current-password" /></label>
+        <label>Nova senha<input name="nova" type="password" required minLength={8} autoComplete="new-password" /></label>
+        <label>Repita a nova senha<input name="confirmar" type="password" required minLength={8} autoComplete="new-password" /></label>
+        <button>Trocar senha</button>
+      </form>
     </>
   );
 }
