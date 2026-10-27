@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
 import {
   STATUS, ehCelularBR, linkWhatsapp, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
-  mensagemSegunda, proximoPasso, DIAS_ATE_LEMBRETE, type Lead, type Status,
+  mensagemSegunda, proximoPasso, DIAS_ATE_LEMBRETE, type Atendimento, type Lead, type Status,
 } from "@aprenda/prospeccao";
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
@@ -217,6 +217,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       <p><strong>Leads</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/alunos">Alunos</a> · <a href="/painel/assinaturas">Assinaturas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
       <EstadoWhatsapp estado={estadoDoBot()} />
+      <EsperandoPessoa atendimentos={banco.atendimentosAbertos()} />
       <p>
         Primeiras mensagens hoje: <strong>{hoje}/{config.limiteDiario}</strong>
         {!podeContatar && " — limite do dia atingido. Volte amanhã: número que manda muito pra quem não responde é limitado ou banido."}
@@ -282,6 +283,35 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {leads.length === 0 && <p>Nenhum lead aqui. <a href="/painel/buscar">Buscar barbearias</a> pela base da Receita ou pelo Google e Instagram.</p>}
       </div>
     </>
+  );
+}
+
+async function resolverAtendimento(form: FormData) {
+  "use server";
+  await exigirLogin();
+  obterBanco().resolverAtendimento(String(form.get("telefone")));
+  revalidatePath("/painel");
+}
+
+/** Quem pediu "falar com uma pessoa" no bot. A resposta sai do celular do chip do bot. */
+function EsperandoPessoa({ atendimentos }: { atendimentos: Atendimento[] }) {
+  if (atendimentos.length === 0) return null;
+  return (
+    <section className="cartao" aria-labelledby="pessoa-titulo">
+      <h2 id="pessoa-titulo" style={{ marginTop: 0 }}>Esperando uma pessoa no WhatsApp ({atendimentos.length})</h2>
+      <p><small>Responda pelo celular do chip do bot, na conversa da pessoa. Quando você responde por lá, o pedido sai daqui sozinho.</small></p>
+      {atendimentos.map((a) => (
+        <form key={a.id} action={resolverAtendimento} style={{ borderTop: "1px solid currentColor", paddingTop: 10, marginTop: 10 }}>
+          <input type="hidden" name="telefone" value={a.telefone} />
+          <p style={{ margin: 0 }}>
+            <strong>{a.nome ?? "Sem nome"}</strong> · {a.telefone.replace(/^55(\d{2})(\d+)(\d{4})$/, "($1) $2-$3")}
+            {" "}<small>· {new Date(a.criadoEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</small>
+          </p>
+          <p style={{ whiteSpace: "pre-wrap", margin: "6px 0" }}>{a.duvida}</p>
+          <BotaoEnviar className="botao-sec">Já respondi</BotaoEnviar>
+        </form>
+      ))}
+    </section>
   );
 }
 

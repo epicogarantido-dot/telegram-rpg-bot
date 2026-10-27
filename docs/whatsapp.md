@@ -14,6 +14,21 @@ protocolo do WhatsApp Web. **Não é a API oficial.**
   (`Limitador`). Disparo em massa / mensagem não solicitada é spam, é o caminho
   mais rápido pro banimento e não vamos implementar.
 
+## O que reduz o risco (pesquisa de 27/10/2026)
+
+- Só responder quem escreveu (já é assim) e nunca mandar primeiro.
+- Nome de perfil que deixa claro que é bot, ex.: **"Aprenda Livre · atendimento automático"**,
+  e foto/descrição do projeto. O menu já se apresenta como atendimento automático.
+- Pausas com variação antes de responder e teto de respostas por minuto (`limiteGeral`).
+- Reconexão com espera crescente; parar depois de "desconectado pelo celular" (já faz).
+- Parear o número poucas vezes: cada pareamento novo chama atenção.
+- Não responder um monte de mensagem acumulada de uma vez quando o bot volta (`MAX_IDADE_MIN`).
+- Fixar a versão do Baileys (`7.0.0-rc14`) e só atualizar lendo as notas.
+- Botões e listas: o Baileys oficial tirou; enquete ainda funciona mas ler o voto é frágil.
+  Por isso o menu é numerado. Botão de verdade = API oficial (paga).
+- IP de servidor (datacenter) é visto com mais desconfiança que IP de casa. É o risco que
+  sobra de rodar na Square Cloud; o chip dedicado protege o seu número pessoal.
+
 ## Rodar
 
 ```bash

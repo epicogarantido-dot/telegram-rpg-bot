@@ -45,6 +45,16 @@ export interface Lead extends Estabelecimento {
   demoConvite?: string;
 }
 
+/** Pedido de "falar com uma pessoa" vindo do bot. */
+export interface Atendimento {
+  id: number;
+  telefone: string;
+  nome?: string;
+  duvida: string;
+  criadoEm: string;
+  resolvidoEm?: string;
+}
+
 export interface Inscricao {
   id: number;
   nome: string;
@@ -97,6 +107,12 @@ export class BancoProspeccao {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL, telefone TEXT NOT NULL, negocio TEXT, cidade TEXT,
         interesse TEXT NOT NULL, criado_em TEXT NOT NULL
+      );
+      -- Quem pediu pra falar com uma pessoa no bot: a dúvida fica aqui até alguém responder.
+      CREATE TABLE IF NOT EXISTS atendimentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telefone TEXT NOT NULL, nome TEXT, duvida TEXT NOT NULL,
+        criado_em TEXT NOT NULL, resolvido_em TEXT
       );
     `);
     // Colunas novas em bancos antigos.
@@ -305,5 +321,31 @@ export class BancoProspeccao {
   inscricoes(): Inscricao[] {
     return this.db.prepare(`SELECT id, nome, telefone, negocio, cidade, interesse, criado_em AS criadoEm
       FROM inscricoes ORDER BY id DESC`).all() as unknown as Inscricao[];
+  }
+
+  // ---------- atendimento por uma pessoa (pedido no bot) ----------
+
+  /** Guarda a dúvida. Se a mesma pessoa já tem um pedido aberto, junta a mensagem nele. */
+  pedirPessoa(telefone: string, duvida: string, nome?: string): void {
+    const texto = duvida.trim().slice(0, 1000);
+    if (!texto) return;
+    const aberto = this.db.prepare("SELECT id, duvida FROM atendimentos WHERE telefone = ? AND resolvido_em IS NULL").get(telefone) as { id: number; duvida: string } | undefined;
+    if (aberto) {
+      this.db.prepare("UPDATE atendimentos SET duvida = ? WHERE id = ?").run(`${aberto.duvida}\n${texto}`.slice(-2000), aberto.id);
+      return;
+    }
+    this.db.prepare("INSERT INTO atendimentos (telefone, nome, duvida, criado_em) VALUES (?, ?, ?, ?)")
+      .run(telefone, nome?.slice(0, 80) ?? null, texto, new Date().toISOString());
+  }
+
+  /** Alguém respondeu (pelo celular do bot ou marcou no painel). */
+  resolverAtendimento(telefone: string): void {
+    this.db.prepare("UPDATE atendimentos SET resolvido_em = ? WHERE telefone = ? AND resolvido_em IS NULL").run(new Date().toISOString(), telefone);
+  }
+
+  atendimentosAbertos(): Atendimento[] {
+    return (this.db.prepare(`SELECT id, telefone, nome, duvida, criado_em AS criadoEm FROM atendimentos
+      WHERE resolvido_em IS NULL ORDER BY id`).all() as unknown as (Atendimento & { nome: string | null })[])
+      .map((a) => ({ ...a, nome: a.nome ?? undefined }));
   }
 }

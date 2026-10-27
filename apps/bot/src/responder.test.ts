@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { carregarCursos } from "@aprenda/catalogo";
-import { ehPedidoDeEntrada, ehPedidoDeSaida, PESSOA_HORAS, responder, SESSAO_MIN, type Resposta, type Sessao } from "./responder.ts";
+import { ehPedidoDeEntrada, ehPedidoDeSaida, PESSOA_HORAS, responder, responderMidia, SESSAO_MIN, sessaoComPessoa, type Resposta, type Sessao } from "./responder.ts";
 
 const ctx = { cursos: await carregarCursos(), siteUrl: "https://exemplo.com/" };
 
@@ -87,12 +87,15 @@ describe("árvore de opções", () => {
     }
   });
 
-  it("5 chama uma pessoa: o bot fica quieto até o menu ou o tempo acabar", () => {
+  it("5 chama uma pessoa: a dúvida vai pro painel, o bot confirma uma vez e depois só repassa", () => {
     const c = conversa();
     c.manda("oi");
     expect(textoDe(c.manda("5"))).toContain("uma pessoa");
-    expect(c.manda("minha dúvida é sobre o preço")).toBeNull();
-    expect(c.manda("alô?", 60)).toBeNull();
+    const duvida = c.manda("minha dúvida é sobre o preço");
+    expect(duvida).toMatchObject({ tipo: "pessoa", duvida: "minha dúvida é sobre o preço" });
+    expect(duvida?.tipo === "pessoa" && duvida.texto).toContain("Anotado");
+    const mais = c.manda("alô?", 60);
+    expect(mais).toEqual({ tipo: "pessoa", duvida: "alô?" });
     expect(textoDe(c.manda("menu"))).toContain("*Menu*");
     // Passado o prazo, volta ao normal.
     const d = conversa();
@@ -119,6 +122,35 @@ describe("árvore de opções", () => {
     c.manda("oi");
     c.manda("2");
     expect(c.manda("SAIR")).toEqual({ tipo: "sair" });
+  });
+
+  it("cumprimenta pelo nome do perfil, se parecer nome de gente", () => {
+    expect(textoDe(responder("oi", ctx, undefined, 0, "joão silva").resposta)).toContain("Oi, João!");
+    expect(textoDe(responder("oi", ctx, undefined, 0, "🔥JV🔥").resposta)).toContain("Oi! 👋");
+    expect(textoDe(responder("oi", ctx).resposta)).toContain("atendimento automático");
+  });
+
+  it("'não entendi' muda e, na terceira vez seguida, oferece uma pessoa", () => {
+    const c = conversa();
+    c.manda("oi");
+    const r1 = textoDe(c.manda("xyz"));
+    const r2 = textoDe(c.manda("hã"));
+    const r3 = textoDe(c.manda("kkk"));
+    expect(r1).toContain("Não entendi");
+    expect(r2).not.toBe(r1);
+    expect(r3).toContain("*5*");
+    expect(r3).toContain("pessoa");
+  });
+
+  it("áudio ou foto: pede texto; com uma pessoa, fica calado", () => {
+    expect(textoDe(responderMidia().resposta)).toContain("só leio texto");
+    expect(responderMidia(sessaoComPessoa(0), 1000).resposta).toBeNull();
+  });
+
+  it("quando alguém da equipe responde pelo celular, o bot não se mete", () => {
+    const r = responder("e aí, quanto custa?", ctx, sessaoComPessoa(0), 1000);
+    expect(r.resposta).toBeNull();
+    expect(responder("menu", ctx, sessaoComPessoa(0), 1000).resposta).not.toBeNull();
   });
 
   it("ignora mensagem vazia", () => {

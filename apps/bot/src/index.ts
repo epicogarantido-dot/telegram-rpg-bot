@@ -14,7 +14,7 @@ import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, isPnUser, us
 import pino from "pino";
 import qrcode from "qrcode-terminal";
 import { carregarCursos } from "@aprenda/catalogo";
-import { PESSOA_HORAS, RESPOSTA_SAIDA, responder, type Contexto, type Sessao } from "./responder.ts";
+import { PESSOA_HORAS, RESPOSTA_SAIDA, responder, responderMidia, sessaoComPessoa, type Contexto, type Sessao } from "./responder.ts";
 import { Limitador } from "./limitador.ts";
 
 // BOT_SESSAO: onde fica a sessão do WhatsApp (no pacote da Square Cloud, ./auth ao lado do bot).
@@ -24,6 +24,12 @@ const numeroPareamento = process.env.BOT_NUMERO?.replace(/\D/g, "");
 
 const ctx: Contexto = { cursos: await carregarCursos(), siteUrl };
 const limitador = new Limitador({ porMinuto: 6 });
+/** Teto de respostas por minuto somando todas as conversas: rajada é o que mais chama atenção do WhatsApp. */
+const limiteGeral = new Limitador({ porMinuto: 20 });
+/** Mensagem mais velha que isso (o bot estava fora do ar) não é respondida: responder um monte de uma vez é arriscado. */
+const MAX_IDADE_MIN = 15;
+/** Ids das mensagens que o próprio bot mandou: o resto que sai deste número foi escrito por uma pessoa, no celular. */
+const enviadosPeloBot = new Set<string>();
 /** Em que ponto da árvore de opções cada conversa está (some sozinho com o tempo, ver SESSAO_MIN). */
 const sessoes = new Map<string, Sessao>();
 // Limpa conversas paradas de vez em quando, pra memória não crescer.
@@ -175,26 +181,36 @@ async function conectar(): Promise<void> {
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
-    if (type !== "notify") return;
     for (const msg of messages) {
       const chat = msg.key.remoteJid;
-      if (!chat || msg.key.fromMe) continue;
-      // Só conversa privada: em grupo o bot ficaria respondendo todo mundo.
-      if (chat.endsWith("@g.us") || chat === "status@broadcast") continue;
-
-      const texto = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text;
-      if (!texto) continue;
-      if (!limitador.permitir(chat)) continue;
-
+      // Só conversa privada: grupo, status e canal ficam de fora.
+      if (!chat || chat.endsWith("@g.us") || chat.endsWith("@newsletter") || chat === "status@broadcast") continue;
       // No WhatsApp novo o chat pode vir como LID (@lid); o número real vem em remoteJidAlt.
       const jidTelefone = isPnUser(chat) ? chat : msg.key.remoteJidAlt;
       const telefone = jidTelefone?.split("@")[0]?.split(":")[0];
+      const conteudo = msg.message ?? {};
+      const texto = conteudo.conversation ?? conteudo.extendedTextMessage?.text;
+      const midia = !texto && !!(conteudo.audioMessage || conteudo.imageMessage || conteudo.videoMessage || conteudo.stickerMessage || conteudo.documentMessage || conteudo.ptvMessage);
+
+      if (msg.key.fromMe) {
+        // Alguém da equipe escreveu pelo celular do bot: o bot sai da frente nessa conversa
+        // e o pedido some da lista "esperando uma pessoa" do painel.
+        if (msg.key.id && !enviadosPeloBot.has(msg.key.id) && (texto || midia)) {
+          sessoes.set(chat, sessaoComPessoa());
+          if (telefone) void chamarSite("/api/whatsapp/pessoa", { telefone, resolvido: true }).catch(() => {});
+        }
+        continue;
+      }
+      if (type !== "notify" || (!texto && !midia)) continue;
+      const enviadaEm = Number(msg.messageTimestamp ?? 0) * 1000;
+      if (enviadaEm && Date.now() - enviadaEm > MAX_IDADE_MIN * 60_000) continue;
+      if (!limitador.permitir(chat)) continue;
 
       // A árvore de opções decide; aqui só se executa o que ela pediu.
-      const r = responder(texto, ctx, sessoes.get(chat));
+      const r = texto ? responder(texto, ctx, sessoes.get(chat), Date.now(), msg.pushName ?? undefined) : responderMidia(sessoes.get(chat));
       sessoes.set(chat, r.sessao);
       if (!r.resposta) continue;
-      let resposta: string;
+      let resposta: string | undefined;
       if (r.resposta.tipo === "sair") {
         if (telefone) await registrarSaida(telefone);
         else console.warn(`Pedido de SAIR sem número identificável (${chat}); bloqueie manualmente.`);
@@ -203,14 +219,31 @@ async function conectar(): Promise<void> {
         resposta = telefone
           ? await pedirLinkDeEntrada(telefone, msg.pushName ?? undefined)
           : "Não consegui identificar seu número. Tente mandar de novo daqui a pouco.";
+      } else if (r.resposta.tipo === "pessoa") {
+        if (telefone) {
+          await chamarSite("/api/whatsapp/pessoa", { telefone, nome: msg.pushName ?? undefined, duvida: r.resposta.duvida })
+            .catch((e) => console.error("Pedido de pessoa não chegou ao site:", e));
+        }
+        resposta = r.resposta.texto;
       } else {
         resposta = r.resposta.texto;
+      }
+      if (!resposta) continue;
+      if (!limiteGeral.permitir("todas")) {
+        console.warn("Limite geral de respostas por minuto atingido; ignorando", chat);
+        continue;
       }
       try {
         await sock.readMessages([msg.key]);
         await sock.sendPresenceUpdate("composing", chat);
-        await new Promise((r) => setTimeout(r, 800 + Math.min(resposta.length * 10, 2500)));
-        await sock.sendMessage(chat, { text: resposta });
+        // Pausa de quem digita: um pouco aleatória e maior pra texto maior.
+        await new Promise((ok) => setTimeout(ok, 1_200 + Math.random() * 1_500 + Math.min(resposta.length * 12, 3_000)));
+        await sock.sendPresenceUpdate("paused", chat);
+        const enviada = await sock.sendMessage(chat, { text: resposta });
+        if (enviada?.key.id) {
+          enviadosPeloBot.add(enviada.key.id);
+          if (enviadosPeloBot.size > 2_000) enviadosPeloBot.delete(enviadosPeloBot.values().next().value!);
+        }
       } catch (e) {
         console.error(`Falha ao responder ${chat}:`, e);
       }

@@ -127,3 +127,19 @@ describe("OpenStreetMap", () => {
     expect(r[1]!.mapsUrl).toBe("https://www.openstreetmap.org/way/2");
   });
 });
+
+describe("atendimento por uma pessoa (pedido no bot)", () => {
+  it("guarda a dúvida, junta as mensagens seguintes e some ao resolver", () => {
+    const b = new BancoProspeccao(":memory:");
+    b.pedirPessoa("5555999998888", "quanto custa o site?", "João");
+    b.pedirPessoa("5555999998888", "e tem fidelidade?");
+    const [a] = b.atendimentosAbertos();
+    expect(a).toMatchObject({ telefone: "5555999998888", nome: "João" });
+    expect(a!.duvida).toBe("quanto custa o site?\ne tem fidelidade?");
+    b.resolverAtendimento("5555999998888");
+    expect(b.atendimentosAbertos()).toHaveLength(0);
+    // Pergunta nova depois de resolvido abre outro pedido.
+    b.pedirPessoa("5555999998888", "outra dúvida");
+    expect(b.atendimentosAbertos()).toHaveLength(1);
+  });
+});
