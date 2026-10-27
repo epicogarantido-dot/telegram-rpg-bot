@@ -4,6 +4,8 @@ Cursos gratuitos e **abertos** pra quem tem barbearia (traduzidos de fontes aber
 aqui) e uma Revista, num site que é o **funil de venda** do SaaS das barbearias. Sem bot e sem
 login de aluno. Tudo em TypeScript, monorepo com npm workspaces.
 
+> **Recomeço (27/10/2026):** leia antes `docs/memorando-proxima-conversa.md` — o que era pra termos, o que nunca foi conferido no ar e o pedido do dono pra auditar e consertar.
+
 ## Mapa
 
 - `data/cursos/*.json` — o catálogo. Fonte da verdade; validado por `Curso` (zod). `autoria: "traducao"` (fonte aberta, com `fonte.url`) ou `"propria"` (escrito aqui, CC BY 4.0).
