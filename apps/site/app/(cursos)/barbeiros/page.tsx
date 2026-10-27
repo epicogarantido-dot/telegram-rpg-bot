@@ -7,7 +7,6 @@ import { normalizarTelefone } from "@aprenda/prospeccao";
 import { obterBanco } from "@/lib/painel";
 import { reais } from "@/lib/agenda";
 import { Carrossel } from "@/componentes/Carrossel";
-import { sitesDeExemplo } from "@/lib/exemplos";
 
 export const metadata = {
   title: "Site e agenda online para barbearias",
@@ -134,7 +133,6 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
   const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
   const artigos = (await carregarArtigos()).slice(0, 3);
-  const exemplos = sitesDeExemplo();
 
   return (
     <div className="venda">
@@ -146,7 +144,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             no estilo da sua marca. E o cliente vê os horários livres e marca sozinho.
           </p>
           <div className="acoes">
-            <Link href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></Link>
+            <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
             <a href="#estilos" className="botao-sec">Ver os estilos</a>
           </div>
         </div>
@@ -164,14 +162,12 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
               <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
               <span className="estilo-slide-legenda">
                 <strong>{t.nome}</strong><span>{t.resumo}</span>
-                {exemplos[t.id] && <span className="estilo-slide-vivo">Abrir o exemplo no ar</span>}
+                <span className="estilo-slide-vivo">Abrir o exemplo no ar</span>
               </span>
             </>
           );
-          // Com o exemplo no ar, o slide abre o site de verdade (dá pra navegar e testar a marcação).
-          return exemplos[t.id]
-            ? <a key={t.id} href={`/b/${exemplos[t.id]}`} className="estilo-slide" target="_blank" rel="noopener">{conteudo}</a>
-            : <div key={t.id} className="estilo-slide">{conteudo}</div>;
+          // O slide abre o site de exemplo no ar (/exemplo leva até ele; sem exemplo, à montagem).
+          return <a key={t.id} href={`/exemplo/${t.id}`} className="estilo-slide" target="_blank" rel="noopener">{conteudo}</a>;
         })}
       </Carrossel>
 
@@ -191,7 +187,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           ))}
         </div>
         <p className="venda-marca-acao">
-          <Link href="/montar" className="botao">Montar o meu site <ArrowRight size={18} aria-hidden /></Link>
+          <a href="/montar" className="botao">Montar o meu site <ArrowRight size={18} aria-hidden /></a>
         </p>
       </section>
 
@@ -258,7 +254,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           </ul>
         </div>
         <div className="venda-plano-acao">
-          <Link href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></Link>
+          <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
           <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Sem cadastro pra ver. Leva um minuto, pelo celular.</p>
         </div>
       </section>

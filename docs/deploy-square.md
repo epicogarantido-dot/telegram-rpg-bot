@@ -73,3 +73,22 @@ mas depende da máquina e da internet de casa ficarem ligadas.
   arquivos antigos ao subir versão nova.
 - **Antes de cada atualização, baixe o backup** em `/painel/backup` (arquivo `.db`).
 - Pra restaurar: coloque o arquivo como `data/privado/agenda.db` e reinicie.
+
+
+## Dois apps: site de leads e site das barbearias (27/10/2026)
+
+`npm run pacote:square` gera quatro zips do mesmo build:
+
+| Zip | Pra quê |
+|---|---|
+| `dist/leads-commit.zip` | atualizar o app de leads que já existe (Commit e reiniciar) |
+| `dist/leads-square.zip` | criar o app de leads do zero (Upload; traz `squarecloud.config`) |
+| `dist/saas-square.zip` | criar o app das barbearias (Upload) |
+| `dist/saas-commit.zip` | atualizar o app das barbearias depois |
+
+`.env` de cada um:
+
+- **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`. Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
+- **SaaS:** `LEADS_URL=https://<app-leads>.squareweb.app`, `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*`.
+
+O banco da agenda (barbearias, pagamentos, fotos) mora no app SaaS; o de leads (prospecção, contagem por origem) no app de leads. Backup da agenda: `/painel/backup` no SaaS.

@@ -7,6 +7,7 @@ import { chaveDoAparelho } from "@/lib/protecao";
 import { obterBanco } from "@/lib/painel";
 import { CampoOrigem } from "@/componentes/ContarOrigem";
 import { porFotosPadrao } from "@/lib/exemplos";
+import { contarCadastro } from "@/lib/modo";
 
 export const metadata = { title: "Criar conta — Agenda" };
 
@@ -32,7 +33,7 @@ async function cadastrar(form: FormData) {
     if (!demo) porFotosPadrao(conta.barbearia.id, conta.barbearia.tema);
     obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
     // De onde veio quem virou cliente (link do grupo, cartão, convite, demonstração): só a contagem.
-    obterBanco().registrarOrigem(campo("origem") || (demo ? "demonstracao" : "direto"), "cadastro");
+    await contarCadastro(campo("origem") || (demo ? "demonstracao" : "direto"), (o) => obterBanco().registrarOrigem(o, "cadastro"));
   } catch (e) {
     redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}) })}`);
   }

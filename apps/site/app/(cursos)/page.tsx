@@ -6,7 +6,6 @@ import { CartaoCurso } from "@/componentes/cursos";
 import { Carrossel } from "@/componentes/Carrossel";
 import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
 import { CartaoMateria } from "@/componentes/revista";
-import { sitesDeExemplo } from "@/lib/exemplos";
 
 /**
  * Página gerada no build, refeita no servidor a cada 10 min: depois de um deploy, uma versão
@@ -22,7 +21,6 @@ export default async function Inicio() {
   // Os cursos de barbearia na frente: é pra quem esse site fala.
   const cursos = (await carregarCursos()).sort((a, b) => Number(b.tags.includes("barbearia")) - Number(a.tags.includes("barbearia")));
   const artigos = (await carregarArtigos()).slice(0, MAX_ITENS_CARROSSEL);
-  const exemplos = sitesDeExemplo();
   return (
     <>
       <section className="heroi">
@@ -34,7 +32,7 @@ export default async function Inicio() {
         </p>
         <div className="acoes-heroi">
           <Link href="/cursos" className="botao">Ver os cursos grátis</Link>
-          <Link href="/montar" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></Link>
+          <a href="/montar" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></a>
         </div>
       </section>
 
@@ -48,14 +46,14 @@ export default async function Inicio() {
         descricao={<>Não é site padrão: é a sua marca. As suas fotos, o seu nome, a sua equipe e os seus preços, num dos {TEMAS.length} estilos. O cliente vê o seu trabalho e marca horário sozinho.</>}
       >
         {TEMAS.map((t) => (
-          <Link key={t.id} href={exemplos[t.id] ? `/b/${exemplos[t.id]}` : "/barbeiros#estilos"} className="estilo-slide">
+          <a key={t.id} href={`/exemplo/${t.id}`} className="estilo-slide">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
             <span className="estilo-slide-legenda">
               <strong>{t.nome}</strong><span>{t.resumo}</span>
-              {exemplos[t.id] && <span className="estilo-slide-vivo">Abrir o exemplo no ar</span>}
+              <span className="estilo-slide-vivo">Abrir o exemplo no ar</span>
             </span>
-          </Link>
+          </a>
         ))}
       </Carrossel>
       <p className="vitrine-acao">

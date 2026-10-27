@@ -1,51 +1,52 @@
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { gravarFoto, processarFoto } from "@aprenda/agenda";
-import { PASTA_CURSOS } from "@aprenda/catalogo";
+import { ErroAgenda } from "@aprenda/agenda";
 import { nomeParaMensagem, type Lead } from "@aprenda/prospeccao";
 import { obterAgenda } from "./agenda";
 import { urlDoSite } from "./membros";
 import { obterBanco } from "./painel";
-import { porFotosPadrao, sitesDeExemplo } from "./exemplos";
+import { criarSitesDeExemplo, porFotosPadrao, sitesDeExemplo } from "./exemplos";
+import { chaveEntreApps, modoSite, urlSaas } from "./modo";
 
-/** Fotos de exemplo (Unsplash) que vêm com o projeto: `data/demo-fotos/fotos.json`. */
-const PASTA_FOTOS_DEMO = join(dirname(PASTA_CURSOS), "demo-fotos");
-
-interface FotoDemo { arquivo: string; categoria: string; legenda?: string }
-
-/** Link que vai pro barbeiro: o site com o nome dele e o convite pra virar dono. */
+/** Link que vai pro barbeiro: o site com o nome dele e o convite pra virar dono (no app do SaaS). */
 export function linkDaDemonstracao(slug: string, convite: string): string {
-  return `${urlDoSite()}/b/${slug}?convite=${encodeURIComponent(convite)}`;
+  const base = modoSite() === "leads" ? urlSaas() : urlDoSite();
+  return `${base}/b/${slug}?convite=${encodeURIComponent(convite)}`;
 }
 
 /**
- * Monta a demonstração pro lead: site com o nome da barbearia, o estilo escolhido e as fotos de
- * exemplo (passando por `processarFoto`, como qualquer foto). Guarda slug e convite no lead.
+ * Cria a demonstração neste app (onde fica o banco da agenda): site com o nome da barbearia,
+ * o estilo escolhido e as fotos padrão do site de exemplo daquele estilo.
+ */
+export async function criarDemonstracaoAqui(dados: { nome: string; tema: string; cidade?: string; lead?: string }): Promise<{ slug: string; convite: string }> {
+  if (!sitesDeExemplo()[dados.tema]) await criarSitesDeExemplo();
+  const { barbearia, convite } = obterAgenda().criarDemonstracao(dados);
+  porFotosPadrao(barbearia.id, dados.tema);
+  return { slug: barbearia.slug, convite };
+}
+
+/**
+ * Monta a demonstração pro lead e guarda slug e convite nele. Com o site de leads separado
+ * do SaaS, pede pro app do SaaS criar (rota /api/demonstracao, com a chave entre os apps).
  */
 export async function criarDemonstracaoParaLead(lead: Lead, tema: string): Promise<string> {
-  const agenda = obterAgenda();
-  const { barbearia, convite } = agenda.criarDemonstracao({
+  const dados = {
     nome: nomeParaMensagem(lead.nome),
     tema,
     cidade: lead.cidade ? nomeParaMensagem(lead.cidade) : undefined,
     lead: lead.placeId,
-  });
-  // Com o site de exemplo do estilo no ar, divide as fotos dele (não reprocessa nada).
-  if (sitesDeExemplo()[tema]) {
-    porFotosPadrao(barbearia.id, tema);
-    obterBanco().guardarDemonstracao(lead.placeId, barbearia.slug, convite);
-    return linkDaDemonstracao(barbearia.slug, convite);
+  };
+  let demo: { slug: string; convite: string };
+  if (modoSite() === "leads") {
+    const r = await fetch(`${urlSaas()}/api/demonstracao`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-chave": chaveEntreApps() ?? "" },
+      body: JSON.stringify(dados),
+      signal: AbortSignal.timeout(60_000),
+    }).catch(() => undefined);
+    if (!r?.ok) throw new ErroAgenda("O site das barbearias não respondeu. Confira o SAAS_URL e se a PAINEL_SENHA é a mesma nos dois apps.");
+    demo = (await r.json()) as { slug: string; convite: string };
+  } else {
+    demo = await criarDemonstracaoAqui(dados);
   }
-  const fotos = JSON.parse(await readFile(join(PASTA_FOTOS_DEMO, "fotos.json"), "utf8")) as FotoDemo[];
-  let capa: string | undefined;
-  for (const f of fotos) {
-    const proc = await processarFoto(await readFile(join(PASTA_FOTOS_DEMO, f.arquivo)));
-    const arquivo = agenda.registrarFoto(barbearia.id, { categoria: f.categoria, legenda: f.legenda, largura: proc.largura, altura: proc.altura });
-    gravarFoto(arquivo, proc);
-    if (!capa && f.categoria === "ambiente") capa = arquivo;
-  }
-  const foto = agenda.fotos(barbearia.id).find((f) => f.arquivo === capa);
-  if (foto) agenda.definirCapa(barbearia.id, foto.id);
-  obterBanco().guardarDemonstracao(lead.placeId, barbearia.slug, convite);
-  return linkDaDemonstracao(barbearia.slug, convite);
+  obterBanco().guardarDemonstracao(lead.placeId, demo.slug, demo.convite);
+  return linkDaDemonstracao(demo.slug, demo.convite);
 }

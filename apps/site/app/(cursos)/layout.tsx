@@ -29,9 +29,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               Aprenda Livre
             </Link>
             <nav aria-label="Principal">
-              <Link href="/cursos">Cursos</Link>
-              <Link href="/revista">Revista</Link>
-              <Link href="/montar" className="nav-destaque">Quero meu site</Link>
+              <a href="/cursos">Cursos</a>
+              <a href="/revista">Revista</a>
+              <a href="/montar" className="nav-destaque">Quero meu site</a>
             </nav>
           </header>
         </div>
@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <main>{children}</main>
         <footer className="rodape">
           Cursos traduzidos de fontes abertas, com crédito e licença originais, e cursos escritos aqui.{" "}
-          <Link href="/licencas">Licenças e créditos</Link> · <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>.
+          <a href="/licencas">Licenças e créditos</a> · <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>.
         </footer>
       </body>
     </html>
