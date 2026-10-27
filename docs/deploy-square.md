@@ -86,7 +86,7 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 | `dist/saas-square.zip` | criar o app das barbearias (Upload) |
 | `dist/saas-commit.zip` | atualizar o app das barbearias depois |
 
-`.env` de cada um:
+`.env` de cada um (modelo pronto do SaaS: `.env.saas.example`):
 
 - **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`. Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
 - **SaaS:** `LEADS_URL=https://<app-leads>.squareweb.app`, `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*`.
