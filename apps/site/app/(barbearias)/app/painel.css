@@ -140,3 +140,11 @@
 .conta-links small { display: block; color: var(--suave); font-weight: 400; font-size: 13px; }
 .conta-links svg { flex: none; color: var(--destaque); }
 .conta-sair { margin-top: 20px; }
+
+/* ---------- Fotos: antes e depois ---------- */
+.espaco-destaque { padding: 20px; margin-bottom: 8px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); box-shadow: var(--sombra); }
+.pares { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin: 12px 0 16px; }
+.par { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.par img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; }
+.par figcaption { grid-column: 1 / -1; font-size: 14px; color: var(--suave); }
+.par .acoes { grid-column: 1 / -1; }

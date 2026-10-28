@@ -175,7 +175,21 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      {mosaico.length >= 3 && (
+      {/* Galeria: antes e depois quando o barbeiro cadastrou pares (o que mais convence); sem pares, o mosaico. */}
+      {pares.length > 0 ? (
+        <section className="b-secao b-antes-depois" id="antes-depois" aria-labelledby="ad-titulo" data-revelar>
+          <div className="b-antes-depois-cabeca">
+            <h2 id="ad-titulo">Antes e depois</h2>
+            <p>Arraste a linha e veja a diferença.</p>
+          </div>
+          <div className="b-comparadores">
+            {pares.slice(0, 4).map((p) => (
+              <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
+            ))}
+          </div>
+          {agenda && <p className="b-centro"><Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Quero sair assim</Link></p>}
+        </section>
+      ) : mosaico.length >= 3 && (
         <section className="b-mosaico" aria-labelledby="mosaico-titulo" data-revelar>
           <div className="b-mosaico-principal">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -193,17 +207,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       )}
 
       <Frase texto={frases[0]} foto={fotoFrase(0)} />
-
-      {tema === "potencia" && pares.length > 0 && (
-        <section className="b-secao" id="antes-depois">
-          <h2>Antes e depois</h2>
-          <div className="b-comparadores">
-            {pares.slice(0, 2).map((p) => (
-              <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
-            ))}
-          </div>
-        </section>
-      )}
 
       {equipe.length > 0 && (
         <section className="b-secao" id="equipe" aria-labelledby="equipe-titulo">

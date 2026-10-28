@@ -60,6 +60,54 @@ async function enviar(form: FormData) {
   voltar(paraCapa ? "capa" : categoria, `?enviadas=${enviadas}${erro ? `&erro=${encodeURIComponent(erro)}` : ""}`);
 }
 
+/**
+ * Antes e depois de uma vez: grava as duas fotos e já liga uma à outra. Vira o comparador de
+ * arrastar na página inicial do site (no lugar do mosaico de fotos).
+ */
+async function enviarPar(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const banco = obterAgenda();
+  const antes = form.get("antes");
+  const depois = form.get("depois");
+  const categoria = String(form.get("categoria") ?? "degrade");
+  const legenda = String(form.get("legenda") ?? "");
+  if (!(antes instanceof File) || antes.size === 0 || !(depois instanceof File) || depois.size === 0) {
+    redirect("/app/fotos?erro=Escolha%20a%20foto%20de%20antes%20e%20a%20de%20depois.#antes-depois");
+  }
+  try {
+    // Processa as duas antes de gravar qualquer uma: se uma falhar, não sobra foto sozinha.
+    const [fa, fd] = await Promise.all([processarFoto(Buffer.from(await antes.arrayBuffer())), processarFoto(Buffer.from(await depois.arrayBuffer()))]);
+    const nomeDepois = banco.registrarFoto(barbearia.id, { categoria, legenda, largura: fd.largura, altura: fd.altura });
+    gravarFoto(nomeDepois, fd);
+    const nomeAntes = banco.registrarFoto(barbearia.id, { categoria, legenda: legenda ? `Antes: ${legenda}` : "Antes", largura: fa.largura, altura: fa.altura });
+    gravarFoto(nomeAntes, fa);
+    banco.definirAntes(barbearia.id, banco.fotoDaBarbearia(barbearia.id, nomeAntes)!.id, nomeDepois);
+  } catch (e) {
+    redirect(`/app/fotos?erro=${encodeURIComponent(mensagemDeErro(e))}#antes-depois`);
+  }
+  revalidatePath(`/b/${barbearia.slug}`);
+  voltar("antes-depois", "?enviadas=2");
+}
+
+/** Desfaz um par: a foto de "antes" volta a ser uma foto comum (ou sai do site, se pedir). */
+async function desfazerPar(form: FormData) {
+  "use server";
+  const { barbearia } = await exigirAcessoAtivo();
+  const banco = obterAgenda();
+  const id = Number(form.get("id"));
+  try {
+    if (form.get("acao") === "apagar") {
+      const arquivo = banco.removerFoto(barbearia.id, id);
+      if (arquivo) apagarFoto(arquivo);
+    } else banco.definirAntes(barbearia.id, id, null);
+  } catch (e) {
+    redirect(`/app/fotos?erro=${encodeURIComponent(mensagemDeErro(e))}#antes-depois`);
+  }
+  revalidatePath(`/b/${barbearia.slug}`);
+  voltar("antes-depois");
+}
+
 /** Põe no site uma foto do acervo (sem reprocessar: divide o arquivo). Se `capa`, vira a capa. */
 async function doAcervo(form: FormData) {
   "use server";
@@ -125,6 +173,7 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
   const banco = obterAgenda();
   const fotos = banco.fotos(barbearia.id);
   const capa = fotos.find((f) => f.capa) ?? fotos.find((f) => f.categoria === "ambiente") ?? fotos[0];
+  const pares = banco.paresAntesDepois(barbearia.id);
   // Acervo: fotos padrão que ainda não estão no site dele.
   const origem = acervo(barbearia.tema);
   const usadas = new Set(fotos.map(assinatura));
@@ -141,9 +190,54 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
 
       <nav className="espacos-atalhos" aria-label="Espaços do site">
+        <a href="#antes-depois">Antes e depois</a>
         <a href="#capa">Capa</a>
         {CATEGORIAS_FOTO.map((c) => <a key={c.id} href={`#${c.id}`}>{c.nome}</a>)}
       </nav>
+
+      <section className="espaco espaco-destaque" id="antes-depois" aria-labelledby="ad-titulo">
+        <h2 id="ad-titulo">Antes e depois <small>{pares.length > 0 ? `${pares.length} no site` : "vazio"}</small></h2>
+        <p className="suave pequeno">
+          O que mais convence quem visita o seu site. Tire a foto do cliente antes de começar e outra no
+          fim, do mesmo ângulo. No site vira uma foto só, que o cliente arrasta pra ver a diferença.
+        </p>
+        {pares.length > 0 && (
+          <div className="pares">
+            {pares.map((p) => (
+              <figure key={p.antes.id} className="par">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={urlFoto(p.antes.arquivo, "p")} alt="Antes" loading="lazy" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={urlFoto(p.depois.arquivo, "p")} alt={p.depois.legenda ?? "Depois"} loading="lazy" />
+                <figcaption>{p.depois.legenda || "Sem legenda"}</figcaption>
+                <form action={desfazerPar} className="acoes">
+                  <input type="hidden" name="id" value={p.antes.id} />
+                  <button className="botao-sec" name="acao" value="separar">Separar</button>
+                  <button className="botao-sec perigo" name="acao" value="apagar"><Trash2 size={16} aria-hidden /> Tirar o antes do site</button>
+                </form>
+              </figure>
+            ))}
+          </div>
+        )}
+        <details className="espaco-mais" open={pares.length === 0}>
+          <summary><ImagePlus size={18} aria-hidden /> Adicionar antes e depois</summary>
+          <form action={enviarPar} className="formulario">
+            <label>Foto de antes
+              <CampoFoto name="antes" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required />
+            </label>
+            <label>Foto de depois
+              <CampoFoto name="depois" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required />
+            </label>
+            <label>Que corte é
+              <select name="categoria" defaultValue="degrade">
+                {CATEGORIAS_FOTO.filter((c) => !["ambiente", "produtos", "equipe"].includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+            </label>
+            <input name="legenda" maxLength={80} placeholder="Legenda (opcional), ex.: Mid fade com risco" aria-label="Legenda" />
+            <BotaoEnviar carregando="Enviando…"><Upload size={18} aria-hidden /> Pôr no site</BotaoEnviar>
+          </form>
+        </details>
+      </section>
 
       <section className="espaco" id="capa" aria-labelledby="capa-titulo">
         <h2 id="capa-titulo">Capa <small>a foto grande do topo do site</small></h2>

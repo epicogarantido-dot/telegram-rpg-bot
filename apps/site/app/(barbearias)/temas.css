@@ -1044,3 +1044,10 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 
 /* Equipe de 3 no celular: 3 colunas (2 + 1 sozinho ficava torto). */
 @media (max-width: 560px) { .b-equipe:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .b-equipe:has(> :nth-child(3):last-child) .b-pessoa h3 { font-size: 1rem; } }
+
+/* Antes e depois na página inicial (no lugar do mosaico quando o barbeiro cadastrou pares). */
+.b-antes-depois-cabeca { text-align: center; margin-bottom: 24px; }
+.site-b .b-antes-depois-cabeca h2 { margin: 0 0 6px; text-align: center; }
+.b-antes-depois-cabeca p { margin: 0; color: var(--suave); }
+.b-antes-depois .b-comparadores { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); max-width: 1000px; margin-inline: auto; }
+.b-antes-depois .b-centro { margin-top: 28px; }
