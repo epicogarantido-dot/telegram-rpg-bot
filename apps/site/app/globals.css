@@ -667,7 +667,7 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 }
 .lista-sumidos { list-style: none; padding: 0; display: grid; gap: 10px; }
 .lista-sumidos .cartao { margin: 0; }
-.referencia-pedida { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
+.referencia-pedida { display: flex; width: fit-content; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
 .referencia-pedida img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
 .parte-pct { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--suave); }
 .parte-pct input { width: 70px; }
@@ -678,7 +678,9 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .data-proxima { margin: 16px 0; padding: 12px 16px; border-left: 3px solid var(--destaque); background: var(--cartao); border-radius: 0 var(--raio-p) var(--raio-p) 0; }
 .data-proxima p { margin: 0; }
 .data-proxima p + p { margin-top: 4px; }
-.config-servico .config-servico-domicilio { grid-column: 1 / -1; grid-row: 3; }
+.config-servico .config-servico-domicilio { grid-column: 1 / -1; grid-row: 3; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--texto); }
+.config-servico .config-servico-adicional { grid-row: 4; }
+@media (max-width: 640px) { .config-servico .config-servico-desc, .config-servico .config-servico-domicilio { grid-row: auto; } }
 .etiqueta-alerta { border-color: var(--erro); color: var(--erro); }
 .plano-vencido { border-color: var(--erro); }
 

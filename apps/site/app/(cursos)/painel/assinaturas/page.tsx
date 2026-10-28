@@ -74,6 +74,8 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
   const banco = obterAgenda();
   const pendentes = banco.pagamentosPendentes();
   const barbearias = banco.todasBarbearias();
+  const clientes = barbearias.filter((b) => b.email);
+  const semDono = barbearias.length - clientes.length;
 
   return (
     <>
@@ -151,8 +153,11 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
         );
       })()}
 
-      <h2>Barbearias ({barbearias.length})</h2>
-      {barbearias.map((b) => {
+      {/* Só quem tem conta (e-mail de acesso). Exemplos e prévias de /montar não têm dono: ficam contados à parte. */}
+      <h2>Barbearias ({clientes.length})</h2>
+      {semDono > 0 && <p><small>Fora da lista: {semDono} {semDono === 1 ? "site sem dono" : "sites sem dono"} (exemplos e prévias de /montar, que vencem sozinhas).</small></p>}
+      {clientes.length === 0 && <p>Nenhuma barbearia cadastrada ainda.</p>}
+      {clientes.map((b) => {
         const ativo = banco.acessoAtivo(b);
         return (
           <div key={b.id} className="item-config">

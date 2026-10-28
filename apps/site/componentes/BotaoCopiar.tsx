@@ -8,7 +8,7 @@ export function BotaoCopiar({ texto, rotulo = "Copiar link" }: { texto: string; 
   const [copiado, setCopiado] = useState(false);
   return (
     <button type="button" className="botao-sec" aria-live="polite" onClick={async () => {
-      try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000); } catch { prompt("Copie o link:", texto); }
+      try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000); } catch { prompt("Copie:", texto); }
     }}>
       {copiado ? <><Check size={16} aria-hidden /> Copiado</> : <><Copy size={16} aria-hidden /> {rotulo}</>}
     </button>

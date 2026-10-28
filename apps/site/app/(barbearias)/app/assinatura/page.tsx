@@ -1,3 +1,4 @@
+import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -142,6 +143,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
           <div>
             <p>1. Abra o app do seu banco e escaneie o QR code, ou use o Pix copia e cola:</p>
             <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
+            <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
             <p>Identificador: <code>{pagamento.txid}</code></p>
             <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia{barbearia.emMontagem ? ", e chama você no WhatsApp" : ", e você recebe um aviso no celular"}.</p>
             {pagamento.status === "informado" && (

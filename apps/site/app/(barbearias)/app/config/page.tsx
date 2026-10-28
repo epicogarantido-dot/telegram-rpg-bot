@@ -151,7 +151,8 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
   const { barbearia } = await exigirAcessoAtivo();
   const { erro, aviso } = await searchParams;
   const banco = obterAgenda();
-  const servicos = banco.servicos(barbearia.id);
+  // Desativados vão pro fim: conta nova tem os genéricos (Corte, Barba...) desligados pelo cardápio.
+  const servicos = banco.servicos(barbearia.id).sort((a, b) => Number(b.ativo) - Number(a.ativo));
   const profissionais = banco.profissionais(barbearia.id);
   const expedientes = banco.expedientes(barbearia.id);
   const fotosEquipe = banco.fotos(barbearia.id, "equipe");
@@ -235,7 +236,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
           <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
           <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
           <label className="marcar config-servico-domicilio"><input type="checkbox" name="domicilio" defaultChecked={s.emDomicilio} /> Vou até o cliente (pede o endereço)</label>
-          <label className="marcar config-servico-domicilio"><input type="checkbox" name="adicional" defaultChecked={s.adicional} /> Oferecer como adicional (&quot;+ {s.nome}&quot; junto com outro serviço)</label>
+          <label className="marcar config-servico-domicilio config-servico-adicional"><input type="checkbox" name="adicional" defaultChecked={s.adicional} /> Oferecer como adicional (&quot;+ {s.nome}&quot; junto com outro serviço)</label>
           <div className="acoes">
             <button className="botao-sec">Salvar</button>
             <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>

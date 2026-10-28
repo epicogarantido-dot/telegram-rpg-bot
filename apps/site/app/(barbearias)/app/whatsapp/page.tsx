@@ -53,7 +53,7 @@ export default async function WhatsappBusiness() {
       <div className="painel-ola">
         <div>
           <h1>WhatsApp Business</h1>
-          <p>O WhatsApp conversa. O seu site agenda.</p>
+          <p className="frase">O WhatsApp conversa. O seu site agenda.</p>
         </div>
       </div>
       <p className="suave">
