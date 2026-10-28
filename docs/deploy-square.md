@@ -103,7 +103,7 @@ pro outro).
 `.env` de cada um (modelos: `.env.example` e `.env.saas.example`):
 
 - **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*`. Tire `SAAS_URL` se estiver lá: não é mais usado.
-- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA` (pode ser outra), `ADMIN_WHATSAPP` e `PLANO_DIAS`. Tire `LEADS_URL`, `SITE_INICIAL`, `PIX_*` e `PLANO_VALOR`/`PLANO_ADESAO` se estiverem lá: o SaaS não cobra.
+- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA` (pode ser outra), `ADMIN_WHATSAPP`, `PLANO_DIAS`, `PLANO_ADESAO` e `PLANO_VALOR` (os mesmos do leads: só aparecem nos Termos) e `BOT_SEGREDO`. Tire `LEADS_URL`, `SITE_INICIAL` e `PIX_*` se estiverem lá: o SaaS não cobra.
 
 Cada app tem o seu banco da agenda: o de leads guarda exemplos, demonstrações e as assinaturas; o
 SaaS, as barbearias entregues e a agenda delas. Baixe o backup (`/painel/backup`) **nos dois**.
