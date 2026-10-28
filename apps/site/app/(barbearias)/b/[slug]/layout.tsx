@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { CalendarCheck, MessageCircle, Navigation } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 import { linkMapa, nivelEfeitos } from "@/lib/barbearias";
@@ -9,13 +9,12 @@ import { Efeitos } from "@/componentes/barbearia/Efeitos";
 import { QueroEsteSite } from "@/componentes/barbearia/QueroEsteSite";
 import { dataPorExtenso } from "@/lib/datas";
 import { ehSiteDeExemplo } from "@/lib/exemplos";
-import { entregue } from "@/lib/entrega";
 import { conviteDaPrevia } from "@/lib/previa";
 import { ehOBarbeiro } from "@/lib/protecao";
 import { TEMAS } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { trocarEstiloDaPrevia } from "./acoes-previa";
-import { soEntrega } from "@/lib/modo";
+import { soEntrega, soVenda } from "@/lib/modo";
 
 /** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -32,9 +31,8 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   const banco = obterAgenda();
   const b = banco.barbeariaPorSlug(slug);
   if (!b) notFound();
-  // Vendido aqui (site de leads) e já entregue: o site de verdade está no SaaS.
-  const noSaas = entregue(b.id);
-  if (noSaas) redirect(noSaas.site);
+  // No site de leads só abrem exemplos e prévias; conta paga não vira site aqui (o admin cria no SaaS).
+  if (soVenda() && !b.demoAte && !b.emMontagem) notFound();
   // No SaaS só existe site de quem pagou: exemplos (acervo de fotos) e prévias não abrem.
   if (b.demoAte && soEntrega()) notFound();
   const ativo = banco.acessoAtivo(b);

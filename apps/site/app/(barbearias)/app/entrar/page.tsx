@@ -4,7 +4,7 @@ import { ErroAgenda } from "@aprenda/agenda";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { chaveDoAparelho, chaveDoEmail } from "@/lib/protecao";
 import { contatoResponsavel } from "@/lib/contato";
-import { vendeAqui } from "@/lib/entrega";
+import { soVenda } from "@/lib/modo";
 import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Entrar — Agenda" };
@@ -32,7 +32,7 @@ async function entrar(form: FormData) {
   }
   await gravarSessaoAgenda(token);
   // No site de leads a conta só acompanha o pedido; o painel de verdade fica no SaaS.
-  redirect(vendeAqui() ? "/app/assinatura" : "/app");
+  redirect(soVenda() ? "/app/assinatura" : "/app");
 }
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {

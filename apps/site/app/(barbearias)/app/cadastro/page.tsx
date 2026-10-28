@@ -7,7 +7,7 @@ import { chaveDoAparelho } from "@/lib/protecao";
 import { obterBanco } from "@/lib/painel";
 import { CampoOrigem } from "@/componentes/ContarOrigem";
 import { porFotosPadrao } from "@/lib/exemplos";
-import { vendeAqui } from "@/lib/entrega";
+import { soVenda } from "@/lib/modo";
 
 export const metadata = { title: "Criar conta — Agenda" };
 
@@ -39,8 +39,8 @@ async function cadastrar(form: FormData) {
   }
   await gravarSessaoAgenda(token);
   // Sem teste grátis, o próximo passo é o pagamento; a equipe entra em contato pra pôr no ar.
-  // No site de leads (que só vende) é sempre o pagamento: o painel fica no SaaS, depois da entrega.
-  redirect(montagem || vendeAqui() ? "/app/assinatura?bemvindo=1" : "/app?novo=1");
+  // No site de leads (que só mostra e cobra) é sempre o pagamento: o painel fica no SaaS.
+  redirect(montagem || soVenda() ? "/app/assinatura?bemvindo=1" : "/app?novo=1");
 }
 
 export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string; demo?: string }> }) {

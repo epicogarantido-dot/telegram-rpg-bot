@@ -13,19 +13,6 @@ import { agoraNoFuso, deMinutos, diaDaSemana, paraMinutos, somarDias, type Data,
  * outra barbearia. Ao migrar pro Supabase, isso vira RLS por barbearia.
  */
 
-/** Barbearia vendida no site de leads, a caminho do SaaS (`dadosParaEntrega` → `receberConta`). */
-export interface DadosEntrega {
-  nomeBarbearia: string;
-  telefone: string;
-  tema: string;
-  cidade?: string;
-  bio?: string;
-  endereco?: string;
-  nome: string;
-  email: string;
-  senhaHash: string;
-}
-
 export interface Barbearia {
   id: number;
   slug: string;
@@ -619,54 +606,41 @@ export class BancoAgenda {
     }
   }
 
-  // ---------- entrega (o site de leads vende, o SaaS recebe) ----------
-
-  /** O que o site de vendas manda pro SaaS quando o primeiro Pix é confirmado. A senha vai só como hash. */
-  dadosParaEntrega(barbeariaId: number): DadosEntrega | undefined {
-    const b = this.barbeariaPorId(barbeariaId);
-    const u = this.db.prepare("SELECT nome, email, senha_hash FROM usuarios WHERE barbearia_id = ? ORDER BY id LIMIT 1").get(barbeariaId) as
-      { nome: string; email: string; senha_hash: string } | undefined;
-    if (!b || !u) return undefined;
-    return {
-      nomeBarbearia: b.nome, telefone: b.telefone, tema: b.tema, cidade: b.cidade, bio: b.bio, endereco: b.endereco,
-      nome: u.nome, email: u.email, senhaHash: u.senha_hash,
-    };
-  }
+  // ---------- conta criada pelo admin (vendida no site de leads) ----------
 
   /**
-   * Recebe no SaaS a barbearia vendida no site de leads: já no ar por `dias` a partir de hoje, com
-   * o mesmo e-mail e a mesma senha. Mandar de novo o mesmo e-mail devolve a que já existe (o admin
-   * pode repetir o envio sem criar outra).
+   * O cliente comprou no site de leads e o admin conferiu o Pix: o admin cria aqui a barbearia
+   * dele, já no ar por `dias` a partir de hoje, e manda o link e a senha no WhatsApp. O Pix da
+   * contratação entra no histórico como confirmado, então a próxima cobrança já é a mensalidade.
    */
-  receberConta(dados: DadosEntrega & { dias: number; valorCentavos: number; txid: string; agora?: Date }): { barbearia: Barbearia; nova: boolean } {
-    const email = dados.email.trim().toLowerCase();
-    const existente = this.db.prepare("SELECT barbearia_id AS id FROM usuarios WHERE email = ?").get(email) as { id: number } | undefined;
-    if (existente) return { barbearia: this.barbeariaPorId(existente.id)!, nova: false };
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new ErroAgenda("E-mail inválido.");
-    if (!/^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/.test(dados.senhaHash)) throw new ErroAgenda("Senha inválida.");
+  criarContaPeloAdmin(dados: {
+    nomeBarbearia: string; telefone: string; tema: string; cidade?: string;
+    nome: string; email: string; senha: string; dias: number; agora?: Date;
+  }): Barbearia {
+    const email = this.validarConta(dados);
     if (!temaValido(dados.tema)) throw new ErroAgenda("Estilo inválido.");
     if (!Number.isInteger(dados.dias) || dados.dias < 1 || dados.dias > 400) throw new ErroAgenda("Dias inválidos.");
-    if (!Number.isInteger(dados.valorCentavos) || dados.valorCentavos < 0 || !/^[A-Za-z0-9]{1,25}$/.test(dados.txid)) throw new ErroAgenda("Pagamento inválido.");
     const nomeBarbearia = dados.nomeBarbearia.trim().slice(0, 80);
-    if (nomeBarbearia.length < 2 || !/^\d{10,13}$/.test(dados.telefone)) throw new ErroAgenda("Nome ou WhatsApp inválido.");
+    if (nomeBarbearia.length < 2) throw new ErroAgenda("Diga o nome da barbearia.");
     const hoje = agoraNoFuso("America/Sao_Paulo", dados.agora).slice(0, 10);
-    const texto = (v: string | undefined, max: number) => v?.trim().slice(0, max) || null;
+    const cidade = dados.cidade?.trim().slice(0, 60) || undefined;
+    const nome = dados.nome.trim().slice(0, 80) || "Barbeiro";
     const agora = new Date().toISOString();
     this.db.exec("BEGIN");
     try {
-      const b = this.db.prepare(`INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, montagem, tema, cidade, bio, endereco)
-        VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`).run(this.slugLivre(nomeBarbearia), nomeBarbearia, dados.telefone, agora,
-        somarDias(hoje, dados.dias - 1), dados.tema, texto(dados.cidade, 60), texto(dados.bio, 400), texto(dados.endereco, 160));
+      const b = this.db.prepare(`INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, montagem, tema, cidade, bio)
+        VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`).run(this.slugLivre(nomeBarbearia), nomeBarbearia, dados.telefone, agora,
+        somarDias(hoje, dados.dias - 1), dados.tema, cidade ?? null,
+        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Escolha o horário e marque aqui mesmo.`);
       const id = Number(b.lastInsertRowid);
       this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
-        .run(id, dados.nome.trim().slice(0, 80) || nomeBarbearia, email, dados.senhaHash, agora);
-      this.semearBarbearia(id, dados.nome.trim() || "Barbeiro");
-      // O Pix da contratação (pago e conferido no site de leads) fica no histórico: a próxima
-      // cobrança daqui já é a mensalidade.
-      this.db.prepare(`INSERT INTO pagamentos (barbearia_id, txid, valor_centavos, dias, status, criado_em, decidido_em)
-        VALUES (?, ?, ?, ?, 'confirmado', ?, ?)`).run(id, `L${dados.txid}`.slice(0, 25), dados.valorCentavos, dados.dias, agora, agora);
+        .run(id, nome, email, hashSenha(dados.senha), agora);
+      this.semearBarbearia(id, nome);
+      this.db.prepare(`INSERT INTO pagamentos (barbearia_id, txid, valor_centavos, dias, status, pagador, criado_em, decidido_em)
+        VALUES (?, ?, ?, ?, 'confirmado', 'pago no site de vendas', ?, ?)`)
+        .run(id, `AG${id}X${randomBytes(4).toString("hex").toUpperCase()}`, this.plano.adesaoCentavos || this.plano.valorCentavos, dados.dias, agora, agora);
       this.db.exec("COMMIT");
-      return { barbearia: this.barbeariaPorId(id)!, nova: true };
+      return this.barbeariaPorId(id)!;
     } catch (e) {
       this.db.exec("ROLLBACK");
       throw e;

@@ -14,7 +14,7 @@ function formatarTelefone(t: string): string {
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { entregue } from "@/lib/entrega";
+import { soVenda } from "@/lib/modo";
 
 export const metadata = { title: "Assinatura", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -52,29 +52,6 @@ async function jaPaguei(form: FormData) {
 export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string; bemvindo?: string }> }) {
   const { barbearia } = await exigirBarbeiro();
   const { erro, bemvindo } = await searchParams;
-  // Comprou pelo site de leads e o Pix foi confirmado: o site e o painel já estão no SaaS.
-  const noAr = entregue(barbearia.id);
-  if (noAr) {
-    return (
-      <>
-        <ol className="passos-compra" aria-label="Etapas">
-          <li className="feito">Seu site</li>
-          <li className="feito">Cadastro</li>
-          <li className="feito">Pagamento</li>
-        </ol>
-        <section className="pedido-recebido" aria-labelledby="no-ar-titulo">
-          <h1 id="no-ar-titulo">Seu site está no ar!</h1>
-          <p>Pagamento confirmado, {barbearia.nome}. O seu site e o seu painel já estão prontos:</p>
-          <p><a className="botao" href={noAr.painel}>Entrar no meu painel</a></p>
-          <p className="suave">
-            Use o mesmo e-mail e a mesma senha do cadastro. O endereço do seu site é{" "}
-            <a href={noAr.site}>{noAr.site.replace(/^https?:\/\//, "")}</a>. Guarde o link do painel nos favoritos:
-            é lá que você vê a agenda, troca as fotos e renova a mensalidade.
-          </p>
-        </section>
-      </>
-    );
-  }
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
   const pagamento = banco.pagamentoAberto(barbearia.id);
@@ -86,6 +63,27 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
     ? gerarPixCopiaECola({ ...configPix, valorCentavos: pagamento.valorCentavos, txid: pagamento.txid, descricao: `Agenda ${barbearia.nome}` })
     : "";
   const qr = copiaECola ? await QRCode.toString(copiaECola, { type: "svg", margin: 1, width: 240 }) : "";
+
+  // Site de leads (só mostra e cobra): Pix confirmado, o admin cria o site no SaaS e manda no WhatsApp.
+  if (soVenda() && !barbearia.emMontagem && !nuncaPagou) {
+    return (
+      <>
+        <ol className="passos-compra" aria-label="Etapas">
+          <li className="feito">Seu site</li>
+          <li className="feito">Cadastro</li>
+          <li className="feito">Pagamento</li>
+        </ol>
+        <section className="pedido-recebido" aria-labelledby="pago-titulo">
+          <h1 id="pago-titulo">Pagamento confirmado!</h1>
+          <p>
+            Obrigado, {barbearia.nome}. Seu site já está sendo preparado: você recebe <strong>no WhatsApp</strong>,
+            no número {formatarTelefone(barbearia.telefone)}, o link do site e a senha do seu painel.
+          </p>
+          <p className="suave">No painel você troca as fotos, os preços, os horários e o que mais quiser.</p>
+        </section>
+      </>
+    );
+  }
 
   // Conta nova que já pagou (ou disse que pagou): agora é com a equipe, que chama no WhatsApp.
   if (barbearia.emMontagem && pagamento.status === "informado") {

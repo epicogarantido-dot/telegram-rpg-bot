@@ -1120,27 +1120,21 @@ describe("senha: trocar no painel e link de troca", () => {
   });
 });
 
-describe("entrega do site de leads pro SaaS", () => {
-  it("leva a barbearia com a mesma senha, já no ar, e não duplica se mandar de novo", () => {
-    const leads = new BancoAgenda(":memory:", { valorCentavos: 5000, dias: 30, testeDias: 0 });
-    const { barbearia } = leads.criarConta({ nomeBarbearia: "Barbearia do Zé", telefone: "5555999991234", nome: "Zé", email: "Ze@x.com", senha: "segredo123" });
-    leads.atualizarSite(barbearia.id, { tema: "potencia", cidade: "Alegrete", bio: "Corte bom." });
-    const dados = leads.dadosParaEntrega(barbearia.id)!;
-    expect(dados.senhaHash).toMatch(/^scrypt:/);
-
-    const saas = new BancoAgenda(":memory:", { valorCentavos: 5000, dias: 30, testeDias: 0 });
+describe("conta criada pelo admin (venda no site de leads)", () => {
+  it("nasce no ar, entra com a senha dada e a próxima cobrança é a mensalidade", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 5000, adesaoCentavos: 10000, dias: 30, testeDias: 0 });
     const agora = new Date("2026-10-28T15:00:00Z");
-    const { barbearia: nova, nova: criou } = saas.receberConta({ ...dados, dias: 30, valorCentavos: 10000, txid: "AG7X55702AFC", agora });
-    expect(criou).toBe(true);
+    const nova = b.criarContaPeloAdmin({
+      nomeBarbearia: "Barbearia do Zé", telefone: "5555999991234", tema: "potencia", cidade: "Alegrete",
+      nome: "Zé", email: "Ze@x.com", senha: "segredo123", dias: 30, agora,
+    });
     expect(nova).toMatchObject({ nome: "Barbearia do Zé", tema: "potencia", cidade: "Alegrete", emMontagem: false, acessoAte: "2026-11-26" });
-    expect(saas.acessoAtivo(nova, agora)).toBe(true);
-    expect(saas.entrar("ze@x.com", "segredo123")).toBeTruthy();
-    expect(saas.servicos(nova.id).length).toBeGreaterThan(0);
-    // A contratação já foi paga no site de leads: a próxima cobrança é a mensalidade.
-    expect(saas.jaContratou(nova.id)).toBe(true);
-
-    const repetido = saas.receberConta({ ...dados, dias: 30, valorCentavos: 10000, txid: "AG7X55702AFC", agora });
-    expect(repetido).toMatchObject({ nova: false, barbearia: { id: nova.id } });
-    expect(() => saas.receberConta({ ...dados, email: "outro@x.com", senhaHash: "texto-puro", dias: 30, valorCentavos: 10000, txid: "X1" })).toThrow(ErroAgenda);
+    expect(b.acessoAtivo(nova, agora)).toBe(true);
+    expect(b.entrar("ze@x.com", "segredo123")).toBeTruthy();
+    expect(b.servicos(nova.id).length).toBeGreaterThan(0);
+    expect(b.jaContratou(nova.id)).toBe(true);
+    expect(b.valorDaProximaCobranca(nova.id)).toBe(5000);
+    expect(() => b.criarContaPeloAdmin({ nomeBarbearia: "Outra", telefone: "5555999990000", tema: "potencia", nome: "A", email: "ze@x.com", senha: "segredo123", dias: 30 }))
+      .toThrow(/e-mail/);
   });
 });

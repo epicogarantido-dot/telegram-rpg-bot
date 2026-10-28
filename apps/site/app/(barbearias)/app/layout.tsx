@@ -4,7 +4,7 @@ import { CalendarDays, ExternalLink } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
 import { NavPainel } from "@/componentes/barbearia/NavPainel";
-import { vendeAqui } from "@/lib/entrega";
+import { soVenda } from "@/lib/modo";
 import "./painel.css";
 
 // O painel pode ser instalado no celular como app (avisos de horário novo).
@@ -21,12 +21,12 @@ export default async function LayoutPainel({ children }: { children: React.React
 
   // Fora da conta (entrar, cadastro), com o site ainda em montagem ou no site de leads (que só
   // vende; o painel fica no SaaS): topo simples, sem menu.
-  if (!barbearia || barbearia.emMontagem || vendeAqui()) {
+  if (!barbearia || barbearia.emMontagem || soVenda()) {
     return (
       <>
         <div className="barra-topo">
           <header className="topo">
-            <Link href={vendeAqui() ? "/app/assinatura" : "/app"} className="marca">
+            <Link href={soVenda() ? "/app/assinatura" : "/app"} className="marca">
               <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
               {barbearia?.nome ?? "Agenda da barbearia"}
             </Link>

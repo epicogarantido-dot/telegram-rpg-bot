@@ -86,19 +86,26 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 | `dist/saas-square.zip` | criar o app das barbearias (Upload) |
 | `dist/saas-commit.zip` | atualizar o app das barbearias depois |
 
-**Quem faz o quê (28/10/2026):** o de leads **vende** (cursos, Revista, `/barbeiros`, sites de
-exemplo, prévia em `/montar`, cadastro e o 1º Pix); o SaaS **entrega**, só pra quem já pagou (site
-do cliente, agenda, painel do barbeiro e renovações), e não tem nenhum link pro de leads. Você
-confere o 1º Pix em `/painel/assinaturas` **do app de leads** ("Confirmar e entregar o site"): a
-barbearia é criada no SaaS já no ar, com o mesmo e-mail e senha, as fotos padrão do estilo e o
-cardápio; o barbeiro vê "Seu site está no ar!" com o botão pro painel. Se o SaaS não responder,
-nada é confirmado (dá pra tentar de novo sem duplicar). Renovações e "link de nova senha" ficam
-em `/painel/assinaturas` **do SaaS**.
+**Quem faz o quê (28/10/2026):** o de leads **mostra e cobra** (cursos, Revista, `/barbeiros`,
+sites de exemplo, prévia em `/montar`, cadastro e o 1º Pix); o SaaS **entrega**, só pra quem já
+pagou (site do cliente, agenda, painel do barbeiro e renovações), e não tem nenhum link pro de
+leads. O caminho:
+
+1. O cliente paga no site de leads. Você confere o Pix em `/painel/assinaturas` **do leads**
+   ("Vendas") e toca em "Confirmar pagamento". A tela dele passa a dizer que vai receber o link e
+   a senha no WhatsApp.
+2. No `/painel/assinaturas` **do SaaS**, "Criar site de cliente": nome, WhatsApp, responsável,
+   e-mail, cidade e estilo (a lista de Vendas do leads mostra o estilo e a cidade que ele
+   escolheu). O site nasce no ar por `PLANO_DIAS` dias, com fotos padrão e cortes de barbearia.
+3. Abre o seu WhatsApp com o link do site, o do painel, o e-mail e a senha. É só enviar. Ele
+   arruma o resto no painel.
+
+Renovações e "link de nova senha" ficam no SaaS.
 
 `.env` de cada um (modelos: `.env.example` e `.env.saas.example`):
 
-- **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*` (ele cobra a contratação). Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
-- **SaaS:** `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_VALOR` e `PLANO_DIAS` (renovações). Tire `LEADS_URL` e `SITE_INICIAL` se ainda estiverem lá: não são mais usados.
+- **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*` (ele cobra a contratação). `SAAS_URL` é opcional (links velhos do painel vão pra lá).
+- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_ADESAO` (só pro histórico da contratação), `PLANO_VALOR` e `PLANO_DIAS` (renovações). Tire `LEADS_URL` e `SITE_INICIAL` se ainda estiverem lá: não são mais usados.
 
 Cada app tem o seu banco da agenda: o de leads guarda exemplos, prévias e as compras até a
 entrega; o SaaS, as barbearias entregues, a agenda e as renovações. Baixe o backup
