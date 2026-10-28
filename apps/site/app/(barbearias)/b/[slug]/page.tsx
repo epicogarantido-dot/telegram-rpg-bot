@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AtSign, CalendarCheck, Clock, MapPin, MessageCircle, Navigation, Phone, Users } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, TEMAS } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { Frase } from "@/componentes/barbearia/Frase";
 import { frasesDoTema } from "@/lib/frases";
 import { obterAgenda, reais } from "@/lib/agenda";
-import { dadosEstruturados, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
+import { dadosEstruturados, ehCorte, linkMapa, mapaEmbutido, nivelEfeitos, situacaoAgora, urlAbsoluta, urlFoto } from "@/lib/barbearias";
 
 export const dynamic = "force-dynamic";
 
@@ -63,16 +63,21 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
   const telefoneBonito = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
   const categoriasUsadas = CATEGORIAS_FOTO.filter((c) => c.id !== "equipe" && fotos.some((f) => f.categoria === c.id));
-  // Mosaico: a capa de novo (é a foto mais bonita do site) e dois cortes.
-  const mosaico = [
-    ...(capa ? [capa] : []),
-    ...trabalhos.filter((f) => ["degrade", "corte", "navalhado", "barba"].includes(f.categoria)).slice(-2),
-  ];
+  // Mosaico logo abaixo da abertura: três cortes (a capa acabou de aparecer lá em cima, não repete).
+  // Com menos de 3 fotos de corte, completa com a capa.
+  // Degradê primeiro: é a foto que mostra o corte pronto (as de "corte" costumam ser a tesoura em ação).
+  const ordemCorte = ["degrade", "navalhado", "corte", "barba"];
+  const fotosDeCorte = trabalhos.filter((f) => ordemCorte.includes(f.categoria))
+    .sort((a, b2) => ordemCorte.indexOf(a.categoria) - ordemCorte.indexOf(b2.categoria));
+  const mosaico = fotosDeCorte.length >= 3 ? fotosDeCorte.slice(0, 3) : [...(capa ? [capa] : []), ...fotosDeCorte.slice(-2)];
   // Fotos do ambiente pra "Conheça a casa" e pro fundo da chamada final, sem repetir quando dá.
   const ambientes = trabalhos.filter((f) => f.categoria === "ambiente");
   const fotoCasa = ambientes.at(-1) ?? capa;
   const fotoChamada = ambientes.length > 1 ? ambientes[0] : capa;
   const agendarHref = `${base}/agendar`;
+  // "Cortes a partir de R$ X": preço é a primeira dúvida de quem chega (e a página não tem mais cardápio).
+  const precosCorte = servicos.filter((s) => ehCorte(s.nome) && s.precoCentavos > 0).map((s) => s.precoCentavos);
+  const aPartir = b.mostrarPrecos && precosCorte.length > 0 ? Math.min(...precosCorte) : undefined;
   const frases = frasesDoTema(tema);
   // Fundo das frases: fotos que lembram barbearia (ambiente, depois ferramentas, depois a capa).
   // Começa pelas que ainda não apareceram grandes; com poucas, repete.
@@ -82,7 +87,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
     ...ambientes,
     ...(capa ? [capa] : []),
   ];
-  const fotoFrase = (i: number) => fundosFrase.length ? fundosFrase[i % fundosFrase.length] : undefined;
+  const inicioFrase = Math.max(0, TEMAS.findIndex((t) => t.id === tema));
+  const fotoFrase = (i: number) => fundosFrase.length ? fundosFrase[(i + inicioFrase) % fundosFrase.length] : undefined;
 
   return (
     <>
@@ -119,6 +125,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             </h1>
           ) : <h1>{b.nome}</h1>}
           {b.bio && <p className="b-bio">{b.bio}</p>}
+          {aPartir !== undefined && agenda && <p className="b-a-partir">Cortes a partir de {reais(aPartir)}</p>}
           {fila && (
             <p className="b-fila">
               <Users size={18} aria-hidden />
@@ -150,7 +157,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
-      <Frase texto={frases[0]} foto={fotoFrase(0)} />
 
       {/* A página inicial só vende a ideia e leva pro "Agendar"; a escolha do corte fica no agendar.
           Quem atende só por ordem de chegada não tem agendar: aí o cardápio aparece aqui. */}
@@ -186,7 +192,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      <Frase texto={frases[1]} foto={fotoFrase(1)} />
+      <Frase texto={frases[0]} foto={fotoFrase(0)} />
 
       {tema === "potencia" && pares.length > 0 && (
         <section className="b-secao" id="antes-depois">
@@ -217,7 +223,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      <Frase texto={frases[2]} foto={fotoFrase(2)} />
+      <Frase texto={frases[1]} foto={fotoFrase(1)} />
 
       <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (
@@ -249,8 +255,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
           )}
           <div className="b-chamada-texto" data-revelar>
-            <h2 id="chamada-titulo">Seu próximo corte já tem horário.</h2>
-            <p>Garanta o seu em menos de um minuto, sem criar conta.</p>
+            <h2 id="chamada-titulo">{frases[2]}</h2>
+            <p>Seu próximo corte já tem horário. Garanta o seu em menos de um minuto, sem criar conta.</p>
             <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>
           </div>
         </section>

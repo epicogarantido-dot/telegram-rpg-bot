@@ -847,7 +847,7 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-chamada > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
 .b-chamada::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.75)); }
 .b-chamada-texto { display: grid; justify-items: center; gap: 14px; max-width: 680px; padding: 80px 16px; }
-.site-b .b-chamada h2 { margin: 0; font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.05; color: #fff; }
+.site-b .b-chamada h2 { margin: 0; max-width: 20ch; font-size: clamp(1.9rem, 5vw, 3.2rem); line-height: 1.08; color: #fff; text-wrap: balance; }
 .site-b .b-chamada h2::after { display: none; }
 .b-chamada p { margin: 0 0 8px; color: rgb(255 255 255 / 0.85); font-size: 1.1rem; }
 
@@ -871,6 +871,8 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-vitrine-grade { list-style: none; margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 760px) { .b-vitrine-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
 @media (min-width: 1040px) { .b-vitrine-grade { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* `.site-b a` pinta link com a cor do tema (escura nos temas claros): cartão sobre foto é sempre branco. */
+.site-b .b-vitrine-item { color: #fff; }
 .b-vitrine-item {
   position: relative; display: block; height: 100%; overflow: hidden; text-decoration: none; cursor: pointer;
   border-radius: var(--raio); background: var(--fundo-2); color: #fff; isolation: isolate;
@@ -1020,3 +1022,25 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 /* Equipe em grade (a página inicial não tem mais carrossel). */
 .b-equipe .b-pessoa img, .b-equipe .b-pessoa-inicial { height: auto; aspect-ratio: 4 / 5; }
 @media (max-width: 560px) { .b-equipe { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+
+/* Luxo Técnico no celular: nome e "Agendar" primeiro, a foto embaixo (a foto sozinha ocupava a primeira tela). */
+@media (max-width: 899px) {
+  .site-b[data-tema="tecnico"] .b-heroi-texto { order: -1; padding-top: 24px; padding-bottom: 24px; }
+  .site-b[data-tema="tecnico"] .b-heroi-midia { aspect-ratio: 16 / 11; max-height: 46svh; border-radius: 28px 28px 0 0; }
+}
+
+/* Barra "Agendar" do celular: na página inicial só aparece depois que o botão da abertura sai da
+   tela (antes eram dois "Agendar" iguais empilhados). Sem JavaScript, fica sempre visível. */
+@media (max-width: 760px) {
+  .site-b.b-barra-espera .b-barra-celular { translate: 0 110%; transition: translate 0.25s ease; }
+  .site-b.b-barra-espera.b-barra-visivel .b-barra-celular { translate: 0 0; }
+  /* Endereço vai em "Onde estamos"; na abertura do celular ficava embaixo das bolinhas. */
+  .b-heroi .b-info-rapida li:not(.b-estado) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .site-b.b-barra-espera .b-barra-celular { transition: none; } }
+
+/* Preço de partida na abertura. */
+.b-a-partir { margin: 0; font-weight: 600; letter-spacing: 0.01em; }
+
+/* Equipe de 3 no celular: 3 colunas (2 + 1 sozinho ficava torto). */
+@media (max-width: 560px) { .b-equipe:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .b-equipe:has(> :nth-child(3):last-child) .b-pessoa h3 { font-size: 1rem; } }

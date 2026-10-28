@@ -22,6 +22,9 @@ export function Efeitos({ tema }: { tema: string }) {
     // Navegação da galeria de uma foto por vez (Cerimônia). É controle, não enfeite: vale sempre.
     if (tema === "cerimonia") limpar.push(galeriaComSetas(raiz, semMovimento));
 
+    // Barra "Agendar" do celular só depois que o botão da abertura sai da tela (não é animação: vale sempre).
+    limpar.push(barraDepoisDaAbertura(raiz));
+
     if (!semMovimento) {
       // Todos os temas: fotos, cartões e frases aparecem quando entram na tela.
       limpar.push(revelarAoRolar(raiz));
@@ -36,6 +39,15 @@ export function Efeitos({ tema }: { tema: string }) {
   }, [tema, caminho]);
 
   return null;
+}
+
+function barraDepoisDaAbertura(raiz: HTMLElement): () => void {
+  const acoes = raiz.querySelector(".b-heroi .b-acoes");
+  if (!acoes) return () => {};
+  raiz.classList.add("b-barra-espera");
+  const vigia = new IntersectionObserver(([e]) => raiz.classList.toggle("b-barra-visivel", !e?.isIntersecting));
+  vigia.observe(acoes);
+  return () => { vigia.disconnect(); raiz.classList.remove("b-barra-espera", "b-barra-visivel"); };
 }
 
 /**
