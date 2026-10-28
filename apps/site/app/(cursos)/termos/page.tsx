@@ -1,3 +1,4 @@
+import { soEntrega } from "@/lib/modo";
 import Link from "next/link";
 import { MONTAGEM_DIAS, planoDoAmbiente } from "@aprenda/agenda";
 import { reais } from "@/lib/agenda";
@@ -21,12 +22,16 @@ export default function Termos() {
       <h1>Termos de uso</h1>
       <p className="suave">Atualizado em 27 de outubro de 2026.</p>
 
-      <h2>Cursos e Revista</h2>
-      <p>
-        São grátis e abertos. Cada curso traduzido mantém a licença e o crédito do original (veja em{" "}
-        <Link href="/licencas">Licenças e créditos</Link>). O conteúdo é educativo: preços, leis e regras mudam, então
-        confira com seu contador ou com o órgão responsável antes de decidir algo importante.
-      </p>
+      {!soEntrega() && (
+        <>
+          <h2>Cursos e Revista</h2>
+          <p>
+            São grátis e abertos. Cada curso traduzido mantém a licença e o crédito do original (veja em{" "}
+            <Link href="/licencas">Licenças e créditos</Link>). O conteúdo é educativo: preços, leis e regras mudam, então
+            confira com seu contador ou com o órgão responsável antes de decidir algo importante.
+          </p>
+        </>
+      )}
 
       <h2>Site e agenda pra barbearias</h2>
       <h3>O que você recebe</h3>
@@ -69,7 +74,7 @@ export default function Termos() {
         . Antes de apagar, você pode pedir uma cópia da sua lista de clientes.
       </p>
 
-      <p className="suave"><Link href="/privacidade">Privacidade</Link> · <Link href="/licencas">Licenças e créditos</Link></p>
+      <p className="suave"><Link href="/privacidade">Privacidade</Link>{!soEntrega() && <> · <Link href="/licencas">Licenças e créditos</Link></>}</p>
     </article>
   );
 }

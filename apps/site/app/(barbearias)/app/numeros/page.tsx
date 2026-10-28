@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { agoraNoFuso } from "@aprenda/agenda";
 import { exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
+import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Números do mês", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -89,7 +90,7 @@ export default async function Numeros({ searchParams }: { searchParams: Promise<
           </div>
           <p className="suave pequeno">
             Pelo preço atual de cada serviço, só o que foi atendido (faltas não entram). A porcentagem de cada um você define em <Link href="/app/config">Configurações</Link>.
-            Barbeiro parceiro precisa de contrato escrito e homologado: veja o guia <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">Barbeiro parceiro</a> e combine com seu contador.
+            Barbeiro parceiro precisa de contrato escrito e homologado: {soEntrega() ? "combine" : <>veja o guia <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">Barbeiro parceiro</a> e combine</>} com seu contador.
           </p>
         </>
       ) : null}
@@ -102,7 +103,7 @@ export default async function Numeros({ searchParams }: { searchParams: Promise<
       </ul>
       <p className="suave pequeno">
         Conta só o que passou pela agenda do sistema (inclusive o que você marca pelo painel). Faltas entram quando você toca em &quot;Faltou&quot;.
-        Quer se aprofundar? Veja o curso grátis <a href="/cursos/agenda-cheia">Agenda cheia</a>.
+        {!soEntrega() && <> Quer se aprofundar? Veja o curso grátis <a href="/cursos/agenda-cheia">Agenda cheia</a>.</>}
       </p>
     </>
   );

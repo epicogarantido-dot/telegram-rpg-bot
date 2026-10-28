@@ -1,17 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Leads e SaaS em apps separados (MODO_SITE, ver lib/modo.ts): quem pede uma página do outro
- * lado é mandado pro endereço certo, com o mesmo caminho e a mesma busca. Sem MODO_SITE (ou sem
- * a URL do outro lado), não faz nada e o app serve tudo, como antes.
+ * Leads e SaaS em apps separados (MODO_SITE, ver lib/modo.ts).
+ *
+ * O de leads VENDE: cursos, Revista, /barbeiros, exemplos, prévia (/montar), cadastro e o 1º Pix.
+ * Quem pede ali uma página do painel (/app, fora cadastro, pagamento, entrar e senha) ou da agenda
+ * assinada é mandado pro SaaS. Sem SAAS_URL, serve tudo, como um app só.
+ *
+ * O SaaS ENTREGA e não conhece o de leads: o que é de venda (início, cursos, Revista, exemplos,
+ * montar, cadastro, painel de leads) cai na entrada do painel do barbeiro, aqui mesmo.
  */
 const DO_SAAS = [
-  /^\/app(\/|$)/, /^\/b\//, /^\/agenda\//, /^\/f\//, /^\/montar\/?$/, /^\/exemplo\//,
-  /^\/painel\/(assinaturas|backup|comprovante)(\/|$)/, /^\/api\/demonstracao$/,
+  /^\/app(\/(?!entrar|assinatura|senha|cadastro)[^]*)?$/, /^\/agenda\//,
 ];
-const DO_LEADS = [
+const DE_VENDA = [
   /^\/$/, /^\/cursos(\/[^.]*)?$/, /^\/revista(\/[a-z0-9-]+)?\/?$/, /^\/barbeiros(\/obrigado)?\/?$/, /^\/licencas\/?$/,
-  /^\/painel\/?$/, /^\/painel\/(buscar|cartao|divulgacao)(\/|$)/,
+  /^\/painel\/(buscar|cartao|divulgacao)(\/|$)/, /^\/montar\/?$/, /^\/app\/cadastro\/?$/, /^\/exemplo\//,
 ];
 
 const limpar = (url: string | undefined) => (url ?? "").trim().replace(/\/$/, "");
@@ -22,13 +26,10 @@ export function proxy(req: NextRequest) {
   if (modo === "leads") {
     const saas = limpar(process.env.SAAS_URL);
     if (saas && DO_SAAS.some((r) => r.test(pathname))) return NextResponse.redirect(`${saas}${pathname}${search}`, 307);
-  } else if (modo === "saas" && DO_LEADS.some((r) => r.test(pathname))) {
-    const leads = limpar(process.env.LEADS_URL);
-    // A porta de entrada do SaaS é o próprio produto: um site de barbearia de exemplo (estilo em
-    // SITE_INICIAL, padrão Cerimônia). Sem app de leads, o resto cai na montagem do site.
-    if (pathname === "/") return NextResponse.redirect(new URL(`/exemplo/${process.env.SITE_INICIAL || "cerimonia"}${search}`, req.url), 307);
-    if (!leads) return NextResponse.redirect(new URL(`/montar${search}`, req.url), 307);
-    return NextResponse.redirect(`${leads}${pathname}${search}`, 307);
+  } else if (modo === "saas") {
+    // O admin cai no /painel depois de entrar: aqui o painel dele é o das assinaturas.
+    if (/^\/painel\/?$/.test(pathname)) return NextResponse.redirect(new URL("/painel/assinaturas", req.url), 307);
+    if (DE_VENDA.some((r) => r.test(pathname))) return NextResponse.redirect(new URL("/app/entrar", req.url), 307);
   }
   return NextResponse.next();
 }

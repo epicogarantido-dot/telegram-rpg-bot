@@ -4,6 +4,8 @@ import { ErroAgenda } from "@aprenda/agenda";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { chaveDoAparelho, chaveDoEmail } from "@/lib/protecao";
 import { contatoResponsavel } from "@/lib/contato";
+import { vendeAqui } from "@/lib/entrega";
+import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Entrar — Agenda" };
 
@@ -29,7 +31,8 @@ async function entrar(form: FormData) {
     redirect(`/app/entrar?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
   await gravarSessaoAgenda(token);
-  redirect("/app");
+  // No site de leads a conta só acompanha o pedido; o painel de verdade fica no SaaS.
+  redirect(vendeAqui() ? "/app/assinatura" : "/app");
 }
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
@@ -47,11 +50,11 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
       <p>
         Esqueceu a senha?{" "}
         {contato
-          ? <a href={`${contato.link}?text=${encodeURIComponent("Oi! Esqueci a senha da minha agenda no Aprenda Livre.")}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
+          ? <a href={`${contato.link}?text=${encodeURIComponent("Oi! Esqueci a senha do painel da minha barbearia.")}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
           : "Fale com quem te vendeu o site"}
         {" "}e mandamos um link pra criar outra.
       </p>
-      <p>Ainda não tem? <Link href="/app/cadastro">Criar conta</Link></p>
+      {!soEntrega() && <p>Ainda não tem? <Link href="/app/cadastro">Criar conta</Link></p>}
     </>
   );
 }

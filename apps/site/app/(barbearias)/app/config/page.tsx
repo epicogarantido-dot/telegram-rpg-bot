@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ErroAgenda, FOLGAS, formatarData, INTERVALOS, nomeDia } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { exigirAcessoAtivo, gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Configurações", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -255,7 +256,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       </form>
 
       <h2>Profissionais <small className="suave">({profissionais.filter((p) => p.ativo).length} atendendo)</small></h2>
-      <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…". Em &quot;Fica com&quot;, a porcentagem de cada serviço que é do profissional (comissão ou <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">barbeiro parceiro</a>); deixe vazio se não divide. A conta do mês sai em <Link href="/app/numeros">Números do mês</Link>.</p>
+      <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…". Em &quot;Fica com&quot;, a porcentagem de cada serviço que é do profissional (comissão ou {soEntrega() ? "barbeiro parceiro" : <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">barbeiro parceiro</a>}); deixe vazio se não divide. A conta do mês sai em <Link href="/app/numeros">Números do mês</Link>.</p>
       {profissionais.map((p) => (
         <div key={p.id} className={`equipe-item ${p.ativo ? "" : "desativado"}`}>
           <form action={editarProfissional}>

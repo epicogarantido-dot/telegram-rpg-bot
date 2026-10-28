@@ -14,6 +14,7 @@ function formatarTelefone(t: string): string {
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { entregue } from "@/lib/entrega";
 
 export const metadata = { title: "Assinatura", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -51,6 +52,29 @@ async function jaPaguei(form: FormData) {
 export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string; bemvindo?: string }> }) {
   const { barbearia } = await exigirBarbeiro();
   const { erro, bemvindo } = await searchParams;
+  // Comprou pelo site de leads e o Pix foi confirmado: o site e o painel já estão no SaaS.
+  const noAr = entregue(barbearia.id);
+  if (noAr) {
+    return (
+      <>
+        <ol className="passos-compra" aria-label="Etapas">
+          <li className="feito">Seu site</li>
+          <li className="feito">Cadastro</li>
+          <li className="feito">Pagamento</li>
+        </ol>
+        <section className="pedido-recebido" aria-labelledby="no-ar-titulo">
+          <h1 id="no-ar-titulo">Seu site está no ar!</h1>
+          <p>Pagamento confirmado, {barbearia.nome}. O seu site e o seu painel já estão prontos:</p>
+          <p><a className="botao" href={noAr.painel}>Entrar no meu painel</a></p>
+          <p className="suave">
+            Use o mesmo e-mail e a mesma senha do cadastro. O endereço do seu site é{" "}
+            <a href={noAr.site}>{noAr.site.replace(/^https?:\/\//, "")}</a>. Guarde o link do painel nos favoritos:
+            é lá que você vê a agenda, troca as fotos e renova a mensalidade.
+          </p>
+        </section>
+      </>
+    );
+  }
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
   const pagamento = banco.pagamentoAberto(barbearia.id);

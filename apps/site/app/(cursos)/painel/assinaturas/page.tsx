@@ -8,6 +8,8 @@ import { linkWhatsapp } from "@aprenda/prospeccao";
 import { urlDoSite } from "@/lib/membros";
 import { criarSitesDeExemplo, fotosNovasParaExemplos, sitesDeExemplo } from "@/lib/exemplos";
 import { avisarPagamento } from "@/lib/avisos";
+import { entregarNoSaas, entregue, vendeAqui } from "@/lib/entrega";
+import { soEntrega, urlSaas } from "@/lib/modo";
 import { TEMAS } from "@aprenda/agenda";
 
 export const metadata = { title: "Assinaturas", robots: { index: false } };
@@ -21,12 +23,17 @@ async function decidir(form: FormData) {
   const confirmado = form.get("acao") === "confirmar";
   const p = banco.pagamento(id);
   const antes = p && banco.barbeariaPorId(p.barbeariaId);
+  let erro: string | undefined;
   try {
+    // Site de leads: o Pix confirmado leva a barbearia pro SaaS ANTES de marcar aqui. Se o SaaS
+    // não responder, nada é confirmado e dá pra tentar de novo (lá não duplica).
+    if (confirmado && p && antes && vendeAqui() && !entregue(antes.id)) await entregarNoSaas(antes.id, p);
     if (confirmado) banco.confirmarPagamento(id);
     else banco.recusarPagamento(id);
   } catch (e) {
-    redirect(`/painel/assinaturas?erro=${encodeURIComponent(mensagemDeErro(e))}`);
+    erro = mensagemDeErro(e);
   }
+  if (erro) redirect(`/painel/assinaturas?erro=${encodeURIComponent(erro)}`);
   // Avisa no celular do barbeiro (se ele ligou os avisos): site no ar, renovação ou Pix não achado.
   if (p && antes) {
     const depois = banco.barbeariaPorId(p.barbeariaId);
@@ -79,8 +86,19 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <p><Link href="/painel">Leads</Link> · <a href="/painel/divulgacao">Divulgação</a> · <strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
-      <h1>Assinaturas</h1>
+      {soEntrega()
+        ? <p><strong>Assinaturas</strong> · <a href="/painel/backup">Baixar backup</a></p>
+        : <p><Link href="/painel">Leads</Link> · <a href="/painel/divulgacao">Divulgação</a> · <strong>{vendeAqui() ? "Vendas" : "Assinaturas"}</strong> · <a href="/painel/backup">Baixar backup</a></p>}
+      <h1>{vendeAqui() ? "Vendas" : "Assinaturas"}</h1>
+      {vendeAqui() ? (
+        <p><small>
+          Aqui ficam as compras (prévia, cadastro e o primeiro Pix). Ao confirmar o Pix, a barbearia vai pro{" "}
+          <a href={`${urlSaas()}/painel/assinaturas`}>site das barbearias</a> já no ar, com o mesmo e-mail e senha.
+          Renovações e senha esquecida ficam lá.
+        </small></p>
+      ) : soEntrega() && (
+        <p><small>Barbearias que já pagaram: renovações, senha esquecida e bloqueio.</small></p>
+      )}
       {erro && <p className="erro">{erro}</p>}
 
       <h2>Pagamentos a conferir ({pendentes.filter((p) => p.status === "informado").length})</h2>
@@ -116,7 +134,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
             <form action={decidir}>
               <input type="hidden" name="id" value={p.id} />
               <input type="hidden" name="acao" value="confirmar" />
-              <button className="botao">Confirmar e liberar</button>
+              <button className="botao">{vendeAqui() ? "Confirmar e entregar o site" : "Confirmar e liberar"}</button>
             </form>
             <form action={decidir}>
               <input type="hidden" name="id" value={p.id} />
@@ -127,6 +145,8 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
         </div>
       ))}
 
+      {/* No SaaS os exemplos não aparecem: ficam só como acervo de fotos padrão das contas. */}
+      {!soEntrega() && <>
       <h2>Sites de exemplo</h2>
       <p><small>Um por estilo, pra mostrar um site de verdade na conversa. Sem login (ninguém mexe), a marcação não grava e o topo avisa que é exemplo. Aparecem nos carrosséis de estilos.</small></p>
       {(() => {
@@ -152,19 +172,27 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
           </>
         );
       })()}
+      </>}
 
       {/* Só quem tem conta (e-mail de acesso). Exemplos e prévias de /montar não têm dono: ficam contados à parte. */}
       <h2>Barbearias ({clientes.length})</h2>
-      {semDono > 0 && <p><small>Fora da lista: {semDono} {semDono === 1 ? "site sem dono" : "sites sem dono"} (exemplos e prévias de /montar, que vencem sozinhas).</small></p>}
+      {semDono > 0 && !soEntrega() && <p><small>Fora da lista: {semDono} {semDono === 1 ? "site sem dono" : "sites sem dono"} (exemplos e prévias de /montar, que vencem sozinhas).</small></p>}
       {clientes.length === 0 && <p>Nenhuma barbearia cadastrada ainda.</p>}
       {clientes.map((b) => {
         const ativo = banco.acessoAtivo(b);
         return (
           <div key={b.id} className="item-config">
             <span>
-              {ativo ? "🟢" : "🔴"} <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} ·{" "}
+              {ativo ? "🟢" : "🔴"} <a href={entregue(b.id)?.site ?? `/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} ·{" "}
               {b.emMontagem ? (ativo ? `pedido aberto até ${formatarData(b.acessoAte)} (ainda não publicado)` : `não pagou; pedido venceu em ${formatarData(b.acessoAte)}`) : ativo ? `até ${formatarData(b.acessoAte)}` : `bloqueada desde ${formatarData(b.acessoAte)}`}
             </span>
+            {vendeAqui() ? (
+              <span className="acoes">
+                {entregue(b.id)
+                  ? <a href={entregue(b.id)!.site} target="_blank" rel="noopener noreferrer">Entregue: ver no site das barbearias</a>
+                  : <small>aguardando o Pix</small>}
+              </span>
+            ) : (
             <span className="acoes">
               <form action={linkDeSenha}>
                 <input type="hidden" name="id" value={b.id} />
@@ -177,6 +205,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 </form>
               )}
             </span>
+            )}
           </div>
         );
       })}

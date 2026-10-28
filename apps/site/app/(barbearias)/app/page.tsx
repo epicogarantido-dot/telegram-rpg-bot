@@ -11,6 +11,7 @@ import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { situacaoAgora, urlFoto } from "@/lib/barbearias";
 import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
 import { proximaData } from "@/lib/datas-barbearia";
+import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -249,7 +250,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         return (
           <aside className="data-proxima" aria-label="Próxima data">
             <p><strong>{faltam === 0 ? "Hoje" : `Daqui a ${faltam} dia${faltam > 1 ? "s" : ""}`}: {d.titulo}</strong></p>
-            <p className="suave pequeno">{d.ideia}{d.link && <> <a href={d.link} target="_blank" rel="noopener noreferrer">Ler a matéria</a></>}</p>
+            <p className="suave pequeno">{d.ideia}{d.link && !soEntrega() && <> <a href={d.link} target="_blank" rel="noopener noreferrer">Ler a matéria</a></>}</p>
           </aside>
         );
       })()}

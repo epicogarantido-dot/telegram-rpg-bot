@@ -1,15 +1,12 @@
-import { ErroAgenda } from "@aprenda/agenda";
 import { nomeParaMensagem, type Lead } from "@aprenda/prospeccao";
 import { obterAgenda } from "./agenda";
 import { urlDoSite } from "./membros";
 import { obterBanco } from "./painel";
 import { criarSitesDeExemplo, porFotosPadrao, sitesDeExemplo } from "./exemplos";
-import { chaveEntreApps, modoSite, urlSaas } from "./modo";
 
-/** Link que vai pro barbeiro: o site com o nome dele e o convite pra virar dono (no app do SaaS). */
+/** Link que vai pro barbeiro: o site com o nome dele e o convite pra virar dono (neste app, onde se vende). */
 export function linkDaDemonstracao(slug: string, convite: string): string {
-  const base = modoSite() === "leads" ? urlSaas() : urlDoSite();
-  return `${base}/b/${slug}?convite=${encodeURIComponent(convite)}`;
+  return `${urlDoSite()}/b/${slug}?convite=${encodeURIComponent(convite)}`;
 }
 
 /**
@@ -23,30 +20,14 @@ export async function criarDemonstracaoAqui(dados: { nome: string; tema: string;
   return { slug: barbearia.slug, convite };
 }
 
-/**
- * Monta a demonstração pro lead e guarda slug e convite nele. Com o site de leads separado
- * do SaaS, pede pro app do SaaS criar (rota /api/demonstracao, com a chave entre os apps).
- */
+/** Monta a demonstração pro lead e guarda slug e convite nele. */
 export async function criarDemonstracaoParaLead(lead: Lead, tema: string): Promise<string> {
-  const dados = {
+  const demo = await criarDemonstracaoAqui({
     nome: nomeParaMensagem(lead.nome),
     tema,
     cidade: lead.cidade ? nomeParaMensagem(lead.cidade) : undefined,
     lead: lead.placeId,
-  };
-  let demo: { slug: string; convite: string };
-  if (modoSite() === "leads") {
-    const r = await fetch(`${urlSaas()}/api/demonstracao`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-chave": chaveEntreApps() ?? "" },
-      body: JSON.stringify(dados),
-      signal: AbortSignal.timeout(60_000),
-    }).catch(() => undefined);
-    if (!r?.ok) throw new ErroAgenda("O site das barbearias não respondeu. Confira o SAAS_URL e se a PAINEL_SENHA é a mesma nos dois apps.");
-    demo = (await r.json()) as { slug: string; convite: string };
-  } else {
-    demo = await criarDemonstracaoAqui(dados);
-  }
+  });
   obterBanco().guardarDemonstracao(lead.placeId, demo.slug, demo.convite);
   return linkDaDemonstracao(demo.slug, demo.convite);
 }

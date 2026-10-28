@@ -34,7 +34,7 @@ export default async function Divulgacao() {
 
   return (
     <>
-      <p><a href="/painel">Leads</a> · <a href="/painel/buscar">Buscar</a> · <strong>Divulgação</strong> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Assinaturas</a></p>
+      <p><a href="/painel">Leads</a> · <a href="/painel/buscar">Buscar</a> · <strong>Divulgação</strong> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Vendas</a></p>
       <h1>Divulgação</h1>
 
       <h2>De onde veio gente (últimos 30 dias)</h2>

@@ -2,12 +2,11 @@ import { createHash, timingSafeEqual } from "node:crypto";
 
 /**
  * O mesmo código sobe como um app só (padrão) ou como dois apps na Square:
- * - MODO_SITE=leads: cursos, Revista, /barbeiros e o painel de leads. Precisa de SAAS_URL.
- * - MODO_SITE=saas: /montar, sites das barbearias, agenda, painel do barbeiro e pagamentos.
- *   LEADS_URL (opcional) é pra onde vão os links de cursos e Revista.
- * Sem a URL do outro lado, o app volta a ter tudo junto: nada fica fora do ar por falta de config.
- * As rotas de cada lado ficam no proxy.ts, que manda quem pede uma página do outro lado pro app
- * certo; por isso os links entre os dois são relativos e com <a> (nada de <Link> com prefetch).
+ * - MODO_SITE=leads: VENDE. Cursos, Revista, /barbeiros, painel de leads, sites de exemplo,
+ *   prévia, cadastro e o 1º Pix. Precisa de SAAS_URL (pra onde entrega a barbearia paga).
+ * - MODO_SITE=saas: ENTREGA. Só quem já pagou: site do cliente, agenda, painel e renovações.
+ *   Não sabe que o de leads existe: nenhum link nem chamada pra lá.
+ * Sem SAAS_URL, o de leads volta a ter tudo junto: nada fica fora do ar por falta de config.
  */
 export type Modo = "ambos" | "leads" | "saas";
 
@@ -17,8 +16,9 @@ export function urlSaas(): string {
   return limpar(process.env.SAAS_URL);
 }
 
-export function urlLeads(): string {
-  return limpar(process.env.LEADS_URL);
+/** App que só entrega (o SaaS): sem venda, sem exemplo à mostra e sem link pro site de leads. */
+export function soEntrega(): boolean {
+  return modoSite() === "saas";
 }
 
 export function modoSite(): Modo {
@@ -40,21 +40,4 @@ export function chaveConfere(recebida: string | null): boolean {
   const a = Buffer.from(chave);
   const b = Buffer.from(recebida);
   return a.length === b.length && timingSafeEqual(a, b);
-}
-
-/**
- * Conta um cadastro por origem. Com os apps separados, a contagem fica no site de leads (onde está
- * a tela de Divulgação), então o SaaS avisa por lá; sem LEADS_URL, conta aqui mesmo.
- */
-export async function contarCadastro(origem: string, registrarAqui: (origem: string) => void): Promise<void> {
-  if (modoSite() === "saas" && urlLeads()) {
-    await fetch(`${urlLeads()}/api/origem`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-chave": chaveEntreApps() ?? "" },
-      body: JSON.stringify({ origem, tipo: "cadastro" }),
-      signal: AbortSignal.timeout(5_000),
-    }).catch(() => {});
-    return;
-  }
-  registrarAqui(origem);
 }

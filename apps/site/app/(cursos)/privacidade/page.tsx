@@ -1,5 +1,9 @@
+import { soEntrega } from "@/lib/modo";
 import Link from "next/link";
 import { contatoResponsavel } from "@/lib/contato";
+
+// O SaaS e o site de leads mostram coisas diferentes (MODO_SITE só existe no servidor rodando).
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Privacidade",
@@ -97,7 +101,7 @@ export default function Privacidade() {
         Respondemos em até 15 dias.
       </p>
 
-      <p className="suave"><Link href="/termos">Termos de uso</Link> · <Link href="/licencas">Licenças e créditos</Link></p>
+      <p className="suave"><Link href="/termos">Termos de uso</Link>{!soEntrega() && <> · <Link href="/licencas">Licenças e créditos</Link></>}</p>
     </article>
   );
 }

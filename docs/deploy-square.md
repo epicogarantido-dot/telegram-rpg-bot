@@ -86,9 +86,20 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 | `dist/saas-square.zip` | criar o app das barbearias (Upload) |
 | `dist/saas-commit.zip` | atualizar o app das barbearias depois |
 
-`.env` de cada um (modelo pronto do SaaS: `.env.saas.example`):
+**Quem faz o quê (28/10/2026):** o de leads **vende** (cursos, Revista, `/barbeiros`, sites de
+exemplo, prévia em `/montar`, cadastro e o 1º Pix); o SaaS **entrega**, só pra quem já pagou (site
+do cliente, agenda, painel do barbeiro e renovações), e não tem nenhum link pro de leads. Você
+confere o 1º Pix em `/painel/assinaturas` **do app de leads** ("Confirmar e entregar o site"): a
+barbearia é criada no SaaS já no ar, com o mesmo e-mail e senha, as fotos padrão do estilo e o
+cardápio; o barbeiro vê "Seu site está no ar!" com o botão pro painel. Se o SaaS não responder,
+nada é confirmado (dá pra tentar de novo sem duplicar). Renovações e "link de nova senha" ficam
+em `/painel/assinaturas` **do SaaS**.
 
-- **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`. Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
-- **SaaS:** `LEADS_URL=https://<app-leads>.squareweb.app`, `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*` e, se quiser, `SITE_INICIAL` (o estilo do site de exemplo que abre no endereço principal; padrão `cerimonia`).
+`.env` de cada um (modelos: `.env.example` e `.env.saas.example`):
 
-O banco da agenda (barbearias, pagamentos, fotos) mora no app SaaS; o de leads (prospecção, contagem por origem) no app de leads. Backup da agenda: `/painel/backup` no SaaS.
+- **Leads:** `SAAS_URL=https://<app-saas>.squareweb.app`, `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*` (ele cobra a contratação). Sem `SAAS_URL`, ele serve tudo sozinho (como um app só).
+- **SaaS:** `SITE_URL` (o próprio), a **mesma** `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_VALOR` e `PLANO_DIAS` (renovações). Tire `LEADS_URL` e `SITE_INICIAL` se ainda estiverem lá: não são mais usados.
+
+Cada app tem o seu banco da agenda: o de leads guarda exemplos, prévias e as compras até a
+entrega; o SaaS, as barbearias entregues, a agenda e as renovações. Baixe o backup
+(`/painel/backup`) **nos dois**.

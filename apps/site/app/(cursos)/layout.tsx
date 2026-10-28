@@ -1,16 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { ContarOrigem } from "@/componentes/ContarOrigem";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CalendarDays } from "lucide-react";
+import { soEntrega } from "@/lib/modo";
 import "../globals.css";
 import "./imperial.css";
 
-export const metadata: Metadata = {
-  // Endereço público, pra prévia do WhatsApp achar as fotos (og:image precisa de URL completa).
-  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
-  title: { default: "Aprenda Livre", template: "%s · Aprenda Livre" },
-  description: "Os melhores cursos gratuitos e abertos do mundo, traduzidos para o português.",
-};
+export function generateMetadata(): Metadata {
+  // No SaaS (só entrega) estas páginas são as do admin, privacidade e termos: sem a marca da venda.
+  const marca = soEntrega() ? "Site da Barbearia" : "Aprenda Livre";
+  return {
+    // Endereço público, pra prévia do WhatsApp achar as fotos (og:image precisa de URL completa).
+    metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
+    title: { default: marca, template: `%s · ${marca}` },
+    description: soEntrega() ? "Site e agenda da barbearia." : "Os melhores cursos gratuitos e abertos do mundo, traduzidos para o português.",
+  };
+}
 
 export const viewport: Viewport = {
   // Tema escuro do Salão Imperial (Cerimônia): a barra do celular acompanha o fundo.
@@ -19,6 +24,27 @@ export const viewport: Viewport = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  // O SaaS usa este layout só no admin, na privacidade e nos termos: nada de link pra venda.
+  if (soEntrega()) {
+    return (
+      <html lang="pt-BR">
+        <body className="site-cursos">
+          <div className="barra-topo">
+            <header className="topo">
+              <Link href="/app/entrar" className="marca">
+                <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
+                Site da Barbearia
+              </Link>
+            </header>
+          </div>
+          <main>{children}</main>
+          <footer className="rodape">
+            <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>
+          </footer>
+        </body>
+      </html>
+    );
+  }
   return (
     <html lang="pt-BR">
       <body className="site-cursos">

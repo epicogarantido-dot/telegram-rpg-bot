@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { gravarSessao, senhaConfere } from "@/lib/painel";
+import { soEntrega } from "@/lib/modo";
 import { ipDaRequisicao, mensagemMembro, obterMembros } from "@/lib/membros";
+
+// O SaaS e o site de leads mostram coisas diferentes (MODO_SITE só existe no servidor rodando).
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Entrar", robots: { index: false } };
 
@@ -14,7 +18,8 @@ async function entrar(form: FormData) {
   }
   if (!senhaConfere(String(form.get("senha") ?? ""))) redirect("/painel/entrar?erro=1");
   await gravarSessao();
-  redirect("/painel");
+  // No SaaS o painel do admin é só o das assinaturas.
+  redirect(soEntrega() ? "/painel/assinaturas" : "/painel");
 }
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
