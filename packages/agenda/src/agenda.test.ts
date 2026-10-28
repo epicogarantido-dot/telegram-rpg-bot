@@ -1120,21 +1120,48 @@ describe("senha: trocar no painel e link de troca", () => {
   });
 });
 
-describe("conta criada pelo admin (venda no site de leads)", () => {
-  it("nasce no ar, entra com a senha dada e a próxima cobrança é a mensalidade", () => {
-    const b = new BancoAgenda(":memory:", { valorCentavos: 5000, adesaoCentavos: 10000, dias: 30, testeDias: 0 });
+describe("conta criada pelo admin no SaaS (vencer só avisa)", () => {
+  const plano = { valorCentavos: 5000, dias: 30, testeDias: 0, vencerBloqueia: false };
+  const dados = {
+    nomeBarbearia: "Barbearia do Zé", telefone: "5555999991234", tema: "potencia", cidade: "Alegrete",
+    nome: "Zé", email: "Ze@x.com", senha: "segredo123", dias: 30,
+  };
+
+  it("nasce no ar com 30 dias e entra com a senha dada", () => {
+    const b = new BancoAgenda(":memory:", plano);
     const agora = new Date("2026-10-28T15:00:00Z");
-    const nova = b.criarContaPeloAdmin({
-      nomeBarbearia: "Barbearia do Zé", telefone: "5555999991234", tema: "potencia", cidade: "Alegrete",
-      nome: "Zé", email: "Ze@x.com", senha: "segredo123", dias: 30, agora,
-    });
-    expect(nova).toMatchObject({ nome: "Barbearia do Zé", tema: "potencia", cidade: "Alegrete", emMontagem: false, acessoAte: "2026-11-26" });
+    const nova = b.criarContaPeloAdmin({ ...dados, agora });
+    expect(nova).toMatchObject({ nome: "Barbearia do Zé", tema: "potencia", cidade: "Alegrete", emMontagem: false, suspensa: false, acessoAte: "2026-11-26" });
+    expect(b.diasRestantes(nova, agora)).toBe(30);
     expect(b.acessoAtivo(nova, agora)).toBe(true);
     expect(b.entrar("ze@x.com", "segredo123")).toBeTruthy();
     expect(b.servicos(nova.id).length).toBeGreaterThan(0);
-    expect(b.jaContratou(nova.id)).toBe(true);
-    expect(b.valorDaProximaCobranca(nova.id)).toBe(5000);
-    expect(() => b.criarContaPeloAdmin({ nomeBarbearia: "Outra", telefone: "5555999990000", tema: "potencia", nome: "A", email: "ze@x.com", senha: "segredo123", dias: 30 }))
-      .toThrow(/e-mail/);
+    expect(() => b.criarContaPeloAdmin({ ...dados, nomeBarbearia: "Outra", email: "ze@x.com" })).toThrow(/e-mail/);
+  });
+
+  it("depois do prazo continua no ar (só avisa); suspensa sai do ar; renovar soma os dias", () => {
+    const b = new BancoAgenda(":memory:", plano);
+    const nova = b.criarContaPeloAdmin({ ...dados, agora: new Date("2026-10-28T15:00:00Z") });
+    const depois = new Date("2026-12-10T15:00:00Z");
+    expect(b.dentroDoPrazo(nova, depois)).toBe(false);
+    expect(b.acessoAtivo(nova, depois)).toBe(true);
+
+    b.suspender(nova.id, true);
+    expect(b.acessoAtivo(b.barbeariaPorId(nova.id)!, depois)).toBe(false);
+    b.suspender(nova.id, false);
+    expect(b.acessoAtivo(b.barbeariaPorId(nova.id)!, depois)).toBe(true);
+
+    // Prazo já acabou: conta a partir de hoje.
+    b.renovar(nova.id, 30, depois);
+    expect(b.barbeariaPorId(nova.id)!.acessoAte).toBe("2027-01-08");
+    // Ainda no prazo: soma depois do fim.
+    b.renovar(nova.id, 30, depois);
+    expect(b.barbeariaPorId(nova.id)!.acessoAte).toBe("2027-02-07");
+  });
+
+  it("no padrão (site de leads e um app só), o prazo vencido continua tirando do ar", () => {
+    const b = new BancoAgenda(":memory:", { ...plano, vencerBloqueia: undefined });
+    const nova = b.criarContaPeloAdmin({ ...dados, agora: new Date("2026-10-28T15:00:00Z") });
+    expect(b.acessoAtivo(nova, new Date("2026-12-10T15:00:00Z"))).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
 import { obterAgenda } from "./agenda";
 
 /**
- * Cardápio de uma barbearia de verdade, pros sites de exemplo e pras prévias de /montar:
+ * Cardápio de uma barbearia de verdade, pros sites de exemplo, demonstrações e contas novas:
  * primeiro os cortes pelo nome que o cliente pede no balcão (low, mid, high fade, social,
  * americano...), depois o que dá pra fazer junto (adicionais). Preços de referência de
  * barbearia de bairro; no site de cada cliente a equipe põe os preços dele.

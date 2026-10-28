@@ -60,7 +60,7 @@ export function PropagandaSaas() {
           {reais(adesao)} na contratação (já com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
         </p>
         <div className="acoes">
-          <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
           <Link href="/barbeiros#estilos" className="botao-sec">Ver os estilos</Link>
         </div>
       </div>

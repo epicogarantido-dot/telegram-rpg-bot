@@ -5,9 +5,8 @@ import { sitesDeExemplo } from "@/lib/exemplos";
 export const dynamic = "force-dynamic";
 
 /**
- * Atalho estável pro site de exemplo de um estilo: os carrosséis (inclusive do site de leads,
- * em outro app) apontam pra cá sem precisar saber o endereço do exemplo. Sem exemplo no ar,
- * cai na montagem já com o estilo escolhido.
+ * Atalho estável pro site de exemplo de um estilo: os carrosséis do site apontam pra cá sem
+ * precisar saber o endereço do exemplo. Sem exemplo no ar, cai no cadastro de compra.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ tema: string }> }) {
   const { tema } = await params;
@@ -16,5 +15,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ tema: st
   const extra = origem && /^[a-z0-9-]{2,60}$/.test(origem) ? `origem=${origem}` : "";
   const slug = temaValido(tema) ? sitesDeExemplo()[tema] : undefined;
   if (slug) redirect(`/b/${slug}${extra ? `?${extra}` : ""}`);
-  redirect(`/montar?${[temaValido(tema) ? `tema=${tema}` : "", extra].filter(Boolean).join("&")}`);
+  redirect(`/app/cadastro${extra ? `?${extra}` : ""}`);
 }

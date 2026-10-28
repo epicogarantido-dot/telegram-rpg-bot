@@ -189,7 +189,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           Ajuste em <Link href="/app/config">Configurações</Link> e mande o link abaixo pros clientes.
         </aside>
       )}
-      {diasRestantes <= 3 && (
+      {/* No SaaS quem avisa do prazo é a faixa do layout (sem Pix por aqui). */}
+      {!soEntrega() && diasRestantes <= 3 && (
         <aside className="atribuicao">
           ⏳ Seu acesso vence {diasRestantes === 1 ? "hoje" : `em ${diasRestantes} dias`}.{" "}
           <Link href="/app/assinatura">Renovar com Pix</Link> pra não bloquear sua agenda.

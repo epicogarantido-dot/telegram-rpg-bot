@@ -9,11 +9,8 @@ import { Efeitos } from "@/componentes/barbearia/Efeitos";
 import { QueroEsteSite } from "@/componentes/barbearia/QueroEsteSite";
 import { dataPorExtenso } from "@/lib/datas";
 import { ehSiteDeExemplo } from "@/lib/exemplos";
-import { conviteDaPrevia } from "@/lib/previa";
 import { ehOBarbeiro } from "@/lib/protecao";
 import { TEMAS } from "@aprenda/agenda";
-import { BotaoEnviar } from "@/componentes/BotaoEnviar";
-import { trocarEstiloDaPrevia } from "./acoes-previa";
 import { soEntrega, soVenda } from "@/lib/modo";
 
 /** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
@@ -31,15 +28,14 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   const banco = obterAgenda();
   const b = banco.barbeariaPorSlug(slug);
   if (!b) notFound();
-  // No site de leads só abrem exemplos e prévias; conta paga não vira site aqui (o admin cria no SaaS).
-  if (soVenda() && !b.demoAte && !b.emMontagem) notFound();
-  // No SaaS só existe site de quem pagou: exemplos (acervo de fotos) e prévias não abrem.
+  // No site de leads só abrem os exemplos e as demonstrações: assinatura vendida aqui não vira site
+  // aqui (o site do cliente é montado no SaaS).
+  if (soVenda() && !b.demoAte) notFound();
+  // No SaaS só existe site de quem pagou: exemplos (acervo de fotos) e demonstrações não abrem.
   if (b.demoAte && soEntrega()) notFound();
   const ativo = banco.acessoAtivo(b);
   // Demonstração vencida some de vez (não tem dono pra quem "falar direto").
   if (b.demoAte && !ativo) notFound();
-  // Prévia que o barbeiro montou neste aparelho em /montar (o convite está no cookie).
-  const previa = b.demoAte ? await conviteDaPrevia(b.id) : undefined;
   // Em montagem (conta nova que ainda não pagou), só o dono logado vê o site.
   const dono = b.emMontagem && await ehOBarbeiro(b.id);
   const noAr = ativo && (!b.emMontagem || dono);
@@ -56,29 +52,13 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
             <strong>Site de exemplo</strong> do estilo que você está vendo. Barbearia e fotos são ilustrativas e a marcação
             vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
           </p>
-          <a className="b-demo-botao" href={`/montar?tema=${b.tema}`}>Quero um site assim</a>
+          <a className="b-demo-botao" href="/app/cadastro">Quero um site assim</a>
           <details className="b-demo-estilos">
             <summary>Ver outros estilos</summary>
             <nav aria-label="Outros estilos de site">
               {TEMAS.filter((t) => t.id !== b.tema).map((t) => <a key={t.id} href={`/exemplo/${t.id}`}>{t.nome}</a>)}
             </nav>
           </details>
-        </aside>
-      ) : previa ? (
-        <aside className="b-demo" aria-label="Aviso de prévia">
-          <p>
-            <strong>Assim fica o site da {b.nome}.</strong> As fotos são de exemplo: no site de verdade, a nossa
-            equipe põe as suas fotos, serviços e preços.
-          </p>
-          <form action={trocarEstiloDaPrevia} className="b-demo-estilo">
-            <input type="hidden" name="id" value={b.id} />
-            <label htmlFor="previa-tema">Estilo</label>
-            <select id="previa-tema" name="tema" defaultValue={b.tema}>
-              {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
-            </select>
-            <BotaoEnviar className="b-demo-botao-sec" carregando="Trocando…">Trocar</BotaoEnviar>
-          </form>
-          <a className="b-demo-botao" href={`/app/cadastro?demo=${encodeURIComponent(previa)}`}>Quero este site</a>
         </aside>
       ) : dono ? (
         <aside className="b-demo" aria-label="Aviso de site em montagem">

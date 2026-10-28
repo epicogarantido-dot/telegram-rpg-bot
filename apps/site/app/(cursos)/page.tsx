@@ -32,7 +32,7 @@ export default async function Inicio() {
         </p>
         <div className="acoes-heroi">
           <Link href="/cursos" className="botao">Ver os cursos grátis</Link>
-          <a href="/montar" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></a>
         </div>
       </section>
 

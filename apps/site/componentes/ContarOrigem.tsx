@@ -11,23 +11,6 @@ const VALIDA = /^[a-z0-9-]{2,60}$/;
  * por aba. Fica só no sessionStorage do navegador: some ao fechar a aba, não é cookie.
  */
 export function ContarOrigem() {
-  // O site da barbearia pode estar em outro app (outro endereço, outra aba de sessionStorage):
-  // ao clicar pra montar o site, a origem vai junto no link, e o cadastro de lá conta certo.
-  useEffect(() => {
-    const aoClicar = (e: MouseEvent) => {
-      const a = (e.target as Element | null)?.closest?.("a");
-      const href = a?.getAttribute("href");
-      if (!a || !href || !/^\/(montar|exemplo\/)/.test(href) || href.includes("origem=")) return;
-      try {
-        const origem = sessionStorage.getItem(CHAVE_ORIGEM);
-        if (origem && VALIDA.test(origem)) a.setAttribute("href", `${href}${href.includes("?") ? "&" : "?"}origem=${origem}`);
-      } catch {
-        // sem sessionStorage: segue sem a origem
-      }
-    };
-    document.addEventListener("click", aoClicar, true);
-    return () => document.removeEventListener("click", aoClicar, true);
-  }, []);
   useEffect(() => {
     const origem = new URLSearchParams(window.location.search).get("origem")?.toLowerCase();
     if (!origem || !VALIDA.test(origem)) return;
@@ -47,7 +30,8 @@ export function CampoOrigem() {
   useEffect(() => {
     const campo = document.querySelector<HTMLInputElement>('input[name="origem"]');
     try {
-      const origem = sessionStorage.getItem(CHAVE_ORIGEM);
+      // Veio de um link antigo (/montar?origem=...) direto pro cadastro, ou guardada na aba.
+      const origem = new URLSearchParams(window.location.search).get("origem")?.toLowerCase() || sessionStorage.getItem(CHAVE_ORIGEM);
       if (campo && origem && VALIDA.test(origem)) campo.value = origem;
     } catch {
       // sem sessionStorage: cadastro conta sem origem

@@ -4,7 +4,9 @@ import { CalendarDays, ExternalLink } from "lucide-react";
 import { obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
 import { NavPainel } from "@/componentes/barbearia/NavPainel";
-import { soVenda } from "@/lib/modo";
+import { soEntrega, soVenda } from "@/lib/modo";
+import { prazoDaConta } from "@/lib/prazo";
+import { contatoResponsavel } from "@/lib/contato";
 import "./painel.css";
 
 // O painel pode ser instalado no celular como app (avisos de horário novo).
@@ -19,9 +21,9 @@ export default async function LayoutPainel({ children }: { children: React.React
   const usuario = banco.usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
   const barbearia = usuario && banco.barbeariaPorId(usuario.barbeariaId);
 
-  // Fora da conta (entrar, cadastro), com o site ainda em montagem ou no site de leads (que só
-  // vende; o painel fica no SaaS): topo simples, sem menu.
-  if (!barbearia || barbearia.emMontagem || soVenda()) {
+  // Fora da conta (entrar, cadastro), com o site ainda em montagem, suspenso pelo admin ou no
+  // site de leads (que só mostra e cobra; o painel fica no SaaS): topo simples, sem menu.
+  if (!barbearia || barbearia.emMontagem || barbearia.suspensa || soVenda()) {
     return (
       <>
         <div className="barra-topo">
@@ -39,6 +41,20 @@ export default async function LayoutPainel({ children }: { children: React.React
 
   const fotos = banco.fotos(barbearia.id);
   const capa = fotos.find((f) => f.capa) ?? fotos[0];
+  // SaaS: o prazo pago só avisa (faltando poucos dias e depois que acaba); nada sai do ar por isso.
+  const prazo = soEntrega() ? prazoDaConta(barbearia) : undefined;
+  const contato = contatoResponsavel();
+  const faixa = prazo && prazo.situacao !== "em dia" && (
+    <div className={`faixa-prazo ${prazo.situacao}`} role="status">
+      <p>
+        <strong>{prazo.frase}</strong>{" "}
+        {prazo.situacao === "acabou" ? "O seu site e a agenda continuam funcionando. " : ""}Pra renovar, fale com a gente.
+      </p>
+      {contato
+        ? <a className="botao-sec" target="_blank" rel="noopener noreferrer" href={`${contato.link}?text=${encodeURIComponent(`Olá! Quero renovar o site da ${barbearia.nome}.`)}`}>Renovar pelo WhatsApp</a>
+        : <Link className="botao-sec" href="/app/assinatura">Ver o plano</Link>}
+    </div>
+  );
   return (
     <div className="painel">
       <aside className="painel-lado">
@@ -69,7 +85,7 @@ export default async function LayoutPainel({ children }: { children: React.React
           <ExternalLink size={16} aria-hidden /> Ver site
         </a>
       </header>
-      <main className="painel-conteudo">{children}</main>
+      <main className="painel-conteudo">{faixa}{children}</main>
       <NavPainel modo="abas" />
     </div>
   );

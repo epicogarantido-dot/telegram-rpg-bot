@@ -1,22 +1,24 @@
-import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
-import { apagarComprovante, ErroAgenda, formatarData, gerarPixCopiaECola, gravarComprovante, MAX_BYTES_COMPROVANTE, prepararComprovante } from "@aprenda/agenda";
+import { apagarComprovante, ErroAgenda, formatarData, gerarPixCopiaECola, gravarComprovante, MAX_BYTES_COMPROVANTE, prepararComprovante, type Barbearia } from "@aprenda/agenda";
+import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { CampoFoto } from "@/componentes/CampoFoto";
+import { linkWhatsapp } from "@aprenda/prospeccao";
+import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { contatoResponsavel } from "@/lib/contato";
+import { soEntrega, soVenda } from "@/lib/modo";
+import { prazoDaConta } from "@/lib/prazo";
 
 /** 5555999991234 → (55) 99999-1234 */
 function formatarTelefone(t: string): string {
   const local = t.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
   return local.length >= 10 ? `(${local.slice(0, 2)}) ${local.slice(2, -4)}-${local.slice(-4)}` : t;
 }
-import { CampoFoto } from "@/componentes/CampoFoto";
-import { linkWhatsapp } from "@aprenda/prospeccao";
-import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { soVenda } from "@/lib/modo";
 
-export const metadata = { title: "Assinatura", robots: { index: false } };
+export const metadata = { title: "Plano", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const ROTULO = { aberto: "aguardando pagamento", informado: "aguardando confirmação", confirmado: "confirmado", recusado: "recusado" };
@@ -49,8 +51,44 @@ async function jaPaguei(form: FormData) {
   revalidatePath("/app/assinatura");
 }
 
+/**
+ * SaaS: o barbeiro não paga por aqui (a cobrança é com a gente, fora do sistema). A página só
+ * mostra até quando vai o período pago e o caminho pra renovar, que é falar no WhatsApp.
+ */
+function SeuPlano({ barbearia }: { barbearia: Barbearia }) {
+  const prazo = prazoDaConta(barbearia);
+  const contato = contatoResponsavel();
+  return (
+    <>
+      {!barbearia.suspensa && <p><Link href="/app">← Voltar pro painel</Link></p>}
+      <h1>Seu plano</h1>
+      {barbearia.suspensa ? (
+        <aside className="erro">
+          O seu site e o painel estão pausados. Fale com a gente pra voltar ao ar: nada foi apagado.
+        </aside>
+      ) : prazo.situacao === "em dia" && (
+        // Acabando ou acabou: a faixa do painel, logo acima, já diz.
+        <aside className="aviso-novo">{prazo.frase}</aside>
+      )}
+      <p>
+        O seu site, a agenda e o painel continuam funcionando normalmente. A renovação é com a gente:
+        {contato ? <> é só chamar no WhatsApp.</> : <> fale com quem te vendeu o site.</>}
+      </p>
+      {contato && (
+        <p>
+          <a className="botao" target="_blank" rel="noopener noreferrer"
+            href={`${contato.link}?text=${encodeURIComponent(`Olá! Quero renovar o site da ${barbearia.nome}.`)}`}>
+            Renovar pelo WhatsApp
+          </a>
+        </p>
+      )}
+    </>
+  );
+}
+
 export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string; bemvindo?: string }> }) {
   const { barbearia } = await exigirBarbeiro();
+  if (soEntrega()) return <SeuPlano barbearia={barbearia} />;
   const { erro, bemvindo } = await searchParams;
   const banco = obterAgenda();
   const ativo = banco.acessoAtivo(barbearia);
@@ -64,34 +102,12 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
     : "";
   const qr = copiaECola ? await QRCode.toString(copiaECola, { type: "svg", margin: 1, width: 240 }) : "";
 
-  // Site de leads (só mostra e cobra): Pix confirmado, o admin cria o site no SaaS e manda no WhatsApp.
-  if (soVenda() && !barbearia.emMontagem && !nuncaPagou) {
-    return (
-      <>
-        <ol className="passos-compra" aria-label="Etapas">
-          <li className="feito">Seu site</li>
-          <li className="feito">Cadastro</li>
-          <li className="feito">Pagamento</li>
-        </ol>
-        <section className="pedido-recebido" aria-labelledby="pago-titulo">
-          <h1 id="pago-titulo">Pagamento confirmado!</h1>
-          <p>
-            Obrigado, {barbearia.nome}. Seu site já está sendo preparado: você recebe <strong>no WhatsApp</strong>,
-            no número {formatarTelefone(barbearia.telefone)}, o link do site e a senha do seu painel.
-          </p>
-          <p className="suave">No painel você troca as fotos, os preços, os horários e o que mais quiser.</p>
-        </section>
-      </>
-    );
-  }
-
   // Conta nova que já pagou (ou disse que pagou): agora é com a equipe, que chama no WhatsApp.
   if (barbearia.emMontagem && pagamento.status === "informado") {
     return (
       <>
         <ol className="passos-compra" aria-label="Etapas">
-          <li className="feito">Seu site</li>
-          <li className="feito">Cadastro</li>
+          <li className="feito">Seus dados</li>
           <li className="feito">Pagamento</li>
         </ol>
         <section className="pedido-recebido" aria-labelledby="recebido-titulo">
@@ -123,17 +139,28 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
     <>
       {barbearia.emMontagem ? (
         <ol className="passos-compra" aria-label="Etapas">
-          <li className="feito">Seu site</li>
-          <li className="feito">Cadastro</li>
+          <li className="feito">Seus dados</li>
           <li aria-current="step">Pagamento</li>
         </ol>
-      ) : ativo && <p><Link href="/app">← Voltar pro painel</Link></p>}
-      <h1>{barbearia.emMontagem ? (bemvindo ? "Conta criada! Último passo: o pagamento" : "Pagamento do seu site") : "Assinatura"}</h1>
+      ) : ativo && !soVenda() && <p><Link href="/app">← Voltar pro painel</Link></p>}
+      <h1>{barbearia.emMontagem ? (bemvindo ? "Último passo: o pagamento" : "Pagamento do seu site") : "Sua assinatura"}</h1>
       {barbearia.emMontagem && ativo ? (
         <aside className="aviso-novo">
           Pague pelo Pix e mande o comprovante aqui embaixo. Depois disso, nossa equipe confere e chama você no WhatsApp
           pra montar o site da {barbearia.nome} com as suas fotos e preços e colocar no ar.
         </aside>
+      ) : soVenda() && !barbearia.emMontagem ? (
+        // Site de leads: aqui fica só a assinatura (o site é entregue pelo WhatsApp). Atrasar não tira nada do ar por aqui.
+        <>
+          <aside className={ativo ? "aviso-novo" : "erro"}>
+            {ativo
+              ? <>✅ Assinatura em dia até <strong>{formatarData(barbearia.acessoAte)}</strong>. Pode pagar a próxima antes: os dias se somam.</>
+              : <>Mensalidade atrasada desde <strong>{formatarData(barbearia.acessoAte)}</strong>. Pague pelo Pix aqui embaixo pra ficar em dia.</>}
+          </aside>
+          <p className="suave">
+            O seu site e o painel: o link e a senha vão pelo WhatsApp, no número {formatarTelefone(barbearia.telefone)}.
+          </p>
+        </>
       ) : barbearia.emMontagem ? (
         <aside className="erro">
           O prazo pra montar o site acabou. Pague pelo Pix pra publicar: nada do que você montou foi apagado.
@@ -167,7 +194,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
             <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
             <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
             <p>Identificador: <code>{pagamento.txid}</code></p>
-            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia{barbearia.emMontagem ? ", e chama você no WhatsApp" : ", e você recebe um aviso no celular"}.</p>
+            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia{barbearia.emMontagem ? ", e chama você no WhatsApp" : soVenda() ? "" : ", e você recebe um aviso no celular"}.</p>
             {pagamento.status === "informado" && (
               <p className="atribuicao">
                 ⏳ {pagamento.comprovante ? "Recebemos seu comprovante" : "Recebemos seu aviso"}
@@ -186,7 +213,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
               </form>
             )}
             <p className="suave pequeno">
-              {!barbearia.emMontagem && <>Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.</>}
+              {!barbearia.emMontagem && !soVenda() && <>Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.</>}
               {configPix.whatsappAdmin && (
                 <>{" "}Problema com o Pix?{" "}
                   <a target="_blank" rel="noopener noreferrer"

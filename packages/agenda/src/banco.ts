@@ -53,6 +53,8 @@ export interface Barbearia {
    * só ele vê a página pública. O primeiro Pix confirmado publica (`confirmarPagamento`).
    */
   emMontagem: boolean;
+  /** Tirada do ar pelo admin (`suspender`), sem mexer no prazo pago. */
+  suspensa: boolean;
   /** Link da página de avaliação no Google (o barbeiro cola uma vez em Configurações). */
   linkAvaliacao?: string;
   /** Em quantos dias o cliente costuma voltar, quando ele ainda não tem histórico. */
@@ -222,6 +224,11 @@ export interface Plano {
   dias: number;
   /** Dias grátis na criação da conta. 0 = precisa pagar antes de usar. */
   testeDias: number;
+  /**
+   * Prazo vencido tira o site e o painel do ar (padrão). false = vencer só avisa o barbeiro (o
+   * SaaS): aí só a suspensão do admin (`suspender`) tira do ar. Demonstração vence sempre.
+   */
+  vencerBloqueia?: boolean;
 }
 
 export function planoDoAmbiente(): Plano {
@@ -235,12 +242,12 @@ export function planoDoAmbiente(): Plano {
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
   "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, folga_min AS folgaMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
-  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias, montagem AS emMontagem";
+  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias, montagem AS emMontagem, suspensa";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
 function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
   if (!linha) return undefined;
-  const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1, emMontagem: linha.emMontagem === 1 } as Record<string, unknown>;
+  const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1, emMontagem: linha.emMontagem === 1, suspensa: linha.suspensa === 1 } as Record<string, unknown>;
   for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte", "linkAvaliacao"]) if (b[k] === null) b[k] = undefined;
   return b as Barbearia & T;
 }
@@ -365,6 +372,7 @@ export class BancoAgenda {
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
     this.garantirColuna("barbearias", "montagem", "INTEGER NOT NULL DEFAULT 0");
+    this.garantirColuna("barbearias", "suspensa", "INTEGER NOT NULL DEFAULT 0");
     this.garantirColuna("pagamentos", "comprovante", "TEXT");
     this.garantirColuna("servicos", "descricao", "TEXT");
     this.garantirColuna("servicos", "em_domicilio", "INTEGER NOT NULL DEFAULT 0");
@@ -609,9 +617,8 @@ export class BancoAgenda {
   // ---------- conta criada pelo admin (vendida no site de leads) ----------
 
   /**
-   * O cliente comprou no site de leads e o admin conferiu o Pix: o admin cria aqui a barbearia
-   * dele, já no ar por `dias` a partir de hoje, e manda o link e a senha no WhatsApp. O Pix da
-   * contratação entra no histórico como confirmado, então a próxima cobrança já é a mensalidade.
+   * O cliente comprou no site de leads e o admin conferiu o Pix lá: o admin cria aqui a barbearia
+   * dele, já no ar por `dias` a partir de hoje, e manda o link e a senha no WhatsApp.
    */
   criarContaPeloAdmin(dados: {
     nomeBarbearia: string; telefone: string; tema: string; cidade?: string;
@@ -636,9 +643,6 @@ export class BancoAgenda {
       this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(id, nome, email, hashSenha(dados.senha), agora);
       this.semearBarbearia(id, nome);
-      this.db.prepare(`INSERT INTO pagamentos (barbearia_id, txid, valor_centavos, dias, status, pagador, criado_em, decidido_em)
-        VALUES (?, ?, ?, ?, 'confirmado', 'pago no site de vendas', ?, ?)`)
-        .run(id, `AG${id}X${randomBytes(4).toString("hex").toUpperCase()}`, this.plano.adesaoCentavos || this.plano.valorCentavos, dados.dias, agora, agora);
       this.db.exec("COMMIT");
       return this.barbeariaPorId(id)!;
     } catch (e) {
@@ -1431,7 +1435,18 @@ export class BancoAgenda {
 
   // ---------- assinatura (Pix com confirmação manual) ----------
 
+  /**
+   * Site e painel no ar? Suspensa pelo admin, nunca. Com `vencerBloqueia: false` (o SaaS), conta
+   * de barbeiro fica no ar mesmo depois do prazo (o painel só avisa); demonstração vence sempre.
+   */
   acessoAtivo(b: Barbearia, agora?: Date): boolean {
+    if (b.suspensa) return false;
+    if (this.plano.vencerBloqueia === false && !b.demoAte && !b.emMontagem) return true;
+    return this.dentroDoPrazo(b, agora);
+  }
+
+  /** O período pago (acesso_ate) ainda não acabou? É o que vira "em dia" ou "atrasada". */
+  dentroDoPrazo(b: Barbearia, agora?: Date): boolean {
     return agoraNoFuso(b.fuso, agora).slice(0, 10) <= b.acessoAte;
   }
 
@@ -1540,7 +1555,25 @@ export class BancoAgenda {
       FROM barbearias b ORDER BY b.acesso_ate`).all().map((l) => paraBarbearia(l as Record<string, unknown>)) as unknown as (Barbearia & { email: string })[];
   }
 
-  /** Bloqueio manual imediato (ex.: estorno, fraude). */
+  /** Admin tira do ar (ou põe de volta) o site e o painel, sem mexer no prazo. */
+  suspender(barbeariaId: number, suspensa: boolean): void {
+    this.db.prepare("UPDATE barbearias SET suspensa = ? WHERE id = ?").run(suspensa ? 1 : 0, barbeariaId);
+  }
+
+  /**
+   * Admin registrou que o barbeiro pagou (a cobrança é fora daqui): soma `dias` depois do fim do
+   * prazo atual, ou a partir de hoje se ele já acabou.
+   */
+  renovar(barbeariaId: number, dias: number, agora?: Date): void {
+    const b = this.barbeariaPorId(barbeariaId);
+    if (!b) throw new ErroAgenda("Barbearia não encontrada.");
+    if (!Number.isInteger(dias) || dias < 1 || dias > 400) throw new ErroAgenda("Dias inválidos.");
+    const hoje = agoraNoFuso(b.fuso, agora).slice(0, 10);
+    const base = b.acessoAte >= hoje ? somarDias(b.acessoAte, 1) : hoje;
+    this.db.prepare("UPDATE barbearias SET acesso_ate = ? WHERE id = ?").run(somarDias(base, dias - 1), barbeariaId);
+  }
+
+  /** Bloqueio manual imediato (ex.: estorno, fraude), com um app só: tira o prazo pra ontem. */
   bloquear(barbeariaId: number, agora?: Date): void {
     const b = this.barbeariaPorId(barbeariaId);
     if (!b) return;

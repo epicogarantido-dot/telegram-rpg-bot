@@ -731,12 +731,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 }
 .b-demo-botao:hover { background: #ffffff; }
 .b-demo-botao:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 3px; }
-.b-demo-botao-sec {
-  display: inline-block; padding: 7px 14px; border-radius: 4px; border: 1px solid rgb(244 244 242 / 0.5);
-  background: transparent; color: #f4f4f2; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
-}
-.b-demo-botao-sec:hover { border-color: #f4f4f2; }
-.b-demo-botao-sec:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 3px; }
 /* "Ver outros estilos" no aviso dos exemplos: abre a lista dos outros 5. */
 .b-demo-estilos summary {
   display: inline-block; padding: 7px 14px; border-radius: 4px; border: 1px solid rgb(244 244 242 / 0.5);
@@ -749,11 +743,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-demo-estilos nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
 .b-demo-estilos nav a { color: #f4f4f2; padding: 6px 12px; border-radius: 999px; background: rgb(244 244 242 / 0.12); text-decoration: none; }
 .b-demo-estilos nav a:hover { background: rgb(244 244 242 / 0.22); }
-.b-demo-estilo { display: flex; align-items: center; gap: 8px; margin: 0; }
-.b-demo-estilo select {
-  padding: 7px 10px; border-radius: 4px; border: 1px solid rgb(244 244 242 / 0.5);
-  background: #2a2a27; color: #f4f4f2; font: inherit; max-width: 52vw;
-}
 
 /* O que o serviço inclui, embaixo do nome. */
 .b-servico-desc { display: block; margin-top: 2px; font-weight: 400; font-size: 14px; line-height: 1.4; color: var(--suave); }

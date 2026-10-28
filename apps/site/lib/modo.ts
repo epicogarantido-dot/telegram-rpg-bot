@@ -1,18 +1,12 @@
 /**
  * O mesmo código sobe como um app só (padrão) ou como dois apps na Square:
  * - MODO_SITE=leads: MOSTRA E COBRA. Cursos, Revista, /barbeiros, painel de leads, sites de
- *   exemplo, prévia, cadastro e o 1º Pix. SAAS_URL (opcional) manda links velhos do painel pra lá.
- * - MODO_SITE=saas: ENTREGA. Só quem já pagou: site do cliente, agenda, painel e renovações.
- *   O admin cria a conta à mão (/painel/assinaturas) e manda link e senha no WhatsApp.
- *   Não sabe que o de leads existe: nenhum link nem chamada pra lá.
+ *   exemplo, cadastro e o Pix da assinatura (o admin confirma e vê quem está atrasado).
+ * - MODO_SITE=saas: ENTREGA. Só quem já pagou: site do cliente, agenda e painel. O admin cria a
+ *   conta à mão (/painel/assinaturas) com 30 dias e manda link e senha no WhatsApp; vencer só avisa.
+ * Os dois não se ligam: nenhum link nem chamada de um pro outro.
  */
 export type Modo = "ambos" | "leads" | "saas";
-
-const limpar = (url: string | undefined) => (url ?? "").trim().replace(/\/$/, "");
-
-export function urlSaas(): string {
-  return limpar(process.env.SAAS_URL);
-}
 
 /** App que só mostra e cobra (o de leads): conta paga não vira site aqui, quem entrega é o admin no SaaS. */
 export function soVenda(): boolean {

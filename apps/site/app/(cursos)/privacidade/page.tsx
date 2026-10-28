@@ -19,7 +19,7 @@ export default function Privacidade() {
   return (
     <article className="texto-legal">
       <h1>Privacidade</h1>
-      <p className="suave">Atualizado em 27 de outubro de 2026.</p>
+      <p className="suave">Atualizado em 28 de outubro de 2026.</p>
 
       <p>
         Esta página explica, em português simples, quais dados o Aprenda Livre guarda, pra quê, e o que você pode
@@ -31,14 +31,6 @@ export default function Privacidade() {
         Você lê tudo sem cadastro. Não usamos ferramenta de anúncio nem de rastreamento de terceiros. Contamos, de forma
         agregada, quantas visitas chegam por cada link que divulgamos (por exemplo, &quot;veio do grupo&quot;): só o
         número, sem guardar quem você é, seu IP ou cookie de rastreio.
-      </p>
-
-      <h2>Prévia do site da sua barbearia</h2>
-      <p>
-        Quando você monta uma prévia em &quot;Quero meu site&quot;, guardamos o nome e a cidade da barbearia que você
-        digitou, por 7 dias, pra mostrar o site. Um cookie neste aparelho lembra qual prévia é a sua (é ele que mostra
-        &quot;Quero este site&quot;). Pra segurar abuso, contamos quantas prévias cada aparelho monta por dia, com o
-        aparelho guardado só como código embaralhado.
       </p>
 
       <h2>Comunidade de barbeiros</h2>

@@ -106,11 +106,11 @@ export function ehSiteDeExemplo(slug: string): boolean {
 
 /**
  * Cria os exemplos que faltam e põe nos que já existem as fotos novas do banco (rodar de novo
- * não duplica). As prévias de /montar copiam as fotos do exemplo, então ganham as novas também.
+ * não duplica). As demonstrações copiam as fotos do exemplo, então ganham as novas também.
  * Devolve quantos sites criou.
  */
 export function criarSitesDeExemplo(): Promise<number> {
-  // Uma criação por vez no processo todo (a subida do servidor e uma prévia podem pedir juntas;
+  // Uma criação por vez no processo todo (a subida do servidor e uma demonstração podem pedir juntas;
   // em paralelo sairiam exemplos repetidos). globalThis porque cada pedaço do Next tem os seus módulos.
   const g = globalThis as { criandoExemplos?: Promise<number> };
   g.criandoExemplos ??= criar().finally(() => { g.criandoExemplos = undefined; });

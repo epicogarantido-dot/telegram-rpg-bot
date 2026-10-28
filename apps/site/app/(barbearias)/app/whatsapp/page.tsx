@@ -5,72 +5,66 @@ export const metadata = { title: "WhatsApp Business", robots: { index: false } }
 export const dynamic = "force-dynamic";
 
 /**
- * Textos prontos pra ligar o WhatsApp Business no site: o WhatsApp conversa, o site agenda.
- * Não é integração por API (o sistema não manda mensagem sozinho): o barbeiro copia e cola
- * nas ferramentas do próprio app (saudação, ausência, resposta rápida, perfil, IA da Meta).
+ * Resposta automática sem robô: a "Mensagem de saudação" do próprio WhatsApp Business (grátis)
+ * manda UMA mensagem com o link de agendar pra quem chama; se a conversa continua, não repete
+ * (só volta pra quem ficar 14 dias sem conversar). O sistema não manda nada: o barbeiro cola o
+ * texto no app dele. Nada de mensagem de ausência nem atendente de IA, que mandam mais mensagens.
  */
 export default async function WhatsappBusiness() {
   const { barbearia } = await exigirAcessoAtivo();
   const b = obterAgenda().barbeariaPorId(barbearia.id)!;
   const site = `${process.env.SITE_URL ?? ""}/b/${b.slug}`;
   const agendar = `${site}/agendar`;
-
-  const textos = [
-    {
-      id: "saudacao", onde: "Mensagem de saudação",
-      caminho: "WhatsApp Business → Ferramentas comerciais → Mensagem de saudação",
-      dica: "Vai sozinha pra quem te chama pela primeira vez (ou depois de 14 dias sem conversa).",
-      texto: `Oi! Aqui é da ${b.nome} 💈\nPra marcar seu horário, escolha o corte e o horário livre por aqui, leva menos de um minuto:\n${agendar}\n\nSe preferir, é só mandar sua dúvida que eu respondo assim que sair da cadeira.`,
-    },
-    {
-      id: "ausencia", onde: "Mensagem de ausência",
-      caminho: "WhatsApp Business → Ferramentas comerciais → Mensagem de ausência",
-      dica: "Pra fora do horário de atendimento: o cliente marca mesmo com a barbearia fechada.",
-      texto: `Oi! A ${b.nome} está fechada agora, mas a agenda não fecha: escolha seu horário aqui e já fica marcado:\n${agendar}`,
-    },
-    {
-      id: "rapida", onde: "Resposta rápida \"/agendar\"",
-      caminho: "WhatsApp Business → Ferramentas comerciais → Respostas rápidas → atalho: agendar",
-      dica: "No meio da conversa, digite / e escolha \"agendar\": o texto entra pronto.",
-      texto: `Pra garantir seu horário, escolhe por aqui que já fica marcado no meu sistema, com lembrete no seu celular: ${agendar}`,
-    },
-    {
-      id: "ia", onde: "Instruções pro atendente de IA da Meta",
-      caminho: "WhatsApp Business → Meta Business Agent (se você usa) → informações da empresa",
-      dica: "A IA conversa e manda o link; quem marca de verdade é o site, só em horário livre.",
-      texto: `Quando o cliente quiser marcar, remarcar ou saber os horários livres, mande este link, que mostra os horários de verdade e marca na hora: ${agendar}\nNão combine horário pela conversa. Preços, serviços e fotos dos cortes estão no site: ${site}`,
-    },
-    {
-      id: "perfil", onde: "Site do perfil",
-      caminho: "WhatsApp Business → Configurações → Perfil comercial → Site",
-      dica: "Aparece no seu perfil pra todo mundo que abre a conversa. Use o mesmo na bio do Instagram.",
-      texto: site,
-    },
-  ];
+  const saudacao = `Oi! Aqui é da ${b.nome} 💈\nPra ver os horários disponíveis e agendar, é por aqui:\n${agendar}\n\nVocê escolhe o serviço e o horário, e já fica marcado.`;
+  const rapida = `Pra ver os horários disponíveis e agendar, é por aqui: ${agendar}`;
 
   return (
     <>
       <div className="painel-ola">
         <div>
           <h1>WhatsApp Business</h1>
-          <p className="frase">O WhatsApp conversa. O seu site agenda.</p>
+          <p className="frase">Uma mensagem automática com o link de agendar.</p>
         </div>
       </div>
-      <p className="suave">
-        Copie cada texto e cole no lugar indicado do seu WhatsApp Business. Assim todo mundo que te chama
-        recebe o link certo, e o horário é marcado no site, sem conflito e com lembrete pro cliente.
-        Nada é enviado sozinho pelo sistema: é o seu próprio WhatsApp que manda.
-      </p>
+
+      <section className="conta-bloco texto-whats" aria-labelledby="tw-saudacao">
+        <h2 id="tw-saudacao">Mensagem automática (saudação)</h2>
+        <p className="suave">
+          Quem te chama no WhatsApp recebe na hora esta mensagem, com o link pra ver os horários livres e agendar.
+          Vai <strong>uma vez só</strong>: se a conversa continuar, o WhatsApp não manda de novo (ela só volta pra quem
+          ficar 14 dias sem te chamar). É do próprio WhatsApp Business: grátis, sem robô e sem risco pro seu número.
+        </p>
+        <pre>{saudacao}</pre>
+        <BotaoCopiar texto={saudacao} rotulo="Copiar mensagem" />
+        <h3>Como ligar (uma vez, no celular)</h3>
+        <ol className="passos-whats">
+          <li>Copie a mensagem acima.</li>
+          <li>Abra o WhatsApp Business e entre em <strong>Ferramentas comerciais</strong> (no Android, pelo menu ⋮; no iPhone, em Configurações; nas versões novas, na aba Ferramentas).</li>
+          <li>Toque em <strong>Mensagem de saudação</strong> e ligue <strong>Enviar mensagem de saudação</strong>.</li>
+          <li>Toque no lápis, apague o texto que vem pronto e cole o seu.</li>
+          <li>Em <strong>Destinatários</strong>, escolha <strong>Todos</strong> e toque em <strong>Salvar</strong>.</li>
+        </ol>
+        <p className="suave pequeno">
+          Só funciona pelo app no celular (não pelo WhatsApp Web) e o celular precisa estar com internet.
+          Deixe a &quot;Mensagem de ausência&quot; desligada: ela manda outra mensagem automática.
+        </p>
+      </section>
+
       <div className="textos-whats">
-        {textos.map((t) => (
-          <section key={t.id} className="conta-bloco texto-whats" aria-labelledby={`tw-${t.id}`}>
-            <h2 id={`tw-${t.id}`}>{t.onde}</h2>
-            <p className="suave pequeno">{t.caminho}</p>
-            <pre>{t.texto}</pre>
-            <p className="suave pequeno">{t.dica}</p>
-            <BotaoCopiar texto={t.texto} rotulo="Copiar texto" />
-          </section>
-        ))}
+        <section className="conta-bloco texto-whats" aria-labelledby="tw-rapida">
+          <h2 id="tw-rapida">Resposta rápida &quot;/agendar&quot; (opcional)</h2>
+          <p className="suave pequeno">Ferramentas comerciais → Respostas rápidas → + → atalho: agendar</p>
+          <pre>{rapida}</pre>
+          <p className="suave pequeno">Não é automática: no meio da conversa, quando você quiser, digite / e escolha &quot;agendar&quot;.</p>
+          <BotaoCopiar texto={rapida} rotulo="Copiar texto" />
+        </section>
+        <section className="conta-bloco texto-whats" aria-labelledby="tw-perfil">
+          <h2 id="tw-perfil">Link no perfil (opcional)</h2>
+          <p className="suave pequeno">Ferramentas comerciais → Perfil da empresa → campo Site</p>
+          <pre>{site}</pre>
+          <p className="suave pequeno">Aparece no seu perfil pra todo mundo que abre a conversa. Use o mesmo na bio do Instagram.</p>
+          <BotaoCopiar texto={site} rotulo="Copiar link" />
+        </section>
       </div>
     </>
   );

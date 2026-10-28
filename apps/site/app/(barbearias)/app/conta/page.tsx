@@ -4,6 +4,7 @@ import { TEMAS } from "@aprenda/agenda";
 import { CalendarDays, CreditCard, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
+import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Minha conta", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function Conta() {
   const site = `${process.env.SITE_URL ?? ""}/b/${b.slug}`;
   const telefone = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
   const estilo = TEMAS.find((t) => t.id === b.tema)?.nome ?? b.tema;
-  const situacao = dias <= 0 ? { texto: "Vencido", classe: "vencido" } : dias <= 5 ? { texto: `Vence em ${dias} ${dias === 1 ? "dia" : "dias"}`, classe: "alerta" } : { texto: "Em dia", classe: "" };
+  const situacao = dias <= 0 ? { texto: soEntrega() ? "Período pago acabou" : "Vencido", classe: "vencido" } : dias <= 5 ? { texto: `Vence em ${dias} ${dias === 1 ? "dia" : "dias"}`, classe: "alerta" } : { texto: "Em dia", classe: "" };
 
   return (
     <>
@@ -39,10 +40,13 @@ export default async function Conta() {
           <h2 id="plano-titulo">Plano</h2>
           <dl className="conta-dados">
             <div><dt>Situação</dt><dd><span className={`conta-status ${situacao.classe}`}>{situacao.texto}</span></dd></div>
-            <div><dt>Acesso até</dt><dd>{dataPorExtenso(b.acessoAte)}</dd></div>
-            <div><dt>Mensalidade</dt><dd>{reais(banco.plano.valorCentavos)} a cada 30 dias, por Pix</dd></div>
+            <div><dt>{soEntrega() ? "Pago até" : "Acesso até"}</dt><dd>{dataPorExtenso(b.acessoAte)}</dd></div>
+            {!soEntrega() && <div><dt>Mensalidade</dt><dd>{reais(banco.plano.valorCentavos)} a cada 30 dias, por Pix</dd></div>}
           </dl>
-          <p style={{ marginBottom: 0 }}><Link className="botao" href="/app/assinatura"><CreditCard size={18} aria-hidden /> Pagar ou ver pagamentos</Link></p>
+          <p style={{ marginBottom: 0 }}>
+            {/* No SaaS não se paga por aqui: a página do plano mostra o prazo e o WhatsApp pra renovar. */}
+            <Link className="botao" href="/app/assinatura"><CreditCard size={18} aria-hidden /> {soEntrega() ? "Ver o plano e renovar" : "Pagar ou ver pagamentos"}</Link>
+          </p>
         </section>
 
         <section className="conta-bloco" aria-labelledby="dados-titulo">
@@ -69,7 +73,7 @@ export default async function Conta() {
         <section className="conta-bloco" aria-labelledby="mais-titulo">
           <h2 id="mais-titulo">Mais do painel</h2>
           <ul className="conta-links">
-            <li><Link href="/app/whatsapp"><MessageCircle size={20} aria-hidden /><span>WhatsApp Business<small>Textos prontos pra pôr o link de agendar no seu WhatsApp</small></span></Link></li>
+            <li><Link href="/app/whatsapp"><MessageCircle size={20} aria-hidden /><span>WhatsApp Business<small>Mensagem automática com o link de agendar</small></span></Link></li>
             <li><Link href="/app/config"><Settings size={20} aria-hidden /><span>Configurações<small>Serviços, equipe, horários e como você atende</small></span></Link></li>
             <li><Link href="/app/planos"><Repeat size={20} aria-hidden /><span>Planos mensais<small>Clientes que pagam por mês</small></span></Link></li>
             <li><Link href="/app/clientes"><Users size={20} aria-hidden /><span>Clientes que sumiram<small>Quem não volta faz tempo</small></span></Link></li>

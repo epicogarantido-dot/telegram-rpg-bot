@@ -9,28 +9,26 @@ import { CampoOrigem } from "@/componentes/ContarOrigem";
 import { porFotosPadrao } from "@/lib/exemplos";
 import { soVenda } from "@/lib/modo";
 
-export const metadata = { title: "Criar conta — Agenda" };
+export const metadata = { title: "Quero o meu site" };
 
 async function cadastrar(form: FormData) {
   "use server";
   const campo = (n: string) => String(form.get(n) ?? "");
   const telefone = normalizarTelefone(campo("telefone"));
-  // Veio do "Quero este site" de uma demonstração: a conta assume aquele site em vez de criar outro.
+  // Veio do "Quero este site" de uma demonstração: só conta de onde veio (o site não muda de dono).
   const demo = campo("demo") || undefined;
   let token: string;
   let montagem = false;
   try {
     // Até 3 contas novas por aparelho por dia: segura quem tenta criar barbearia em massa.
     const chave = `cadastro:ip:${await chaveDoAparelho()}`;
-    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Muitas contas criadas deste aparelho hoje. Tente amanhã ou fale com a gente.");
+    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Muitos pedidos feitos deste aparelho hoje. Tente amanhã ou fale com a gente.");
     if (!telefone) throw new ErroAgenda("WhatsApp inválido.");
-    const dados = { nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") };
-    const banco = obterAgenda();
-    const conta = demo ? banco.assumirDemonstracao(demo, dados) : banco.criarConta(dados);
+    const conta = obterAgenda().criarConta({ nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") });
     token = conta.token;
     montagem = conta.barbearia.emMontagem;
-    // Conta do zero já nasce com as fotos padrão (do acervo); a da prévia já tem as dela.
-    if (!demo) porFotosPadrao(conta.barbearia.id, conta.barbearia.tema);
+    // No site de leads a conta é só a assinatura (o site do cliente é montado no SaaS): sem fotos.
+    if (!soVenda()) porFotosPadrao(conta.barbearia.id, conta.barbearia.tema);
     obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
     // De onde veio quem virou cliente (link do grupo, cartão, convite, demonstração): só a contagem.
     obterBanco().registrarOrigem(campo("origem") || (demo ? "demonstracao" : "direto"), "cadastro");
@@ -38,37 +36,29 @@ async function cadastrar(form: FormData) {
     redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}) })}`);
   }
   await gravarSessaoAgenda(token);
-  // Sem teste grátis, o próximo passo é o pagamento; a equipe entra em contato pra pôr no ar.
-  // No site de leads (que só mostra e cobra) é sempre o pagamento: o painel fica no SaaS.
+  // Próximo passo é o pagamento. No site de leads (que só mostra e cobra) é sempre ele.
   redirect(montagem || soVenda() ? "/app/assinatura?bemvindo=1" : "/app?novo=1");
 }
 
+/**
+ * "Quero meu site": o pedido. Nada de escolher estilo ou montar nada aqui: o barbeiro deixa o
+ * contato e paga; depois a gente chama no WhatsApp, pega fotos, serviços e preços e monta o site.
+ */
 export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string; demo?: string }> }) {
   const { erro, demo: convite } = await searchParams;
   const demo = obterAgenda().demonstracaoPorConvite(convite);
   const plano = planoDoAmbiente();
   return (
     <>
-      {demo ? (
-        <>
-          <ol className="passos-compra" aria-label="Etapas">
-            <li className="feito">Seu site</li>
-            <li aria-current="step">Cadastro</li>
-            <li>Pagamento</li>
-          </ol>
-          <h1>Falta pouco pro site da {demo.nome} ser seu</h1>
-          <p>
-            Você fica com <a href={`/b/${demo.slug}`} target="_blank" rel="noopener noreferrer">este site</a>, no mesmo endereço e no mesmo estilo.
-            Crie seu acesso; no próximo passo é o pagamento pelo Pix, e a nossa equipe entra em contato com você pelo WhatsApp pra montar o site com as suas fotos e preços e colocar no ar.
-          </p>
-        </>
-      ) : (
-        <>
-          <h1>Agenda online para sua barbearia</h1>
-          <p>Seu cliente marca pelo link, você vê tudo no celular.</p>
-          {convite && <p className="erro">Esse link de demonstração venceu ou já foi usado. Dá pra criar a conta do zero aqui embaixo.</p>}
-        </>
-      )}
+      <ol className="passos-compra" aria-label="Etapas">
+        <li aria-current="step">Seus dados</li>
+        <li>Pagamento</li>
+      </ol>
+      <h1>Quero o meu site</h1>
+      <p>
+        Site da sua barbearia com agenda online e painel no celular. Depois do pagamento, a gente chama você no
+        WhatsApp, pega as suas fotos, serviços e preços e entrega o site pronto, pra você mudar o que quiser.
+      </p>
       <p className="suave">
         {plano.testeDias > 0
           ? <>Grátis por {plano.testeDias} dias. Depois, </>
@@ -82,12 +72,13 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <input name="telefone" placeholder="WhatsApp da barbearia (com DDD)" required inputMode="tel" />
         <input name="nome" placeholder="Seu nome" required maxLength={60} />
         <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
-        <input name="senha" type="password" placeholder="Senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
+        <input name="senha" type="password" placeholder="Crie uma senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
+        <small className="suave">A senha é pra você acompanhar o pedido e a assinatura por aqui.</small>
         <CampoOrigem />
-        <small className="suave">Ao criar a conta você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
-        <button type="submit">{plano.testeDias > 0 ? "Criar minha agenda" : "Continuar para o pagamento"}</button>
+        <small className="suave">Ao continuar você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
+        <button type="submit">{plano.testeDias > 0 ? "Começar" : "Continuar para o pagamento"}</button>
       </form>
-      <p>Já tem conta? <Link href="/app/entrar">Entrar</Link></p>
+      <p>Já fez o pedido? <Link href="/app/entrar">Entrar</Link></p>
     </>
   );
 }

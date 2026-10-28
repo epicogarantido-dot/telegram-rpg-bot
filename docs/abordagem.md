@@ -97,9 +97,14 @@ site (`?origem=convite`) e o convite do grupo (`COMUNIDADE_LINK`). Nunca na 1ª 
 quem não conversou com você é o que o WhatsApp mais trata como spam. No grupo, use os posts prontos
 de `/painel/divulgacao`, um por dia, e veja lá quais trouxeram visita e cadastro.
 
-## Depois do "Quero este site" (27/10/2026)
+## Depois do "Quero meu site" (28/10/2026)
 
-O barbeiro faz o cadastro e paga (Pix + comprovante) e vê "Pedido recebido!". Ele não edita nada: em `/painel/assinaturas` aparece o pedido com o comprovante e o link "Chamar no WhatsApp". Na conversa você pega fotos, serviços, preços e horários, monta o site e confirma o pagamento (o site vai pro ar).
+No site de leads o barbeiro só vê os exemplos e compra: cadastro (sem escolher estilo nem nada) e
+Pix com comprovante, e vê "Pedido recebido!". Em `/painel/assinaturas` **do leads** você confere o
+Pix e confirma: a assinatura fica salva com o prazo (quando acaba, aparece "atrasada"; nada é
+bloqueado). Aí você chama no WhatsApp, pega fotos, serviços, preços e horários e cria o site no
+**SaaS** ("Criar site de cliente": já no ar por 30 dias), que abre o seu WhatsApp com o link e a
+senha do painel. Ele arruma o resto pelo painel. Recebeu a mensalidade? No SaaS, "+30 dias".
 
 ## Posicionamento: o site completa o WhatsApp (28/10/2026)
 
@@ -117,18 +122,20 @@ O que cada um faz (é o que está em `/barbeiros`, seção "Com o seu WhatsApp, 
 | Manda foto solta | Vitrine: antes e depois, cortes com foto e preço, equipe |
 | — | Lembrete no celular do cliente e link pra remarcar ou cancelar sem te chamar |
 
-Como um liga no outro: no painel, **WhatsApp** (`/app/whatsapp`) tem os textos prontos pra colar
-na saudação, na ausência, na resposta rápida "/agendar", no perfil e nas instruções do atendente de
-IA da Meta, todos com o link de agendar. Não é integração por API: nada sai sozinho do sistema.
+Como um liga no outro: no painel, **WhatsApp** (`/app/whatsapp`) tem a **mensagem de saudação**
+pronta, com o passo a passo: é a resposta automática do próprio WhatsApp Business (grátis, sem robô):
+quem chama recebe UMA mensagem com o link pra ver os horários e agendar; se a conversa continua,
+não repete (só volta depois de 14 dias sem conversa). Também tem a resposta rápida "/agendar" e o
+link do perfil. Não é integração por API: nada sai sozinho do sistema.
 
 ### Respostas prontas
 
 - **"Já tenho o WhatsApp Business."** — Ótimo, ele continua. O WhatsApp é pra conversar; o site é
   pra você parar de conversar pra marcar horário. No painel tem a mensagem de saudação pronta com o
   seu link: quem te chamar já recebe onde marcar.
-- **"Já uso a IA do WhatsApp pra responder."** — Então ela ganha onde mandar o cliente. A IA
-  conversa, mas não sabe os seus horários livres de verdade; o site sabe. Você ensina a IA a mandar
-  o link e quem marca é a agenda, sem conflito.
+- **"Já uso a IA do WhatsApp pra responder."** — A IA conversa, mas não sabe os seus horários
+  livres de verdade; o site sabe. Com o link na saudação, o cliente recebe na hora onde marcar, e
+  quem marca é a agenda, sem conflito.
 - **"Meu cliente marca pelo WhatsApp mesmo."** — Quantas vezes por dia você para um corte pra
   responder "tem horário amanhã?"? Com o link na saudação, ele escolhe sozinho e você só recebe o
   aviso no celular.

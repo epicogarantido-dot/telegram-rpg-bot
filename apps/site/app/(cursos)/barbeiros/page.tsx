@@ -118,7 +118,7 @@ const SUA_MARCA = [
 /**
  * O site completa o WhatsApp (não concorre): o que cada um faz bem e como um leva ao outro. Só o que
  * existe de verdade: o site não manda mensagem sozinho e não tem integração por API com o WhatsApp;
- * a ligação é o link do site dentro do WhatsApp Business (saudação, resposta rápida, perfil, IA da Meta).
+ * a ligação é o link do site dentro do WhatsApp Business (saudação automática, resposta rápida, perfil).
  */
 const WHATS_LADOS = [
   {
@@ -142,19 +142,19 @@ const WHATS_LADOS = [
 ] as const;
 
 const WHATS_PASSOS = [
-  ["Na saudação do WhatsApp Business", "Quem te chama recebe na hora: \"pra marcar, escolha seu horário aqui\", com o link do seu site."],
-  ["No atendente de IA da Meta, se você usar", "Você ensina: quando pedirem horário, mande o link. A IA conversa, o site agenda."],
+  ["Uma mensagem automática, uma vez só", "Quem te chama recebe na hora a saudação do próprio WhatsApp Business, com o link pra ver os horários livres e agendar. Se a conversa continuar, ela não repete. Grátis e sem robô."],
+  ["Na resposta rápida, quando você quiser", "No meio da conversa, digite /agendar e o link entra pronto."],
   ["No perfil, na bio do Instagram e no Google", "Um endereço só seu, que leva direto pros seus cortes e pra agenda."],
 ] as const;
 
 const PERGUNTAS = [
   ["Vai ficar igual ao site de outra barbearia?", "Não. O estilo é só a moldura: o que aparece são as suas fotos, o seu nome, a sua equipe e os seus preços. Duas barbearias no mesmo estilo ficam tão diferentes quanto o trabalho de cada uma."],
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
-  ["Posso ver como fica antes de pagar?", "Pode. Diga o nome da barbearia e escolha o estilo: o site abre pronto na hora, sem cadastro. Se gostar, faz o cadastro e o pagamento, e a nossa equipe chama você no WhatsApp pra montar o site com as suas fotos, serviços e preços."],
-  ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
+  ["Posso ver como fica antes de pagar?", "Pode. Os seis estilos estão no ar, com barbearias de exemplo: abra e navegue como se fosse o seu cliente, até o agendamento. Se gostar, toque em Quero o meu site, faça o cadastro e o pagamento, e a gente chama você no WhatsApp pra montar o site com as suas fotos, serviços e preços."],
+  ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pode ser pausado até você voltar, sem apagar nada."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
   ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Na véspera, o painel lista quem vem amanhã pra você lembrar pelo WhatsApp. Quem falta fica marcado, entra nos números do mês, e quem marca e some você pode bloquear."],
-  ["Já uso o WhatsApp Business (e até a IA da Meta). Pra que um site?", "Pra parar de marcar horário na conversa. O WhatsApp é ótimo pra falar com o cliente; o site mostra o seu trabalho, aparece no Google e agenda sozinho, só nos horários livres. No painel tem os textos prontos pra pôr o link do site na saudação, nas respostas rápidas e no atendente de IA do WhatsApp Business."],
+  ["Já uso o WhatsApp Business. Pra que um site?", "Pra parar de marcar horário na conversa. O WhatsApp é ótimo pra falar com o cliente; o site mostra o seu trabalho, aparece no Google e agenda sozinho, só nos horários livres. No painel tem o passo a passo pra ligar a saudação automática do WhatsApp Business com o link de agendar: quem te chama recebe uma mensagem só, na hora."],
   ["O sistema manda mensagem pros meus clientes?", "Não. Ele prepara a mensagem e abre o SEU WhatsApp; quem envia é você. Assim seu número não corre risco e o cliente fala com quem conhece."],
   ["Posso trocar o estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem agendamentos."],
 ] as const;
@@ -177,7 +177,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             seus preços e os horários livres, e o cliente marca sozinho, sem você parar o corte pra responder.
           </p>
           <div className="acoes">
-            <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
+            <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
             <a href="#estilos" className="botao-sec">Ver os estilos</a>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           {WHATS_PASSOS.map(([titulo, texto]) => <li key={titulo}><strong>{titulo}</strong><span>{texto}</span></li>)}
         </ol>
         <p className="venda-marca-acao">
-          <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
         </p>
       </section>
 
@@ -244,7 +244,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           ))}
         </div>
         <p className="venda-marca-acao">
-          <a href="/montar" className="botao">Montar o meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
         </p>
       </section>
 
@@ -304,15 +304,15 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
           </div>
           <ul>
-            <li>Você vê como fica antes de pagar. Depois do pagamento, a nossa equipe monta o site com você.</li>
+            <li>Você vê os estilos no ar antes de pagar. Depois do pagamento, a gente te chama no WhatsApp e monta o seu site com as suas fotos e preços.</li>
             <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
-            <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pausa até você voltar.</li>
+            <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pode ser pausado até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
           </ul>
         </div>
         <div className="venda-plano-acao">
-          <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
-          <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Sem cadastro pra ver. Leva um minuto, pelo celular.</p>
+          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
+          <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva um minuto, pelo celular.</p>
         </div>
       </section>
 

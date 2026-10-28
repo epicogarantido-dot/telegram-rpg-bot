@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <nav aria-label="Principal">
               <a href="/cursos">Cursos</a>
               <a href="/revista">Revista</a>
-              <a href="/montar" className="nav-destaque">Quero meu site</a>
+              <a href="/app/cadastro" className="nav-destaque">Quero meu site</a>
             </nav>
           </header>
         </div>

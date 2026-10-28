@@ -59,8 +59,7 @@ if (fs.existsSync(env)) process.loadEnvFile(env);
 process.env.PORT ??= "80";
 process.env.HOSTNAME ??= "0.0.0.0";
 process.env.NODE_ENV = "production";
-// Qual lado este app serve (leads ou saas). O .env pode trocar; sem a URL do outro app
-// (SAAS_URL no de leads), ele serve tudo, como um app só.
+// Qual lado este app serve: leads (mostra e cobra) ou saas (entrega). Os dois não se ligam.
 process.env.MODO_SITE ??= "${modo}";
 // Dados (agenda, leads) ficam em data/privado/, que NÃO vai no zip:
 // assim um novo upload não apaga o banco. Faça backup em /painel/backup.
@@ -105,4 +104,4 @@ AUTORESTART=true
   console.log(`✅ ${app.nome}: ${zip} (criar o app: Upload) e ${zipCommit} (atualizar: Commit e reiniciar)`);
 }
 console.log(`Versão: ${versao}`);
-console.log("Antes de subir: crie o .env (copie de .env.example) com PAINEL_SENHA e os dados do Pix. Ver docs/deploy-square.md.");
+console.log("Antes de subir: crie o .env de cada app (leads: copie de .env.example, com PAINEL_SENHA e os dados do Pix; SaaS: de .env.saas.example). Ver docs/deploy-square.md.");

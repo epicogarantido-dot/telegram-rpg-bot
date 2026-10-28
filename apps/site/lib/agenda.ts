@@ -1,12 +1,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { BancoAgenda, ErroAgenda, type Barbearia, type Usuario } from "@aprenda/agenda";
+import { BancoAgenda, ErroAgenda, planoDoAmbiente, type Barbearia, type Usuario } from "@aprenda/agenda";
+import { soEntrega } from "./modo";
 
 const COOKIE = "sessao_agenda";
 
 let banco: BancoAgenda | undefined;
 export function obterAgenda(): BancoAgenda {
-  return (banco ??= new BancoAgenda());
+  // No SaaS o prazo de 30 dias só avisa o barbeiro: o site e o painel seguem no ar até o admin suspender.
+  return (banco ??= new BancoAgenda(undefined, { ...planoDoAmbiente(), vencerBloqueia: !soEntrega() }));
 }
 
 export async function gravarSessaoAgenda(token: string): Promise<void> {
@@ -34,9 +36,9 @@ export async function exigirBarbeiro(): Promise<{ usuario: Usuario; barbearia: B
 }
 
 /**
- * Como exigirBarbeiro, mas manda pra tela de pagamento se o acesso venceu ou se a conta ainda não
- * pagou (em montagem): quem comprou pelo site de leads só paga e aguarda; o site de verdade a
- * equipe monta à parte, então não adianta editar nada aqui antes.
+ * Como exigirBarbeiro, mas manda pra página da assinatura se a conta está fora do ar: em
+ * montagem (ainda não pagou), suspensa pelo admin ou, fora do SaaS, com o prazo vencido. No SaaS
+ * o prazo vencido só avisa (faixa no painel).
  */
 export async function exigirAcessoAtivo(): Promise<{ usuario: Usuario; barbearia: Barbearia }> {
   const sessao = await exigirBarbeiro();

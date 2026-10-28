@@ -86,27 +86,24 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 | `dist/saas-square.zip` | criar o app das barbearias (Upload) |
 | `dist/saas-commit.zip` | atualizar o app das barbearias depois |
 
-**Quem faz o quê (28/10/2026):** o de leads **mostra e cobra** (cursos, Revista, `/barbeiros`,
-sites de exemplo, prévia em `/montar`, cadastro e o 1º Pix); o SaaS **entrega**, só pra quem já
-pagou (site do cliente, agenda, painel do barbeiro e renovações), e não tem nenhum link pro de
-leads. O caminho:
+**Quem faz o quê (28/10/2026):** os dois apps **não se ligam** (nenhum link nem chamada de um
+pro outro).
 
-1. O cliente paga no site de leads. Você confere o Pix em `/painel/assinaturas` **do leads**
-   ("Vendas") e toca em "Confirmar pagamento". A tela dele passa a dizer que vai receber o link e
-   a senha no WhatsApp.
-2. No `/painel/assinaturas` **do SaaS**, "Criar site de cliente": nome, WhatsApp, responsável,
-   e-mail, cidade e estilo (a lista de Vendas do leads mostra o estilo e a cidade que ele
-   escolheu). O site nasce no ar por `PLANO_DIAS` dias, com fotos padrão e cortes de barbearia.
-3. Abre o seu WhatsApp com o link do site, o do painel, o e-mail e a senha. É só enviar. Ele
-   arruma o resto no painel.
-
-Renovações e "link de nova senha" ficam no SaaS.
+- **Leads mostra e cobra:** cursos, Revista, `/barbeiros`, os sites de exemplo, o cadastro ("Quero
+  o meu site", sem escolher nada) e o Pix. Você confere o Pix em `/painel/assinaturas` **do leads**
+  e confirma: a assinatura fica salva com o prazo. Quando o prazo acaba, ela aparece "atrasada"
+  (pra você e pro cliente, que paga a mensalidade pelo Pix ali mesmo). Nada é bloqueado.
+- **SaaS entrega:** depois de confirmar, você chama o cliente no WhatsApp, pega o que precisa e,
+  no `/painel/assinaturas` **do SaaS**, "Criar site de cliente" (nome, WhatsApp, responsável,
+  e-mail, cidade e estilo). O site nasce no ar por `PLANO_DIAS` dias, com fotos padrão e cortes de
+  barbearia, e abre o seu WhatsApp com o link do site, o do painel, o e-mail e a senha. Ele arruma
+  o resto no painel. Quando faltam 5 dias e depois que acaba, o painel dele só avisa ("Renovar pelo
+  WhatsApp"); o site continua no ar. Recebeu? "+30 dias". Quer tirar do ar? "Suspender".
 
 `.env` de cada um (modelos: `.env.example` e `.env.saas.example`):
 
-- **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*` (ele cobra a contratação). `SAAS_URL` é opcional (links velhos do painel vão pra lá).
-- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_ADESAO` (só pro histórico da contratação), `PLANO_VALOR` e `PLANO_DIAS` (renovações). Tire `LEADS_URL` e `SITE_INICIAL` se ainda estiverem lá: não são mais usados.
+- **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*`. Tire `SAAS_URL` se estiver lá: não é mais usado.
+- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA` (pode ser outra), `ADMIN_WHATSAPP` e `PLANO_DIAS`. Tire `LEADS_URL`, `SITE_INICIAL`, `PIX_*` e `PLANO_VALOR`/`PLANO_ADESAO` se estiverem lá: o SaaS não cobra.
 
-Cada app tem o seu banco da agenda: o de leads guarda exemplos, prévias e as compras até a
-entrega; o SaaS, as barbearias entregues, a agenda e as renovações. Baixe o backup
-(`/painel/backup`) **nos dois**.
+Cada app tem o seu banco da agenda: o de leads guarda exemplos, demonstrações e as assinaturas; o
+SaaS, as barbearias entregues e a agenda delas. Baixe o backup (`/painel/backup`) **nos dois**.
