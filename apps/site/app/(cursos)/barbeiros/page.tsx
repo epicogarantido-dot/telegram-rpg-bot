@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BarChart3, BellRing, CalendarCheck, Camera, Link2, Palette, Repeat, Scissors, ShieldCheck, Smartphone, Store, Users } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, CalendarCheck, Camera, Link2, MessageCircle, Palette, Repeat, Scissors, ShieldCheck, Smartphone, Store, Users } from "lucide-react";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
 import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { normalizarTelefone } from "@aprenda/prospeccao";
@@ -115,6 +115,38 @@ const SUA_MARCA = [
   },
 ] as const;
 
+/**
+ * O site completa o WhatsApp (não concorre): o que cada um faz bem e como um leva ao outro. Só o que
+ * existe de verdade: o site não manda mensagem sozinho e não tem integração por API com o WhatsApp;
+ * a ligação é o link do site dentro do WhatsApp Business (saudação, resposta rápida, perfil, IA da Meta).
+ */
+const WHATS_LADOS = [
+  {
+    icone: MessageCircle, titulo: "O seu WhatsApp",
+    itens: [
+      "Conversa com quem já é cliente.",
+      "Tira dúvida, combina detalhe, manda foto.",
+      "Responde quando dá, entre um corte e outro.",
+      "Não aparece no Google pra quem ainda não te conhece.",
+    ],
+  },
+  {
+    icone: CalendarCheck, titulo: "O seu site completa",
+    itens: [
+      "Agenda sozinho, 24 horas, só com horário livre de verdade, sem marcar dois no mesmo horário.",
+      "Mostra o seu trabalho: antes e depois, cortes com foto, preços e equipe.",
+      "Aparece no Google com mapa, endereço e horário de funcionamento.",
+      "Lembrete no celular do cliente e link pra ele remarcar ou cancelar sem te chamar.",
+    ],
+  },
+] as const;
+
+const WHATS_PASSOS = [
+  ["Na saudação do WhatsApp Business", "Quem te chama recebe na hora: \"pra marcar, escolha seu horário aqui\", com o link do seu site."],
+  ["No atendente de IA da Meta, se você usar", "Você ensina: quando pedirem horário, mande o link. A IA conversa, o site agenda."],
+  ["No perfil, na bio do Instagram e no Google", "Um endereço só seu, que leva direto pros seus cortes e pra agenda."],
+] as const;
+
 const PERGUNTAS = [
   ["Vai ficar igual ao site de outra barbearia?", "Não. O estilo é só a moldura: o que aparece são as suas fotos, o seu nome, a sua equipe e os seus preços. Duas barbearias no mesmo estilo ficam tão diferentes quanto o trabalho de cada uma."],
   ["Preciso de computador?", "Não. Tudo funciona no celular: o site, o painel e os avisos. No iPhone, é só adicionar o painel à tela de início."],
@@ -122,6 +154,7 @@ const PERGUNTAS = [
   ["Precisa de cartão de crédito?", "Não. O pagamento é por Pix. Sem fidelidade: se não renovar, o site pausa até você voltar."],
   ["Meus clientes precisam baixar aplicativo?", "Não. Eles abrem o seu link (do Instagram, do Google ou do WhatsApp) e marcam pelo navegador."],
   ["E se o cliente não aparecer?", "Ele recebe o horário com lembrete no celular dele e pode remarcar sozinho pelo link. Na véspera, o painel lista quem vem amanhã pra você lembrar pelo WhatsApp. Quem falta fica marcado, entra nos números do mês, e quem marca e some você pode bloquear."],
+  ["Já uso o WhatsApp Business (e até a IA da Meta). Pra que um site?", "Pra parar de marcar horário na conversa. O WhatsApp é ótimo pra falar com o cliente; o site mostra o seu trabalho, aparece no Google e agenda sozinho, só nos horários livres. No painel tem os textos prontos pra pôr o link do site na saudação, nas respostas rápidas e no atendente de IA do WhatsApp Business."],
   ["O sistema manda mensagem pros meus clientes?", "Não. Ele prepara a mensagem e abre o SEU WhatsApp; quem envia é você. Assim seu número não corre risco e o cliente fala com quem conhece."],
   ["Posso trocar o estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem agendamentos."],
 ] as const;
@@ -138,10 +171,10 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
     <div className="venda">
       <section className="venda-heroi">
         <div className="venda-heroi-texto">
-          <h1>Um site com a cara da sua barbearia.</h1>
+          <h1>O WhatsApp conversa. O seu site agenda.</h1>
           <p>
-            Não é modelo com o nome trocado: são as suas fotos, o seu nome, a sua equipe e os seus preços,
-            no estilo da sua marca. E o cliente vê os horários livres e marca sozinho.
+            Um site com a cara da sua barbearia, que completa o seu WhatsApp: mostra o seu trabalho, os
+            seus preços e os horários livres, e o cliente marca sozinho, sem você parar o corte pra responder.
           </p>
           <div className="acoes">
             <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
@@ -170,6 +203,30 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           return <a key={t.id} href={`/exemplo/${t.id}`} className="estilo-slide" target="_blank" rel="noopener">{conteudo}</a>;
         })}
       </Carrossel>
+
+      <section className="venda-recursos venda-whats" aria-labelledby="whats-titulo">
+        <h2 id="whats-titulo">Com o seu WhatsApp, a barbearia fica completa</h2>
+        <p className="venda-marca-intro">
+          Seu cliente já fala com você no WhatsApp, e é assim que tem que ser. O site não troca o WhatsApp:
+          ele faz o que conversa nenhuma faz bem. Os dois juntos fecham o caminho inteiro, do primeiro olhar
+          ao cliente sentado na cadeira.
+        </p>
+        <div className="venda-whats-grade">
+          {WHATS_LADOS.map(({ icone: Icone, titulo, itens }) => (
+            <div key={titulo} className="venda-recurso venda-whats-lado">
+              <h3><Icone size={20} aria-hidden /> {titulo}</h3>
+              <ul>{itens.map((i) => <li key={i}>{i}</li>)}</ul>
+            </div>
+          ))}
+        </div>
+        <h3 className="venda-whats-sub">Como um liga no outro</h3>
+        <ol className="venda-whats-passos">
+          {WHATS_PASSOS.map(([titulo, texto]) => <li key={titulo}><strong>{titulo}</strong><span>{texto}</span></li>)}
+        </ol>
+        <p className="venda-marca-acao">
+          <a href="/montar" className="botao">Ver o meu site pronto <ArrowRight size={18} aria-hidden /></a>
+        </p>
+      </section>
 
       <section className="venda-recursos venda-marca" aria-labelledby="marca-titulo">
         <h2 id="marca-titulo">Não é um site padrão. É a sua marca.</h2>

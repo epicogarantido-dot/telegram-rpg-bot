@@ -100,3 +100,44 @@ de `/painel/divulgacao`, um por dia, e veja lá quais trouxeram visita e cadastr
 ## Depois do "Quero este site" (27/10/2026)
 
 O barbeiro faz o cadastro e paga (Pix + comprovante) e vê "Pedido recebido!". Ele não edita nada: em `/painel/assinaturas` aparece o pedido com o comprovante e o link "Chamar no WhatsApp". Na conversa você pega fotos, serviços, preços e horários, monta o site e confirma o pagamento (o site vai pro ar).
+
+## Posicionamento: o site completa o WhatsApp (28/10/2026)
+
+A Meta está vendendo o WhatsApp Business pro mesmo barbeiro (atendente de IA, anúncios que abrem
+conversa, listas de transmissão). Não brigue com isso: **o WhatsApp conversa, o site agenda**. O
+barbeiro continua no WhatsApp dele; o site faz o que conversa nenhuma faz bem, e os dois juntos
+deixam a barbearia completa.
+
+O que cada um faz (é o que está em `/barbeiros`, seção "Com o seu WhatsApp, a barbearia fica completa"):
+
+| WhatsApp | O site completa |
+|---|---|
+| Conversa com quem já é cliente | Aparece no Google, com mapa e horário, pra quem ainda não te conhece |
+| Responde quando dá, entre um corte e outro | Agenda sozinho, 24 h, só em horário livre, sem marcar dois no mesmo horário |
+| Manda foto solta | Vitrine: antes e depois, cortes com foto e preço, equipe |
+| — | Lembrete no celular do cliente e link pra remarcar ou cancelar sem te chamar |
+
+Como um liga no outro: no painel, **WhatsApp** (`/app/whatsapp`) tem os textos prontos pra colar
+na saudação, na ausência, na resposta rápida "/agendar", no perfil e nas instruções do atendente de
+IA da Meta, todos com o link de agendar. Não é integração por API: nada sai sozinho do sistema.
+
+### Respostas prontas
+
+- **"Já tenho o WhatsApp Business."** — Ótimo, ele continua. O WhatsApp é pra conversar; o site é
+  pra você parar de conversar pra marcar horário. No painel tem a mensagem de saudação pronta com o
+  seu link: quem te chamar já recebe onde marcar.
+- **"Já uso a IA do WhatsApp pra responder."** — Então ela ganha onde mandar o cliente. A IA
+  conversa, mas não sabe os seus horários livres de verdade; o site sabe. Você ensina a IA a mandar
+  o link e quem marca é a agenda, sem conflito.
+- **"Meu cliente marca pelo WhatsApp mesmo."** — Quantas vezes por dia você para um corte pra
+  responder "tem horário amanhã?"? Com o link na saudação, ele escolhe sozinho e você só recebe o
+  aviso no celular.
+- **"Vou fazer anúncio que abre conversa no WhatsApp."** — Pode fazer: quem chegar pelo anúncio
+  recebe a saudação com o link e marca em um minuto. O site deixa o anúncio render mais, porque a
+  conversa termina em horário marcado.
+
+Custos de referência (pra não ser pego de surpresa, out/2026, fontes de terceiros): o app WhatsApp
+Business é grátis; o atendente de IA é grátis até um limite mensal não divulgado, com planos pagos
+anunciados; mensagem automática pela API oficial custa por mensagem (cerca de R$ 0,035 lembrete,
+R$ 0,32 marketing) e exige conta da Meta com cartão. O nosso sistema não usa a API: quem manda é o
+barbeiro, do WhatsApp dele.

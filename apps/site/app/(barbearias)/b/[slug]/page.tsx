@@ -187,7 +187,10 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
               <AntesDepois key={p.antes.id} antes={urlFoto(p.antes.arquivo)} depois={urlFoto(p.depois.arquivo)} legenda={p.depois.legenda} />
             ))}
           </div>
-          {agenda && <p className="b-centro"><Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Quero sair assim</Link></p>}
+          <p className="b-centro b-galeria-acoes">
+            {agenda && <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Quero sair assim</Link>}
+            <Link href={`${base}/trabalhos`} className="b-botao-sec">Ver todos os trabalhos</Link>
+          </p>
         </section>
       ) : mosaico.length >= 3 && (
         <section className="b-mosaico" aria-labelledby="mosaico-titulo" data-revelar>
@@ -204,6 +207,9 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img key={f.id} src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? ""} loading="lazy" width={f.largura} height={f.altura} />
           ))}
         </section>
+      )}
+      {pares.length === 0 && mosaico.length >= 3 && (
+        <p className="b-mosaico-mais"><Link href={`${base}/trabalhos`} className="b-botao-sec">Ver todos os trabalhos</Link></p>
       )}
 
       <Frase texto={frases[0]} foto={fotoFrase(0)} />

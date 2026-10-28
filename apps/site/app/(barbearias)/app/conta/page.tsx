@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
-import { CalendarDays, CreditCard, KeyRound, LogOut, Repeat, Settings, Star, Users } from "lucide-react";
+import { CalendarDays, CreditCard, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
 
@@ -69,6 +69,7 @@ export default async function Conta() {
         <section className="conta-bloco" aria-labelledby="mais-titulo">
           <h2 id="mais-titulo">Mais do painel</h2>
           <ul className="conta-links">
+            <li><Link href="/app/whatsapp"><MessageCircle size={20} aria-hidden /><span>WhatsApp Business<small>Textos prontos pra pôr o link de agendar no seu WhatsApp</small></span></Link></li>
             <li><Link href="/app/config"><Settings size={20} aria-hidden /><span>Configurações<small>Serviços, equipe, horários e como você atende</small></span></Link></li>
             <li><Link href="/app/planos"><Repeat size={20} aria-hidden /><span>Planos mensais<small>Clientes que pagam por mês</small></span></Link></li>
             <li><Link href="/app/clientes"><Users size={20} aria-hidden /><span>Clientes que sumiram<small>Quem não volta faz tempo</small></span></Link></li>

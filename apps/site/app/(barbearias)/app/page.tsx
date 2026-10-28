@@ -228,6 +228,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
               href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkPublico}`)}`}>
               <MessageCircle size={16} aria-hidden /> Mandar no WhatsApp
             </a>
+            <Link className="botao-sec" href="/app/whatsapp">Pôr no WhatsApp Business</Link>
           </div>
         </div>
       </section>

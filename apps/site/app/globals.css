@@ -490,6 +490,17 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .venda-recurso p { margin: 0; color: var(--suave); }
 .venda-marca-intro { max-width: 68ch; margin: 12px 0 0; color: var(--suave); }
 .venda-marca-acao { margin: 28px 0 0; }
+/* WhatsApp + site: dois lados lado a lado e os 3 jeitos de ligar um no outro. */
+.venda-whats-grade { display: grid; gap: 16px; margin-top: 24px; }
+@media (min-width: 760px) { .venda-whats-grade { grid-template-columns: 1fr 1fr; } }
+.venda-whats-lado { padding: 20px 22px; border: 1px solid var(--borda); border-radius: var(--raio); }
+.venda-whats-lado:last-child { border-color: var(--destaque); }
+.venda-whats-sub { margin: 32px 0 12px; font-size: 1.15rem; }
+.venda-whats-passos { list-style: none; counter-reset: passo; margin: 0; padding: 0; display: grid; gap: 14px; }
+@media (min-width: 760px) { .venda-whats-passos { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+.venda-whats-passos li { counter-increment: passo; display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.venda-whats-passos li::before { content: counter(passo); font: 600 1.6rem/1 var(--fonte-titulo); color: var(--destaque); }
+.venda-whats-passos span { color: var(--suave); }
 
 .venda-plano {
   display: grid; gap: 24px; align-items: center; padding: 28px; border-radius: var(--raio);

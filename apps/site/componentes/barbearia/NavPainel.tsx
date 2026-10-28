@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, Images, LayoutTemplate, Settings, UserRound, Users } from "lucide-react";
+import { BarChart3, CalendarDays, Images, LayoutTemplate, MessageCircle, Settings, UserRound, Users } from "lucide-react";
 
 const ITENS = [
   { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
@@ -10,6 +10,7 @@ const ITENS = [
   { href: "/app/fotos", rotulo: "Fotos", Icone: Images, aba: true },
   { href: "/app/numeros", rotulo: "Números", Icone: BarChart3, aba: true },
   { href: "/app/clientes", rotulo: "Clientes", Icone: Users, aba: false },
+  { href: "/app/whatsapp", rotulo: "WhatsApp", Icone: MessageCircle, aba: false },
   { href: "/app/config", rotulo: "Configurações", Icone: Settings, aba: false },
   { href: "/app/conta", rotulo: "Minha conta", Icone: UserRound, aba: true },
 ] as const;

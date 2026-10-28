@@ -148,3 +148,12 @@
 .par img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; }
 .par figcaption { grid-column: 1 / -1; font-size: 14px; color: var(--suave); }
 .par .acoes { grid-column: 1 / -1; }
+
+/* ---------- WhatsApp Business: textos prontos ---------- */
+.textos-whats { display: grid; gap: 14px; margin-top: 16px; }
+@media (min-width: 860px) { .textos-whats { grid-template-columns: 1fr 1fr; align-items: start; } }
+.texto-whats h2 { margin-bottom: 4px; }
+.texto-whats pre {
+  margin: 12px 0; padding: 14px; white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.5 var(--fonte-texto);
+  background: var(--destaque-claro); border-radius: 12px 12px 12px 2px; color: var(--texto);
+}
