@@ -155,25 +155,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       {b.oferta && <p className="b-oferta">{b.oferta}</p>}
 
 
-      {/* A página inicial só vende a ideia e leva pro "Agendar"; a escolha do corte fica no agendar.
-          Quem atende só por ordem de chegada não tem agendar: aí o cardápio aparece aqui. */}
-      {!agenda && servicos.length > 0 && (
-        <section className="b-secao" id="servicos">
-          <h2>Serviços</h2>
-          <ul className="b-servicos">
-            {servicos.map((s) => (
-              <li key={s.id}>
-                <span className="b-servico-nome">{s.nome}{s.descricao && <small className="b-servico-desc">{s.descricao}</small>}</span>
-                <span className="b-servico-tempo">{s.duracaoMin} min</span>
-                {b.mostrarPrecos && <span className="b-servico-preco">{reais(s.precoCentavos)}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <Frase texto={frases[0]} foto={fotoFrase(0)} />
-
       {/* Galeria: antes e depois quando o barbeiro cadastrou pares (o que mais convence); sem pares, o mosaico. */}
       {pares.length > 0 ? (
         <section className="b-secao b-antes-depois" id="antes-depois" aria-labelledby="ad-titulo" data-revelar>
@@ -255,6 +236,32 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           )}
         </div>
       </section>
+
+      {/* Tabela clara, uma linha por serviço: nome, tempo e preço (se o barbeiro mostra preços). O que cada um
+          inclui fica no agendar. */}
+      {servicos.length > 0 && (
+        <section className="b-secao b-precos" id="precos" aria-labelledby="precos-titulo">
+          <h2 id="precos-titulo">{b.mostrarPrecos ? "Serviços e preços" : "Serviços"}</h2>
+          {[
+            { titulo: "Cortes", lista: servicos.filter((s) => ehCorte(s.nome)) },
+            { titulo: "Barba e cuidados", lista: servicos.filter((s) => !ehCorte(s.nome)) },
+          ].filter((g) => g.lista.length > 0).map((g) => (
+            <div key={g.titulo} className="b-precos-grupo">
+              <h3>{g.titulo}</h3>
+              <ul className="b-servicos">
+                {g.lista.map((s) => (
+                  <li key={s.id}>
+                    <span className="b-servico-nome">{s.nome}</span>
+                    <span className="b-servico-tempo">{s.duracaoMin} min</span>
+                    {b.mostrarPrecos && <span className="b-servico-preco">{reais(s.precoCentavos)}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {agenda && <p className="b-centro b-precos-acao"><Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link></p>}
+        </section>
+      )}
 
       {agenda && (
         <section className="b-chamada" aria-labelledby="chamada-titulo">

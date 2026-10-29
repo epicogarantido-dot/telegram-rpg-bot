@@ -231,6 +231,13 @@
 .b-servico-tempo { color: var(--suave); font-size: 14px; }
 .b-servico-preco { font-variant-numeric: tabular-nums; font-weight: 600; }
 .b-servico-acao { font-size: 14px; font-weight: 600; text-underline-offset: 4px; }
+/* Tabela de serviços e preços da página inicial, em grupos. */
+.b-precos-grupo + .b-precos-grupo { margin-top: 28px; }
+.b-precos-grupo h3 { margin: 0 0 10px; font-size: 1rem; color: var(--suave); font-weight: 600; letter-spacing: 0.04em; }
+.b-precos-acao { margin-top: 28px; }
+.b-precos .b-servicos li, .b-precos .b-servicos li:is(*) { grid-template-columns: minmax(0, 1fr) auto 6.5em; padding: 12px 0; gap: 8px 16px; }
+.b-precos .b-servico-tempo { grid-row: auto; text-align: right; }
+.b-precos .b-servico-preco { text-align: right; }
 @media (max-width: 560px) {
   .b-servicos li { grid-template-columns: minmax(0, 1fr) auto; }
   .b-servico-tempo { grid-row: 2; }
