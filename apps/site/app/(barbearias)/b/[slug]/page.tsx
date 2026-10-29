@@ -50,6 +50,10 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
     { valor: equipe.length, rotulo: equipe.length === 1 ? "profissional" : "profissionais" },
     ...((() => { const n = banco.totalAtendimentos(b.id); return n >= 20 ? [{ valor: n, rotulo: "horários marcados pelo site" }] : []; })()),
   ].filter((n) => n.valor > 0);
+  // Um número sozinho ("1 profissional") não diz nada: só mostra com dois ou mais.
+  const numerosDaCasa = numeros.length >= 2 ? numeros : [];
+  // A apresentação já aparece na abertura; aqui a casa fala por números e Instagram. Sem nada disso, a seção some.
+  const temCasa = numerosDaCasa.length > 0 || Boolean(b.instagram);
   const expedientes = banco.expedientes(b.id);
   const agora = situacaoAgora(b, expedientes);
   const mapa = linkMapa(b);
@@ -214,7 +218,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
 
       <Frase texto={frases[2]} foto={fotoFrase(2)} />
 
-      <section className="b-secao b-casa" aria-labelledby="casa-titulo">
+      {temCasa && <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (
           <div className="b-casa-foto" data-revelar>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -223,10 +227,9 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         )}
         <div className="b-casa-texto" data-revelar>
           <h2 id="casa-titulo">Conheça a casa</h2>
-          {b.bio && <p className="b-casa-bio">{b.bio}</p>}
-          {numeros.length > 0 && (
+          {numerosDaCasa.length > 0 && (
             <dl className="b-numeros">
-              {numeros.map((n) => (
+              {numerosDaCasa.map((n) => (
                 <div key={n.rotulo}><dt>{n.rotulo}</dt><dd data-contar={tema === "tecnico" ? n.valor : undefined}>{n.valor}</dd></div>
               ))}
             </dl>
@@ -235,7 +238,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <a className="b-casa-insta" href={`https://instagram.com/${b.instagram}`} target="_blank" rel="noopener noreferrer"><AtSign size={18} aria-hidden /> Veja mais no Instagram @{b.instagram}</a>
           )}
         </div>
-      </section>
+      </section>}
 
       {/* Tabela clara, uma linha por serviço: nome, tempo e preço (se o barbeiro mostra preços). O que cada um
           inclui fica no agendar. */}

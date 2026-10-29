@@ -176,6 +176,7 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .vendas-valores { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 8px 0 18px; }
 .site-cursos .vendas-valores p { margin: 0; color: var(--suave); }
 .site-cursos .vendas-valores strong { display: block; color: var(--texto); font-size: 2rem; font-weight: 300; }
+.site-cursos .vendas-conta { margin: 0 0 18px; color: var(--texto); }
 .site-cursos .vendas-preco ul { margin: 0 0 22px; padding-left: 20px; display: grid; gap: 6px; max-width: 60ch; }
 .site-cursos .vendas-preco .acoes { display: flex; flex-wrap: wrap; gap: 10px; }
 

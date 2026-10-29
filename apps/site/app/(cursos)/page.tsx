@@ -48,12 +48,16 @@ const TELAS = [
 ] as const;
 
 const PERGUNTAS = [
-  ["Preciso de CNPJ?", "Não. O pagamento é por Pix e pode ser no seu nome."],
-  ["Preciso saber mexer em site?", "Não. A gente monta o site com as suas fotos, serviços e preços. Depois, trocar uma foto ou um preço é pelo celular, como num aplicativo."],
-  ["Posso trocar de estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem os horários marcados."],
-  ["Como o cliente marca?", "Ele abre o seu link (no Instagram, no Google ou no WhatsApp), escolhe o serviço e o horário livre e põe nome e WhatsApp. Não baixa aplicativo nem cria conta."],
   ["Posso ver antes de pagar?", "Pode. Os seis estilos estão no ar com barbearias de exemplo: abra e marque um horário de teste, como se fosse o seu cliente."],
   ["E se eu quiser parar?", "É só não renovar. Não tem fidelidade nem multa."],
+  ["Preciso de CNPJ?", "Não. O pagamento é por Pix e pode ser no seu nome."],
+  ["Preciso saber mexer em site?", "Não. A gente monta o site com as suas fotos, serviços e preços. Depois, trocar uma foto ou um preço é pelo celular, como num aplicativo."],
+  ["Como fica o endereço do site?", "Com o nome da sua barbearia, do jeito nome-da-barbearia.squareweb.app. É esse link que você põe no Instagram, no Google e no WhatsApp."],
+  ["Como o cliente marca?", "Ele abre o seu link, escolhe o serviço e o horário livre e põe nome e WhatsApp. Não baixa aplicativo nem cria conta."],
+  ["O cliente recebe lembrete?", "Ao marcar, ele pode pôr o horário na agenda do celular, com aviso uma hora antes. E no painel você manda o lembrete de amanhã pelo seu WhatsApp, com um toque."],
+  ["Posso trocar de estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem os horários marcados."],
+  ["E se eu atrasar a mensalidade?", "A gente te chama no WhatsApp pra combinar. Não tem multa nem juros."],
+  ["Quem me ajuda se eu travar?", "A gente, pelo WhatsApp. Quem monta o seu site é quem te atende."],
 ] as const;
 
 /**
@@ -91,15 +95,6 @@ export default async function Inicio() {
         </figure>
       </section>
 
-      <section className="vendas-secao" aria-labelledby="no-site-titulo">
-        <h2 id="no-site-titulo">O que vem no seu site</h2>
-        <ul className="vendas-no-site">
-          {NO_SITE.map(({ icone: Icone, titulo, texto }) => (
-            <li key={titulo}><Icone size={20} aria-hidden /><span><strong>{titulo}</strong>{texto}</span></li>
-          ))}
-        </ul>
-      </section>
-
       <div className="vendas-secao vendas-carrossel">
         <Carrossel id="estilos" titulo="Escolha o estilo" descricao="Os seis estão no ar com barbearias de exemplo: abra, navegue e marque um horário de teste. No seu, entram as suas fotos e os seus preços.">
           {TEMAS.map((t) => (
@@ -116,6 +111,15 @@ export default async function Inicio() {
           ))}
         </Carrossel>
       </div>
+
+      <section className="vendas-secao" aria-labelledby="no-site-titulo">
+        <h2 id="no-site-titulo">O que vem no seu site</h2>
+        <ul className="vendas-no-site">
+          {NO_SITE.map(({ icone: Icone, titulo, texto }) => (
+            <li key={titulo}><Icone size={20} aria-hidden /><span><strong>{titulo}</strong>{texto}</span></li>
+          ))}
+        </ul>
+      </section>
 
       <div className="vendas-secao vendas-carrossel">
         <Carrossel titulo="Como funciona por dentro" descricao="Telas de verdade do sistema: o que o seu cliente vê pra marcar e o que você vê no painel, no celular.">
@@ -144,6 +148,8 @@ export default async function Inicio() {
           <p><strong>{reais(adesao)}</strong> pra começar, já com o primeiro mês</p>
           <p><strong>{reais(plano.valorCentavos)}</strong> por mês depois</p>
         </div>
+        {/* Conta que o barbeiro faz de cabeça. Só vale enquanto a mensalidade cabe em dois cortes baratos (R$ 30). */}
+        {plano.valorCentavos <= 6000 && <p className="vendas-conta">A mensalidade sai por menos de dois cortes.</p>}
         <ul>
           <li>Site, agenda online e painel no celular.</li>
           <li>Barbeiros e agendamentos ilimitados.</li>
@@ -159,8 +165,8 @@ export default async function Inicio() {
       <section className="vendas-secao" aria-labelledby="perguntas-titulo">
         <h2 id="perguntas-titulo">Perguntas</h2>
         <div className="vendas-perguntas">
-          {PERGUNTAS.map(([p, r]) => (
-            <details key={p}>
+          {PERGUNTAS.map(([p, r], i) => (
+            <details key={p} open={i < 2}>
               <summary>{p}</summary>
               <p>{r}</p>
             </details>
