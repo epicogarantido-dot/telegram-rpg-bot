@@ -5,6 +5,7 @@ import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
 import { reais } from "@/lib/agenda";
 import { contatoResponsavel } from "@/lib/contato";
+import { Carrossel } from "@/componentes/Carrossel";
 
 /** Feita a cada visita: preço e WhatsApp vêm do .env, que não existe na hora do build. */
 export const dynamic = "force-dynamic";
@@ -30,6 +31,20 @@ const NO_SITE = [
   { icone: MapPin, titulo: "Mapa", texto: "Onde fica a barbearia, com o caminho no celular." },
   { icone: MessageCircle, titulo: "Botão de WhatsApp", texto: "Pra quem quiser falar com você antes de marcar." },
   { icone: Smartphone, titulo: "Painel no celular", texto: "Aviso a cada horário novo; você muda tudo, quando quiser." },
+] as const;
+
+/** Telas reais do sistema (tiradas de um site de teste em public/funcionalidades/), na ordem do uso. */
+const TELAS = [
+  { arquivo: "agendar-corte", titulo: "O cliente escolhe o corte", texto: "Cada corte com foto e preço. Quem só quer a barba começa em \"Não vou cortar\".", alt: "Tela de escolher o corte no celular" },
+  { arquivo: "agendar-adicionais", titulo: "Soma barba e sobrancelha", texto: "Os adicionais entram com um toque, com o tempo e o preço certos.", alt: "Tela de adicionais com barba, cavanhaque, risco e pezinho" },
+  { arquivo: "agendar-horario", titulo: "Só horário livre de verdade", texto: "Ele vê os dias e os horários que sobram e marca na hora, sem te chamar.", alt: "Tela de escolher o dia e o horário" },
+  { arquivo: "agendado", titulo: "Lembrete no celular dele", texto: "Põe na agenda do celular e, se precisar, troca ou cancela pelo link.", alt: "Tela de horário marcado com o botão de adicionar à agenda" },
+  { arquivo: "painel-agenda", titulo: "Sua agenda do dia", texto: "Quem vem, o serviço e a foto do corte que ele escolheu. Confirma no seu WhatsApp com um toque.", alt: "Painel com os horários do dia" },
+  { arquivo: "painel-calendario", titulo: "No calendário do seu celular", texto: "Os horários aparecem no iPhone ou no Google, com lembrete antes de cada cliente.", alt: "Tela de ligar a agenda no calendário do celular" },
+  { arquivo: "painel-fotos", titulo: "Suas fotos, por tipo de corte", texto: "Degradê, navalhado, barba, antes e depois: você troca pelo celular.", alt: "Painel de fotos do site" },
+  { arquivo: "painel-servicos", titulo: "Serviços, tempos e preços", texto: "Cada serviço com o seu tempo e o seu preço. Mudou aqui, mudou no site.", alt: "Painel com os serviços e preços" },
+  { arquivo: "painel-estilo", titulo: "Troque o estilo quando quiser", texto: "Seis estilos, sem perder fotos, serviços nem horários.", alt: "Painel de escolher o estilo do site" },
+  { arquivo: "painel-whatsapp", titulo: "Resposta automática no WhatsApp", texto: "Quem te chama recebe uma mensagem com o link de agendar. Do próprio WhatsApp Business, grátis.", alt: "Tela com a mensagem pronta pro WhatsApp Business" },
 ] as const;
 
 const PERGUNTAS = [
@@ -85,27 +100,34 @@ export default async function Inicio() {
         </ul>
       </section>
 
-      <section id="estilos" className="vendas-secao" aria-labelledby="estilos-titulo">
-        <h2 id="estilos-titulo">Escolha o estilo</h2>
-        <p className="vendas-intro">
-          Os seis estão no ar com barbearias de exemplo: abra, navegue e marque um horário de teste. No seu, entram
-          as suas fotos e os seus preços.
-        </p>
-        <ul className="vendas-estilos">
+      <div className="vendas-secao vendas-carrossel">
+        <Carrossel id="estilos" titulo="Escolha o estilo" descricao="Os seis estão no ar com barbearias de exemplo: abra, navegue e marque um horário de teste. No seu, entram as suas fotos e os seus preços.">
           {TEMAS.map((t) => (
-            <li key={t.id}>
+            <div key={t.id} className="estilo-slide">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/barbeiros/${t.id}.webp`} alt={`Site no estilo ${t.nome}, visto no celular`} width={390} height={780} loading="lazy" />
               <h3>{t.nome}</h3>
-              <p>{t.resumo}</p>
+              <span>{t.resumo}</span>
               <div className="vendas-estilo-acoes">
                 <a href={`/exemplo/${t.id}`} className="botao-sec" target="_blank" rel="noopener">Ver exemplo</a>
                 <a href={`/app/cadastro?estilo=${t.id}`} className="botao" data-evento="quero" data-detalhe={t.id}>Quero esse</a>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
-      </section>
+        </Carrossel>
+      </div>
+
+      <div className="vendas-secao vendas-carrossel">
+        <Carrossel titulo="Como funciona por dentro" descricao="Telas de verdade do sistema: o que o seu cliente vê pra marcar e o que você vê no painel, no celular.">
+          {TELAS.map((t) => (
+            <figure key={t.arquivo} className="estilo-slide">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/funcionalidades/${t.arquivo}.webp`} alt={t.alt} width={390} height={780} loading="lazy" />
+              <figcaption><strong>{t.titulo}</strong><span>{t.texto}</span></figcaption>
+            </figure>
+          ))}
+        </Carrossel>
+      </div>
 
       <section className="vendas-secao" aria-labelledby="como-titulo">
         <h2 id="como-titulo">Como funciona</h2>
