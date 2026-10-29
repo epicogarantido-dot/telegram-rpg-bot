@@ -1159,6 +1159,18 @@ describe("conta criada pelo admin no SaaS (vencer só avisa)", () => {
     expect(b.barbeariaPorId(nova.id)!.acessoAte).toBe("2027-02-07");
   });
 
+  it("app de um barbeiro só: sessão do dono, prazo direto e sessões derrubadas", () => {
+    const b = new BancoAgenda(":memory:", plano);
+    const nova = b.criarContaPeloAdmin({ ...dados, agora: new Date("2026-10-28T15:00:00Z") });
+    const token = b.sessaoDoDono(nova.id);
+    expect(b.usuarioDaSessao(token)?.barbeariaId).toBe(nova.id);
+    b.definirPrazo(nova.id, "2027-03-01");
+    expect(b.barbeariaPorId(nova.id)!.acessoAte).toBe("2027-03-01");
+    expect(() => b.definirPrazo(nova.id, "01/03/2027")).toThrow(ErroAgenda);
+    b.encerrarSessoes(nova.id);
+    expect(b.usuarioDaSessao(token)).toBeUndefined();
+  });
+
   it("no padrão (site de leads e um app só), o prazo vencido continua tirando do ar", () => {
     const b = new BancoAgenda(":memory:", { ...plano, vencerBloqueia: undefined });
     const nova = b.criarContaPeloAdmin({ ...dados, agora: new Date("2026-10-28T15:00:00Z") });

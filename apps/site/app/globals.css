@@ -230,6 +230,14 @@ a.cartao:hover { transform: translateY(-2px); box-shadow: var(--sombra-forte); b
 .linha-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .cancelado { opacity: 0.55; }
 .item-config { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--borda); }
+/* Admin do leads: bloco do app do barbeiro (variáveis pra colar na Square), embaixo da linha. */
+.item-config:has(.app-do-barbeiro) { flex-wrap: wrap; }
+.app-do-barbeiro { flex: 1 1 100%; }
+.app-do-barbeiro summary { cursor: pointer; font-weight: 500; }
+.app-do-barbeiro pre {
+  margin: 10px 0; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.5;
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: 8px;
+}
 .inativo { text-decoration: line-through; color: var(--suave); }
 .expediente { display: grid; gap: 8px; }
 .expediente fieldset {

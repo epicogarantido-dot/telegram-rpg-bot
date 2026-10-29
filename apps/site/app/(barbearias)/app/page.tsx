@@ -8,7 +8,7 @@ import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/age
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
-import { situacaoAgora, urlFoto } from "@/lib/barbearias";
+import { linkPublico, situacaoAgora, urlFoto } from "@/lib/barbearias";
 import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
 import { proximaData } from "@/lib/datas-barbearia";
 import { soEntrega } from "@/lib/modo";
@@ -146,7 +146,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
   const data = sp.data && dataValida(sp.data) ? sp.data : hoje;
   const agenda = obterAgenda().agendamentosDoDia(barbearia.id, data);
-  const linkPublico = `${process.env.SITE_URL ?? ""}/b/${barbearia.slug}`;
+  const linkDoSite = linkPublico(barbearia);
   const diasRestantes = obterAgenda().diasRestantes(barbearia);
   const banco = obterAgenda();
   const profissionais = banco.profissionais(barbearia.id, true);
@@ -223,11 +223,11 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           : <span />}
         <div className="cartao-site-texto">
           <p><strong>Seu site está no ar.</strong> Mande o link pros clientes marcarem sozinhos.</p>
-          <a className="link-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkPublico.replace(/^https?:\/\//, "")}</a>
+          <a className="link-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkDoSite.replace(/^https?:\/\//, "")}</a>
           <div className="cartao-site-acoes">
-            <BotaoCopiar texto={linkPublico} />
+            <BotaoCopiar texto={linkDoSite} />
             <a className="botao-sec" target="_blank" rel="noopener noreferrer"
-              href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkPublico}`)}`}>
+              href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkDoSite}`)}`}>
               <MessageCircle size={16} aria-hidden /> Mandar no WhatsApp
             </a>
             <Link className="botao-sec" href="/app/whatsapp">Pôr no WhatsApp Business</Link>
@@ -312,7 +312,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
                     <li key={a.id}>
                       {a.inicio.slice(11)} · {a.clienteNome} ·{" "}
                       <a target="_blank" rel="noopener noreferrer" href={linkWhatsapp(a.clienteTelefone,
-                        `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Tivemos um imprevisto e não vamos conseguir te atender ${formatarData(data)} às ${a.inicio.slice(11, 16)}. Desculpe! Dá pra remarcar por aqui: ${linkPublico}`)}>
+                        `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Tivemos um imprevisto e não vamos conseguir te atender ${formatarData(data)} às ${a.inicio.slice(11, 16)}. Desculpe! Dá pra remarcar por aqui: ${linkDoSite}`)}>
                         <MessageCircle size={14} aria-hidden /> Avisar no WhatsApp
                       </a>{" · "}<a href={`#ag-${a.id}`}>ver horário</a>
                     </li>
@@ -449,7 +449,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             <p className="atribuicao" role="status">
               Cancelado. Avise {a.clienteNome.split(" ")[0]} pra não vir à toa:{" "}
               <a target="_blank" rel="noopener noreferrer" href={linkWhatsapp(a.clienteTelefone,
-                `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Precisamos cancelar seu horário de ${a.servico}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Desculpe! Pra marcar outro: ${linkPublico}`)}>
+                `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Precisamos cancelar seu horário de ${a.servico}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Desculpe! Pra marcar outro: ${linkDoSite}`)}>
                 <MessageCircle size={16} aria-hidden /> Avisar no WhatsApp
               </a>
             </p>

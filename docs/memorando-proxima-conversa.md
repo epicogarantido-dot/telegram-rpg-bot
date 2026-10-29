@@ -1,10 +1,11 @@
 # Memorando pra próxima conversa (27/10/2026)
 
-> **Mudou em 28/10/2026 (vale mais que o resto deste memorando):** os dois apps não se ligam mais.
-> O de leads mostra os sites de exemplo e cobra a assinatura (o admin confirma o Pix e vê quem está
-> atrasado); o SaaS só entrega: o admin cria o site do cliente lá ("Criar site de cliente", 30 dias)
-> e manda link e senha no WhatsApp; vencer só avisa o barbeiro. Não existem mais `SAAS_URL`,
-> `LEADS_URL`, `/montar` (prévia) nem cobrança no SaaS. Ver "Dois apps" no `CLAUDE.md`.
+> **Mudou em 28/10/2026 (vale mais que o resto deste memorando):** os apps não se ligam mais. O de
+> leads mostra os sites de exemplo e cobra a assinatura (o admin confirma o Pix e vê quem está
+> atrasado); o SaaS é **um app por barbeiro** na Square: a barbearia nasce sozinha com as variáveis
+> do bloco "App do barbeiro" (leads), `/` é o site dela e `/admin` o painel, que entra só com a
+> senha; vencer só avisa. Não existem mais `SAAS_URL`, `LEADS_URL`, `/montar` (prévia) nem cobrança
+> no SaaS. Ver "Dois apps" no `CLAUDE.md`.
 
 **Pro próximo chat:** o dono do projeto vai recomeçar com você. Na avaliação dele, **nós falhamos**:
 o que está abaixo era pra estar pronto e funcionando, e não está do jeito que ele esperava. Sua

@@ -1,6 +1,7 @@
 import type { Barbearia, Expediente } from "@aprenda/agenda";
 import { agoraNoFuso, dataValida, diaDaSemana, nomeDia, paraMinutos, TEMAS } from "@aprenda/agenda";
 import { obterAgenda } from "@/lib/agenda";
+import { soEntrega } from "@/lib/modo";
 
 /** URL pública da foto (miniatura ou grande). Servida por app/f/[nome]/route.ts. */
 export function urlFoto(arquivo: string, tamanho: "p" | "g" = "g"): string {
@@ -9,6 +10,14 @@ export function urlFoto(arquivo: string, tamanho: "p" | "g" = "g"): string {
 
 export function urlAbsoluta(caminho: string): string {
   return `${(process.env.SITE_URL ?? "").replace(/\/$/, "")}${caminho}`;
+}
+
+/**
+ * Link do site pra divulgar ("" = página inicial, "/agendar" = direto no agendar). No SaaS o app é
+ * de uma barbearia só, então o endereço principal já é o site dela (e /agendar, o agendar).
+ */
+export function linkPublico(b: Pick<Barbearia, "slug">, pagina: "" | "/agendar" = ""): string {
+  return urlAbsoluta(soEntrega() ? pagina : `/b/${b.slug}${pagina}`);
 }
 
 export function linkMapa(b: Pick<Barbearia, "nome" | "endereco" | "cidade">): string | undefined {

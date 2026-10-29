@@ -86,24 +86,31 @@ mas depende da máquina e da internet de casa ficarem ligadas.
 | `dist/saas-square.zip` | criar o app das barbearias (Upload) |
 | `dist/saas-commit.zip` | atualizar o app das barbearias depois |
 
-**Quem faz o quê (28/10/2026):** os dois apps **não se ligam** (nenhum link nem chamada de um
-pro outro).
+**Quem faz o quê (28/10/2026):** os apps **não se ligam** (nenhum link nem chamada de um pro
+outro). O de leads mostra e cobra; o SaaS é **um app por barbeiro**.
 
 - **Leads mostra e cobra:** cursos, Revista, `/barbeiros`, os sites de exemplo, o cadastro ("Quero
-  o meu site", sem escolher nada) e o Pix. Você confere o Pix em `/painel/assinaturas` **do leads**
-  e confirma: a assinatura fica salva com o prazo. Quando o prazo acaba, ela aparece "atrasada"
-  (pra você e pro cliente, que paga a mensalidade pelo Pix ali mesmo). Nada é bloqueado.
-- **SaaS entrega:** depois de confirmar, você chama o cliente no WhatsApp, pega o que precisa e,
-  no `/painel/assinaturas` **do SaaS**, "Criar site de cliente" (nome, WhatsApp, responsável,
-  e-mail, cidade e estilo). O site nasce no ar por `PLANO_DIAS` dias, com fotos padrão e cortes de
-  barbearia, e abre o seu WhatsApp com o link do site, o do painel, o e-mail e a senha. Ele arruma
-  o resto no painel. Quando faltam 5 dias e depois que acaba, o painel dele só avisa ("Renovar pelo
-  WhatsApp"); o site continua no ar. Recebeu? "+30 dias". Quer tirar do ar? "Suspender".
+  o meu site", sem escolher nada) e o Pix. Você confere o Pix em `/painel/assinaturas` e confirma:
+  a assinatura fica salva com o prazo. Quando o prazo acaba, ela aparece "atrasada" (pra você e
+  pro cliente, que paga a mensalidade pelo Pix ali mesmo). Nada é bloqueado.
+- **Cada venda vira um app SaaS** (o site, a agenda e o painel daquele barbeiro):
+  1. Na linha da assinatura (leads), abra **"App do barbeiro"** e copie as variáveis.
+  2. Na Square, crie um app novo com o `saas-square.zip` (Upload). Ele sobe com o subdomínio
+     `nova-barbearia`; em Configurações, troque pro subdomínio sugerido no bloco (ex.:
+     `barbearia-do-ze`), assim o próximo cliente também sobe com `nova-barbearia`.
+  3. Em Configurações → Variáveis de ambiente, cole (ou importe) as variáveis e reinicie. Na
+     primeira subida a barbearia nasce sozinha: nome, WhatsApp, estilo, fotos padrão e cortes.
+  4. Toque em **"Mandar o acesso pelo WhatsApp"**: vai o link do site e o do painel
+     (`endereço/admin`) com a senha. Ele entra só com a senha e arruma o resto.
+  5. Renovou no leads? Mude o `PAGO_ATE` do app dele pra data nova e reinicie. Quando faltam 5 dias
+     e depois que acaba, o painel dele só avisa ("Renovar pelo WhatsApp"); o site continua no ar.
+     Pra tirar do ar, pare o app na Square.
 
-`.env` de cada um (modelos: `.env.example` e `.env.saas.example`):
+Variáveis de cada um (modelos: `.env.example` e `.env.saas.example`):
 
-- **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP` e `PLANO_*`. Tire `SAAS_URL` se estiver lá: não é mais usado.
-- **SaaS:** `SITE_URL` (o próprio), `PAINEL_SENHA` (pode ser outra), `ADMIN_WHATSAPP`, `PLANO_DIAS`, `PLANO_ADESAO` e `PLANO_VALOR` (os mesmos do leads: só aparecem nos Termos) e `BOT_SEGREDO`. Tire `LEADS_URL`, `SITE_INICIAL` e `PIX_*` se estiverem lá: o SaaS não cobra.
+- **Leads:** `SITE_URL` (o próprio), `PAINEL_SENHA`, `COMUNIDADE_LINK`, `REMETENTE`, `PIX_*`, `ADMIN_WHATSAPP`, `PLANO_*` e `BOT_SEGREDO`. Tire `SAAS_URL` se estiver lá: não é mais usado.
+- **App de cada barbeiro:** o bloco "App do barbeiro" do leads já traz tudo: `SITE_URL`, `PAINEL_SENHA` (a senha do /admin dele), `ADMIN_WHATSAPP`, `PLANO_*`, `PAGO_ATE`, `BARBEARIA_*`, `BARBEIRO_NOME` e `BOT_SEGREDO`.
 
 Cada app tem o seu banco da agenda: o de leads guarda exemplos, demonstrações e as assinaturas; o
-SaaS, as barbearias entregues e a agenda delas. Baixe o backup (`/painel/backup`) **nos dois**.
+de cada barbeiro, a barbearia dele e a agenda. Backup: `/painel/backup` no leads e "Cópia dos dados"
+(`/app/backup`) no painel de cada barbeiro.

@@ -4,7 +4,7 @@ import { formatarData } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { MessageCircle } from "lucide-react";
 import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
-import { urlAbsoluta } from "@/lib/barbearias";
+import { linkPublico } from "@/lib/barbearias";
 import { mensagemVolta } from "@/lib/pos-atendimento";
 
 export const metadata = { title: "Clientes que sumiram", robots: { index: false } };
@@ -20,7 +20,7 @@ async function chamar(form: FormData) {
   banco.registrarChamada(barbearia.id, c.telefone);
   redirect(linkWhatsapp(c.telefone, mensagemVolta({
     barbearia: barbearia.nome, cliente: c.nome, diasSemVir: c.diasSemVir, servico: c.ultimoServico,
-    linkAgendar: urlAbsoluta(`/b/${barbearia.slug}/agendar`),
+    linkAgendar: linkPublico(barbearia, "/agendar"),
   })));
 }
 

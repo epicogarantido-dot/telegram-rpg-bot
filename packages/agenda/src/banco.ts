@@ -665,6 +665,21 @@ export class BancoAgenda {
     return token;
   }
 
+  /**
+   * App de um barbeiro só (SaaS): a página de admin entra só com a senha do .env (quem confere é
+   * o site) e abre a sessão do dono da barbearia.
+   */
+  sessaoDoDono(barbeariaId: number): string {
+    const u = this.db.prepare("SELECT id FROM usuarios WHERE barbearia_id = ? ORDER BY id LIMIT 1").get(barbeariaId) as { id: number } | undefined;
+    if (!u) throw new ErroAgenda("Barbearia sem conta de acesso.");
+    return this.criarSessao(u.id);
+  }
+
+  /** Derruba todas as sessões abertas da barbearia (a senha do admin mudou). */
+  encerrarSessoes(barbeariaId: number): void {
+    this.db.prepare("DELETE FROM sessoes WHERE usuario_id IN (SELECT id FROM usuarios WHERE barbearia_id = ?)").run(barbeariaId);
+  }
+
   usuarioDaSessao(token: string | undefined): Usuario | undefined {
     if (!token) return undefined;
     return this.db.prepare(`SELECT u.id, u.barbearia_id AS barbeariaId, u.nome, u.email FROM sessoes s
@@ -1553,6 +1568,12 @@ export class BancoAgenda {
     return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA.split(", ").map((c) => `b.${c}`).join(", ")},
       (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id ORDER BY u.id LIMIT 1) AS email
       FROM barbearias b ORDER BY b.acesso_ate`).all().map((l) => paraBarbearia(l as Record<string, unknown>)) as unknown as (Barbearia & { email: string })[];
+  }
+
+  /** Até quando está pago, direto (no app de um barbeiro só, vem do PAGO_ATE do .env). */
+  definirPrazo(barbeariaId: number, ate: Data): void {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ate) || Number.isNaN(Date.parse(ate))) throw new ErroAgenda("Data inválida.");
+    this.db.prepare("UPDATE barbearias SET acesso_ate = ? WHERE id = ?").run(ate, barbeariaId);
   }
 
   /** Admin tira do ar (ou põe de volta) o site e o painel, sem mexer no prazo. */

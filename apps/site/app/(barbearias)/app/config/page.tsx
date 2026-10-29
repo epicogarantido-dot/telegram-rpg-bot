@@ -309,13 +309,18 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
           </form>
         ))}
 
-      <h2 id="senha">Trocar senha</h2>
-      <form action={trocarSenha} className="formulario">
-        <label>Senha atual<input name="atual" type="password" required autoComplete="current-password" /></label>
-        <label>Nova senha<input name="nova" type="password" required minLength={8} autoComplete="new-password" /></label>
-        <label>Repita a nova senha<input name="confirmar" type="password" required minLength={8} autoComplete="new-password" /></label>
-        <button>Trocar senha</button>
-      </form>
+      <h2 id="senha">{soEntrega() ? "Senha do painel" : "Trocar senha"}</h2>
+      {soEntrega() ? (
+        // App de um barbeiro só: a senha do painel é a do .env, quem troca é a gente.
+        <p className="suave">A senha do painel é a que a gente te mandou. Pra trocar, fale com a gente no WhatsApp.</p>
+      ) : (
+        <form action={trocarSenha} className="formulario">
+          <label>Senha atual<input name="atual" type="password" required autoComplete="current-password" /></label>
+          <label>Nova senha<input name="nova" type="password" required minLength={8} autoComplete="new-password" /></label>
+          <label>Repita a nova senha<input name="confirmar" type="password" required minLength={8} autoComplete="new-password" /></label>
+          <button>Trocar senha</button>
+        </form>
+      )}
     </>
   );
 }

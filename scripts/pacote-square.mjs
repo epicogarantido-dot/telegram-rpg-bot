@@ -7,8 +7,10 @@
 // nem build (menos memória, sobe mais rápido).
 //
 // Um build, dois apps (ver apps/site/lib/modo.ts): sai um par de zips pro site de leads
-// (cursos, Revista, painel de leads) e um par pro SaaS (sites das barbearias, agenda,
-// pagamentos). Em cada par: "-square" pra criar o app (Upload) e "-commit" pra atualizar.
+// (cursos, Revista, exemplos, cadastro e Pix) e um par pro SaaS, que é UM app por barbeiro
+// (site, agenda e painel dele). Em cada par: "-square" pra criar o app (Upload) e "-commit" pra
+// atualizar. O "saas-square.zip" sobe uma vez por venda com o subdomínio "nova-barbearia": depois
+// de subir, troque o subdomínio no painel da Square pro nome da barbearia (aí o próximo sobe igual).
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -19,7 +21,7 @@ const destino = join(raiz, "dist/square");
 const memoria = process.env.SQUARE_MEMORIA ?? "512";
 const APPS = [
   { modo: "leads", nome: "Aprenda Livre", descricao: "Cursos gratuitos e Revista para barbeiros", subdominio: process.env.SQUARE_SUBDOMINIO ?? "aprendalivre" },
-  { modo: "saas", nome: "Site da Barbearia", descricao: "Site, agenda e painel das barbearias", subdominio: process.env.SQUARE_SUBDOMINIO_SAAS ?? "sitedabarbearia" },
+  { modo: "saas", nome: "Nova barbearia", descricao: "Site, agenda e painel de uma barbearia", subdominio: process.env.SQUARE_SUBDOMINIO_SAAS ?? "nova-barbearia" },
 ];
 
 console.log("🔨 build do site...");
@@ -104,4 +106,4 @@ AUTORESTART=true
   console.log(`✅ ${app.nome}: ${zip} (criar o app: Upload) e ${zipCommit} (atualizar: Commit e reiniciar)`);
 }
 console.log(`Versão: ${versao}`);
-console.log("Antes de subir: crie o .env de cada app (leads: copie de .env.example, com PAINEL_SENHA e os dados do Pix; SaaS: de .env.saas.example). Ver docs/deploy-square.md.");
+console.log("Antes de subir: variáveis de cada app (leads: .env.example, com PAINEL_SENHA e os dados do Pix; app de cada barbeiro: o bloco pronto em /painel/assinaturas do leads, ou .env.saas.example). Ver docs/deploy-square.md.");

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
-import { CalendarDays, CreditCard, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
+import { CalendarDays, CreditCard, Download, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
+import { linkPublico } from "@/lib/barbearias";
 import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Minha conta", robots: { index: false } };
@@ -21,7 +22,7 @@ export default async function Conta() {
   const banco = obterAgenda();
   const b = banco.barbeariaPorId(barbearia.id)!;
   const dias = banco.diasRestantes(b);
-  const site = `${process.env.SITE_URL ?? ""}/b/${b.slug}`;
+  const site = linkPublico(b);
   const telefone = b.telefone.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
   const estilo = TEMAS.find((t) => t.id === b.tema)?.nome ?? b.tema;
   const situacao = dias <= 0 ? { texto: soEntrega() ? "Período pago acabou" : "Vencido", classe: "vencido" } : dias <= 5 ? { texto: `Vence em ${dias} ${dias === 1 ? "dia" : "dias"}`, classe: "alerta" } : { texto: "Em dia", classe: "" };
@@ -54,7 +55,7 @@ export default async function Conta() {
           <dl className="conta-dados">
             <div><dt>Barbearia</dt><dd>{b.nome}</dd></div>
             <div><dt>Responsável</dt><dd>{usuario.nome}</dd></div>
-            <div><dt>E-mail de acesso</dt><dd>{usuario.email}</dd></div>
+            {!soEntrega() && <div><dt>E-mail de acesso</dt><dd>{usuario.email}</dd></div>}
             <div><dt>WhatsApp</dt><dd>{telefone}</dd></div>
             {b.cidade && <div><dt>Cidade</dt><dd>{b.cidade}</dd></div>}
           </dl>
@@ -79,7 +80,9 @@ export default async function Conta() {
             <li><Link href="/app/clientes"><Users size={20} aria-hidden /><span>Clientes que sumiram<small>Quem não volta faz tempo</small></span></Link></li>
             <li><Link href="/app/calendario"><CalendarDays size={20} aria-hidden /><span>Agenda no celular<small>Ver os horários no calendário do iPhone ou Google</small></span></Link></li>
             <li><Link href="/app/avaliacao"><Star size={20} aria-hidden /><span>Placa de avaliação<small>QR pra pedir avaliação no Google</small></span></Link></li>
-            <li><Link href="/app/config#senha"><KeyRound size={20} aria-hidden /><span>Trocar senha</span></Link></li>
+            {soEntrega()
+              ? <li><a href="/app/backup"><Download size={20} aria-hidden /><span>Cópia dos dados<small>Baixar tudo (clientes, horários, serviços) num arquivo</small></span></a></li>
+              : <li><Link href="/app/config#senha"><KeyRound size={20} aria-hidden /><span>Trocar senha</span></Link></li>}
           </ul>
         </section>
       </div>

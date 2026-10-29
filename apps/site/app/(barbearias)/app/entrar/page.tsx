@@ -4,8 +4,9 @@ import { ErroAgenda } from "@aprenda/agenda";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { chaveDoAparelho, chaveDoEmail } from "@/lib/protecao";
 import { contatoResponsavel } from "@/lib/contato";
-import { soVenda } from "@/lib/modo";
-import { soEntrega } from "@/lib/modo";
+import { senhaConfere } from "@/lib/painel";
+import { barbeariaDoApp, prepararBarbeariaDoApp } from "@/lib/barbearia-do-app";
+import { soEntrega, soVenda } from "@/lib/modo";
 
 export const metadata = { title: "Entrar — Agenda" };
 
@@ -35,9 +36,56 @@ async function entrar(form: FormData) {
   redirect(soVenda() ? "/app/assinatura" : "/app");
 }
 
+/**
+ * SaaS (um app por barbeiro): o admin entra só com a senha do .env (PAINEL_SENHA), sem e-mail.
+ * Errar conta 10 por aparelho e 100 no total a cada 15 min (a senha gerada é longa: o limite só
+ * segura robô).
+ */
+async function entrarComSenha(form: FormData) {
+  "use server";
+  const banco = obterAgenda();
+  const chaves = [`login:ip:${await chaveDoAparelho()}`, "login:admin"];
+  let token: string;
+  try {
+    if (banco.contarTentativas(chaves[0]!, 15) >= 10 || banco.contarTentativas(chaves[1]!, 15) >= 100) throw new ErroAgenda(MUITAS);
+    if (!senhaConfere(String(form.get("senha") ?? ""))) {
+      for (const c of chaves) banco.consumirLimite(c, Number.MAX_SAFE_INTEGER, 15, "");
+      throw new ErroAgenda("Senha incorreta.");
+    }
+    const b = barbeariaDoApp() ?? await prepararBarbeariaDoApp();
+    token = banco.sessaoDoDono(b.id);
+  } catch (e) {
+    redirect(`/app/entrar?erro=${encodeURIComponent(mensagemDeErro(e))}`);
+  }
+  await gravarSessaoAgenda(token);
+  redirect("/app");
+}
+
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const { erro } = await searchParams;
   const contato = contatoResponsavel();
+  const esqueceu = (
+    <p>
+      Esqueceu a senha?{" "}
+      {contato
+        ? <a href={`${contato.link}?text=${encodeURIComponent("Oi! Esqueci a senha do painel da minha barbearia.")}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
+        : "Fale com quem te vendeu o site"}
+      {soEntrega() ? "." : <>{" "}e mandamos um link pra criar outra.</>}
+    </p>
+  );
+  if (soEntrega()) {
+    return (
+      <>
+        <h1>Painel da barbearia</h1>
+        {erro && <p className="erro">{erro}</p>}
+        <form action={entrarComSenha} className="formulario">
+          <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" aria-label="Senha" />
+          <button type="submit">Entrar</button>
+        </form>
+        {esqueceu}
+      </>
+    );
+  }
   return (
     <>
       <h1>Entrar na agenda</h1>
@@ -47,14 +95,8 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" />
         <button type="submit">Entrar</button>
       </form>
-      <p>
-        Esqueceu a senha?{" "}
-        {contato
-          ? <a href={`${contato.link}?text=${encodeURIComponent("Oi! Esqueci a senha do painel da minha barbearia.")}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
-          : "Fale com quem te vendeu o site"}
-        {" "}e mandamos um link pra criar outra.
-      </p>
-      {!soEntrega() && <p>Ainda não tem? <Link href="/app/cadastro">Criar conta</Link></p>}
+      {esqueceu}
+      <p>Ainda não fez o pedido? <Link href="/app/cadastro">Quero o meu site</Link></p>
     </>
   );
 }

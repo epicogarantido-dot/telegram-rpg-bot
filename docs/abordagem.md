@@ -102,9 +102,9 @@ de `/painel/divulgacao`, um por dia, e veja lá quais trouxeram visita e cadastr
 No site de leads o barbeiro só vê os exemplos e compra: cadastro (sem escolher estilo nem nada) e
 Pix com comprovante, e vê "Pedido recebido!". Em `/painel/assinaturas` **do leads** você confere o
 Pix e confirma: a assinatura fica salva com o prazo (quando acaba, aparece "atrasada"; nada é
-bloqueado). Aí você chama no WhatsApp, pega fotos, serviços, preços e horários e cria o site no
-**SaaS** ("Criar site de cliente": já no ar por 30 dias), que abre o seu WhatsApp com o link e a
-senha do painel. Ele arruma o resto pelo painel. Recebeu a mensalidade? No SaaS, "+30 dias".
+bloqueado). Aí você sobe o app dele na Square com as variáveis do bloco "App do barbeiro" (o site
+nasce sozinho, já no ar por 30 dias), manda o link e a senha pelo WhatsApp e pega fotos, serviços,
+preços e horários pra arrumar junto. Recebeu a mensalidade? Mude o `PAGO_ATE` do app dele.
 
 ## Posicionamento: o site completa o WhatsApp (28/10/2026)
 

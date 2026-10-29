@@ -12,6 +12,8 @@ import { avisarPagamento } from "@/lib/avisos";
 import { soEntrega, soVenda } from "@/lib/modo";
 import { porCardapio } from "@/lib/cardapio";
 import { prazoDaConta } from "@/lib/prazo";
+import { mensagemDeAcesso, variaveisDoApp } from "@/lib/app-do-barbeiro";
+import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 
 export const metadata = { title: "Assinaturas", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -288,8 +290,8 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
       {soVenda() && (
         <p><small>
           Quem comprou pelo site. Confira o Pix no extrato e confirme: a assinatura fica salva com o prazo. Quando o prazo
-          acaba, ela aparece como atrasada (nada é bloqueado). O site do cliente você monta no app das barbearias e manda pelo
-          WhatsApp.
+          acaba, ela aparece como atrasada (nada é bloqueado). Cada barbeiro ganha um app só dele na Square: em &quot;App do
+          barbeiro&quot;, na linha da assinatura, estão as variáveis pra colar e a mensagem com o link e a senha.
         </small></p>
       )}
       {erro && <p className="erro">{erro}</p>}
@@ -333,6 +335,22 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 <button className="botao-sec">Link de nova senha</button>
               </form>
             </span>
+            {/* Pago: o app do barbeiro (um por cliente) sobe na Square com estas variáveis. */}
+            {!b.emMontagem && (
+              <details className="app-do-barbeiro">
+                <summary>App do barbeiro: variáveis e acesso</summary>
+                <p><small>
+                  1. Suba o <code>saas-square.zip</code> como app novo na Square e troque o subdomínio pro sugerido. 2. Cole estas
+                  variáveis em Configurações → Variáveis de ambiente e reinicie. 3. Mande o acesso pro barbeiro.
+                  Renovou aqui? Atualize o <code>PAGO_ATE</code> no app dele.
+                </small></p>
+                <pre>{variaveisDoApp(b)}</pre>
+                <span className="acoes">
+                  <BotaoCopiar texto={variaveisDoApp(b)} rotulo="Copiar variáveis" />
+                  <a className="botao-sec" target="_blank" rel="noopener noreferrer" href={linkWhatsapp(b.telefone, mensagemDeAcesso(b))}>Mandar o acesso pelo WhatsApp</a>
+                </span>
+              </details>
+            )}
           </div>
         ))
         : clientes.map((b) => {

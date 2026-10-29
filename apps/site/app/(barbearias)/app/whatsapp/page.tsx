@@ -1,5 +1,6 @@
 import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
+import { linkPublico } from "@/lib/barbearias";
 
 export const metadata = { title: "WhatsApp Business", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -13,8 +14,8 @@ export const dynamic = "force-dynamic";
 export default async function WhatsappBusiness() {
   const { barbearia } = await exigirAcessoAtivo();
   const b = obterAgenda().barbeariaPorId(barbearia.id)!;
-  const site = `${process.env.SITE_URL ?? ""}/b/${b.slug}`;
-  const agendar = `${site}/agendar`;
+  const site = linkPublico(b);
+  const agendar = linkPublico(b, "/agendar");
   const saudacao = `Oi! Aqui é da ${b.nome} 💈\nPra ver os horários disponíveis e agendar, é por aqui:\n${agendar}\n\nVocê escolhe o serviço e o horário, e já fica marcado.`;
   const rapida = `Pra ver os horários disponíveis e agendar, é por aqui: ${agendar}`;
 
