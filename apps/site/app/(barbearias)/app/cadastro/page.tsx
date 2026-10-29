@@ -24,7 +24,10 @@ async function cadastrar(form: FormData) {
     const chave = `cadastro:ip:${await chaveDoAparelho()}`;
     if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Muitos pedidos feitos deste aparelho hoje. Tente amanhã ou fale com a gente.");
     if (!telefone) throw new ErroAgenda("WhatsApp inválido.");
-    const conta = obterAgenda().criarConta({ nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") });
+    // No site de leads o pedido é só barbearia, WhatsApp e nome: e-mail e senha não seguram ninguém antes do Pix.
+    const conta = soVenda()
+      ? obterAgenda().criarPedido({ nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome") })
+      : obterAgenda().criarConta({ nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") });
     token = conta.token;
     montagem = conta.barbearia.emMontagem;
     // Veio do "Quero esse" de um estilo: fica anotado pra montar o site nele (dá pra trocar depois).
@@ -77,17 +80,21 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         {demo && <input type="hidden" name="demo" value={convite} />}
         {tema && <input type="hidden" name="estilo" value={tema.id} />}
         {tema && <p className="suave pequeno">Estilo escolhido: <strong>{tema.nome}</strong> (dá pra trocar depois). <a href="/#estilos">Ver os outros</a></p>}
-        <input name="barbearia" placeholder="Nome da barbearia" required maxLength={60} defaultValue={demo?.nome} />
-        <input name="telefone" placeholder="WhatsApp da barbearia (com DDD)" required inputMode="tel" />
-        <input name="nome" placeholder="Seu nome" required maxLength={60} />
-        <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
-        <input name="senha" type="password" placeholder="Crie uma senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
-        <small className="suave">A senha é pra você acompanhar o pedido e a assinatura por aqui.</small>
+        <label>Nome da barbearia<input name="barbearia" required maxLength={60} defaultValue={demo?.nome} autoComplete="organization" /></label>
+        <label>WhatsApp (com DDD)<input name="telefone" required inputMode="tel" autoComplete="tel" placeholder="(19) 99999-0000" /></label>
+        <label>Seu nome<input name="nome" required maxLength={60} autoComplete="name" /></label>
+        {soVenda()
+          ? <small className="suave">É por esse WhatsApp que a gente fala com você pra montar o site.</small>
+          : <>
+            <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
+            <input name="senha" type="password" placeholder="Crie uma senha (mín. 8 caracteres)" required minLength={8} autoComplete="new-password" />
+            <small className="suave">A senha é pra você acompanhar o pedido e a assinatura por aqui.</small>
+          </>}
         <CampoOrigem />
         <small className="suave">Ao continuar você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
         <button type="submit">{plano.testeDias > 0 ? "Começar" : "Continuar para o pagamento"}</button>
       </form>
-      <p>Já fez o pedido? <Link href="/app/entrar">Entrar</Link></p>
+      <p className="suave">Já fez o pedido? <Link href="/app/entrar">Ver o meu pedido</Link></p>
     </>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { randomBytes } from "node:crypto";
-import { ErroAgenda, formatarData, TEMAS, type Barbearia } from "@aprenda/agenda";
+import { ErroAgenda, formatarData, semEmail, TEMAS, type Barbearia } from "@aprenda/agenda";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { exigirLogin } from "@/lib/painel";
 import { linkWhatsapp, normalizarTelefone } from "@aprenda/prospeccao";
@@ -179,7 +179,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 <span className={`etiqueta ${b.suspensa || prazo.situacao === "acabou" ? "etiqueta-alerta" : ""}`}>
                   {b.suspensa ? "suspensa" : prazo.situacao === "acabou" ? "prazo acabou" : prazo.situacao === "acabando" ? "acabando" : "em dia"}
                 </span>{" "}
-                <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} · {formatarTelefone(b.telefone)}
+                <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {formatarTelefone(b.telefone)}{semEmail(b.email) ? "" : ` · ${b.email}`}
                 <br /><small>{prazo.frase}</small>
               </span>
               <span className="acoes">
@@ -320,7 +320,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
           <div key={b.id} className="item-config">
             <span>
               <span className={`etiqueta ${s.alerta ? "etiqueta-alerta" : ""}`}>{s.etiqueta}</span>{" "}
-              <strong>{b.nome}</strong> · {formatarTelefone(b.telefone)} · {b.email}
+              <strong>{b.nome}</strong> · {formatarTelefone(b.telefone)}{semEmail(b.email) ? "" : ` · ${b.email}`}
               <br /><small>{s.texto}</small>
             </span>
             <span className="acoes">
@@ -358,7 +358,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
           return (
             <div key={b.id} className="item-config">
               <span>
-                {ativo ? "🟢" : "🔴"} <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a> · {b.email} ·{" "}
+                {ativo ? "🟢" : "🔴"} <a href={`/b/${b.slug}`} target="_blank" rel="noopener noreferrer">{b.nome}</a>{semEmail(b.email) ? "" : ` · ${b.email}`} ·{" "}
                 {b.emMontagem ? (ativo ? `pedido aberto até ${formatarData(b.acessoAte)} (ainda não publicado)` : `não pagou; pedido venceu em ${formatarData(b.acessoAte)}`) : ativo ? `até ${formatarData(b.acessoAte)}` : `bloqueada desde ${formatarData(b.acessoAte)}`}
               </span>
               <span className="acoes">

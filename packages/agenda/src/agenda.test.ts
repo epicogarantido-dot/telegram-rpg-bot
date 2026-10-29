@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BancoAgenda, ErroAgenda, gerarSlug, planoDoAmbiente } from "./banco.ts";
+import { BancoAgenda, ErroAgenda, gerarSlug, planoDoAmbiente, semEmail } from "./banco.ts";
 import { horariosLivres } from "./disponibilidade.ts";
 import { agoraNoFuso, diaDaSemana, somarDias } from "./tempo.ts";
 import { conferirSenha, hashSenha } from "./senha.ts";
@@ -85,6 +85,21 @@ describe("BancoAgenda", () => {
     });
     return { b, barbearia, token };
   }
+
+  it("pedido sem e-mail nem senha: segue logado e depois entra pelo WhatsApp", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 2990, dias: 30, testeDias: 0 });
+    const { barbearia, token } = b.criarPedido({ nomeBarbearia: "Box Sul", telefone: "5555999998888", nome: "Ana", agora });
+    const u = b.usuarioDaSessao(token)!;
+    expect(semEmail(u.email)).toBe(true);
+    expect(semEmail("ana@x.com")).toBe(false);
+    expect(() => b.criarPedido({ nomeBarbearia: "B", telefone: "5519900000003", nome: "Ana" })).toThrow(ErroAgenda);
+    // O admin manda o link de nova senha; ela cria a senha e entra com o WhatsApp (DDD 55 também).
+    expect(barbearia.slug).toBe("box-sul");
+    b.trocarSenhaComLink(b.criarLinkDeSenha(u.id), "novasenha123");
+    expect(() => b.entrar("(55) 99999-8888", "errada")).toThrow(ErroAgenda);
+    expect(b.usuarioDaSessao(b.entrar("(55) 99999-8888", "novasenha123"))?.id).toBe(u.id);
+    expect(b.usuarioDaSessao(b.entrar("5555999998888", "novasenha123"))?.id).toBe(u.id);
+  });
 
   it("cria conta com slug, sessão e configuração inicial", () => {
     const { b, barbearia, token } = novo();

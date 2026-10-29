@@ -8,6 +8,7 @@ import { soEntrega, soVenda } from "@/lib/modo";
 import { prazoDaConta } from "@/lib/prazo";
 import { contatoResponsavel } from "@/lib/contato";
 import "./painel.css";
+import "../../(cursos)/imperial.css";
 
 // O painel pode ser instalado no celular como app (avisos de horário novo).
 export const metadata = {
@@ -21,14 +22,29 @@ export default async function LayoutPainel({ children }: { children: React.React
   const usuario = banco.usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
   const barbearia = usuario && banco.barbeariaPorId(usuario.barbeariaId);
 
-  // Fora da conta (entrar, cadastro), com o site ainda em montagem, suspenso pelo admin ou no
-  // site de leads (que só mostra e cobra; o painel fica no SaaS): topo simples, sem menu.
+  // Site de leads (só mostra e cobra; o painel fica no SaaS): pedido, pagamento e entrar com o
+  // mesmo visual e a mesma marca da página de venda, pra quem compra não achar que saiu do site.
+  if (soVenda()) {
+    return (
+      <div className="site-cursos app-venda">
+        <div className="barra-topo">
+          <header className="topo">
+            <Link href="/" className="marca">Site da Barbearia</Link>
+            <nav aria-label="Principal"><a href="/#estilos">Estilos</a></nav>
+          </header>
+        </div>
+        <main>{children}</main>
+      </div>
+    );
+  }
+
+  // Fora da conta (entrar, cadastro), com o site ainda em montagem ou suspenso pelo admin: topo simples, sem menu.
   if (!barbearia || barbearia.emMontagem || barbearia.suspensa || soVenda()) {
     return (
       <>
         <div className="barra-topo">
           <header className="topo">
-            <Link href={soVenda() ? "/app/assinatura" : "/app"} className="marca">
+            <Link href="/app" className="marca">
               <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
               {barbearia?.nome ?? "Agenda da barbearia"}
             </Link>

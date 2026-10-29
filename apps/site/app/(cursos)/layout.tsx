@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Medir } from "@/componentes/ContarOrigem";
 import { WhatsFixo, WhatsRodape } from "@/componentes/WhatsFixo";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { MarcaTopo } from "@/componentes/MarcaTopo";
 import { soEntrega } from "@/lib/modo";
 import "../globals.css";
 import "./imperial.css";
@@ -51,10 +52,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body className="site-cursos">
         <div className="barra-topo">
           <header className="topo">
-            <Link href="/" className="marca">
-              <span className="marca-icone"><BookOpen size={18} aria-hidden /></span>
-              Aprenda Livre
-            </Link>
+            <MarcaTopo />
             <nav aria-label="Principal">
               <a href="/#estilos" data-evento="estilos">Estilos</a>
               <a href="/#preco">Preço</a>

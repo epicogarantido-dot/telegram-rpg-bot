@@ -114,7 +114,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
           <h1 id="recebido-titulo">Pedido recebido!</h1>
           <p>
             Obrigado, {barbearia.nome}. Nossa equipe vai conferir o pagamento e <strong>entrar em contato com você pelo
-            WhatsApp</strong>, no número {formatarTelefone(barbearia.telefone)}. Normalmente é no mesmo dia.
+            WhatsApp</strong>, no número {formatarTelefone(barbearia.telefone)}. Em até 24 horas.
           </p>
           <p className="suave">
             Na conversa a gente pega as suas fotos, serviços, preços e horários e monta o seu site de verdade.
@@ -194,7 +194,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
             <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
             <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
             <p>Identificador: <code>{pagamento.txid}</code></p>
-            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere, normalmente no mesmo dia{barbearia.emMontagem ? ", e chama você no WhatsApp" : soVenda() ? "" : ", e você recebe um aviso no celular"}.</p>
+            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere em até 24 horas{barbearia.emMontagem ? ", e chama você no WhatsApp" : soVenda() ? "" : ", e você recebe um aviso no celular"}.</p>
             {pagamento.status === "informado" && (
               <p className="atribuicao">
                 ⏳ {pagamento.comprovante ? "Recebemos seu comprovante" : "Recebemos seu aviso"}

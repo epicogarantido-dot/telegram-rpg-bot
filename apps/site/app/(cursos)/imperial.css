@@ -211,3 +211,22 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .vendas-carrossel .estilo-slide h3 { margin: 4px 0 0; font-size: 1.1rem; }
 .site-cursos .vendas-carrossel .estilo-slide img { border-color: #000; }
 .site-cursos .vendas-carrossel .vendas-estilo-acoes { margin-top: 6px; }
+
+/* ---------- pedido, pagamento e entrar no site de leads (/app/*, layout do painel) ---------- */
+html:has(.app-venda), body:has(.app-venda) { background: #120b14; }
+.app-venda { min-height: 100vh; min-height: 100dvh; }
+.app-venda main { max-width: 560px; }
+.app-venda main > h1 { font-size: clamp(1.7rem, 6vw, 2.4rem); margin-top: 8px; }
+.app-venda .formulario label { color: var(--texto); font-weight: 400; }
+.app-venda .formulario input:not([type="checkbox"]), .app-venda .formulario select {
+  background: var(--cartao); color: var(--texto); border: 1px solid var(--linha);
+}
+.app-venda .formulario input::placeholder { color: rgb(255 255 255 / 0.4); }
+.app-venda .formulario input:focus { border-color: #fff; box-shadow: 0 0 0 3px rgb(255 255 255 / 0.15); }
+.app-venda .erro { background: var(--erro-fundo); color: var(--erro); border-color: var(--erro-borda); }
+
+/* ---------- quem monta o site (nome e foto do responsável, se houver) ---------- */
+.site-cursos .vendas-quem { display: flex; gap: 24px; align-items: flex-start; }
+.site-cursos .vendas-quem img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none; border: 1px solid var(--linha); }
+.site-cursos .vendas-quem p { color: var(--suave); max-width: 60ch; }
+@media (max-width: 560px) { .site-cursos .vendas-quem { flex-direction: column; gap: 16px; } .site-cursos .vendas-quem img { width: 96px; height: 96px; } }

@@ -13,7 +13,7 @@ function contexto(caminho: string): { pagina: string; texto: string } {
 
 /** WhatsApp do responsável, pedido na hora (página gerada no build não tem o .env). */
 function useContato() {
-  const [contato, setContato] = useState<{ numero: string; texto: string }>();
+  const [contato, setContato] = useState<{ numero: string; texto: string; nome?: string }>();
   useEffect(() => {
     fetch("/api/contato").then((r) => r.json()).then((c) => c?.numero && setContato(c)).catch(() => {});
   }, []);
@@ -45,7 +45,7 @@ export function WhatsRodape() {
     <p className="rodape-whats">
       Dúvida sobre o site da sua barbearia?{" "}
       <a href={`https://wa.me/${contato.numero}?text=${encodeURIComponent("Oi! Quero saber do site com agenda pra minha barbearia.")}`} target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="rodape">
-        Fale no WhatsApp: {contato.texto}
+        Fale {contato.nome ? `com ${contato.nome} ` : ""}no WhatsApp: {contato.texto}
       </a>
     </p>
   );

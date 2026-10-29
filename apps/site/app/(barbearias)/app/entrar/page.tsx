@@ -8,7 +8,7 @@ import { senhaConfere } from "@/lib/painel";
 import { barbeariaDoApp, prepararBarbeariaDoApp } from "@/lib/barbearia-do-app";
 import { soEntrega, soVenda } from "@/lib/modo";
 
-export const metadata = { title: "Entrar — Agenda" };
+export const metadata = { title: "Entrar" };
 
 const MUITAS = "Muitas tentativas. Espere 15 minutos e tente de novo.";
 
@@ -88,10 +88,11 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
   }
   return (
     <>
-      <h1>Entrar na agenda</h1>
+      <h1>{soVenda() ? "Ver o meu pedido" : "Entrar na agenda"}</h1>
+      {soVenda() && <p className="suave">Entre com o WhatsApp do pedido e a senha. Pediu sem senha? É só falar com a gente que mandamos um link pra criar.</p>}
       {erro && <p className="erro">{erro}</p>}
       <form action={entrar} className="formulario">
-        <input name="email" type="email" placeholder="E-mail" required autoComplete="email" />
+        <input name="email" placeholder={soVenda() ? "WhatsApp (com DDD) ou e-mail" : "E-mail"} required autoComplete="username" aria-label="WhatsApp ou e-mail" />
         <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" />
         <button type="submit">Entrar</button>
       </form>

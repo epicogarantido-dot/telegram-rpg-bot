@@ -4,7 +4,7 @@ import { CalendarCheck, Camera, Clock, MapPin, MessageCircle, Scissors, Smartpho
 import { carregarArtigos, carregarCursos } from "@aprenda/catalogo";
 import { planoDoAmbiente, TEMAS } from "@aprenda/agenda";
 import { reais } from "@/lib/agenda";
-import { contatoResponsavel } from "@/lib/contato";
+import { contatoResponsavel, fotoDoResponsavel } from "@/lib/contato";
 import { Carrossel } from "@/componentes/Carrossel";
 
 /** Feita a cada visita: preço e WhatsApp vêm do .env, que não existe na hora do build. */
@@ -69,6 +69,7 @@ export default async function Inicio() {
   const plano = planoDoAmbiente();
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
   const contato = contatoResponsavel();
+  const foto = fotoDoResponsavel();
   const whats = (texto: string) => contato && `${contato.link}?text=${encodeURIComponent(texto)}`;
   const cursos = (await carregarCursos()).sort((a, b) => Number(b.tags.includes("barbearia")) - Number(a.tags.includes("barbearia"))).slice(0, 3);
   const artigos = (await carregarArtigos()).slice(0, 3);
@@ -137,10 +138,27 @@ export default async function Inicio() {
         <h2 id="como-titulo">Como funciona</h2>
         <ol className="vendas-passos">
           <li><strong>Escolha o estilo</strong><span>Veja os exemplos no ar e toque em &quot;Quero esse&quot;.</span></li>
-          <li><strong>Faça o pedido e pague pelo Pix</strong><span>Nome da barbearia, WhatsApp e e-mail. Leva uns 2 minutos.</span></li>
-          <li><strong>A gente monta e te manda o link</strong><span>Chamamos você no WhatsApp, pegamos as fotos, os serviços e os preços e entregamos o site no ar, normalmente no mesmo dia. Depois você muda o que quiser pelo celular.</span></li>
+          <li><strong>Faça o pedido e pague pelo Pix</strong><span>Nome da barbearia, WhatsApp e o seu nome. Leva 1 minuto.</span></li>
+          <li><strong>A gente monta e te manda o link</strong><span>Chamamos você no WhatsApp, pegamos as fotos, os serviços e os preços e entregamos o site no ar em até 24 horas depois do Pix. Depois você muda o que quiser pelo celular.</span></li>
         </ol>
       </section>
+
+      {contato?.nome && (
+        <section className="vendas-secao vendas-quem" aria-labelledby="quem-titulo">
+          {foto && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={foto} alt={contato.nome} width={120} height={120} loading="lazy" />
+          )}
+          <div>
+            <h2 id="quem-titulo">Quem monta o seu site</h2>
+            <p>
+              Sou {contato.nome}. Sou eu que te chamo no WhatsApp, monto o site com as suas fotos e os seus preços
+              e te ajudo depois, quando precisar. Sem robô e sem central de atendimento.
+            </p>
+            <a href={whats(`Oi, ${contato.nome.split(" ")[0]}! Quero saber do site com agenda pra minha barbearia.`)!} className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="quem">Falar comigo no WhatsApp</a>
+          </div>
+        </section>
+      )}
 
       <section id="preco" className="vendas-secao vendas-preco" aria-labelledby="preco-titulo">
         <h2 id="preco-titulo">Quanto custa</h2>

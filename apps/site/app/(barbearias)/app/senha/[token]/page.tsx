@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { semEmail } from "@aprenda/agenda";
+import { soVenda } from "@/lib/modo";
 
-export const metadata = { title: "Nova senha — Agenda", robots: { index: false } };
+export const metadata = { title: "Nova senha", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 /**
@@ -23,7 +25,7 @@ async function salvar(form: FormData) {
     redirect(`/app/senha/${token}?erro=${encodeURIComponent(msg)}`);
   }
   await gravarSessaoAgenda(sessao);
-  redirect("/app?senha=1");
+  redirect(soVenda() ? "/app/assinatura" : "/app?senha=1");
 }
 
 export default async function NovaSenha({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ erro?: string }> }) {
@@ -42,7 +44,11 @@ export default async function NovaSenha({ params, searchParams }: { params: Prom
   return (
     <>
       <h1>Nova senha</h1>
-      <p className="suave">Conta de {usuario.nome} ({usuario.email}). Depois de salvar, você já entra no painel e os outros aparelhos saem.</p>
+      <p className="suave">
+        Conta de {usuario.nome}{semEmail(usuario.email) ? "" : ` (${usuario.email})`}. Depois de salvar, você já entra
+        {soVenda() ? " no seu pedido" : " no painel"} e os outros aparelhos saem.
+        {semEmail(usuario.email) && " Da próxima vez, entre com o WhatsApp da barbearia e esta senha."}
+      </p>
       {erro && <p className="erro" role="alert">{erro}</p>}
       <form action={salvar} className="formulario">
         <input type="hidden" name="token" value={token} />

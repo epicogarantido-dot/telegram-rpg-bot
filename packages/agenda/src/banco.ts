@@ -270,6 +270,14 @@ function caminhoPadrao(): string {
   return join(dir, "data", "privado", "agenda.db");
 }
 
+/** Final do e-mail de marcação das contas criadas pelo pedido sem e-mail (`criarPedido`). */
+export const SEM_EMAIL = "@sem-email.invalid";
+
+/** Conta feita pelo pedido sem e-mail: não mostrar o e-mail de marcação. */
+export function semEmail(email: string | undefined): boolean {
+  return !email || email.endsWith(SEM_EMAIL);
+}
+
 export function gerarSlug(nome: string): string {
   return nome.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "barbearia";
@@ -552,6 +560,18 @@ export class BancoAgenda {
     }
   }
 
+  /**
+   * Pedido do site de leads: só barbearia, WhatsApp e nome, sem e-mail nem senha antes do Pix.
+   * A conta nasce com um e-mail de marcação (`semEmail`) e uma senha aleatória; quem fez o pedido
+   * segue logado pela sessão. Se perder a sessão, o admin manda o link de nova senha e ele entra
+   * com o WhatsApp e essa senha (`entrar`).
+   */
+  criarPedido(dados: { nomeBarbearia: string; telefone: string; nome: string; agora?: Date }): { barbearia: Barbearia; token: string } {
+    if (dados.nomeBarbearia.trim().length < 2) throw new ErroAgenda("Diga o nome da barbearia.");
+    if (dados.nome.trim().length < 2) throw new ErroAgenda("Diga o seu nome.");
+    return this.criarConta({ ...dados, email: `pedido-${randomBytes(6).toString("hex")}${SEM_EMAIL}`, senha: randomBytes(24).toString("base64url") });
+  }
+
   // ---------- demonstração (site de exemplo pra mostrar a um barbeiro) ----------
 
   /**
@@ -651,8 +671,18 @@ export class BancoAgenda {
     }
   }
 
-  entrar(email: string, senha: string): string {
-    const u = this.db.prepare("SELECT id, senha_hash FROM usuarios WHERE email = ?").get(email.trim().toLowerCase()) as
+  /** Entra com o e-mail ou, sem "@", com o WhatsApp da barbearia (pedido feito sem e-mail). */
+  entrar(acesso: string, senha: string): string {
+    if (!acesso.includes("@")) {
+      const digitos = acesso.replace(/\D/g, "");
+      const telefone = digitos.length === 10 || digitos.length === 11 ? `55${digitos}` : digitos;
+      const contas = (telefone.length >= 12 ? this.db.prepare(`SELECT u.id, u.senha_hash FROM usuarios u JOIN barbearias b ON b.id = u.barbearia_id
+        WHERE b.telefone = ? ORDER BY u.id DESC`).all(telefone) : []) as { id: number; senha_hash: string }[];
+      const u = contas.find((c) => conferirSenha(senha, c.senha_hash));
+      if (!u) throw new ErroAgenda("WhatsApp ou senha incorretos.");
+      return this.criarSessao(u.id);
+    }
+    const u = this.db.prepare("SELECT id, senha_hash FROM usuarios WHERE email = ?").get(acesso.trim().toLowerCase()) as
       { id: number; senha_hash: string } | undefined;
     if (!u || !conferirSenha(senha, u.senha_hash)) throw new ErroAgenda("E-mail ou senha incorretos.");
     return this.criarSessao(u.id);

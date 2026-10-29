@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { TEMAS } from "@aprenda/agenda";
+import { semEmail, TEMAS } from "@aprenda/agenda";
 import { CalendarDays, CreditCard, Download, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
@@ -55,7 +55,7 @@ export default async function Conta() {
           <dl className="conta-dados">
             <div><dt>Barbearia</dt><dd>{b.nome}</dd></div>
             <div><dt>Responsável</dt><dd>{usuario.nome}</dd></div>
-            {!soEntrega() && <div><dt>E-mail de acesso</dt><dd>{usuario.email}</dd></div>}
+            {!soEntrega() && !semEmail(usuario.email) && <div><dt>E-mail de acesso</dt><dd>{usuario.email}</dd></div>}
             <div><dt>WhatsApp</dt><dd>{telefone}</dd></div>
             {b.cidade && <div><dt>Cidade</dt><dd>{b.cidade}</dd></div>}
           </dl>

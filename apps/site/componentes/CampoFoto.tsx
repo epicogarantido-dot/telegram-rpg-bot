@@ -15,6 +15,9 @@ export function CampoFoto({ name, accept, multiple, required, ladoMaximo = 1600 
   name: string; accept: string; multiple?: boolean; required?: boolean; ladoMaximo?: number;
 }) {
   const [estado, setEstado] = useState("");
+  const [escolhidos, setEscolhidos] = useState("");
+  // Botão nosso, em português: o nativo vem na língua do navegador ("Choose File").
+  const rotulo = accept.includes("pdf") ? "Escolher arquivo" : multiple ? "Escolher fotos" : "Escolher foto";
 
   async function reduzir(arquivo: File): Promise<File> {
     if (!arquivo.type.startsWith("image/") || arquivo.type === "image/gif") return arquivo;
@@ -37,6 +40,7 @@ export function CampoFoto({ name, accept, multiple, required, ladoMaximo = 1600 
   async function aoEscolher(e: React.ChangeEvent<HTMLInputElement>) {
     const campo = e.currentTarget;
     const originais = Array.from(campo.files ?? []);
+    setEscolhidos(originais.length > 1 ? `${originais.length} escolhidas` : originais[0]?.name ?? "");
     if (originais.length === 0 || typeof DataTransfer === "undefined") return;
     // Enquanto prepara, o formulário não envia (validação nativa segura o botão).
     campo.setCustomValidity("Espere um instante: preparando as fotos.");
@@ -53,7 +57,11 @@ export function CampoFoto({ name, accept, multiple, required, ladoMaximo = 1600 
 
   return (
     <>
-      <input type="file" name={name} accept={accept} multiple={multiple} required={required} onChange={aoEscolher} />
+      <span className="campo-arquivo">
+        <input type="file" name={name} accept={accept} multiple={multiple} required={required} onChange={aoEscolher} aria-label={rotulo} />
+        <span className="campo-arquivo-botao" aria-hidden="true">{rotulo}</span>
+        <span className="campo-arquivo-nome" aria-hidden="true">{escolhidos || "Nada escolhido ainda"}</span>
+      </span>
       {estado && <small className="suave" role="status">{estado}</small>}
     </>
   );

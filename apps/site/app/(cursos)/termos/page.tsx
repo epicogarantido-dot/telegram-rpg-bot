@@ -45,7 +45,7 @@ export default function Termos() {
         <li>{reais(adesao)} na contratação, que já inclui os primeiros {plano.dias} dias.</li>
         <li>Depois, {reais(plano.valorCentavos)} a cada {plano.dias} dias.</li>
         <li>Depois do cadastro, o pedido fica aberto por {MONTAGEM_DIAS} dias esperando o pagamento. Confirmado o Pix, a nossa equipe chama você no WhatsApp pra montar o site com as suas fotos, serviços e preços.</li>
-        <li>Pagamento só por Pix. O site vai pro ar quando a gente confere o Pix, normalmente no mesmo dia.</li>
+        <li>Pagamento só por Pix. O site vai pro ar em até 24 horas depois que a gente confere o Pix.</li>
         <li>Sem fidelidade e sem multa. Se o pagamento não vier, o painel e o site podem ser pausados até você pagar de novo; nada é apagado nesse tempo.</li>
         <li>Se o preço mudar, avisamos antes, e vale a partir do próximo pagamento.</li>
       </ul>

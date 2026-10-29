@@ -52,7 +52,7 @@ export default function Privacidade() {
 
       <h2>Sistema de site e agenda (barbearias)</h2>
       <ul>
-        <li><strong>Conta do barbeiro:</strong> nome, e-mail, WhatsApp e senha (guardada só como código embaralhado, ninguém consegue ler).</li>
+        <li><strong>Conta do barbeiro:</strong> nome da barbearia, seu nome e WhatsApp; e-mail e senha só se você criar (a senha fica guardada só como código embaralhado, ninguém consegue ler).</li>
         <li><strong>Site da barbearia:</strong> o que o barbeiro publica (nome, endereço, fotos, equipe, serviços e preços). Fotos enviadas têm a localização e outros dados escondidos do arquivo apagados antes de ir pro ar.</li>
         <li><strong>Pagamentos:</strong> valor, data, o nome de quem pagou o Pix e, se o barbeiro mandar, o comprovante (imagem ou PDF), pra confirmar a mensalidade. Só o administrador vê o comprovante.</li>
       </ul>

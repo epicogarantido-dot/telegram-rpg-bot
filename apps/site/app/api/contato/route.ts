@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  */
 export function GET() {
   const contato = contatoResponsavel();
-  return Response.json(contato ? { numero: contato.link.replace("https://wa.me/", ""), texto: contato.texto } : {}, {
+  return Response.json(contato ? { numero: contato.link.replace("https://wa.me/", ""), texto: contato.texto, nome: contato.nome } : {}, {
     headers: { "cache-control": "public, max-age=300" },
   });
 }

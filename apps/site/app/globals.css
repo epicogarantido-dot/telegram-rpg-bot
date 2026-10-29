@@ -697,3 +697,12 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .texto-legal h2 { margin-top: 36px; }
 .texto-legal h3 { margin-top: 24px; }
 .texto-legal li { margin: 6px 0; }
+
+/* Campo de arquivo com botão em português (componentes/CampoFoto.tsx). O input fica por cima,
+   invisível: o toque, o teclado e o aviso de "obrigatório" continuam os do navegador. */
+.campo-arquivo { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; }
+.campo-arquivo input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding: 0; border: 0; }
+.campo-arquivo-botao { flex: none; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--linha, var(--borda)); color: var(--texto); font-weight: 600; font-size: 14px; }
+.campo-arquivo-nome { color: var(--suave); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.campo-arquivo:hover .campo-arquivo-botao { background: var(--destaque-claro); }
+.campo-arquivo:has(input:focus-visible) .campo-arquivo-botao { outline: 2px solid var(--destaque); outline-offset: 2px; }
