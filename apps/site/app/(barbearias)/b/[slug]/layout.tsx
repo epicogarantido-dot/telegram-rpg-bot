@@ -13,6 +13,7 @@ import { ehOBarbeiro } from "@/lib/protecao";
 import { TEMAS } from "@aprenda/agenda";
 import { soEntrega, soVenda } from "@/lib/modo";
 import { Medir } from "@/componentes/ContarOrigem";
+import { contatoResponsavel } from "@/lib/contato";
 
 /** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -44,19 +45,27 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
   const agenda = b.atendimento !== "chegada";
   const mapa = linkMapa(b);
   const whats = `https://wa.me/${b.telefone}?text=${encodeURIComponent(`Olá, ${b.nome}! Vim pelo site.`)}`;
+  const nomeDoEstilo = TEMAS.find((t) => t.id === b.tema)?.nome ?? b.tema;
+  const contato = b.demoAte ? contatoResponsavel() : undefined;
 
   return (
     <>
       {b.demoAte && ehSiteDeExemplo(b.slug) ? (
-        <aside className="b-demo" aria-label="Aviso de site de exemplo">
+        // Faixa fixa no alto: é um modelo, e o próximo passo (cadastro ou WhatsApp) fica sempre à mão.
+        <aside className="b-demo b-demo-fixo" aria-label="Aviso de site de exemplo">
           <Medir evento="exemplo" detalhe={b.tema} />
           <p>
-            <strong>Site de exemplo</strong> do estilo que você está vendo. Barbearia e fotos são ilustrativas e a marcação
-            vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
+            <strong>Modelo do estilo {nomeDoEstilo}.</strong> Na sua conta, entram as suas fotos e os seus preços.
           </p>
-          <a className="b-demo-botao" href={`/app/cadastro?estilo=${b.tema}`} data-evento="quero" data-detalhe={b.tema}>Quero um site assim</a>
+          <a className="b-demo-botao" href={`/app/cadastro?estilo=${b.tema}`} data-evento="quero" data-detalhe={b.tema}>Quero esse</a>
+          {contato && (
+            <a className="b-demo-botao-whats" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe={b.tema}
+              href={`${contato.link}?text=${encodeURIComponent(`Oi! Vi o estilo ${nomeDoEstilo} e quero saber mais pra minha barbearia.`)}`}>
+              WhatsApp
+            </a>
+          )}
           <details className="b-demo-estilos">
-            <summary>Ver outros estilos</summary>
+            <summary>Outros estilos</summary>
             <nav aria-label="Outros estilos de site">
               {TEMAS.filter((t) => t.id !== b.tema).map((t) => <a key={t.id} href={`/exemplo/${t.id}`}>{t.nome}</a>)}
             </nav>

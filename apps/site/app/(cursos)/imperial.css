@@ -130,3 +130,81 @@ html:has(body.site-cursos) { background: #120b14; }
 @media (max-width: 420px) {
   .site-cursos :is(.botao, .botao-sec) { letter-spacing: 0.12em; padding-inline: 18px; }
 }
+
+/* ---------- Página de venda (início): o que é, como fica, como funciona, quanto custa ---------- */
+.site-cursos .vendas { display: grid; gap: 8px; padding-bottom: 32px; }
+.site-cursos .vendas-topo { display: grid; gap: 32px; align-items: center; padding: 48px 0 32px; }
+.site-cursos .vendas-topo h1 { font-size: clamp(2rem, 6.4vw, 3.4rem); font-weight: 300; line-height: 1.08; margin: 0 0 18px; max-width: 18ch; text-wrap: balance; }
+.site-cursos .vendas-topo-texto > p { color: var(--suave); max-width: 52ch; margin: 0 0 22px; }
+.site-cursos .vendas-topo .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.site-cursos .vendas-topo .vendas-topo-preco { color: var(--texto); font-size: 1rem; margin: 0 0 6px; }
+.site-cursos .vendas-topo .vendas-topo-cursos { font-size: 0.95rem; margin: 0; }
+.site-cursos .vendas-topo-celular { display: none; margin: 0; }
+.site-cursos .vendas-topo-celular img { width: 100%; max-width: 280px; height: auto; display: block; margin-inline: auto; border-radius: 32px; border: 1px solid rgb(255 255 255 / 0.2); }
+@media (min-width: 860px) {
+  .site-cursos .vendas-topo { grid-template-columns: 1.3fr 0.7fr; padding: 72px 0 48px; }
+  .site-cursos .vendas-topo-celular { display: block; }
+}
+
+.site-cursos .vendas-secao { padding: 40px 0; border-top: 1px solid var(--borda); }
+.site-cursos .vendas-secao h2 { font-size: clamp(1.3rem, 4vw, 1.8rem); text-transform: uppercase; letter-spacing: 0.14em; margin: 0 0 14px; }
+.site-cursos .vendas-intro { color: var(--suave); max-width: 60ch; margin: 0 0 24px; }
+
+/* O que vem no site: lista enxuta, ícone e uma linha. */
+.site-cursos .vendas-no-site { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 18px 28px; }
+@media (min-width: 700px) { .site-cursos .vendas-no-site { grid-template-columns: 1fr 1fr; } }
+.site-cursos .vendas-no-site li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; }
+.site-cursos .vendas-no-site svg { color: var(--acento); margin-top: 3px; }
+.site-cursos .vendas-no-site strong { display: block; font-weight: 500; }
+.site-cursos .vendas-no-site span { color: var(--suave); font-size: 0.95rem; line-height: 1.45; }
+
+/* Os seis estilos: o print do celular é a prova; dois botões em cada. */
+.site-cursos .vendas-estilos { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+@media (min-width: 860px) { .site-cursos .vendas-estilos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 28px; } }
+.site-cursos .vendas-estilos img { width: 100%; height: auto; aspect-ratio: 390 / 780; object-fit: cover; object-position: top; border-radius: 22px; border: 1px solid var(--borda); display: block; background: var(--fundo-2); }
+.site-cursos .vendas-estilos h3 { margin: 14px 0 4px; font-size: 1.1rem; }
+.site-cursos .vendas-estilos p { margin: 0 0 12px; color: var(--suave); font-size: 0.92rem; line-height: 1.4; }
+.site-cursos .vendas-estilo-acoes { display: grid; gap: 8px; }
+.site-cursos .vendas-estilo-acoes :is(.botao, .botao-sec) { width: 100%; justify-content: center; padding: 10px 12px; font-size: 0.85rem; letter-spacing: 0.08em; }
+
+/* Como funciona: é uma sequência de verdade, então vai numerado. */
+.site-cursos .vendas-passos { list-style: none; counter-reset: passo; padding: 0; margin: 0; display: grid; gap: 22px; max-width: 64ch; }
+.site-cursos .vendas-passos li { counter-increment: passo; display: grid; grid-template-columns: 40px 1fr; gap: 4px 14px; }
+.site-cursos .vendas-passos li::before {
+  content: counter(passo); grid-row: span 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--linha);
+  display: grid; place-items: center; font-weight: 500;
+}
+.site-cursos .vendas-passos strong { font-weight: 500; }
+.site-cursos .vendas-passos span { color: var(--suave); font-size: 0.95rem; line-height: 1.5; }
+
+.site-cursos .vendas-valores { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 8px 0 18px; }
+.site-cursos .vendas-valores p { margin: 0; color: var(--suave); }
+.site-cursos .vendas-valores strong { display: block; color: var(--texto); font-size: 2rem; font-weight: 300; }
+.site-cursos .vendas-preco ul { margin: 0 0 22px; padding-left: 20px; display: grid; gap: 6px; max-width: 60ch; }
+.site-cursos .vendas-preco .acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.site-cursos .vendas-perguntas { display: grid; gap: 0; max-width: 70ch; }
+.site-cursos .vendas-perguntas details { border-bottom: 1px solid var(--borda); padding: 14px 0; }
+.site-cursos .vendas-perguntas summary { cursor: pointer; font-weight: 500; }
+.site-cursos .vendas-perguntas p { color: var(--suave); margin: 10px 0 0; }
+
+.site-cursos .vendas-conteudo-grade { display: grid; gap: 28px; }
+@media (min-width: 860px) { .site-cursos .vendas-conteudo-grade { grid-template-columns: 1fr 1fr; } }
+.site-cursos .vendas-conteudo ul { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 14px; }
+.site-cursos .vendas-conteudo li a { display: grid; gap: 2px; text-decoration: none; }
+.site-cursos .vendas-conteudo li span { color: var(--suave); font-size: 0.92rem; line-height: 1.4; }
+.site-cursos .vendas-conteudo strong { font-weight: 500; }
+
+/* Topo: cursos viram link pequeno; no celular o menu fica só com o essencial. */
+.site-cursos .topo nav .nav-pequeno { color: var(--suave); font-size: 14px; }
+@media (max-width: 560px) { .site-cursos .topo nav a[href="/#preco"] { display: none; } }
+
+/* WhatsApp fixo no canto, em todas as páginas do site de vendas. */
+.site-cursos .whats-fixo {
+  position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 30;
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 999px;
+  background: #25d366; color: #0b2e17; font-weight: 600; text-decoration: none; box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+}
+.site-cursos .whats-fixo:hover { color: #0b2e17; background: #2fe073; }
+@media (max-width: 560px) { .site-cursos .whats-fixo span { display: none; } .site-cursos .whats-fixo { padding: 14px; } }
+.site-cursos .rodape-whats { margin: 0 0 10px; color: var(--texto); }

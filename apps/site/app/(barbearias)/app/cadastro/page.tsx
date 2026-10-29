@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ErroAgenda, planoDoAmbiente } from "@aprenda/agenda";
+import { ErroAgenda, planoDoAmbiente, TEMAS, temaValido } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
@@ -27,6 +27,9 @@ async function cadastrar(form: FormData) {
     const conta = obterAgenda().criarConta({ nomeBarbearia: campo("barbearia"), telefone, nome: campo("nome"), email: campo("email"), senha: campo("senha") });
     token = conta.token;
     montagem = conta.barbearia.emMontagem;
+    // Veio do "Quero esse" de um estilo: fica anotado pra montar o site nele (dá pra trocar depois).
+    const estilo = campo("estilo");
+    if (temaValido(estilo)) obterAgenda().atualizarSite(conta.barbearia.id, { tema: estilo });
     // No site de leads a conta é só a assinatura (o site do cliente é montado no SaaS): sem fotos.
     if (!soVenda()) porFotosPadrao(conta.barbearia.id, conta.barbearia.tema);
     obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
@@ -35,7 +38,7 @@ async function cadastrar(form: FormData) {
     obterBanco().registrarEvento("cadastro");
     if (campo("lead")) obterBanco().registrarEventoDoLead(campo("lead"), "cadastro");
   } catch (e) {
-    redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}) })}`);
+    redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}), ...(campo("estilo") ? { estilo: campo("estilo") } : {}) })}`);
   }
   await gravarSessaoAgenda(token);
   // Próximo passo é o pagamento. No site de leads (que só mostra e cobra) é sempre ele.
@@ -46,8 +49,9 @@ async function cadastrar(form: FormData) {
  * "Quero meu site": o pedido. Nada de escolher estilo ou montar nada aqui: o barbeiro deixa o
  * contato e paga; depois a gente chama no WhatsApp, pega fotos, serviços e preços e monta o site.
  */
-export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string; demo?: string }> }) {
-  const { erro, demo: convite } = await searchParams;
+export default async function Cadastro({ searchParams }: { searchParams: Promise<{ erro?: string; demo?: string; estilo?: string }> }) {
+  const { erro, demo: convite, estilo } = await searchParams;
+  const tema = estilo && temaValido(estilo) ? TEMAS.find((t) => t.id === estilo) : undefined;
   const demo = obterAgenda().demonstracaoPorConvite(convite);
   const plano = planoDoAmbiente();
   return (
@@ -71,6 +75,8 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
       {erro && <p className="erro">{erro}</p>}
       <form action={cadastrar} className="formulario">
         {demo && <input type="hidden" name="demo" value={convite} />}
+        {tema && <input type="hidden" name="estilo" value={tema.id} />}
+        {tema && <p className="suave pequeno">Estilo escolhido: <strong>{tema.nome}</strong> (dá pra trocar depois). <a href="/#estilos">Ver os outros</a></p>}
         <input name="barbearia" placeholder="Nome da barbearia" required maxLength={60} defaultValue={demo?.nome} />
         <input name="telefone" placeholder="WhatsApp da barbearia (com DDD)" required inputMode="tel" />
         <input name="nome" placeholder="Seu nome" required maxLength={60} />

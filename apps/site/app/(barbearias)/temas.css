@@ -725,6 +725,18 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   font: 0.9rem/1.45 system-ui, sans-serif; text-align: center;
 }
 .b-demo p { margin: 0; max-width: 62ch; }
+/* Exemplo no site de vendas: a faixa acompanha a rolagem, compacta no celular. */
+.b-demo-fixo { position: sticky; top: 0; z-index: 40; gap: 8px 12px; padding: 8px 12px; font-size: 0.85rem; }
+.b-demo-botao-whats {
+  display: inline-block; padding: 7px 14px; border-radius: 4px; background: #25d366; color: #0b2e17; font-weight: 600; text-decoration: none;
+}
+.b-demo-botao-whats:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 3px; }
+@media (max-width: 560px) {
+  .b-demo-fixo { gap: 6px; padding: 6px 10px; font-size: 0.8rem; }
+  .b-demo-fixo p { flex-basis: 100%; }
+  .b-demo-fixo :is(.b-demo-botao, .b-demo-botao-whats, .b-demo-estilos summary) { padding: 5px 10px; font-size: 0.8rem; }
+  .b-demo-fixo .b-demo-estilos nav { position: absolute; left: 0; right: 0; top: 100%; padding: 10px; background: #1d1d1b; }
+}
 .b-demo-botao {
   display: inline-block; padding: 8px 16px; border-radius: 4px;
   background: #f4f4f2; color: #1d1d1b; font-weight: 600; text-decoration: none;

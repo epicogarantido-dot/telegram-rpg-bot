@@ -39,29 +39,34 @@ export function FotoMateria({ imagem }: { imagem: NonNullable<Artigo["imagem"]> 
   );
 }
 
+/** A ponte pro site, ligada ao assunto do que a pessoa acabou de ler (uma só, depois da parte útil). */
+const PONTES = [
+  { assunto: /agenda|hor[aá]rio|falt|volt|fideli|retorno|cliente/i, titulo: "Agenda cheia começa com o cliente marcando sozinho.", frase: "No seu site, o cliente vê os horários livres e marca a qualquer hora, sem você parar o corte pra responder." },
+  { assunto: /pre[cç]o|lucro|dinheiro|financ|custo|caixa|cobr/i, titulo: "Preço bem mostrado vende sozinho.", frase: "No seu site, cada serviço aparece com o preço, o tempo e o que inclui, e o cliente já soma a barba no corte." },
+  { assunto: /foto|v[ií]deo|instagram|marketing|divulg|redes|google/i, titulo: "Seu trabalho merece uma vitrine.", frase: "No seu site, os seus cortes ficam em destaque, com antes e depois, e o link vai na bio do Instagram e no Google." },
+  { assunto: /equipe|barbeiro parceiro|funcion|comiss/i, titulo: "Cada barbeiro com a sua agenda.", frase: "No seu site, o cliente vê a equipe com foto e escolhe com quem quer cortar; você vê a divisão do mês." },
+] as const;
+
 /**
- * Propaganda do SaaS no fim de cada matéria. Matéria é texto próprio (não é curso CC BY-NC),
- * então pode. O preço vem do mesmo plano da página de venda.
+ * Propaganda do SaaS no fim de cada matéria e lição (nunca em curso CC BY-NC). Matéria é texto
+ * próprio, então pode. O título muda com o assunto (`assunto`: título e resumo do que foi lido).
  */
-export function PropagandaSaas() {
+export function PropagandaSaas({ assunto = "" }: { assunto?: string }) {
   const plano = planoDoAmbiente();
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
+  const ponte = PONTES.find((p) => p.assunto.test(assunto));
   return (
     <aside className="propaganda" aria-labelledby="propaganda-titulo">
       <div className="propaganda-texto">
-        <p className="propaganda-de">Do Aprenda Livre, pra quem tem barbearia</p>
-        <h2 id="propaganda-titulo">Um site com a cara da sua barbearia.</h2>
-        <ul>
-          <li>As suas fotos, o seu nome e a sua equipe: não é modelo pronto.</li>
-          <li>O cliente vê seus cortes e marca sozinho, a qualquer hora.</li>
-          <li>Seis estilos pra sua marca; você muda tudo pelo celular.</li>
-        </ul>
+        <p className="propaganda-de">Pra quem tem barbearia</p>
+        <h2 id="propaganda-titulo">{ponte?.titulo ?? "Um site com a cara da sua barbearia."}</h2>
+        <p>{ponte?.frase ?? "As suas fotos, os seus serviços e preços e a sua equipe, e o cliente marca sozinho, a qualquer hora."}</p>
         <p className="propaganda-preco">
-          {reais(adesao)} na contratação (já com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
+          {reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix. Sem fidelidade.
         </p>
         <div className="acoes">
-          <a href="/app/cadastro" className="botao" data-evento="quero">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
-          <Link href="/barbeiros#estilos" className="botao-sec" data-evento="estilos">Ver os estilos</Link>
+          <a href="/#estilos" className="botao" data-evento="estilos">Ver os estilos</a>
+          <a href="/app/cadastro" className="botao-sec" data-evento="quero">Quero o meu site</a>
         </div>
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}

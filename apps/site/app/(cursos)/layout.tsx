@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Medir } from "@/componentes/ContarOrigem";
+import { WhatsFixo, WhatsRodape } from "@/componentes/WhatsFixo";
 import { BookOpen, CalendarDays } from "lucide-react";
 import { soEntrega } from "@/lib/modo";
 import "../globals.css";
@@ -12,8 +13,8 @@ export function generateMetadata(): Metadata {
   return {
     // Endereço público, pra prévia do WhatsApp achar as fotos (og:image precisa de URL completa).
     metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
-    title: { default: marca, template: `%s · ${marca}` },
-    description: soEntrega() ? "Site e agenda da barbearia." : "Os melhores cursos gratuitos e abertos do mundo, traduzidos para o português.",
+    title: soEntrega() ? { default: marca, template: `%s · ${marca}` } : { default: "Site de barbearia pronto, com agenda online", template: `%s · ${marca}` },
+    description: soEntrega() ? "Site e agenda da barbearia." : "Seu site de barbearia pronto, com agenda online: o cliente vê seus cortes, escolhe o horário e marca sozinho. Seis estilos, pagamento por Pix, sem fidelidade.",
   };
 }
 
@@ -55,15 +56,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               Aprenda Livre
             </Link>
             <nav aria-label="Principal">
-              <a href="/cursos">Cursos</a>
-              <a href="/revista">Revista</a>
+              <a href="/#estilos" data-evento="estilos">Estilos</a>
+              <a href="/#preco">Preço</a>
+              <a href="/cursos" className="nav-pequeno">Cursos</a>
               <a href="/app/cadastro" className="nav-destaque" data-evento="quero">Quero meu site</a>
             </nav>
           </header>
         </div>
         <Medir />
         <main>{children}</main>
+        <WhatsFixo />
         <footer className="rodape">
+          <WhatsRodape />
           Cursos traduzidos de fontes abertas, com crédito e licença originais, e cursos escritos aqui.{" "}
           <a href="/licencas">Licenças e créditos</a> · <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>.
         </footer>

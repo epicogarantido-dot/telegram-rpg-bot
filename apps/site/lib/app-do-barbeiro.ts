@@ -44,7 +44,7 @@ export function variaveisDoApp(b: Barbearia): string {
     `BARBEIRO_NOME=${valor(dono?.nome)}`,
     `BARBEARIA_CIDADE=${valor(b.cidade)}`,
     `# Estilo: silencioso, atemporal, cerimonia, tecnico, potencia ou extravagancia`,
-    `BARBEARIA_ESTILO=cerimonia`,
+    `BARBEARIA_ESTILO=${b.tema}`,
     `BOT_SEGREDO=${derivado(b, "bot", 32)}`,
   ];
   return linhas.join("\n");

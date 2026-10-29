@@ -44,7 +44,7 @@ export default async function PaginaLicao({ params }: { params: Promise<Params> 
         {proxima ? <Link href={href(proxima)}>{proxima.licao.titulo} →</Link> : <span />}
       </nav>
       {/* Funil: quem leu a lição vê o site da barbearia. Nunca em curso CC BY-NC (sem anúncio ali). */}
-      {permiteUsoComercial(curso.fonte.licenca) && <PropagandaSaas />}
+      {permiteUsoComercial(curso.fonte.licenca) && <PropagandaSaas assunto={`${curso.titulo} ${licao.titulo}`} />}
     </article>
   );
 }

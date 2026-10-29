@@ -59,7 +59,7 @@ export default async function PaginaArtigo({ params }: { params: Promise<{ slug:
           </nav>
         )}
       </article>
-      <PropagandaSaas />
+      <PropagandaSaas assunto={`${a.titulo} ${a.resumo}`} />
       {proximos.length > 0 && (
         <Carrossel titulo="Continue lendo" verTodos={{ href: "/revista", texto: "Ver todas" }}>
           {proximos.map((x) => <CartaoMateria key={x.slug} artigo={x} />)}
