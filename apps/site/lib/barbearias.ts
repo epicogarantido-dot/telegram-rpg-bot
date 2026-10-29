@@ -146,6 +146,8 @@ export function ehCorte(nome: string): boolean {
  * Uma foto pra cada serviço, pelo nome ("barba" → fotos de barba...). Evita repetir enquanto
  * houver foto que ainda não foi usada; sem palavra conhecida, usa os cortes e depois o resto.
  */
+const TRABALHO = ["degrade", "navalhado", "corte", "barba", "sobrancelha", "infantil"];
+
 export function fotosDosServicos<F extends { arquivo: string; categoria: string }>(nomes: string[], fotos: F[]): (F | undefined)[] {
   const usadas = new Set<string>();
   const regras: [RegExp, string[]][] = [
@@ -157,13 +159,14 @@ export function fotosDosServicos<F extends { arquivo: string; categoria: string 
     [/corte|cabelo|social|americano|militar|tesoura|m[aá]quina|crop|buzz|mullet|topete|pompadour|undercut/i, ["corte", "degrade"]],
     [/produto|pomada|hidrata|luzes|platin|selagem|relaxa/i, ["produtos", "corte"]],
   ];
+  // Foto livre das categorias certas; acabou? Outra foto de trabalho ainda não usada; só então repete.
   const pegar = (categorias: string[]) => {
     for (const c of categorias) {
-      const da = fotos.filter((f) => f.categoria === c);
-      const livre = da.find((f) => !usadas.has(f.arquivo)) ?? da[0];
+      const livre = fotos.find((f) => f.categoria === c && !usadas.has(f.arquivo));
       if (livre) return livre;
     }
-    return undefined;
+    return fotos.find((f) => TRABALHO.includes(f.categoria) && !usadas.has(f.arquivo))
+      ?? fotos.find((f) => f.categoria === categorias[0]);
   };
   return nomes.map((nome) => {
     const regra = regras.find(([r]) => r.test(nome));

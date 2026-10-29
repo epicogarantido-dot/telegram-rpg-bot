@@ -908,6 +908,14 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-escolhido-foto img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--raio-p); flex: none; }
 .b-escolhido-foto p { margin: 0; }
 .b-extras-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
+/* Continuar (adicionais) e Confirmar horário ficam presos embaixo da tela enquanto rola. */
+.b-extras-acoes, .b-confirmar-fixo {
+  position: sticky; bottom: 0; z-index: 5;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--fundo) 28%);
+}
+.b-confirmar-fixo { display: grid; gap: 6px; margin-top: 12px; }
+.b-confirmar-fixo .b-botao { width: 100%; }
 .b-extras-acoes .b-botao { min-width: 200px; }
 .b-extras-pular { color: var(--suave); text-underline-offset: 4px; font-size: 15px; }
 .site-b[data-tema="atemporal"] .b-vitrine-foto img { filter: grayscale(1); }
@@ -1015,6 +1023,9 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-escolha-corte .b-carrossel-cabeca { margin-bottom: 14px; }
 .b-escolha-corte .b-carrossel-trilho { --larg: clamp(220px, 68vw, 290px); }
 .b-escolha-corte .b-vitrine-texto strong { font-size: 1.5rem; }
+/* "Não vou cortar" continua primeiro, mas estreito: os cortes já aparecem ao lado na primeira tela. */
+.b-escolha-corte .b-carrossel-trilho:has(> li > .b-nao-cortar) { grid-template-columns: calc(var(--larg) * 0.55); }
+.b-escolha-corte .b-nao-cortar .b-vitrine-texto strong { font-size: 1.1rem; }
 /* "Não vou cortar": mesma forma, foto mais apagada, pra ficar claro que é a outra porta. */
 .b-nao-cortar .b-vitrine-foto img { filter: grayscale(0.6) brightness(0.7); }
 .b-nao-cortar::before {

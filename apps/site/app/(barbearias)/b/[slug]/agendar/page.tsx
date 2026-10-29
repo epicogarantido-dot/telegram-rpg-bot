@@ -205,7 +205,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     }
     return (
       <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="O que vai ser hoje?" />
+        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="O que vai ser hoje?" />
         {cortes.length > 0 && <p className="b-escolhido">Sem corte de cabelo · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Quero cortar também</Link></p>}
         {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
         <form method="get" action={base} className="b-adicionais">
@@ -231,7 +231,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     const semCorte = naoCortes[0] && fotoDe.get(naoCortes[0].id);
     return (
       <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Qual corte vai ser?" />
+        <Cabeca rotulo={`Passo 1 de 4 · ${b.nome}`} titulo="Qual corte vai ser?" />
         <CarrosselB id="cortes" rotulo="Cortes" className="b-escolha-corte" apoio="Deslize e toque no seu. Depois vêm barba, sobrancelha e o horário.">
           {naoCortes.length > 0 && (
             <Link href={link({ servico: "sem", data: undefined, ad: undefined, extra: [], foto: undefined })} className="b-vitrine-item b-nao-cortar">
@@ -274,12 +274,12 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     );
   }
 
-  // ---------- Passo 1, parte 2: adicionais (com foto) ----------
+  // ---------- Passo 2: adicionais (com foto) ----------
   if (!respondeu) {
     const fotoServico = fotoEscolhida ?? fotoDe.get(servico.id);
     return (
       <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo="Completa o visual?" />
+        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="Completa o visual?" />
         <div className="b-escolhido b-escolhido-foto">
           {fotoServico && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -347,13 +347,13 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     );
   }
 
-  // ---------- Passo 3: nome e WhatsApp ----------
+  // ---------- Passo 4: nome e WhatsApp ----------
   if (horaValida && data && com && sp.hora) {
     // Cardápio de cortes: até 12 fotos de trabalho, as mais recentes.
     const referencias = banco.fotos(b.id).filter((f) => CATEGORIAS_REFERENCIA.includes(f.categoria)).slice(0, 12);
     return (
       <div className="b-secao b-agendar">
-        <Cabeca rotulo={`Passo 3 de 3 · ${b.nome}`} titulo="Confirme seu horário" />
+        <Cabeca rotulo={`Passo 4 de 4 · ${b.nome}`} titulo="Confirme seu horário" />
         {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
@@ -411,13 +411,17 @@ export default async function Agendar({ params, searchParams }: { params: Promis
               </div>
             </fieldset>
           )}
-          <BotaoEnviar className="b-botao" carregando="Confirmando…">Confirmar horário</BotaoEnviar>
+          {/* Fixo embaixo no celular: o botão de terminar não fica escondido atrás da rolagem. */}
+          <div className="b-confirmar-fixo">
+            <BotaoEnviar className="b-botao" carregando="Confirmando…">Confirmar horário</BotaoEnviar>
+            <small className="b-dica">O horário fica marcado na hora e a barbearia recebe o aviso.</small>
+          </div>
         </form>
       </div>
     );
   }
 
-  // ---------- Passo 2: dia e horário ----------
+  // ---------- Passo 3: dia e horário ----------
   const dias = Array.from({ length: DIAS_A_FRENTE }, (_, i) => somarDias(hoje, i))
     .map((d) => ({ d, vagas: vagasDoDia(banco, b.id, servico.id, ids, d, remarcando?.id, duracao), aberto: banco.expedientes(b.id).has(diaDaSemana(d)) }))
     .filter((x) => x.aberto);
@@ -428,7 +432,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     <div className="b-secao b-agendar">
       {remarcando
         ? <Cabeca rotulo={`Remarcar · ${b.nome}`} titulo="Escolha o novo horário" />
-        : <Cabeca rotulo={`Passo 2 de 3 · ${b.nome}`} titulo="Escolha o horário" />}
+        : <Cabeca rotulo={`Passo 3 de 4 · ${b.nome}`} titulo="Escolha o horário" />}
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       {remarcando ? (
         <p className="b-escolhido">
