@@ -929,23 +929,38 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   padding: clamp(72px, 14vw, 140px) max(20px, env(safe-area-inset-right, 0px)) clamp(72px, 14vw, 140px) max(20px, env(safe-area-inset-left, 0px));
   text-align: center;
 }
-.b-frase p {
+.b-frase :is(p, .b-letreiro-trilho) {
   margin: 0; max-width: 18ch; text-wrap: balance;
   font: var(--t-titulo-peso) var(--t-titulo-estilo) clamp(2rem, 6.5vw, 4.6rem)/1.08 var(--fonte-titulo);
   text-transform: var(--t-titulo-caixa); letter-spacing: var(--t-titulo-espaco);
 }
-.b-frase-palavra { display: inline-block; white-space: pre; }
+/* Letreiro: a frase corre de lado sem parar, por cima da foto. */
+.b-letreiro { display: flex; flex-direction: column; justify-content: center; padding-inline: 0; }
+.b-letreiro-faixa { width: 100%; overflow: hidden; }
+.b-frase .b-letreiro-trilho { display: inline-flex; max-width: none; white-space: nowrap; text-wrap: nowrap; }
+.b-letreiro-trilho span { padding-right: 0.6em; }
+.b-letreiro-trilho span::after { content: "✦"; margin-left: 0.6em; font-size: 0.5em; vertical-align: middle; opacity: 0.7; }
+@media (prefers-reduced-motion: no-preference) {
+  .b-letreiro-trilho { animation: letreiro 48s linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Parado: uma frase só, quebrando linha, no meio. */
+  .b-frase .b-letreiro-trilho { display: block; max-width: 18ch; margin: 0 auto; white-space: normal; text-wrap: balance; text-align: center; }
+  .b-letreiro-trilho span:not(:first-child) { display: none; }
+  .b-letreiro-trilho span::after { content: none; }
+}
+@keyframes letreiro { to { transform: translateX(-50%); } }
 .b-frase-foto { color: #fff; min-height: min(70svh, 560px); }
 .b-frase-foto img { position: absolute; inset: -12% 0; width: 100%; height: 124%; object-fit: cover; z-index: -2; }
 .b-frase-foto::after { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(0 0 0 / 0.55); }
-.site-b[data-tema="potencia"] .b-frase p { font-size: clamp(2.8rem, 10vw, 6.4rem); line-height: 0.92; }
+.site-b[data-tema="potencia"] .b-frase :is(p, .b-letreiro-trilho) { font-size: clamp(2.8rem, 10vw, 6.4rem); line-height: 0.92; }
 .site-b[data-tema="potencia"] .b-frase:not(.b-frase-foto) { color: var(--destaque); text-shadow: 0 0 28px rgb(215 255 30 / 0.35); }
-.site-b[data-tema="extravagancia"] .b-frase p { color: var(--destaque-forte); }
+.site-b[data-tema="extravagancia"] .b-frase :is(p, .b-letreiro-trilho) { color: var(--destaque-forte); }
 .site-b[data-tema="extravagancia"] .b-frase { border-block: 1px solid var(--borda); }
-.site-b[data-tema="cerimonia"] .b-frase p { font-size: clamp(1.6rem, 4.6vw, 3.2rem); line-height: 1.25; }
+.site-b[data-tema="cerimonia"] .b-frase :is(p, .b-letreiro-trilho) { font-size: clamp(1.6rem, 4.6vw, 3.2rem); line-height: 1.25; }
 .site-b[data-tema="atemporal"] .b-frase:not(.b-frase-foto) { background: #000; color: #fff; }
 .site-b[data-tema="atemporal"] .b-frase-foto img { filter: grayscale(1); }
-.site-b[data-tema="tecnico"] .b-frase:not(.b-frase-foto) p { color: var(--destaque); }
+.site-b[data-tema="tecnico"] .b-frase:not(.b-frase-foto) .b-letreiro-trilho { color: var(--destaque); }
 .site-b[data-tema="tecnico"] .b-frase-foto { margin-inline: max(16px, env(safe-area-inset-left, 0px)); border-radius: 28px; }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -965,10 +980,6 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
   .b-anima .b-mosaico[data-revelar] > img:nth-of-type(1) { transition-delay: 0.15s; }
   .b-anima .b-mosaico[data-revelar] > img:nth-of-type(2) { transition-delay: 0.3s; }
   .b-anima :is(.b-casa-foto, .b-mosaico)[data-revelar]:not(.visto) { transform: none; opacity: 1; }
-  /* Frases: a seção não some; as palavras chegam uma a uma. */
-  .b-anima .b-frase[data-revelar]:not(.visto) { opacity: 1; transform: none; }
-  .b-anima .b-frase .b-frase-palavra { transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.7s ease; transition-delay: calc(var(--i) * 90ms); }
-  .b-anima .b-frase:not(.visto) .b-frase-palavra { opacity: 0; transform: translateY(0.5em); filter: blur(8px); }
   /* Foto atrás da frase corre mais devagar que a página. */
   @supports (animation-timeline: view()) {
     .b-frase-foto img { animation: frase-parallax linear both; animation-timeline: view(); }

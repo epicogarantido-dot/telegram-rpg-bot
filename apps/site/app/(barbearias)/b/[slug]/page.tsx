@@ -35,11 +35,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   // Foto de "antes" só aparece no comparador, nunca sozinha na galeria.
   const trabalhos = fotos.filter((f) => f.categoria !== "equipe" && !f.antesDe && f.arquivo !== capa?.arquivo);
   // Abertura: a capa e mais algumas do ambiente e dos trabalhos, pra passar como vitrine.
-  const slides = [
-    ...(capa ? [capa] : []),
-    ...trabalhos.filter((f) => f.categoria === "ambiente"),
-    ...trabalhos.filter((f) => f.categoria !== "ambiente" && f.categoria !== "produtos"),
-  ].slice(0, 5);
+  // Abertura com uma foto só: a capa (sem capa, a primeira foto de trabalho).
+  const slides = capa ? [capa] : trabalhos.filter((f) => f.categoria !== "produtos").slice(0, 1);
   const pares = banco.paresAntesDepois(b.id);
   const tema = b.tema;
   const efeitos = nivelEfeitos(tema);
@@ -175,6 +172,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
+      <Frase texto={frases[0]} foto={fotoFrase(0)} />
+
       {/* Galeria: antes e depois quando o barbeiro cadastrou pares (o que mais convence); sem pares, o mosaico. */}
       {pares.length > 0 ? (
         <section className="b-secao b-antes-depois" id="antes-depois" aria-labelledby="ad-titulo" data-revelar>
@@ -212,7 +211,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         <p className="b-mosaico-mais"><Link href={`${base}/trabalhos`} className="b-botao-sec">Ver todos os trabalhos</Link></p>
       )}
 
-      <Frase texto={frases[0]} foto={fotoFrase(0)} />
+      <Frase texto={frases[1]} foto={fotoFrase(1)} />
 
       {equipe.length > 0 && (
         <section className="b-secao" id="equipe" aria-labelledby="equipe-titulo">
@@ -232,7 +231,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      <Frase texto={frases[1]} foto={fotoFrase(1)} />
+      <Frase texto={frases[2]} foto={fotoFrase(2)} />
 
       <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (
@@ -264,7 +263,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             <img src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
           )}
           <div className="b-chamada-texto" data-revelar>
-            <h2 id="chamada-titulo">{frases[2]}</h2>
+            <h2 id="chamada-titulo">{frases[3]}</h2>
             <p>Seu próximo corte já tem horário. Garanta o seu em menos de um minuto, sem criar conta.</p>
             <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>
           </div>

@@ -59,7 +59,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <a href="/#estilos" data-evento="estilos">Estilos</a>
               <a href="/#preco">Preço</a>
               <a href="/cursos" className="nav-pequeno">Cursos</a>
-              <a href="/app/cadastro" className="nav-destaque" data-evento="quero">Quero meu site</a>
             </nav>
           </header>
         </div>
