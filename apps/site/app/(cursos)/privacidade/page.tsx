@@ -19,7 +19,7 @@ export default function Privacidade() {
   return (
     <article className="texto-legal">
       <h1>Privacidade</h1>
-      <p className="suave">Atualizado em 28 de outubro de 2026.</p>
+      <p className="suave">Atualizado em 29 de outubro de 2026.</p>
 
       <p>
         Esta página explica, em português simples, quais dados o Aprenda Livre guarda, pra quê, e o que você pode
@@ -30,7 +30,10 @@ export default function Privacidade() {
       <p>
         Você lê tudo sem cadastro. Não usamos ferramenta de anúncio nem de rastreamento de terceiros. Contamos, de forma
         agregada, quantas visitas chegam por cada link que divulgamos (por exemplo, &quot;veio do grupo&quot;): só o
-        número, sem guardar quem você é, seu IP ou cookie de rastreio.
+        número, sem guardar quem você é, seu IP ou cookie de rastreio. Do mesmo jeito contamos os passos de quem chega
+        (abriu o site, viu os estilos, abriu um exemplo, tocou em &quot;Quero&quot;, abriu o cadastro). Se a gente te mandou
+        um link pessoal (com um código no fim), anotamos esses passos junto do seu contato, pra saber como te ajudar; é só
+        isso, e você pode pedir pra apagar.
       </p>
 
       <h2>Comunidade de barbeiros</h2>

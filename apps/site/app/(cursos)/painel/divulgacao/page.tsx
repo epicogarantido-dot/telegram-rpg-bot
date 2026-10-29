@@ -37,6 +37,31 @@ export default async function Divulgacao() {
       <p><a href="/painel">Leads</a> · <a href="/painel/buscar">Buscar</a> · <strong>Divulgação</strong> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Vendas</a></p>
       <h1>Divulgação</h1>
 
+      <h2>Funil de venda (últimos 30 dias)</h2>
+      <p><small>
+        Quantas pessoas passaram por cada passo, contadas uma vez por aba (só números, sem guardar quem é). A coluna da direita
+        é quanto do passo anterior chegou até ali: onde ela cai, é ali que a venda se perde. Anote os números antes de mudar
+        a página, pra comparar depois.
+      </small></p>
+      {(() => {
+        const funil = obterBanco().resumoFunil(30);
+        const nomes: Record<string, string> = {
+          abriu: "Abriram o site", estilos: "Foram ver os estilos", exemplo: "Abriram um exemplo", quero: "Tocaram em Quero",
+          whatsapp: "Chamaram no WhatsApp", cadastro_inicio: "Abriram o cadastro", cadastro: "Concluíram o cadastro",
+        };
+        return (
+          <table className="tabela-divisao">
+            <thead><tr><th scope="col">Passo</th><th scope="col">Pessoas</th><th scope="col">Do passo anterior</th></tr></thead>
+            <tbody>
+              {funil.map((f, i) => {
+                const antes = i > 0 ? funil[i - 1]!.total : 0;
+                return <tr key={f.evento}><td>{nomes[f.evento]}</td><td>{f.total}</td><td>{i > 0 && antes > 0 ? `${Math.round((f.total / antes) * 100)}%` : "—"}</td></tr>;
+              })}
+            </tbody>
+          </table>
+        );
+      })()}
+
       <h2>De onde veio gente (últimos 30 dias)</h2>
       <p><small>Conta quem abriu o site por um link com origem (posts abaixo, cartão, &quot;Site + grupo&quot;, presente dos cursos) e quem criou conta de barbearia depois. Só números, sem guardar quem é.</small></p>
       {resumo.length === 0 ? (

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
 import {
   STATUS, ehCelularBR, linkWhatsapp, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
-  mensagemSegunda, mensagemSiteEGrupo, proximoPasso, DIAS_ATE_LEMBRETE, type Lead, type Status,
+  mensagemSegunda, mensagemSiteEGrupo, proximoPasso, DIAS_ATE_LEMBRETE, type Evento, type Lead, type Status,
 } from "@aprenda/prospeccao";
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
@@ -60,14 +60,15 @@ async function enviar(form: FormData) {
       break;
     case "demo":
       if (!lead.demoSlug || !lead.demoConvite) return;
-      texto = mensagemDemonstracao(lead, linkDaDemonstracao(lead.demoSlug, lead.demoConvite));
+      // Com o código do lead (?l=), o cartão dele mostra o que ele fez no site.
+      texto = mensagemDemonstracao(lead, `${linkDaDemonstracao(lead.demoSlug, lead.demoConvite)}&l=${banco.codigoDoLead(lead.placeId)}`);
       status = "demo_enviada";
       break;
     case "cursos":
       texto = mensagemCursos(config);
       break;
     case "site-grupo":
-      texto = mensagemSiteEGrupo(lead, config);
+      texto = mensagemSiteEGrupo(lead, config, banco.codigoDoLead(lead.placeId));
       break;
   }
   if (!texto) return;
@@ -110,6 +111,29 @@ function Enviar({ lead, tipo, children, principal }: { lead: Lead; tipo: Envio; 
       <input type="hidden" name="tipo" value={tipo} />
       <BotaoEnviar className={principal ? "botao" : "botao-sec"}>{children}</BotaoEnviar>
     </form>
+  );
+}
+
+const PASSO: Record<Evento, string> = {
+  abriu: "abriu o site", estilos: "foi ver os estilos", exemplo: "abriu o exemplo", quero: "tocou em Quero",
+  whatsapp: "chamou no WhatsApp", cadastro_inicio: "abriu o cadastro", cadastro: "se cadastrou",
+};
+
+function haQuanto(em: string, agora: Date): string {
+  const min = Math.max(0, Math.round((agora.getTime() - new Date(em).getTime()) / 60_000));
+  if (min < 60) return `há ${min} min`;
+  if (min < 48 * 60) return `há ${Math.round(min / 60)} h`;
+  return `há ${Math.round(min / 1440)} dias`;
+}
+
+/** O que o lead fez no site pelo link com o código dele (?l=), do mais recente pro mais antigo. */
+function NoSite({ lead, agora }: { lead: Lead; agora: Date }) {
+  const eventos = obterBanco().eventosDoLead(lead.placeId, 6);
+  if (eventos.length === 0) return null;
+  return (
+    <><br /><small className="no-site">🔎 No site: {eventos.map((e, i) => (
+      <span key={i}>{i > 0 && " · "}{PASSO[e.evento]}{e.detalhe ? ` ${TEMAS.find((t) => t.id === e.detalhe)?.nome ?? e.detalhe}` : ""} ({haQuanto(e.em, agora)})</span>
+    ))}</small></>
   );
 }
 
@@ -276,6 +300,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
                 </small>
                 {l.avisos && <><br /><small className="aviso-lead">⚠️ {l.avisos}</small></>}
                 {l.observacao && <><br /><small>📝 {l.observacao}</small></>}
+                <NoSite lead={l} agora={agora} />
               </div>
               <AcoesDoLead lead={l} podeContatar={podeContatar} agora={agora} />
             </div>

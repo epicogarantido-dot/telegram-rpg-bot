@@ -32,7 +32,7 @@ export default async function Inicio() {
         </p>
         <div className="acoes-heroi">
           <Link href="/cursos" className="botao">Ver os cursos grátis</Link>
-          <a href="/app/cadastro" className="botao-sec">Quero meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao-sec" data-evento="quero">Quero meu site <ArrowRight size={18} aria-hidden /></a>
         </div>
       </section>
 
@@ -57,7 +57,7 @@ export default async function Inicio() {
         ))}
       </Carrossel>
       <p className="vitrine-acao">
-        <Link href="/barbeiros" className="botao">Conhecer o site <ArrowRight size={18} aria-hidden /></Link>
+        <Link href="/barbeiros" className="botao" data-evento="estilos">Conhecer o site <ArrowRight size={18} aria-hidden /></Link>
       </p>
 
       {artigos.length > 0 && (

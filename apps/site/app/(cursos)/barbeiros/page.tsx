@@ -177,8 +177,8 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
             seus preços e os horários livres, e o cliente marca sozinho, sem você parar o corte pra responder.
           </p>
           <div className="acoes">
-            <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
-            <a href="#estilos" className="botao-sec">Ver os estilos</a>
+            <a href="/app/cadastro" className="botao" data-evento="quero">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
+            <a href="#estilos" className="botao-sec" data-evento="estilos">Ver os estilos</a>
           </div>
         </div>
         <figure className="venda-celular" aria-hidden="true">
@@ -224,7 +224,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           {WHATS_PASSOS.map(([titulo, texto]) => <li key={titulo}><strong>{titulo}</strong><span>{texto}</span></li>)}
         </ol>
         <p className="venda-marca-acao">
-          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao" data-evento="quero">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
         </p>
       </section>
 
@@ -244,7 +244,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           ))}
         </div>
         <p className="venda-marca-acao">
-          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao" data-evento="quero">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
         </p>
       </section>
 
@@ -311,7 +311,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           </ul>
         </div>
         <div className="venda-plano-acao">
-          <a href="/app/cadastro" className="botao">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
+          <a href="/app/cadastro" className="botao" data-evento="quero">Quero o meu site <ArrowRight size={18} aria-hidden /></a>
           <p className="suave pequeno"><Smartphone size={14} aria-hidden /> Leva um minuto, pelo celular.</p>
         </div>
       </section>

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { ContarOrigem } from "@/componentes/ContarOrigem";
+import { Medir } from "@/componentes/ContarOrigem";
 import { BookOpen, CalendarDays } from "lucide-react";
 import { soEntrega } from "@/lib/modo";
 import "../globals.css";
@@ -57,11 +57,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <nav aria-label="Principal">
               <a href="/cursos">Cursos</a>
               <a href="/revista">Revista</a>
-              <a href="/app/cadastro" className="nav-destaque">Quero meu site</a>
+              <a href="/app/cadastro" className="nav-destaque" data-evento="quero">Quero meu site</a>
             </nav>
           </header>
         </div>
-        <ContarOrigem />
+        <Medir />
         <main>{children}</main>
         <footer className="rodape">
           Cursos traduzidos de fontes abertas, com crédito e licença originais, e cursos escritos aqui.{" "}

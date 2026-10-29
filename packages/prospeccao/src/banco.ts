@@ -45,6 +45,13 @@ export interface Lead extends Estabelecimento {
   demoConvite?: string;
 }
 
+/**
+ * Passos do funil de venda, na ordem: abriu o site, foi ver os estilos, abriu um exemplo, tocou
+ * em "Quero", tocou no WhatsApp, abriu o cadastro, concluiu o cadastro.
+ */
+export const EVENTOS = ["abriu", "estilos", "exemplo", "quero", "whatsapp", "cadastro_inicio", "cadastro"] as const;
+export type Evento = (typeof EVENTOS)[number];
+
 /** Teto de origens diferentes por dia (ver `registrarOrigem`). */
 export const MAX_ORIGENS_DIA = 300;
 
@@ -107,10 +114,19 @@ export class BancoProspeccao {
         dia TEXT NOT NULL, origem TEXT NOT NULL, tipo TEXT NOT NULL, total INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (dia, origem, tipo)
       );
+      -- Funil de venda: quantos passaram por cada passo no dia (só a contagem, sem quem).
+      CREATE TABLE IF NOT EXISTS funil (
+        dia TEXT NOT NULL, evento TEXT NOT NULL, total INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (dia, evento)
+      );
+      -- O que um lead contatado fez no site, pelo link com ?l=<codigo> que você mandou pra ele.
+      CREATE TABLE IF NOT EXISTS lead_eventos (
+        lead_id TEXT NOT NULL, evento TEXT NOT NULL, detalhe TEXT, em TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS lead_eventos_lead ON lead_eventos(lead_id, em);
     `);
     // Colunas novas em bancos antigos.
     const existentes = new Set((this.db.prepare("PRAGMA table_info(leads)").all() as { name: string }[]).map((c) => c.name));
-    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite"]) {
+    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite", "codigo"]) {
       if (!existentes.has(coluna)) this.db.exec(`ALTER TABLE leads ADD COLUMN ${coluna} TEXT`);
     }
     if (!existentes.has("cidade_chave")) {
@@ -335,6 +351,58 @@ export class BancoProspeccao {
     this.db.prepare(`INSERT INTO origens (dia, origem, tipo, total) VALUES (?, ?, ?, 1)
       ON CONFLICT (dia, origem, tipo) DO UPDATE SET total = total + 1`).run(dia, origem, tipo);
     return true;
+  }
+
+  // ---------- funil de venda ----------
+
+  /** Soma 1 no passo do funil do dia. Evento desconhecido é ignorado. */
+  registrarEvento(evento: string, agora = new Date()): boolean {
+    if (!(EVENTOS as readonly string[]).includes(evento)) return false;
+    this.db.prepare(`INSERT INTO funil (dia, evento, total) VALUES (?, ?, 1)
+      ON CONFLICT (dia, evento) DO UPDATE SET total = total + 1`).run(agora.toISOString().slice(0, 10), evento);
+    return true;
+  }
+
+  /** Total de cada passo do funil nos últimos `dias` (na ordem do funil, com zero onde não houve). */
+  resumoFunil(dias = 30, agora = new Date()): { evento: Evento; total: number }[] {
+    const desde = new Date(agora.getTime() - (dias - 1) * 86_400_000).toISOString().slice(0, 10);
+    const linhas = this.db.prepare("SELECT evento, SUM(total) AS total FROM funil WHERE dia >= ? GROUP BY evento").all(desde) as { evento: string; total: number }[];
+    const por = new Map(linhas.map((l) => [l.evento, l.total]));
+    return EVENTOS.map((evento) => ({ evento, total: por.get(evento) ?? 0 }));
+  }
+
+  /** Código curto do lead pro link (?l=), criado na primeira vez. Não é o nome: não dá pra adivinhar nem trocar. */
+  codigoDoLead(placeId: string): string | undefined {
+    const atual = this.db.prepare("SELECT codigo FROM leads WHERE place_id = ?").get(placeId) as { codigo: string | null } | undefined;
+    if (!atual) return undefined;
+    if (atual.codigo) return atual.codigo;
+    for (;;) {
+      const codigo = Array.from({ length: 7 }, () => "abcdefghjkmnpqrstuvwxyz23456789"[Math.floor(Math.random() * 31)]).join("");
+      if (this.db.prepare("SELECT 1 FROM leads WHERE codigo = ?").get(codigo)) continue;
+      this.db.prepare("UPDATE leads SET codigo = ? WHERE place_id = ?").run(codigo, placeId);
+      return codigo;
+    }
+  }
+
+  /**
+   * O lead do link fez algo no site. O mesmo passo (e detalhe) em menos de 30 min conta uma vez só,
+   * pra recarregar a página não inflar. Código que não existe é ignorado.
+   */
+  registrarEventoDoLead(codigo: string, evento: string, detalhe?: string, agora = new Date()): boolean {
+    if (!/^[a-z0-9]{7}$/.test(codigo) || !(EVENTOS as readonly string[]).includes(evento)) return false;
+    const lead = this.db.prepare("SELECT place_id AS id FROM leads WHERE codigo = ?").get(codigo) as { id: string } | undefined;
+    if (!lead) return false;
+    const d = detalhe && /^[a-z0-9-]{1,40}$/.test(detalhe) ? detalhe : null;
+    const desde = new Date(agora.getTime() - 30 * 60_000).toISOString();
+    if (this.db.prepare("SELECT 1 FROM lead_eventos WHERE lead_id = ? AND evento = ? AND detalhe IS ? AND em > ?").get(lead.id, evento, d, desde)) return false;
+    this.db.prepare("INSERT INTO lead_eventos (lead_id, evento, detalhe, em) VALUES (?, ?, ?, ?)").run(lead.id, evento, d, agora.toISOString());
+    return true;
+  }
+
+  /** O que o lead fez no site, do mais recente pro mais antigo. */
+  eventosDoLead(placeId: string, limite = 20): { evento: Evento; detalhe?: string; em: string }[] {
+    return (this.db.prepare("SELECT evento, detalhe, em FROM lead_eventos WHERE lead_id = ? ORDER BY em DESC LIMIT ?").all(placeId, limite) as { evento: Evento; detalhe: string | null; em: string }[])
+      .map((e) => ({ evento: e.evento, detalhe: e.detalhe ?? undefined, em: e.em }));
   }
 
   /** Visitas e cadastros por origem nos últimos `dias`, das que mais trouxeram gente. */

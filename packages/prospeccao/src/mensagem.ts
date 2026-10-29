@@ -83,9 +83,10 @@ export function mensagemLembrete(lead: Pick<Lead, "nome">): string {
  * mensagem só. Nunca na 1ª mensagem: link pra quem não conversou com você é o que o WhatsApp
  * mais trata como spam.
  */
-export function mensagemSiteEGrupo(lead: Pick<Lead, "nome">, cfg: ConfigConvite): string | undefined {
+export function mensagemSiteEGrupo(lead: Pick<Lead, "nome">, cfg: ConfigConvite, codigo?: string): string | undefined {
   if (!cfg.siteUrl) return undefined;
-  const site = `${cfg.siteUrl}/?origem=convite`;
+  // Com o código do lead (?l=), o painel mostra o que ele fez no site.
+  const site = `${cfg.siteUrl}/?origem=convite${codigo ? `&l=${codigo}` : ""}`;
   const grupo = cfg.linkGrupo ? `\n\nE tem o grupo de barbeiros, onde eu posto as matérias novas e dicas pra lotar a agenda. Se quiser entrar: ${cfg.linkGrupo}` : "";
   return `Aqui o site: tem cursos e matérias grátis pra quem tem barbearia (preço, cliente que volta, divulgação), sem cadastro. E dá pra ver como ficaria um site com agenda pra ${nomeParaMensagem(lead.nome)}: ${site}${grupo}`;
 }

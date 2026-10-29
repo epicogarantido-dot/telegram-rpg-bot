@@ -154,3 +154,36 @@ describe("site + grupo e de onde vêm as visitas", () => {
     expect(b.resumoOrigens(30, new Date("2026-12-27T12:00:00Z"))).toEqual([]);
   });
 });
+
+describe("funil de venda e link por lead", () => {
+  it("conta cada passo do funil e ignora passo desconhecido", () => {
+    const b = new BancoProspeccao(":memory:");
+    const agora = new Date("2026-10-29T12:00:00Z");
+    b.registrarEvento("abriu", agora); b.registrarEvento("abriu", agora); b.registrarEvento("quero", agora);
+    expect(b.registrarEvento("hackear", agora)).toBe(false);
+    const r = b.resumoFunil(30, agora);
+    expect(r.map((x) => x.evento)).toEqual(["abriu", "estilos", "exemplo", "quero", "whatsapp", "cadastro_inicio", "cadastro"]);
+    expect(r.find((x) => x.evento === "abriu")?.total).toBe(2);
+    expect(r.find((x) => x.evento === "quero")?.total).toBe(1);
+  });
+
+  it("código estável por lead; eventos dele sem repetir em 30 min", () => {
+    const b = new BancoProspeccao(":memory:");
+    b.salvarEstabelecimentos([{ placeId: "x1", nome: "Barbearia do Zé", telefone: "5511987654321" }], "barbearia", "Campinas");
+    const codigo = b.codigoDoLead("x1")!;
+    expect(codigo).toMatch(/^[a-z0-9]{7}$/);
+    expect(b.codigoDoLead("x1")).toBe(codigo);
+    expect(b.codigoDoLead("nao-existe")).toBeUndefined();
+    const agora = new Date("2026-10-29T12:00:00Z");
+    expect(b.registrarEventoDoLead(codigo, "abriu", undefined, agora)).toBe(true);
+    expect(b.registrarEventoDoLead(codigo, "abriu", undefined, new Date("2026-10-29T12:10:00Z"))).toBe(false);
+    expect(b.registrarEventoDoLead(codigo, "exemplo", "potencia", new Date("2026-10-29T12:11:00Z"))).toBe(true);
+    expect(b.registrarEventoDoLead("zzzzzzz", "abriu", undefined, agora)).toBe(false);
+    expect(b.eventosDoLead("x1").map((e) => `${e.evento}${e.detalhe ? `:${e.detalhe}` : ""}`)).toEqual(["exemplo:potencia", "abriu"]);
+  });
+
+  it("o link da mensagem leva o código do lead", () => {
+    expect(mensagemSiteEGrupo({ nome: "Barbearia do Zé" }, { remetente: "João", siteUrl: "https://ex.com" }, "abc2345")).toContain("https://ex.com/?origem=convite&l=abc2345");
+  });
+});
+

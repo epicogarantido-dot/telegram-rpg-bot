@@ -5,7 +5,7 @@ import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { chaveDoAparelho } from "@/lib/protecao";
 import { obterBanco } from "@/lib/painel";
-import { CampoOrigem } from "@/componentes/ContarOrigem";
+import { CampoOrigem, Medir } from "@/componentes/ContarOrigem";
 import { porFotosPadrao } from "@/lib/exemplos";
 import { soVenda } from "@/lib/modo";
 
@@ -32,6 +32,8 @@ async function cadastrar(form: FormData) {
     obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
     // De onde veio quem virou cliente (link do grupo, cartão, convite, demonstração): só a contagem.
     obterBanco().registrarOrigem(campo("origem") || (demo ? "demonstracao" : "direto"), "cadastro");
+    obterBanco().registrarEvento("cadastro");
+    if (campo("lead")) obterBanco().registrarEventoDoLead(campo("lead"), "cadastro");
   } catch (e) {
     redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}) })}`);
   }
@@ -50,6 +52,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
   const plano = planoDoAmbiente();
   return (
     <>
+      <Medir evento="cadastro_inicio" />
       <ol className="passos-compra" aria-label="Etapas">
         <li aria-current="step">Seus dados</li>
         <li>Pagamento</li>

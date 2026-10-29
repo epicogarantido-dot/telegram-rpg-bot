@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "../globals.css";
 import "./temas.css";
-import { ContarOrigem } from "@/componentes/ContarOrigem";
+import { Medir } from "@/componentes/ContarOrigem";
+import { soEntrega } from "@/lib/modo";
 
 /**
  * Segundo site: os sites das barbearias (/b/<nome>) e o painel delas (/app).
@@ -19,8 +20,8 @@ export default function LayoutBarbearias({ children }: { children: React.ReactNo
     <html lang="pt-BR">
       <body className="corpo-barbearias">
         {children}
-        {/* Guarda a origem do link (?origem=) na aba, pro cadastro saber de onde a pessoa veio. */}
-        <ContarOrigem />
+        {/* Funil de venda (exemplos, cadastro). No app do barbeiro (SaaS) não se mede nada do cliente dele. */}
+        {!soEntrega() && <Medir />}
       </body>
     </html>
   );

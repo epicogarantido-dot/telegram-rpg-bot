@@ -12,6 +12,7 @@ import { ehSiteDeExemplo } from "@/lib/exemplos";
 import { ehOBarbeiro } from "@/lib/protecao";
 import { TEMAS } from "@aprenda/agenda";
 import { soEntrega, soVenda } from "@/lib/modo";
+import { Medir } from "@/componentes/ContarOrigem";
 
 /** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -48,11 +49,12 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
     <>
       {b.demoAte && ehSiteDeExemplo(b.slug) ? (
         <aside className="b-demo" aria-label="Aviso de site de exemplo">
+          <Medir evento="exemplo" detalhe={b.tema} />
           <p>
             <strong>Site de exemplo</strong> do estilo que você está vendo. Barbearia e fotos são ilustrativas e a marcação
             vai até o fim sem gravar nada. No seu, entram o seu nome, os seus trabalhos e os seus preços.
           </p>
-          <a className="b-demo-botao" href="/app/cadastro">Quero um site assim</a>
+          <a className="b-demo-botao" href={`/app/cadastro?estilo=${b.tema}`} data-evento="quero" data-detalhe={b.tema}>Quero um site assim</a>
           <details className="b-demo-estilos">
             <summary>Ver outros estilos</summary>
             <nav aria-label="Outros estilos de site">
