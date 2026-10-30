@@ -55,7 +55,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
         <aside className="b-demo b-demo-fixo" aria-label="Aviso de site de exemplo">
           <Medir evento="exemplo" detalhe={b.tema} />
           <p>
-            <strong>Modelo do estilo {nomeDoEstilo}.</strong> Na sua conta, entram as suas fotos e os seus preços.
+            <strong>Modelo do estilo {nomeDoEstilo}.</strong> Toque em Agendar e marque um teste, como se fosse o seu cliente. No seu, entram as suas fotos e os seus preços.
           </p>
           <a className="b-demo-botao" href={`/app/cadastro?estilo=${b.tema}`} data-evento="quero" data-detalhe={b.tema}>Quero esse</a>
           {contato && (

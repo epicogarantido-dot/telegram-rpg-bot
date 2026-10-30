@@ -7,6 +7,8 @@ import { MessageCircle } from "lucide-react";
 /** O que a mensagem pronta diz, pela página onde a pessoa estava (você já sabe do que ela fala). */
 function contexto(caminho: string): { pagina: string; texto: string } {
   if (caminho.startsWith("/revista/")) return { pagina: "materia", texto: "Oi! Li uma matéria no site de vocês e quero saber do site com agenda pra minha barbearia." };
+  if (caminho.startsWith("/app/cadastro")) return { pagina: "pedido", texto: "Oi! Estou fazendo o pedido do site da minha barbearia e fiquei com uma dúvida." };
+  if (caminho.startsWith("/app/assinatura")) return { pagina: "pix", texto: "Oi! Estou no pagamento do site da minha barbearia e fiquei com uma dúvida." };
   if (caminho.startsWith("/cursos")) return { pagina: "cursos", texto: "Oi! Vim pelos cursos e quero saber do site com agenda pra minha barbearia." };
   return { pagina: "inicio", texto: "Oi! Vi os estilos de site de vocês e quero saber mais pra minha barbearia." };
 }

@@ -7,6 +7,7 @@ import { NavPainel } from "@/componentes/barbearia/NavPainel";
 import { soEntrega, soVenda } from "@/lib/modo";
 import { prazoDaConta } from "@/lib/prazo";
 import { contatoResponsavel } from "@/lib/contato";
+import { WhatsFixo } from "@/componentes/WhatsFixo";
 import "./painel.css";
 import "./painel-temas.css";
 import { barbeariaDoApp } from "@/lib/barbearia-do-app";
@@ -36,6 +37,8 @@ export default async function LayoutPainel({ children }: { children: React.React
           </header>
         </div>
         <main>{children}</main>
+        {/* Dúvida na hora de pedir ou pagar: o WhatsApp continua à mão, como no resto da venda. */}
+        <WhatsFixo />
       </div>
     );
   }

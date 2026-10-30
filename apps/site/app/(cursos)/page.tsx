@@ -85,10 +85,11 @@ export default async function Inicio() {
             as suas fotos, os seus serviços e preços e a sua equipe.
           </p>
           <div className="acoes">
-            <a href="#estilos" className="botao" data-evento="estilos">Ver os estilos</a>
+            <a href="#estilos" className="botao" data-evento="estilos">Ver os 6 estilos</a>
             {contato && <a href={whats("Oi! Vi o site de vocês e quero saber do site com agenda pra minha barbearia.")!} className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="topo">Falar no WhatsApp</a>}
           </div>
           <p className="vendas-topo-preco">{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês. Pix, sem fidelidade.</p>
+          <p className="vendas-topo-entrega">No ar em até 24 horas depois do Pix: a gente monta com as suas fotos e os seus preços.</p>
           <p className="vendas-topo-cursos">Veio pelos cursos grátis? <Link href="/cursos">Estão aqui</Link>.</p>
         </div>
         <figure className="vendas-topo-celular" aria-hidden="true">
@@ -113,6 +114,23 @@ export default async function Inicio() {
           ))}
         </Carrossel>
       </div>
+
+      {contato?.nome && (
+        <section className="vendas-secao vendas-quem" aria-labelledby="quem-titulo">
+          {foto && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={foto} alt={contato.nome} width={120} height={120} loading="lazy" />
+          )}
+          <div>
+            <h2 id="quem-titulo">Quem monta o seu site</h2>
+            <p>
+              Sou {contato.nome}. Sou eu que te chamo no WhatsApp, monto o site com as suas fotos e os seus preços
+              e te ajudo depois, quando precisar. Sem robô e sem central de atendimento.
+            </p>
+            <a href={whats(`Oi, ${contato.nome.split(" ")[0]}! Quero saber do site com agenda pra minha barbearia.`)!} className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="quem">Falar comigo no WhatsApp</a>
+          </div>
+        </section>
+      )}
 
       <section className="vendas-secao" aria-labelledby="no-site-titulo">
         <h2 id="no-site-titulo">O que vem no seu site</h2>
@@ -143,23 +161,6 @@ export default async function Inicio() {
           <li><strong>A gente monta e te manda o link</strong><span>Chamamos você no WhatsApp, pegamos as fotos, os serviços e os preços e entregamos o site no ar em até 24 horas depois do Pix. Depois você muda o que quiser pelo celular.</span></li>
         </ol>
       </section>
-
-      {contato?.nome && (
-        <section className="vendas-secao vendas-quem" aria-labelledby="quem-titulo">
-          {foto && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={foto} alt={contato.nome} width={120} height={120} loading="lazy" />
-          )}
-          <div>
-            <h2 id="quem-titulo">Quem monta o seu site</h2>
-            <p>
-              Sou {contato.nome}. Sou eu que te chamo no WhatsApp, monto o site com as suas fotos e os seus preços
-              e te ajudo depois, quando precisar. Sem robô e sem central de atendimento.
-            </p>
-            <a href={whats(`Oi, ${contato.nome.split(" ")[0]}! Quero saber do site com agenda pra minha barbearia.`)!} className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="quem">Falar comigo no WhatsApp</a>
-          </div>
-        </section>
-      )}
 
       <section id="preco" className="vendas-secao vendas-preco" aria-labelledby="preco-titulo">
         <h2 id="preco-titulo">Quanto custa</h2>

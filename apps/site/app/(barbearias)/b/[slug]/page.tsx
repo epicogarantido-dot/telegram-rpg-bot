@@ -144,7 +144,8 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
             {b.telefone && <a href={whats} className="b-botao-sec" target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> WhatsApp</a>}
           </div>
           <ul className="b-info-rapida">
-            <li className={`b-estado ${agora.aberto ? "aberto" : ""}`}><Clock size={16} aria-hidden /> {agora.texto}</li>
+            {/* Exemplo e demonstração não mostram "Fechado": pra quem está comprando, parece site parado. */}
+            {(!b.demoAte || agora.aberto) && <li className={`b-estado ${agora.aberto ? "aberto" : ""}`}><Clock size={16} aria-hidden /> {agora.texto}</li>}
             {b.endereco && <li><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</li>}
           </ul>
         </div>

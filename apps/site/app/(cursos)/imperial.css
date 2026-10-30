@@ -140,6 +140,7 @@ html:has(body.site-cursos) { background: #120b14; }
 .site-cursos .vendas-topo-texto > p { color: var(--suave); max-width: 52ch; margin: 0 0 22px; }
 .site-cursos .vendas-topo .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
 .site-cursos .vendas-topo .vendas-topo-preco { color: var(--texto); font-size: 1rem; margin: 0 0 6px; }
+.site-cursos .vendas-topo .vendas-topo-entrega { color: var(--suave); font-size: 0.95rem; margin: 0 0 6px; }
 .site-cursos .vendas-topo .vendas-topo-cursos { font-size: 0.95rem; margin: 0; }
 .site-cursos .vendas-topo-celular { display: none; margin: 0; }
 .site-cursos .vendas-topo-celular img { width: 100%; max-width: 280px; height: auto; display: block; margin-inline: auto; border-radius: 32px; border: 1px solid rgb(255 255 255 / 0.2); }

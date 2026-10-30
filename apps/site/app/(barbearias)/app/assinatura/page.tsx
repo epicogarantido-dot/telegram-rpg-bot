@@ -120,6 +120,20 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
             Na conversa a gente pega as suas fotos, serviços, preços e horários e monta o seu site de verdade.
             Você não precisa fazer mais nada por aqui.
           </p>
+          <div className="cartao pedido-separar">
+            <p><strong>Pra adiantar, já vá separando:</strong></p>
+            <ul>
+              <li>5 a 10 fotos dos seus cortes (as melhores do seu Instagram servem)</li>
+              <li>os serviços com o preço e quanto tempo cada um leva</li>
+              <li>os dias e horários que a barbearia abre</li>
+            </ul>
+            {contatoResponsavel() && (
+              <a className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="pos-pix"
+                href={`${contatoResponsavel()!.link}?text=${encodeURIComponent(`Oi! Fiz o pedido do site da ${barbearia.nome} e paguei o Pix. Já posso mandar as fotos?`)}`}>
+                Mandar as fotos pelo WhatsApp
+              </a>
+            )}
+          </div>
           {!pagamento.comprovante && (
             <form action={jaPaguei} className="formulario">
               <input type="hidden" name="id" value={pagamento.id} />
@@ -185,15 +199,25 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
         <p className="suave">Depois, a mensalidade pra manter o site e a agenda é {reais(banco.plano.valorCentavos)} a cada {banco.plano.dias} dias.</p>
       )}
       {!pixConfigurado ? (
-        <p>Pagamento ainda não configurado. Fale com o suporte.</p>
+        <p>
+          Pagamento ainda não configurado.{" "}
+          {contatoResponsavel()
+            ? <a href={`${contatoResponsavel()!.link}?text=${encodeURIComponent(`Olá! Quero pagar o site da ${barbearia.nome}, mas o Pix não apareceu.`)}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
+            : "Fale com quem te vendeu o site."}
+        </p>
       ) : (
         <div className="pix">
           <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
           <div>
-            <p>1. Abra o app do seu banco e escaneie o QR code, ou use o Pix copia e cola:</p>
-            <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
+            {/* Quem compra está no próprio celular: o copia e cola vem primeiro; o QR é pra quem abriu no computador. */}
+            <p>1. <strong>No celular:</strong> toque em Copiar código do Pix, abra o app do seu banco e escolha <strong>Pix Copia e Cola</strong>.</p>
             <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
-            <p>Identificador: <code>{pagamento.txid}</code></p>
+            <p className="suave pequeno">No computador? Escaneie o QR code com o app do banco.</p>
+            <details className="pix-codigo">
+              <summary className="suave pequeno">Ver o código do Pix</summary>
+              <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
+              <p className="suave pequeno">Identificador do pagamento: <code>{pagamento.txid}</code></p>
+            </details>
             <p>2. Depois de pagar, mande o comprovante aqui. A gente confere em até 24 horas{barbearia.emMontagem ? ", e chama você no WhatsApp" : soVenda() ? "" : ", e você recebe um aviso no celular"}.</p>
             {pagamento.status === "informado" && (
               <p className="atribuicao">
@@ -208,7 +232,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
                   Comprovante do Pix <small>(print da tela ou PDF)</small>
                   <CampoFoto name="comprovante" accept="image/*,application/pdf" ladoMaximo={2400} />
                 </label>
-                {pagamento.status !== "informado" && <input name="pagador" placeholder="Nome de quem pagou (ajuda a conferir)" maxLength={80} />}
+                {pagamento.status !== "informado" && <input name="pagador" placeholder="Nome no Pix, se for diferente do seu" aria-label="Nome no Pix, se for diferente do seu" maxLength={80} />}
                 <BotaoEnviar carregando="Enviando…">{pagamento.status === "informado" ? "Enviar comprovante" : "Já paguei"}</BotaoEnviar>
               </form>
             )}

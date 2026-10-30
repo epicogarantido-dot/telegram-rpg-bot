@@ -116,6 +116,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <CampoOrigem />
         <small className="suave">Ao continuar você concorda com os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>.</small>
         <button type="submit">{plano.testeDias > 0 ? "Começar" : "Continuar para o pagamento"}</button>
+        {soVenda() && plano.testeDias === 0 && <small className="suave">No próximo passo aparece o Pix de {reais(plano.adesaoCentavos || plano.valorCentavos)}. Nada é cobrado agora.</small>}
       </form>
       <p className="suave">Já fez o pedido? <Link href="/app/entrar">Ver o meu pedido</Link></p>
     </>

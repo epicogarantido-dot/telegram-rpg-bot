@@ -722,3 +722,9 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .config-servico-item.desativado > summary { color: var(--suave); }
 .config-servico-selo { margin-left: 8px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--destaque-claro); color: var(--texto); font-weight: 600; }
 .erro > p { margin: 0; } .erro > p + p { margin-top: 8px; } .erro a { color: inherit; font-weight: 600; }
+/* No celular o QR vai pro fim: quem paga do próprio aparelho usa o copia e cola. */
+@media (max-width: 719px) { .pix > .qr { order: 2; margin: 0 auto; width: 200px; } }
+.pix-codigo { margin: 8px 0 12px; }
+.pix-codigo summary { cursor: pointer; }
+.pedido-separar { margin-top: 16px; }
+.pedido-separar ul { margin: 6px 0 12px; padding-left: 20px; }
