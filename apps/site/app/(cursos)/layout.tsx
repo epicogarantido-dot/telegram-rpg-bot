@@ -7,6 +7,10 @@ import { MarcaTopo } from "@/componentes/MarcaTopo";
 import { soEntrega } from "@/lib/modo";
 import "../globals.css";
 import "./imperial.css";
+import "../(barbearias)/temas.css";
+import "../(barbearias)/app/painel.css";
+import "../(barbearias)/app/painel-temas.css";
+import { barbeariaDoApp } from "@/lib/barbearia-do-app";
 
 export function generateMetadata(): Metadata {
   // No SaaS (só entrega) estas páginas são as do admin, privacidade e termos: sem a marca da venda.
@@ -26,23 +30,27 @@ export const viewport: Viewport = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // O SaaS usa este layout só no admin, na privacidade e nos termos: nada de link pra venda.
+  // O SaaS usa este layout só na privacidade e nos termos: no estilo do site da barbearia (as mesmas
+  // cores e letras do painel), sem nada da venda.
   if (soEntrega()) {
+    const b = barbeariaDoApp();
     return (
       <html lang="pt-BR">
-        <body className="site-cursos">
-          <div className="barra-topo">
-            <header className="topo">
-              <Link href="/app/entrar" className="marca">
-                <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
-                Site da Barbearia
-              </Link>
-            </header>
+        <body className="corpo-barbearias">
+          <div className="painel-simples" data-tema-painel={b?.tema}>
+            <div className="barra-topo">
+              <header className="topo">
+                <Link href="/" className="marca">
+                  <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
+                  {b?.nome ?? "Site da Barbearia"}
+                </Link>
+              </header>
+            </div>
+            <main>{children}</main>
+            <footer className="rodape">
+              <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>
+            </footer>
           </div>
-          <main>{children}</main>
-          <footer className="rodape">
-            <Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos de uso</Link>
-          </footer>
         </body>
       </html>
     );

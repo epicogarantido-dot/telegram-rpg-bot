@@ -21,11 +21,20 @@ export default function Privacidade() {
       <h1>Privacidade</h1>
       <p className="suave">Atualizado em 29 de outubro de 2026.</p>
 
-      <p>
-        Esta página explica, em português simples, quais dados o Aprenda Livre guarda, pra quê, e o que você pode
-        pedir. Vale pro site de cursos e Revista, e pro sistema de site e agenda das barbearias.
-      </p>
+      {soEntrega() ? (
+        <p>
+          Esta página explica, em português simples, quais dados este site e a agenda da barbearia guardam, pra quê, e o
+          que você pode pedir.
+        </p>
+      ) : (
+        <p>
+          Esta página explica, em português simples, quais dados o Aprenda Livre guarda, pra quê, e o que você pode
+          pedir. Vale pro site de cursos e Revista, e pro sistema de site e agenda das barbearias.
+        </p>
+      )}
 
+      {/* No app de cada barbeiro (SaaS) não tem cursos, comunidade nem prospecção: só o site e a agenda. */}
+      {!soEntrega() && <>
       <h2>Cursos e Revista</h2>
       <p>
         Você lê tudo sem cadastro. Não usamos ferramenta de anúncio nem de rastreamento de terceiros. Contamos, de forma
@@ -49,6 +58,8 @@ export default function Privacidade() {
         achado em dados públicos (cadastro de CNPJ da Receita Federal, perfil público ou indicação). Toda mensagem diz
         quem está falando e como sair. Quem responde SAIR nunca mais é procurado.
       </p>
+
+      </>}
 
       <h2>Sistema de site e agenda (barbearias)</h2>
       <ul>
