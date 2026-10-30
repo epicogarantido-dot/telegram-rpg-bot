@@ -8,6 +8,8 @@ import { soEntrega, soVenda } from "@/lib/modo";
 import { prazoDaConta } from "@/lib/prazo";
 import { contatoResponsavel } from "@/lib/contato";
 import "./painel.css";
+import "./painel-temas.css";
+import { barbeariaDoApp } from "@/lib/barbearia-do-app";
 import "../../(cursos)/imperial.css";
 
 // O painel pode ser instalado no celular como app (avisos de horário novo).
@@ -39,19 +41,22 @@ export default async function LayoutPainel({ children }: { children: React.React
   }
 
   // Fora da conta (entrar, cadastro), com o site ainda em montagem ou suspenso pelo admin: topo simples, sem menu.
-  if (!barbearia || barbearia.emMontagem || barbearia.suspensa || soVenda()) {
+  // No SaaS, até a tela de entrar já veste o estilo do site do barbeiro.
+  if (!barbearia || barbearia.emMontagem || barbearia.suspensa) {
+    const doApp = soEntrega() ? barbeariaDoApp() : undefined;
+    const tema = barbearia?.tema ?? doApp?.tema;
     return (
-      <>
+      <div className="painel-simples" data-tema-painel={tema}>
         <div className="barra-topo">
           <header className="topo">
             <Link href="/app" className="marca">
               <span className="marca-icone"><CalendarDays size={18} aria-hidden /></span>
-              {barbearia?.nome ?? "Agenda da barbearia"}
+              {barbearia?.nome ?? doApp?.nome ?? "Agenda da barbearia"}
             </Link>
           </header>
         </div>
         <main>{children}</main>
-      </>
+      </div>
     );
   }
 
@@ -72,7 +77,7 @@ export default async function LayoutPainel({ children }: { children: React.React
     </div>
   );
   return (
-    <div className="painel">
+    <div className="painel" data-tema-painel={barbearia.tema}>
       <aside className="painel-lado">
         <Link href="/app" className="painel-marca">
           {capa

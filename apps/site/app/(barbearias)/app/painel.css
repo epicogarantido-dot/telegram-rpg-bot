@@ -16,7 +16,7 @@
 .painel-marca { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; min-width: 0; }
 .painel-marca img, .painel-marca-inicial {
   flex: none; width: 44px; height: 44px; border-radius: 12px; object-fit: cover;
-  display: grid; place-items: center; background: var(--acento); color: #1b1a17; font: 700 1.2rem var(--fonte-titulo);
+  display: grid; place-items: center; background: var(--lado-acento, var(--acento)); color: var(--sobre-lado-acento, #1b1a17); font: 700 1.2rem var(--fonte-titulo);
 }
 .painel-marca span { display: grid; min-width: 0; line-height: 1.25; }
 .painel-marca strong { font: 650 1rem var(--fonte-titulo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -27,13 +27,13 @@
   color: var(--lado-suave); text-decoration: none; font-weight: 500; font-size: 15px;
 }
 .painel-menu a:hover { color: var(--lado-texto); background: rgb(255 255 255 / 0.06); }
-.painel-menu a[aria-current="page"] { color: var(--lado-texto); background: rgb(255 255 255 / 0.1); box-shadow: inset 3px 0 0 var(--acento); }
+.painel-menu a[aria-current="page"] { color: var(--lado-texto); background: rgb(255 255 255 / 0.1); box-shadow: inset 3px 0 0 var(--lado-acento, var(--acento)); }
 .painel-ver-site {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
   padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: 14px;
-  background: var(--acento); color: #1b1a17;
+  background: var(--lado-acento, var(--acento)); color: var(--sobre-lado-acento, #1b1a17);
 }
-.painel-ver-site:hover { color: #1b1a17; filter: brightness(1.06); }
+.painel-ver-site:hover { color: var(--sobre-lado-acento, #1b1a17); filter: brightness(1.06); }
 
 @media (min-width: 900px) {
   .painel { display: grid; grid-template-columns: 248px minmax(0, 1fr); background: linear-gradient(90deg, var(--lado) 248px, transparent 248px); }

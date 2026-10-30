@@ -1,0 +1,81 @@
+/*
+ * O painel veste o estilo do site da barbearia (data-tema-painel no layout do /app): as cores, a
+ * letra dos títulos e o claro/escuro do tema escolhido. O texto corrido continua no Inter, que é
+ * o mais fácil de ler no dia a dia; os tokens são os mesmos do globals.css, então todo o resto do
+ * painel acompanha sem mudar nada.
+ */
+[data-tema-painel="silencioso"] {
+  --fonte-titulo: "Archivo", system-ui, sans-serif;
+  --fundo: #f6f5f2; --fundo-2: #ecebe7; --texto: #111111; --suave: #5a5a5a; --borda: #dedcd7; --cartao: #ffffff;
+  --destaque: #111111; --destaque-forte: #000000; --destaque-claro: #ecebe7; --sobre-destaque: #ffffff;
+  --acento: #111111; --acento-claro: #ecebe7;
+  --erro: #b42318; --erro-fundo: #fef3f2; --erro-borda: #fecdca;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06); --sombra-forte: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06);
+  --lado: #111111; --lado-texto: #f5f5f5; --lado-suave: #a8a8a8; --lado-acento: #ffffff; --sobre-lado-acento: #111111;
+  color-scheme: light;
+}
+body:has([data-tema-painel="silencioso"]), html:has([data-tema-painel="silencioso"]) { background: #f6f5f2; }
+[data-tema-painel="atemporal"] {
+  --fonte-titulo: "Libre Caslon Text", Georgia, serif;
+  --fundo: #ffffff; --fundo-2: #f0f0f0; --texto: #000000; --suave: #4a4a4a; --borda: #d4d4d4; --cartao: #ffffff;
+  --destaque: #000000; --destaque-forte: #222222; --destaque-claro: #ececec; --sobre-destaque: #ffffff;
+  --acento: #000000; --acento-claro: #ececec;
+  --erro: #b42318; --erro-fundo: #fef3f2; --erro-borda: #fecdca;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06); --sombra-forte: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06);
+  --lado: #000000; --lado-texto: #ffffff; --lado-suave: #a0a0a0; --lado-acento: #ffffff; --sobre-lado-acento: #000000;
+  color-scheme: light;
+}
+body:has([data-tema-painel="atemporal"]), html:has([data-tema-painel="atemporal"]) { background: #ffffff; }
+[data-tema-painel="cerimonia"] {
+  --fonte-titulo: "Jost", system-ui, sans-serif;
+  --fundo: #120b14; --fundo-2: #1d1320; --texto: #f5f0f6; --suave: #b9adbd; --borda: rgb(255 255 255 / 0.16); --cartao: #1a111c;
+  --destaque: #ffffff; --destaque-forte: #e8e0ea; --destaque-claro: #2a1d2d; --sobre-destaque: #120b14;
+  --acento: #e9d9ee; --acento-claro: #2a1d2d;
+  --erro: #fda29b; --erro-fundo: #2d1513; --erro-borda: #5c2520;
+  --sombra: none; --sombra-forte: none;
+  --lado: #0b060c; --lado-texto: #f5f0f6; --lado-suave: #b9adbd; --lado-acento: #e9d9ee; --sobre-lado-acento: #120b14;
+  color-scheme: dark;
+}
+body:has([data-tema-painel="cerimonia"]), html:has([data-tema-painel="cerimonia"]) { background: #120b14; }
+[data-tema-painel="tecnico"] {
+  --fonte-titulo: "Jost", system-ui, sans-serif;
+  --fundo: #f7f8fa; --fundo-2: #e6eaf1; --texto: #0f1d3a; --suave: #55617a; --borda: #dfe5ef; --cartao: #ffffff;
+  --destaque: #0f1d3a; --destaque-forte: #1b2c52; --destaque-claro: #e3e9f4; --sobre-destaque: #ffffff;
+  --acento: #2563eb; --acento-claro: #e3ecfd;
+  --erro: #b42318; --erro-fundo: #fef3f2; --erro-borda: #fecdca;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06); --sombra-forte: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.06);
+  --lado: #0f1d3a; --lado-texto: #eef2f8; --lado-suave: #9fb0cf; --lado-acento: #8fb3ff; --sobre-lado-acento: #0f1d3a;
+  color-scheme: light;
+}
+body:has([data-tema-painel="tecnico"]), html:has([data-tema-painel="tecnico"]) { background: #f7f8fa; }
+[data-tema-painel="potencia"] {
+  --fonte-titulo: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --fundo: #0a0a0a; --fundo-2: #161616; --texto: #f4f4f4; --suave: #a8a8a8; --borda: #2a2a2a; --cartao: #121212;
+  --destaque: #d7ff1e; --destaque-forte: #e6ff66; --destaque-claro: #1d2405; --sobre-destaque: #0a0a0a;
+  --acento: #d7ff1e; --acento-claro: #1d2405;
+  --erro: #fda29b; --erro-fundo: #2d1513; --erro-borda: #5c2520;
+  --sombra: none; --sombra-forte: none;
+  --lado: #000000; --lado-texto: #f4f4f4; --lado-suave: #a8a8a8; --lado-acento: #d7ff1e; --sobre-lado-acento: #0a0a0a;
+  color-scheme: dark;
+}
+body:has([data-tema-painel="potencia"]), html:has([data-tema-painel="potencia"]) { background: #0a0a0a; }
+[data-tema-painel="extravagancia"] {
+  --fonte-titulo: "Bodoni Moda", Didot, Georgia, serif;
+  --fundo: #0c0b09; --fundo-2: #17140e; --texto: #f3e6c4; --suave: #c9b98f; --borda: rgb(201 165 75 / 0.35); --cartao: #13110c;
+  --destaque: #c9a54b; --destaque-forte: #e8c766; --destaque-claro: #2a2212; --sobre-destaque: #0c0b09;
+  --acento: #e8c766; --acento-claro: #2a2212;
+  --erro: #fda29b; --erro-fundo: #2d1513; --erro-borda: #5c2520;
+  --sombra: none; --sombra-forte: none;
+  --lado: #070604; --lado-texto: #f3e6c4; --lado-suave: #c9b98f; --lado-acento: #c9a54b; --sobre-lado-acento: #0c0b09;
+  color-scheme: dark;
+}
+body:has([data-tema-painel="extravagancia"]), html:has([data-tema-painel="extravagancia"]) { background: #0c0b09; }
+[data-tema-painel] { background: var(--fundo); color: var(--texto); }
+@media (min-width: 900px) {
+  .painel[data-tema-painel] { background: linear-gradient(90deg, var(--lado) 248px, var(--fundo) 248px); }
+}
+/* Entrar e conta em montagem (topo simples): a barra de cima na cor do menu. */
+.painel-simples .barra-topo { background: var(--lado); border-bottom: 0; }
+.painel-simples .barra-topo .marca { color: var(--lado-texto); }
+.painel-simples .barra-topo .marca-icone { background: var(--lado-acento); color: var(--sobre-lado-acento); }
+.painel-simples { min-height: 100svh; }
