@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AtSign, CalendarCheck, Clock, MapPin, MessageCircle, Navigation, Phone, Users } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia, TEMAS } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_FOTO, diaDaSemana, nomeDia } from "@aprenda/agenda";
 import { AntesDepois } from "@/componentes/barbearia/AntesDepois";
 import { CapaSlides } from "@/componentes/barbearia/CapaSlides";
 import { Frase } from "@/componentes/barbearia/Frase";
@@ -80,16 +80,6 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
   const precosCorte = servicos.filter((s) => ehCorte(s.nome) && s.precoCentavos > 0).map((s) => s.precoCentavos);
   const aPartir = b.mostrarPrecos && precosCorte.length > 0 ? Math.min(...precosCorte) : undefined;
   const frases = frasesDoTema(tema);
-  // Fundo das frases: fotos que lembram barbearia (ambiente, depois ferramentas, depois a capa).
-  // Começa pelas que ainda não apareceram grandes; com poucas, repete.
-  const fundosFrase = [
-    ...ambientes.filter((f) => f !== fotoCasa && f !== fotoChamada),
-    ...trabalhos.filter((f) => f.categoria === "produtos"),
-    ...ambientes,
-    ...(capa ? [capa] : []),
-  ];
-  const inicioFrase = Math.max(0, TEMAS.findIndex((t) => t.id === tema));
-  const fotoFrase = (i: number) => fundosFrase.length ? fundosFrase[(i + inicioFrase) % fundosFrase.length] : undefined;
 
   return (
     <>
@@ -178,26 +168,26 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
           </p>
         </section>
       ) : mosaico.length >= 3 && (
-        <section className="b-mosaico" aria-labelledby="mosaico-titulo" data-revelar>
-          <div className="b-mosaico-principal">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={urlFoto(mosaico[0]!.arquivo)} alt={mosaico[0]!.legenda ?? ""} loading="lazy" width={mosaico[0]!.largura} height={mosaico[0]!.altura} />
-            <div className="b-mosaico-texto">
-              <h2 id="mosaico-titulo">Você sai daqui outro.</h2>
-              {agenda && <Link href={agendarHref} className="b-botao b-botao-grande"><CalendarCheck size={20} aria-hidden /> Agendar horário</Link>}
-            </div>
+        <section className="b-trabalhos-secao" aria-labelledby="mosaico-titulo">
+          {/* Título e botão fora das fotos: a foto mostra o corte, o texto fica do lado. */}
+          <div className="b-trabalhos-cabeca">
+            <h2 id="mosaico-titulo">Você sai daqui outro.</h2>
+            {agenda && <Link href={agendarHref} className="b-botao"><CalendarCheck size={18} aria-hidden /> Agendar horário</Link>}
           </div>
-          {mosaico.slice(1).map((f) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={f.id} src={urlFoto(f.arquivo, "p")} alt={f.legenda ?? ""} loading="lazy" width={f.largura} height={f.altura} />
-          ))}
+          <div className="b-mosaico" data-revelar>
+            {mosaico.map((f, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={f.id} src={urlFoto(f.arquivo, i === 0 ? undefined : "p")} alt={f.legenda ?? ""} loading="lazy" width={f.largura} height={f.altura}
+                className={i === 0 ? "b-mosaico-principal" : undefined} />
+            ))}
+          </div>
         </section>
       )}
       {pares.length === 0 && mosaico.length >= 3 && (
         <p className="b-mosaico-mais"><Link href={`${base}/trabalhos`} className="b-botao-sec">Ver todos os trabalhos</Link></p>
       )}
 
-      <Frase texto={frases[1]} foto={fotoFrase(1)} />
+      <Frase texto={frases[1]} />
 
       {equipe.length > 0 && (
         <section className="b-secao" id="equipe" aria-labelledby="equipe-titulo">
@@ -217,7 +207,7 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
         </section>
       )}
 
-      <Frase texto={frases[2]} foto={fotoFrase(2)} />
+      <Frase texto={frases[2]} />
 
       {temCasa && <section className="b-secao b-casa" aria-labelledby="casa-titulo">
         {fotoCasa && (
@@ -268,10 +258,10 @@ export default async function SiteBarbearia({ params }: { params: Promise<{ slug
       )}
 
       {agenda && (
-        <section className="b-chamada" aria-labelledby="chamada-titulo">
+        <section className={`b-chamada ${fotoChamada ? "b-chamada-com-foto" : ""}`} aria-labelledby="chamada-titulo">
           {fotoChamada && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
+            <img className="b-chamada-foto" src={urlFoto(fotoChamada.arquivo)} alt="" loading="lazy" width={fotoChamada.largura} height={fotoChamada.altura} />
           )}
           <div className="b-chamada-texto" data-revelar>
             <h2 id="chamada-titulo">{frases[3]}</h2>

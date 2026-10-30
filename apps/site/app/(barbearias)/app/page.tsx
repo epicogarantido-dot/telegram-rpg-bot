@@ -14,6 +14,7 @@ import { proximaData } from "@/lib/datas-barbearia";
 import { soEntrega } from "@/lib/modo";
 import { confirmarNoWhatsapp } from "./acoes-whatsapp";
 import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
+import { GradeSemana } from "@/componentes/barbearia/GradeSemana";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -219,8 +220,21 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </div>
       </dl>
 
+      {/* A semana em tabela (horários x dias), com todos os marcados no lugar; o dia em cartões vem logo abaixo. */}
+      <section className="semana" aria-labelledby="semana-titulo">
+        <div className="semana-topo">
+          <h2 id="semana-titulo">Agenda da semana</h2>
+          <nav aria-label="Semana">
+            <Link href={`/app?data=${somarDias(data, -7)}`}>← 7 dias</Link>
+            {data !== hoje && <Link href="/app">Hoje</Link>}
+            <Link href={`/app?data=${somarDias(data, 7)}`}>7 dias →</Link>
+          </nav>
+        </div>
+        <GradeSemana barbearia={barbearia} inicio={data} />
+      </section>
+
       {/* O dia primeiro: é o que o barbeiro abre o painel pra ver. O resto vem depois. */}
-      <nav className="navegacao">
+      <nav className="navegacao" id="dia">
         <Link href={`/app?data=${somarDias(data, -1)}`}>← dia anterior</Link>
         <strong>{data === hoje ? "Hoje — " : ""}{formatarData(data)}</strong>
         <Link href={`/app?data=${somarDias(data, 1)}`}>próximo dia →</Link>

@@ -201,3 +201,40 @@
 .sinal .botao-sec { padding: 6px 12px; font-size: 13px; min-height: 36px; }
 .sinal-desfazer { background: none; border: 0; padding: 4px; color: var(--suave); text-decoration: underline; font-size: 13px; cursor: pointer; }
 .agendado { flex-wrap: wrap; } .agendado > .sinal { flex-basis: 100%; margin: 0; }
+
+/* ---------- agenda da semana: horários nas linhas, dias nas colunas ---------- */
+.semana { margin: 18px 0 8px; }
+.semana-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.semana-topo h2 { margin: 0; font-size: 1.15rem; }
+.semana-topo nav { display: flex; gap: 14px; font-size: 14px; }
+.grade-semana { margin-top: 10px; overflow-x: auto; border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); -webkit-overflow-scrolling: touch; }
+.grade-semana .grade {
+  gap: 0;
+  display: grid; position: relative;
+  grid-template-columns: 52px repeat(var(--colunas), minmax(92px, 1fr));
+  grid-auto-rows: calc(var(--linha) / var(--sub, 1));
+  min-width: max-content;
+}
+.grade-canto, .grade-hora { position: sticky; left: 0; z-index: 3; background: var(--cartao); grid-column: 1; }
+.grade-hora { font-size: 12px; color: var(--suave); padding: 2px 6px 0 0; text-align: right; font-variant-numeric: tabular-nums; border-top: 1px solid var(--borda); }
+.grade-hora.agora { color: var(--destaque); font-weight: 700; }
+.grade-dia { z-index: 2; background: var(--cartao); border-bottom: 1px solid var(--borda); border-left: 1px solid var(--borda); text-align: center; }
+.grade-dia a { display: grid; padding: 4px 2px; text-decoration: none; color: var(--texto); line-height: 1.15; font-size: 13px; }
+.grade-dia a span { color: var(--suave); font-size: 12px; }
+.grade-dia.hoje a { color: var(--destaque); }
+.grade-dia.fechado a { color: var(--suave); }
+.grade-prof { font-size: 11px; color: var(--suave); text-align: center; border-left: 1px solid var(--borda); border-bottom: 1px solid var(--borda); padding-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grade-celula { border-top: 1px solid var(--borda); border-left: 1px solid var(--borda); }
+.grade-celula.fora { background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--borda) 60%, transparent) 6px 7px); }
+.grade-celula.passou { background-color: color-mix(in srgb, var(--fundo-2) 70%, transparent); }
+.grade-celula.agora { box-shadow: inset 0 2px 0 var(--destaque); }
+.grade-horario {
+  z-index: 1; margin: 1px 3px; padding: 3px 6px; border-radius: 6px; overflow: hidden;
+  background: var(--destaque); color: var(--sobre-destaque); text-decoration: none; font-size: 12px; line-height: 1.2;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.grade-horario strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grade-horario span { opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grade-horario.passou { opacity: 0.45; }
+.grade-horario:hover { color: var(--sobre-destaque); filter: brightness(1.08); }
+.grade-bloqueio { z-index: 1; margin: 1px 3px; padding: 3px 6px; border-radius: 6px; font-size: 12px; color: var(--suave); background: var(--fundo-2); border: 1px dashed var(--borda); overflow: hidden; }

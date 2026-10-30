@@ -147,8 +147,8 @@
 }
 .site-b:not([data-tema="tecnico"]) .b-heroi-texto { padding-top: 120px; padding-bottom: 56px; align-content: end; }
 .site-b:not([data-tema="tecnico"]):has(.b-heroi) > .b-topo { color: #fff; }
-.site-b:is([data-tema="silencioso"], [data-tema="atemporal"]) :is(.b-heroi, .b-chamada) { --destaque: #fff; --destaque-forte: #e9e9e9; --sobre-destaque: #111; --acento: #fff; }
-.site-b[data-tema="tecnico"] .b-chamada { --destaque: #fff; --destaque-forte: #e3e9f4; --sobre-destaque: #0f1d3a; }
+.site-b:is([data-tema="silencioso"], [data-tema="atemporal"]) :is(.b-heroi, .b-chamada:not(.b-chamada-com-foto)) { --destaque: #fff; --destaque-forte: #e9e9e9; --sobre-destaque: #111; --acento: #fff; }
+.site-b[data-tema="tecnico"] .b-chamada:not(.b-chamada-com-foto) { --destaque: #fff; --destaque-forte: #e3e9f4; --sobre-destaque: #0f1d3a; }
 .site-b[data-tema="silencioso"] { --t-sobreposicao: linear-gradient(180deg, rgb(0 0 0 / 0.25) 0%, rgb(0 0 0 / 0.15) 35%, rgb(0 0 0 / 0.8) 100%); }
 .site-b[data-tema="atemporal"] { --t-sobreposicao: linear-gradient(180deg, rgb(0 0 0 / 0.4), rgb(0 0 0 / 0.85)); }
 .site-b:is([data-tema="silencioso"], [data-tema="atemporal"]):has(.b-heroi) > .b-topo .b-botao { background: #fff; color: #111 !important; border-color: #fff; }
@@ -1035,10 +1035,8 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-escolha-corte .b-nao-cortar .b-vitrine-texto strong { font-size: 1.1rem; }
 /* "Não vou cortar": mesma forma, foto mais apagada, pra ficar claro que é a outra porta. */
 .b-nao-cortar .b-vitrine-foto img { filter: grayscale(0.6) brightness(0.7); }
-.b-nao-cortar::before {
-  content: ""; position: absolute; inset: 10px; z-index: 0; pointer-events: none;
-  border: 1px dashed rgb(255 255 255 / 0.55); border-radius: max(calc(var(--raio) - 6px), 0px);
-}
+/* Texto fora da foto: a moldura tracejada de antes ficava solta no meio do cartão; agora é a borda dele. */
+.site-b .b-nao-cortar { border-style: dashed; }
 
 /* Passo 3: o corte escolhido na vitrine, que vai junto com o horário. */
 .b-referencia-escolhida {
@@ -1099,3 +1097,52 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .site-b .b-sinal p { margin: 8px 0; }
 .site-b .b-sinal-qr { width: 200px; max-width: 100%; padding: 8px; background: #fff; border-radius: var(--raio-p); margin: 8px 0; }
 .site-b .b-sinal-qr svg { display: block; width: 100%; height: auto; }
+
+/* ======================================================================
+   Texto fora da foto (revisão de 30/10/2026): como nos sites de barbearia
+   de referência, a foto mostra o trabalho e o texto fica ao lado ou embaixo,
+   no fundo do tema. Só a abertura continua com texto sobre a capa.
+   ====================================================================== */
+
+/* Frases: faixa limpa, sem foto atrás. */
+.site-b .b-frase { min-height: 0; padding-block: clamp(28px, 6vw, 56px); background: var(--fundo-2); color: var(--texto); }
+
+/* Trabalhos: título e botão em cima, fotos em grade embaixo. */
+.b-trabalhos-secao { max-width: 1120px; margin: 0 auto; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
+.b-trabalhos-cabeca { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 16px; }
+.site-b .b-trabalhos-cabeca h2 { margin: 0; text-align: left; }
+.site-b .b-trabalhos-cabeca h2::after { display: none; }
+.b-trabalhos-secao .b-mosaico { padding: 0; height: auto; }
+.b-mosaico .b-mosaico-principal { grid-column: 1 / -1; aspect-ratio: 4 / 3; max-height: 520px; }
+@media (min-width: 760px) {
+  .b-trabalhos-secao .b-mosaico { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; height: min(560px, 70svh); }
+  .b-mosaico .b-mosaico-principal { grid-column: 1; grid-row: 1 / span 2; aspect-ratio: auto; max-height: none; height: 100%; }
+}
+.site-b[data-tema="potencia"] .b-trabalhos-cabeca h2 { font-size: clamp(2.4rem, 8vw, 4.4rem); line-height: 0.9; }
+
+/* Chamada final: foto de um lado, texto do outro (no celular, foto em cima). */
+.b-chamada.b-chamada-com-foto {
+  display: grid; grid-template-columns: 1fr; place-items: stretch; min-height: 0; text-align: left;
+  color: var(--texto); background: var(--fundo-2); max-width: 1120px; margin: 40px auto; border-radius: var(--raio);
+}
+.b-chamada.b-chamada-com-foto::after { display: none; }
+.b-chamada.b-chamada-com-foto > .b-chamada-foto { position: static; width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; z-index: auto; }
+.b-chamada.b-chamada-com-foto .b-chamada-texto { justify-items: start; align-content: center; padding: 32px 24px; }
+.site-b .b-chamada.b-chamada-com-foto h2 { color: var(--texto); }
+.b-chamada.b-chamada-com-foto p { color: var(--suave); }
+@media (min-width: 760px) {
+  .b-chamada.b-chamada-com-foto { grid-template-columns: 1fr 1fr; margin-inline: max(16px, auto); }
+  .b-chamada.b-chamada-com-foto > .b-chamada-foto { aspect-ratio: auto; min-height: 420px; }
+  .b-chamada.b-chamada-com-foto .b-chamada-texto { padding: 48px; }
+}
+.site-b[data-tema="extravagancia"] .b-chamada.b-chamada-com-foto h2 { color: var(--destaque-forte); }
+
+/* Cartões do agendar: foto em cima, nome, tempo e preço embaixo, no fundo do cartão. */
+.site-b .b-vitrine-item { color: var(--texto); background: var(--cartao, var(--fundo-2)); border: 1px solid var(--borda); display: flex; flex-direction: column; }
+.b-vitrine-item::after { display: none; }
+.b-vitrine-foto { position: relative; overflow: hidden; }
+.b-vitrine-foto img { z-index: 0; }
+.b-vitrine-texto { position: static; padding: 10px 12px 12px; }
+.b-vitrine-texto small { color: var(--suave); }
+.b-vitrine-info { color: var(--suave); }
+.b-vitrine-info b { color: var(--texto); }
