@@ -69,7 +69,9 @@ export function GradeSemana({ barbearia, inicio }: { barbearia: Barbearia; inici
 
         {/* Fundo de cada célula: fora do expediente, já passou ou linha de agora. */}
         {dias.flatMap((x, i) => linhas.map((m, r) => {
-          const fora = x.fechado || !x.e || m < paraMinutos(x.e.abre) || m >= paraMinutos(x.e.fecha);
+          // Fora do expediente ou no intervalo (almoço): hachurado.
+          const pausa = !!x.e?.pausaInicio && !!x.e.pausaFim && m >= paraMinutos(x.e.pausaInicio) && m < paraMinutos(x.e.pausaFim);
+          const fora = x.fechado || !x.e || m < paraMinutos(x.e.abre) || m >= paraMinutos(x.e.fecha) || pausa;
           const passou = x.d < hoje || (x.d === hoje && m + passo <= minutoAgora);
           const agoraAqui = x.d === hoje && minutoAgora >= m && minutoAgora < m + passo;
           return (

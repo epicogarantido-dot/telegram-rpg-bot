@@ -1146,3 +1146,38 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-vitrine-texto small { color: var(--suave); }
 .b-vitrine-info { color: var(--suave); }
 .b-vitrine-info b { color: var(--texto); }
+
+/* ======================================================================
+   Revisão de 30/10/2026 (2): abertura com a foto em destaque, frase como
+   foto grande + texto inteiro embaixo, trabalhos num carrossel no fim.
+   ====================================================================== */
+
+/* Abertura: a foto aparece inteira; o escurecido fica só embaixo, onde está o texto. */
+.site-b:not([data-tema="tecnico"]) .b-heroi-midia::after {
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.25) 0%, rgb(0 0 0 / 0) 22%, rgb(0 0 0 / 0) 42%, rgb(0 0 0 / 0.86) 100%);
+}
+.site-b:not([data-tema="tecnico"]) .b-heroi-texto { align-content: end; padding-bottom: 40px; }
+.site-b:not([data-tema="tecnico"]) .b-heroi-texto .b-bio { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Frase: foto grande (como a capa) e a frase inteira embaixo. */
+.b-frase-capa { margin: 0; }
+.b-frase-capa > img { display: block; width: 100%; aspect-ratio: 4 / 5; max-height: 82svh; object-fit: cover; }
+@media (min-width: 760px) { .b-frase-capa > img { aspect-ratio: 21 / 9; max-height: 78svh; } }
+.b-frase-texto {
+  margin: 0 auto; max-width: 22ch; padding: clamp(28px, 6vw, 56px) 16px; text-align: center; text-wrap: balance;
+  font: var(--t-titulo-peso) var(--t-titulo-estilo) clamp(1.7rem, 6vw, 3.2rem)/1.1 var(--fonte-titulo);
+  text-transform: var(--t-titulo-caixa); letter-spacing: var(--t-titulo-espaco); color: var(--texto);
+}
+.site-b[data-tema="potencia"] .b-frase-texto { color: var(--destaque); font-size: clamp(2.4rem, 9vw, 4.6rem); line-height: 0.92; }
+.site-b[data-tema="extravagancia"] .b-frase-texto { color: var(--destaque-forte); }
+.site-b[data-tema="cerimonia"] .b-frase-texto { font-size: clamp(1.5rem, 4.6vw, 2.8rem); line-height: 1.25; }
+.site-b[data-tema="atemporal"] .b-frase-capa > img { filter: grayscale(1); }
+.site-b[data-tema="tecnico"] .b-frase-capa > img { width: auto; margin-inline: max(16px, env(safe-area-inset-left, 0px)); border-radius: 28px; }
+
+/* Trabalhos no fim: fotos numa linha só, deslizando. */
+.b-carrossel-fotos .b-carrossel-trilho { grid-auto-columns: min(72vw, 300px); }
+.b-carrossel-fotos .b-carrossel-trilho img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; border-radius: var(--t-foto-raio, var(--raio)); }
+.site-b[data-tema="atemporal"] .b-carrossel-fotos img { filter: grayscale(1); }
+.b-carrossel-rodape { margin-top: 16px; text-align: center; }
+.b-carrossel-fotos .b-carrossel-trilho > li { align-items: start; }
+.b-carrossel-fotos .b-carrossel-trilho > li > img { flex: none; height: auto; }

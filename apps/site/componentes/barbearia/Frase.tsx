@@ -1,16 +1,17 @@
+import { urlFoto } from "@/lib/barbearias";
+
 /**
- * Frase grande entre as seções, numa faixa limpa (sem foto atrás: texto sobre foto polui), correndo
- * de lado sem parar como um letreiro (não depende de rolar a página). Duas voltas iguais emendam
- * sem buraco; leitor de tela lê a frase uma vez só. Com "reduzir movimento", fica parada e inteira.
+ * Frase entre as partes da página: primeiro uma foto grande, como a capa, e embaixo a frase
+ * inteira, parada (sem letreiro e sem texto em cima da foto). Sem foto, fica só a frase.
  */
-export function Frase({ texto }: { texto: string }) {
+export function Frase({ texto, foto }: { texto: string; foto?: { arquivo: string; largura?: number; altura?: number; legenda?: string } }) {
   return (
-    <section className="b-frase b-letreiro">
-      <p className="b-so-leitor">{texto}</p>
-      <div className="b-letreiro-faixa" aria-hidden="true">
-        {/* Seis cópias: a metade de cá e a de lá são iguais, então andar 50% emenda certinho. */}
-        <div className="b-letreiro-trilho">{[0, 1, 2, 3, 4, 5].map((i) => <span key={i}>{texto}</span>)}</div>
-      </div>
+    <section className={`b-frase-capa ${foto ? "" : "sem-foto"}`}>
+      {foto && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={urlFoto(foto.arquivo)} alt="" loading="lazy" width={foto.largura} height={foto.altura} data-revelar />
+      )}
+      <p className="b-frase-texto">{texto}</p>
     </section>
   );
 }
