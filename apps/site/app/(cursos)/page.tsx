@@ -39,10 +39,11 @@ const TELAS = [
   { arquivo: "agendar-adicionais", titulo: "Soma barba e sobrancelha", texto: "Os adicionais entram com um toque, com o tempo e o preço certos.", alt: "Tela de adicionais com barba, cavanhaque, risco e pezinho" },
   { arquivo: "agendar-horario", titulo: "Só horário livre de verdade", texto: "Ele vê os dias e os horários que sobram e marca na hora, sem te chamar.", alt: "Tela de escolher o dia e o horário" },
   { arquivo: "agendado", titulo: "Lembrete no celular dele", texto: "Põe na agenda do celular e, se precisar, troca ou cancela pelo link.", alt: "Tela de horário marcado com o botão de adicionar à agenda" },
-  { arquivo: "painel-agenda", titulo: "Sua agenda do dia", texto: "Quem vem, o serviço e a foto do corte que ele escolheu. Confirma no seu WhatsApp com um toque.", alt: "Painel com os horários do dia" },
+  { arquivo: "painel-agendados", titulo: "Confirma cada cliente no WhatsApp", texto: "A lista de quem vem nos próximos dias. Um toque abre o seu WhatsApp com a mensagem pronta pro cliente.", alt: "Lista de agendados com o botão verde Confirmar" },
+  { arquivo: "painel-agenda", titulo: "Sua agenda do dia", texto: "Quem vem, o serviço e a foto do corte que ele escolheu. O painel fica com as cores do seu estilo.", alt: "Painel com os horários do dia" },
   { arquivo: "painel-calendario", titulo: "No calendário do seu celular", texto: "Os horários aparecem no iPhone ou no Google, com lembrete antes de cada cliente.", alt: "Tela de ligar a agenda no calendário do celular" },
   { arquivo: "painel-fotos", titulo: "Suas fotos, por tipo de corte", texto: "Degradê, navalhado, barba, antes e depois: você troca pelo celular.", alt: "Painel de fotos do site" },
-  { arquivo: "painel-servicos", titulo: "Serviços, tempos e preços", texto: "Cada serviço com o seu tempo e o seu preço. Mudou aqui, mudou no site.", alt: "Painel com os serviços e preços" },
+  { arquivo: "painel-servicos", titulo: "Serviços, tempos e preços", texto: "Uma linha por serviço, com o tempo e o preço. Toca, muda e salva: mudou no site na hora.", alt: "Painel com os serviços e preços" },
   { arquivo: "painel-estilo", titulo: "Troque o estilo quando quiser", texto: "Seis estilos, sem perder fotos, serviços nem horários.", alt: "Painel de escolher o estilo do site" },
   { arquivo: "painel-whatsapp", titulo: "Resposta automática no WhatsApp", texto: "Quem te chama recebe uma mensagem com o link de agendar. Do próprio WhatsApp Business, grátis.", alt: "Tela com a mensagem pronta pro WhatsApp Business" },
 ] as const;
