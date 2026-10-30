@@ -909,6 +909,17 @@ describe("depois do atendimento: falta, retorno, lembrete, avaliação e número
     expect(b.proximoDoCliente(a.id, "5519998765432", new Date("2026-10-21T12:00:00Z"))).toBe("2026-10-27T10:00");
   });
 
+  it("lista de agendados: só os próximos confirmados, com a confirmação anotada", () => {
+    const { b, a, marcar } = cenario();
+    marcar("2026-10-20", "10:00");
+    const id = marcar("2026-10-27", "10:00");
+    marcar("2026-12-30", "10:00"); // longe demais
+    b.registrarContato(a.id, id, "confirmacao");
+    const lista = b.proximosAgendados(a.id, "2026-10-21T09:00", 30);
+    expect(lista.map((x) => x.inicio)).toEqual(["2026-10-27T10:00"]);
+    expect(lista[0]!.confirmacaoEm).toBeTruthy();
+  });
+
   it("números do mês: atendidos, faltas, quem voltou e quem saiu com retorno", () => {
     const { b, a, s, marcar } = cenario();
     marcar("2026-09-29", "10:00", "5519911110000"); // veio em setembro

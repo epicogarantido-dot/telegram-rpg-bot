@@ -189,6 +189,8 @@ export interface Agendamento {
   /** Quando o barbeiro abriu o lembrete da véspera e o pedido de avaliação (pra não repetir). */
   lembreteEm?: string;
   avaliacaoEm?: string;
+  /** Quando o barbeiro abriu a confirmação do horário no WhatsApp dele (lista de agendados). */
+  confirmacaoEm?: string;
   /** Foto do portfólio que o cliente escolheu ao marcar ("quero esse corte"). */
   referenciaFoto?: string;
   /** Endereço do cliente, só em serviço em domicílio (só o barbeiro vê). */
@@ -387,7 +389,7 @@ export class BancoAgenda {
     this.migrarAdicionais();
     this.garantirColuna("agendamentos", "endereco_cliente", "TEXT");
     this.garantirColuna("barbearias", "retorno_dias", `INTEGER NOT NULL DEFAULT ${RETORNO_PADRAO_DIAS}`);
-    for (const c of ["lembrete_em", "avaliacao_em", "referencia_foto"]) this.garantirColuna("agendamentos", c, "TEXT");
+    for (const c of ["lembrete_em", "avaliacao_em", "confirmacao_em", "referencia_foto"]) this.garantirColuna("agendamentos", c, "TEXT");
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.garantirColuna("profissionais", "parte_pct", "INTEGER");
@@ -960,13 +962,13 @@ export class BancoAgenda {
   agendamentosDoDia(barbeariaId: number, data: Data, profissionalId?: number): Agendamento[] {
     const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
-        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.referencia_foto AS referenciaFoto,
-        a.endereco_cliente AS enderecoCliente
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.confirmacao_em AS confirmacaoEm,
+        a.referencia_foto AS referenciaFoto, a.endereco_cliente AS enderecoCliente
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.inicio LIKE ? ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
-    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
   }
 
   /**
@@ -1098,8 +1100,8 @@ export class BancoAgenda {
   }
 
   /** Anota que o barbeiro abriu o lembrete da véspera ou o pedido de avaliação desse horário. */
-  registrarContato(barbeariaId: number, id: number, tipo: "lembrete" | "avaliacao", agora = new Date()): void {
-    const coluna = tipo === "lembrete" ? "lembrete_em" : "avaliacao_em";
+  registrarContato(barbeariaId: number, id: number, tipo: "lembrete" | "avaliacao" | "confirmacao", agora = new Date()): void {
+    const coluna = tipo === "lembrete" ? "lembrete_em" : tipo === "avaliacao" ? "avaliacao_em" : "confirmacao_em";
     this.db.prepare(`UPDATE agendamentos SET ${coluna} = ? WHERE id = ? AND barbearia_id = ?`).run(agora.toISOString(), id, barbeariaId);
   }
 
@@ -1420,6 +1422,21 @@ export class BancoAgenda {
         ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, desde, `${ate}T99`, ...(profissionalId ? [profissionalId] : [])) as unknown as (Agendamento & { duracaoMin: number })[];
+  }
+
+  /**
+   * Próximos horários confirmados (lista de agendados do painel), do momento `agora` (hora local
+   * da barbearia) até `dias` à frente, com o que o barbeiro já mandou pelo WhatsApp.
+   */
+  proximosAgendados(barbeariaId: number, agora: DataHora, dias = 30): Agendamento[] {
+    const ate = somarDias(agora.slice(0, 10) as Data, dias);
+    const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico,
+        a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.confirmacao_em AS confirmacaoEm, a.endereco_cliente AS enderecoCliente
+      FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
+      WHERE a.barbearia_id = ? AND a.status = 'confirmado' AND a.inicio >= ? AND a.inicio < ?
+      ORDER BY a.inicio LIMIT 300`).all(barbeariaId, agora, `${ate}T99`) as unknown as Agendamento[];
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
   }
 
   // ---------- link do cliente: ver, cancelar e remarcar sem login ----------

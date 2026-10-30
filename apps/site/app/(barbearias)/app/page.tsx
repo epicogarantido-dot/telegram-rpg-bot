@@ -3,15 +3,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { CalendarCheck, CalendarOff, CalendarPlus, Star, MessageCircle, Smartphone, UserX, Users } from "lucide-react";
+import { CalendarCheck, CalendarOff, CalendarPlus, Check, ListChecks, Star, MessageCircle, UserX, Users } from "lucide-react";
 import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
-import { avisoDeTeste, chavesAviso, mensagemConfirmacao } from "@/lib/avisos";
+import { avisoDeTeste, chavesAviso } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { linkPublico, situacaoAgora, urlFoto } from "@/lib/barbearias";
-import { mensagemAvaliacao, mensagemLembrete } from "@/lib/pos-atendimento";
+import { mensagemAvaliacao, mensagemLembrete, primeiroNome } from "@/lib/pos-atendimento";
 import { proximaData } from "@/lib/datas-barbearia";
 import { soEntrega } from "@/lib/modo";
+import { confirmarNoWhatsapp } from "./acoes-whatsapp";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -158,6 +159,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
   const agoraLocal = agoraNoFuso(barbearia.fuso);
   const sumidos = banco.clientesSumidos(barbearia.id).length;
+  const faltamConfirmar = banco.proximosAgendados(barbearia.id, agoraLocal, 30).filter((a) => !a.confirmacaoEm).length;
   const planos = new Map(banco.planos(barbearia.id).map((p) => [p.telefone, p]));
   const linkAvaliacao = banco.barbeariaPorId(barbearia.id)!.linkAvaliacao;
   // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
@@ -238,7 +240,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       <div className="atalhos">
         <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
         <Link href={`/app?data=${data}&bloquear=1#folgas`}><CalendarOff size={20} aria-hidden /> Bloquear horário</Link>
-        <Link href="/app/calendario"><Smartphone size={20} aria-hidden /> Agenda no celular</Link>
+        <Link href="/app/agendados?faltam=1"><ListChecks size={20} aria-hidden /> Confirmar horários{faltamConfirmar > 0 ? ` (${faltamConfirmar})` : ""}</Link>
         <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
       </div>
 
@@ -411,6 +413,11 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           )}
           {a.status === "faltou" && (
             <div className="acoes">
+              <a className="botao-sec" target="_blank" rel="noopener noreferrer" href={linkWhatsapp(a.clienteTelefone,
+                `Oi, ${primeiroNome(a.clienteNome)}! Aqui é da ${barbearia.nome}. Sentimos sua falta no horário de ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. ` +
+                `Quer marcar outro? É só escolher aqui: ${linkPublico(barbearia, "/agendar")}`)}>
+                <MessageCircle size={16} aria-hidden /> Chamar pra remarcar
+              </a>
               <Link className="botao-sec" href={`/app/retorno/${a.id}`}><CalendarPlus size={16} aria-hidden /> Remarcar</Link>
               <form action={marcarFalta}>
                 <input type="hidden" name="id" value={a.id} />
@@ -422,10 +429,12 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           )}
           {a.status === "confirmado" && a.inicio > agoraLocal && (
             <div className="acoes">
-              <a className="botao-sec" target="_blank" rel="noopener noreferrer"
-                href={linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio }))}>
-                <MessageCircle size={16} aria-hidden /> Confirmar no WhatsApp
-              </a>
+              <form action={confirmarNoWhatsapp}>
+                <input type="hidden" name="id" value={a.id} />
+                {a.confirmacaoEm
+                  ? <button className="botao-sec" title="Mandar de novo"><Check size={16} aria-hidden /> Confirmação enviada</button>
+                  : <button className="botao-sec"><MessageCircle size={16} aria-hidden /> Confirmar no WhatsApp</button>}
+              </form>
               <details className="confirmar">
                 <summary className="botao-sec">Cancelar</summary>
                 <div>
@@ -447,9 +456,9 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           )}
           {recemCancelado?.id === a.id && (
             <p className="atribuicao" role="status">
-              Cancelado. Avise {a.clienteNome.split(" ")[0]} pra não vir à toa:{" "}
+              Cancelado. Avise {primeiroNome(a.clienteNome)} pra não vir à toa:{" "}
               <a target="_blank" rel="noopener noreferrer" href={linkWhatsapp(a.clienteTelefone,
-                `Olá, ${a.clienteNome.split(" ")[0]}! Aqui é da ${barbearia.nome}. Precisamos cancelar seu horário de ${a.servico}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Desculpe! Pra marcar outro: ${linkDoSite}`)}>
+                `Olá, ${primeiroNome(a.clienteNome)}! Aqui é da ${barbearia.nome}. Precisamos cancelar seu horário de ${a.servico}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Desculpe! Pra marcar outro: ${linkDoSite}`)}>
                 <MessageCircle size={16} aria-hidden /> Avisar no WhatsApp
               </a>
             </p>

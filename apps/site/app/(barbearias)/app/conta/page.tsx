@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { semEmail, TEMAS } from "@aprenda/agenda";
-import { CalendarDays, CreditCard, Download, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users } from "lucide-react";
+import { CalendarDays, CreditCard, Download, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users, BarChart3 } from "lucide-react";
 import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
 import { linkPublico } from "@/lib/barbearias";
@@ -78,6 +78,7 @@ export default async function Conta() {
             <li><Link href="/app/config"><Settings size={20} aria-hidden /><span>Configurações<small>Serviços, equipe, horários e como você atende</small></span></Link></li>
             <li><Link href="/app/planos"><Repeat size={20} aria-hidden /><span>Planos mensais<small>Clientes que pagam por mês</small></span></Link></li>
             <li><Link href="/app/clientes"><Users size={20} aria-hidden /><span>Clientes que sumiram<small>Quem não volta faz tempo</small></span></Link></li>
+            <li><Link href="/app/numeros"><BarChart3 size={20} aria-hidden /><span>Números<small>Atendimentos, faturamento e quem voltou no mês</small></span></Link></li>
             <li><Link href="/app/calendario"><CalendarDays size={20} aria-hidden /><span>Agenda no celular<small>Ver os horários no calendário do iPhone ou Google</small></span></Link></li>
             <li><Link href="/app/avaliacao"><Star size={20} aria-hidden /><span>Placa de avaliação<small>QR pra pedir avaliação no Google</small></span></Link></li>
             {soEntrega()

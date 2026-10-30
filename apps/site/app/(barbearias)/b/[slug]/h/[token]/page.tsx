@@ -71,6 +71,16 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
       <h1>{titulo}</h1>
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       {sp.cancelado && <p className="b-aviso-ok" role="status">Pronto, cancelamos. O horário ficou livre pra outra pessoa.</p>}
+      {/* Cliente mudou o horário: a barbearia recebe o aviso no painel, mas um toque no WhatsApp dela ajuda quem não vive no painel. */}
+      {!barbeiro && (sp.cancelado || sp.remarcado) && (
+        <p>
+          <a className="b-botao-sec" target="_blank" rel="noopener noreferrer" href={linkWhatsapp(b.telefone, sp.cancelado
+            ? `Olá! Aqui é ${h.clienteNome}. Cancelei pelo site o meu horário de ${h.servico}, ${quando}.`
+            : `Olá! Aqui é ${h.clienteNome}. Troquei pelo site o meu horário: agora é ${h.servico}, ${quando}.`)}>
+            <MessageCircle size={16} aria-hidden /> Avisar a barbearia no WhatsApp
+          </a>
+        </p>
+      )}
 
       {/* Barbeiro logado que marcou pro cliente: o que importa é mandar o link pra ele (o resto da página é do cliente). */}
       {barbeiro && podeMudar && (

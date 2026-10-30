@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, Images, LayoutTemplate, MessageCircle, Settings, UserRound, Users } from "lucide-react";
+import { BarChart3, CalendarDays, Images, LayoutTemplate, ListChecks, MessageCircle, Settings, UserRound, Users } from "lucide-react";
 
 const ITENS = [
   { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
+  // Agendados nas abas do celular: confirmar com o cliente é coisa de todo dia; Números fica no menu e na conta.
+  { href: "/app/agendados", rotulo: "Agendados", Icone: ListChecks, aba: true },
   { href: "/app/site", rotulo: "Meu site", Icone: LayoutTemplate, aba: true },
   { href: "/app/fotos", rotulo: "Fotos", Icone: Images, aba: true },
-  { href: "/app/numeros", rotulo: "Números", Icone: BarChart3, aba: true },
+  { href: "/app/numeros", rotulo: "Números", Icone: BarChart3, aba: false },
   { href: "/app/clientes", rotulo: "Clientes", Icone: Users, aba: false },
   { href: "/app/whatsapp", rotulo: "WhatsApp", Icone: MessageCircle, aba: false },
   { href: "/app/config", rotulo: "Configurações", Icone: Settings, aba: false },
