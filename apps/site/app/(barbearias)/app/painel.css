@@ -238,3 +238,10 @@
 .grade-horario.passou { opacity: 0.45; }
 .grade-horario:hover { color: var(--sobre-destaque); filter: brightness(1.08); }
 .grade-bloqueio { z-index: 1; margin: 1px 3px; padding: 3px 6px; border-radius: 6px; font-size: 12px; color: var(--suave); background: var(--fundo-2); border: 1px dashed var(--borda); overflow: hidden; }
+
+/* Horário próprio de cada profissional (Configurações → Profissionais). */
+.horario-prof { margin: 6px 0 14px; }
+.horario-prof summary { cursor: pointer; font-size: 14px; color: var(--suave); }
+.horario-prof .formulario { margin-top: 10px; }
+.dias-prof { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.dias-prof legend { font-size: 14px; color: var(--suave); margin-bottom: 4px; }

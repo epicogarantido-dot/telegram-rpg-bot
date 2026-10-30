@@ -606,6 +606,21 @@ describe("link do cliente: cancelar e remarcar", () => {
     return { b, a, o, agora, dias, s: s!, p: p!, hora, id, token };
   }
 
+  it("horário próprio do profissional: dias e entrada/saída dentro do da barbearia", () => {
+    const { b, a, dias, s, p, agora } = cenario();
+    const todos = b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora);
+    b.definirHorarioDoProfissional(a.id, p.id, { entrada: "13:00" });
+    const tarde = b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora);
+    expect(tarde.length).toBeLessThan(todos.length);
+    expect(tarde.every((h) => h >= "13:00")).toBe(true);
+    const outroDia = diaDaSemana(dias[2]!) === 2 ? 3 : 2;
+    b.definirHorarioDoProfissional(a.id, p.id, { dias: [outroDia] });
+    expect(b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora)).toEqual([]);
+    expect(() => b.definirHorarioDoProfissional(a.id, p.id, { entrada: "18:00", saida: "10:00" })).toThrow(ErroAgenda);
+    b.definirHorarioDoProfissional(a.id, p.id, {});
+    expect(b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora)).toEqual(todos);
+  });
+
   it("sinal: só no que o cliente marca pelo site, com Pix da barbearia e baixa manual", () => {
     const { b, a, dias, s, p, agora } = cenario();
     expect(() => b.atualizarSinal(a.id, { sinalCentavos: 2000 })).toThrow(ErroAgenda);

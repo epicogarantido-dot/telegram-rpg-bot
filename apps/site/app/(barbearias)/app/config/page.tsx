@@ -79,6 +79,7 @@ async function salvarFuncionamento(form: FormData) {
     folgaMin: Number(form.get("folga")),
     atendimento: String(form.get("atendimento")),
   }));
+  redirect(`/app/config?aviso=${encodeURIComponent("Como você atende: salvo.")}#atende`);
 }
 
 async function salvarSinal(form: FormData) {
@@ -109,6 +110,15 @@ async function alternarServico(form: FormData) {
 async function novoProfissional(form: FormData) {
   "use server";
   await executar((id) => obterAgenda().adicionarProfissional(id, String(form.get("nome"))));
+}
+
+async function salvarHorarioProfissional(form: FormData) {
+  "use server";
+  const dias = [0, 1, 2, 3, 4, 5, 6].filter((d) => form.get(`dia-${d}`) === "on");
+  await executar((id) => obterAgenda().definirHorarioDoProfissional(id, Number(form.get("id")), {
+    dias, entrada: String(form.get("entrada") ?? ""), saida: String(form.get("saida") ?? ""),
+  }));
+  redirect(`/app/config?aviso=${encodeURIComponent("Horário do profissional salvo.")}#equipe`);
 }
 
 async function alternarProfissional(form: FormData) {
@@ -143,6 +153,7 @@ async function salvarExpediente(form: FormData) {
         : undefined);
     }
   });
+  redirect(`/app/config?aviso=${encodeURIComponent("Horário de funcionamento salvo.")}#horario`);
 }
 
 /** Troca a senha sabendo a atual. Os outros aparelhos saem; este continua entrado. */
@@ -190,7 +201,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <button>Salvar</button>
       </form>
 
-      <h2>Como você atende</h2>
+      <h2 id="atende">Como você atende</h2>
       <form action={salvarFuncionamento} className="formulario">
         <fieldset className="escolhas">
           <legend>Forma de atendimento</legend>
@@ -295,7 +306,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <button>Adicionar</button>
       </form>
 
-      <h2>Profissionais <small className="suave">({profissionais.filter((p) => p.ativo).length} atendendo)</small></h2>
+      <h2 id="equipe">Profissionais <small className="suave">({profissionais.filter((p) => p.ativo).length} atendendo)</small></h2>
       <p className="suave pequeno">A foto de cada profissional sai das fotos do tipo "Equipe" (envie em <Link href="/app/fotos">Fotos</Link>). No site, cada um ganha o botão "Agendar com…". Em &quot;Fica com&quot;, a porcentagem de cada serviço que é do profissional (comissão ou {soEntrega() ? "barbeiro parceiro" : <a href="/revista/barbeiro-parceiro-lei-do-salao-parceiro">barbeiro parceiro</a>}); deixe vazio se não divide. A conta do mês sai em <Link href="/app/numeros">Números do mês</Link>.</p>
       {profissionais.map((p) => (
         <div key={p.id} className={`equipe-item ${p.ativo ? "" : "desativado"}`}>
@@ -313,6 +324,30 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
             <button className="botao-sec">Salvar</button>
             <button className="botao-sec" formAction={alternarProfissional} formNoValidate>{p.ativo ? "Desativar" : "Ativar"}</button>
           </form>
+          {/* Horário próprio: o site só oferece a este profissional os dias e horas dele (sempre dentro do da barbearia). */}
+          <details className="horario-prof">
+            <summary>
+              Horário de {p.nome.split(" ")[0]}:{" "}
+              {p.dias || p.entrada || p.saida
+                ? `${p.dias ? p.dias.map((d) => nomeDia(d).slice(0, 3)).join(", ") : "todos os dias"}${p.entrada || p.saida ? `, ${p.entrada ?? "abertura"}–${p.saida ?? "fechamento"}` : ""}`
+                : "o mesmo da barbearia"}
+            </summary>
+            <form action={salvarHorarioProfissional} className="formulario">
+              <input type="hidden" name="id" value={p.id} />
+              <fieldset className="dias-prof">
+                <legend>Dias que atende</legend>
+                {[1, 2, 3, 4, 5, 6, 0].map((d) => (
+                  <label key={d} className="marcar"><input type="checkbox" name={`dia-${d}`} defaultChecked={!p.dias || p.dias.includes(d)} /> {nomeDia(d)}</label>
+                ))}
+              </fieldset>
+              <div className="linha-horas">
+                <label>Entra às<input type="time" name="entrada" defaultValue={p.entrada ?? ""} /></label>
+                <label>Sai às<input type="time" name="saida" defaultValue={p.saida ?? ""} /></label>
+              </div>
+              <small className="suave">Deixe as horas em branco pra seguir o horário da barbearia. Folga de um dia só é em &quot;Bloquear um horário&quot;, na agenda.</small>
+              <button className="botao-sec">Salvar horário</button>
+            </form>
+          </details>
         </div>
       ))}
       <form action={novoProfissional} className="formulario linha">
@@ -320,7 +355,7 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
         <button>Adicionar</button>
       </form>
 
-      <h2>Horário de funcionamento</h2>
+      <h2 id="horario">Horário de funcionamento</h2>
       <form action={salvarExpediente} className="expediente">
         {Array.from({ length: 7 }, (_, dia) => {
           const e = expedientes.get(dia);

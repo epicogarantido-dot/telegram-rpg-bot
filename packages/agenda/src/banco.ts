@@ -170,6 +170,13 @@ export interface Profissional {
   id: number; nome: string; ativo: number; especialidade?: string; fotoArquivo?: string;
   /** Porcentagem de cada serviço que fica com o profissional (parceiro ou comissão). Vazio = não divide. */
   partePct?: number;
+  /**
+   * Horário próprio, dentro do da barbearia: dias da semana em que atende (0 = domingo; vazio =
+   * todos os dias abertos) e entrada/saída ("13:00"; vazio = o da barbearia).
+   */
+  dias?: number[];
+  entrada?: string;
+  saida?: string;
 }
 
 /** Limite de fotos por barbearia: segura o disco do servidor. */
@@ -416,6 +423,7 @@ export class BancoAgenda {
     this.garantirColuna("profissionais", "especialidade", "TEXT");
     this.garantirColuna("profissionais", "foto_arquivo", "TEXT");
     this.garantirColuna("profissionais", "parte_pct", "INTEGER");
+    for (const c of ["dias", "entrada", "saida"]) this.garantirColuna("profissionais", c, "TEXT");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS fotos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -615,7 +623,7 @@ export class BancoAgenda {
     try {
       const b = this.db.prepare(`INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, tema, cidade, bio, demo_ate, demo_token_hash, demo_lead)
         VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?)`).run(this.slugLivre(nome), nome, new Date().toISOString(), ate, dados.tema, cidade ?? null,
-        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Escolha o horário e marque aqui mesmo.`, ate, hash, dados.lead ?? null);
+        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Será um prazer te atender.`, ate, hash, dados.lead ?? null);
       const id = Number(b.lastInsertRowid);
       this.semearBarbearia(id, "Barbeiro");
       this.db.exec("COMMIT");
@@ -683,7 +691,7 @@ export class BancoAgenda {
       const b = this.db.prepare(`INSERT INTO barbearias (slug, nome, telefone, criado_em, acesso_ate, montagem, tema, cidade, bio)
         VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`).run(this.slugLivre(nomeBarbearia), nomeBarbearia, dados.telefone, agora,
         somarDias(hoje, dados.dias - 1), dados.tema, cidade ?? null,
-        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Escolha o horário e marque aqui mesmo.`);
+        `Corte, barba e atendimento caprichado${cidade ? ` em ${cidade}` : ""}. Será um prazer te atender.`);
       const id = Number(b.lastInsertRowid);
       this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em) VALUES (?, ?, ?, ?, ?)")
         .run(id, nome, email, hashSenha(dados.senha), agora);
@@ -829,9 +837,36 @@ export class BancoAgenda {
   }
 
   profissionais(barbeariaId: number, soAtivos = false): Profissional[] {
-    return (this.db.prepare(`SELECT id, nome, ativo, especialidade, foto_arquivo AS fotoArquivo, parte_pct AS partePct FROM profissionais
+    return (this.db.prepare(`SELECT id, nome, ativo, especialidade, foto_arquivo AS fotoArquivo, parte_pct AS partePct, dias, entrada, saida FROM profissionais
       WHERE barbearia_id = ? ${soAtivos ? "AND ativo = 1" : ""} ORDER BY id`)
-      .all(barbeariaId) as unknown as Profissional[]).map((p) => ({ ...p, partePct: p.partePct ?? undefined }));
+      .all(barbeariaId) as unknown as (Omit<Profissional, "dias"> & { dias: string | null })[]).map((p) => ({
+        ...p, partePct: p.partePct ?? undefined, entrada: p.entrada ?? undefined, saida: p.saida ?? undefined,
+        dias: p.dias ? p.dias.split(",").map(Number) : undefined,
+      }));
+  }
+
+  /** Horário próprio do profissional (dias e entrada/saída). Tudo vazio = segue o da barbearia. */
+  definirHorarioDoProfissional(barbeariaId: number, id: number, dados: { dias?: number[]; entrada?: string; saida?: string }): void {
+    const hora = /^([01]\d|2[0-3]):[0-5]\d$/;
+    const entrada = dados.entrada || null;
+    const saida = dados.saida || null;
+    if ((entrada && !hora.test(entrada)) || (saida && !hora.test(saida))) throw new ErroAgenda("Horário inválido.");
+    if (entrada && saida && paraMinutos(entrada) >= paraMinutos(saida)) throw new ErroAgenda("A saída tem que ser depois da entrada.");
+    const dias = dados.dias?.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+    if (dados.dias && dias!.length === 0) throw new ErroAgenda("Marque pelo menos um dia (ou desative o profissional).");
+    this.db.prepare("UPDATE profissionais SET dias = ?, entrada = ?, saida = ? WHERE id = ? AND barbearia_id = ?")
+      .run(dias && dias.length < 7 ? [...new Set(dias)].sort().join(",") : null, entrada, saida, id, barbeariaId);
+  }
+
+  /** Expediente do dia pra um profissional: o da barbearia, cortado pelos dias e pela entrada/saída dele. */
+  expedienteDoProfissional(barbeariaId: number, profissionalId: number, data: Data): Expediente | undefined {
+    const e = this.expedientes(barbeariaId).get(diaDaSemana(data));
+    const p = this.profissionais(barbeariaId).find((x) => x.id === profissionalId);
+    if (!e || !p) return e;
+    if (p.dias && !p.dias.includes(diaDaSemana(data))) return undefined;
+    const abre = p.entrada && paraMinutos(p.entrada) > paraMinutos(e.abre) ? p.entrada : e.abre;
+    const fecha = p.saida && paraMinutos(p.saida) < paraMinutos(e.fecha) ? p.saida : e.fecha;
+    return paraMinutos(abre) < paraMinutos(fecha) ? { ...e, abre, fecha } : undefined;
   }
 
   atualizarProfissional(barbeariaId: number, id: number, dados: { nome?: string; especialidade?: string; fotoArquivo?: string | null; partePct?: number | null }): void {
@@ -1015,7 +1050,7 @@ export class BancoAgenda {
     ];
     return horariosLivres({
       data,
-      expediente: this.expedientes(barbeariaId).get(diaDaSemana(data)),
+      expediente: this.expedienteDoProfissional(barbeariaId, profissionalId, data),
       duracao,
       ocupados,
       agora: agoraNoFuso(b.fuso, agora),

@@ -45,7 +45,8 @@ export default async function Agendados({ searchParams }: { searchParams: Promis
 
       {dias.map((d) => (
         <section key={d} className="agendados-dia" aria-label={`${rotulo(d)}, ${formatarData(d)}`}>
-          <h2>{rotulo(d)} <small className="suave">{formatarData(d)}</small></h2>
+          {/* Hoje e Amanhã ganham a data do lado; os outros já trazem o dia da semana na data. */}
+          <h2>{d === hoje || d === somarDias(hoje, 1) ? <>{rotulo(d)} <small className="suave">{formatarData(d)}</small></> : formatarData(d)}</h2>
           <ul>
             {lista.filter((a) => a.inicio.startsWith(d)).map((a) => (
               <li key={a.id} className="agendado">
