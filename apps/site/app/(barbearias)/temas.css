@@ -1181,3 +1181,22 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-carrossel-rodape { margin-top: 16px; text-align: center; }
 .b-carrossel-fotos .b-carrossel-trilho > li { align-items: start; }
 .b-carrossel-fotos .b-carrossel-trilho > li > img { flex: none; height: auto; }
+
+/* ---------- Agendar, passo 1: grupos → serviços do grupo → volta com o pedido ---------- */
+.b-grupos, .b-grupo-lista { list-style: none; padding: 0; margin: 16px 0 0; }
+.b-grupos > li, .b-grupo-lista > li { display: flex; min-width: 0; }
+.b-grupos > li > a, .b-grupo-lista > li > a { flex: 1; }
+.site-b .b-vitrine-item.marcado { border-color: var(--destaque); box-shadow: 0 0 0 2px var(--destaque); }
+.b-grupo-check {
+  position: absolute; top: 8px; right: 8px; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px;
+  border-radius: 50%; background: var(--destaque); color: var(--sobre-destaque);
+}
+.b-grupo-tirar { color: var(--suave); }
+.b-pedido { margin: 12px 0 4px; padding: 14px 16px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao, var(--fundo-2)); }
+.b-pedido-frase { margin: 0 0 8px; font-size: 1.05rem; }
+.b-pedido-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.b-pedido-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; font-size: 15px; }
+.b-pedido-valor { color: var(--suave); font-variant-numeric: tabular-nums; }
+.b-pedido-lista a { font-size: 13px; color: var(--suave); }
+.b-pedido-total { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--borda); font-size: 1.05rem; }
+.b-grupos .b-vitrine-texto small { display: -webkit-box; }

@@ -5,9 +5,8 @@ import { Check, Scissors, Sparkles } from "lucide-react";
 import { agoraNoFuso, CATEGORIAS_REFERENCIA, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
-import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { ehCorte, fotosDosServicos, urlFoto } from "@/lib/barbearias";
+import { ehCorte, fotosDosServicos, GRUPOS_SERVICO, grupoDoServico, urlFoto } from "@/lib/barbearias";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
 import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
@@ -20,8 +19,9 @@ const DIAS_A_FRENTE = 14;
  * - `com` é quem vai atender no horário escolhido (resolvido ao tocar no horário).
  * - `remarcar` é o token do link do cliente: mesmo fluxo, mas no fim troca o horário.
  * - `extra` são os adicionais (barba, sobrancelha), repetido na URL; `ad=1` diz que o cliente já respondeu.
- * - Passo 1 é um carrossel só: "Não vou cortar" (`servico=sem`, pra quem quer só barba e cuidados)
- *   e os cortes. Escolher um corte leva a foto dele (`foto`), que vira a referência do horário.
+ * - Passo 1 são os grupos (Barba, Cabelo, Sobrancelha, Pigmentação, Platinado, Acabamento): tocar abre
+ *   os serviços do grupo (`grupo`), escolher volta pros grupos com a frase do que vai ser feito e o valor.
+ *   A escolha anda em `sel`; "Escolher o horário" vira `servico` (o corte, se tiver) + `extra`.
  * Tudo por link (funciona sem JavaScript) e cada passo é uma tela.
  */
 type Busca = {
@@ -29,8 +29,11 @@ type Busca = {
   extra?: string | string[];
   /** Foto do corte escolhido na vitrine: vira a referência do horário sem o cliente escolher de novo. */
   foto?: string;
-  /** "Não vou cortar": o que a pessoa marcou (barba, sobrancelha...). */
+  /** "Não vou cortar" antigo: o que a pessoa marcou (links velhos). */
   escolha?: string | string[];
+  /** Passo 1: serviços escolhidos até agora (um por serviço) e o grupo aberto. */
+  sel?: string | string[];
+  grupo?: string;
 };
 
 /** `extra` vem uma vez por adicional; vira lista de ids. */
@@ -186,135 +189,143 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   const todosServicos = banco.servicos(b.id, true);
   const fotosLista = fotosDosServicos(todosServicos.map((s) => s.nome), fotosSite);
   const fotoDe = new Map(todosServicos.map((s, i) => [s.id, fotosLista[i]]));
-  const cortes = servicos.filter((s) => ehCorte(s.nome));
-  const naoCortes = servicos.filter((s) => !ehCorte(s.nome));
 
-  // ---------- "Não vou cortar": barba e cuidados, marca um ou mais ----------
-  if (!remarcando && (sp.servico === "sem" || (!servico && cortes.length === 0 && naoCortes.length > 1))) {
-    const escolhas = lerExtras(sp.escolha);
-    if (sp.ad === "1") {
-      // Enviou: o primeiro vira o serviço do horário e o resto, adicionais dele.
-      const marcados = naoCortes.filter((s) => escolhas.includes(s.id));
-      const principais = marcados.filter((s) => !s.adicional);
-      const erro = marcados.length === 0 ? "Escolha pelo menos um serviço."
-        : principais.length > 1 ? `Escolha só um entre ${principais.map((s) => s.nome).join(" e ")}. O outro dá pra marcar em outro horário.` : "";
-      const principal = principais[0] ?? marcados[0];
-      if (!erro && principal) {
-        const validos = new Set(banco.adicionaisPara(b.id, principal.id).map((a) => a.id));
-        const q = new URLSearchParams({ servico: String(principal.id), ad: "1" });
-        if (filtro) q.set("profissional", String(filtro.id));
-        for (const x of marcados) if (x !== principal && validos.has(x.id)) q.append("extra", String(x.id));
-        redirect(`${base}?${q}`);
-      }
-      sp.erro = erro;
+  // ---------- Passo 1: grupos (Barba, Cabelo, Sobrancelha...) → serviços do grupo → volta pros grupos ----------
+  // A escolha anda na URL (`sel`, um por serviço). Cabelo é um só (escolher outro corte troca); o resto liga e desliga.
+  // Links antigos com `servico` sem `ad=1` (ou "Não vou cortar") caem aqui com o serviço já escolhido.
+  if (!remarcando && (!servico || sp.servico === "sem" || !respondeu || sp.sel !== undefined || sp.grupo !== undefined)) {
+    const porId = new Map(servicos.map((s) => [s.id, s]));
+    const pedidosSel = [...lerExtras(sp.sel), ...(servico && sp.servico !== "sem" ? [servico.id, ...adicionais.map((a) => a.id)] : [])];
+    const selecionados = [...new Set(pedidosSel)].map((id) => porId.get(id)).filter((s): s is NonNullable<typeof s> => !!s);
+    const grupos = GRUPOS_SERVICO.map((g) => ({ ...g, lista: servicos.filter((s) => grupoDoServico(s.nome) === g.id) })).filter((g) => g.lista.length > 0);
+    const grupoAberto = grupos.find((g) => g.id === sp.grupo);
+    const urlGrupos = (sel: number[], extra: Record<string, string | undefined> = {}) => {
+      const q = new URLSearchParams();
+      for (const id of sel) q.append("sel", String(id));
+      if (filtro) q.set("profissional", String(filtro.id));
+      const foto = extra.foto ?? fotoEscolhida?.arquivo;
+      if (foto && sel.some((id) => grupoDoServico(porId.get(id)?.nome ?? "") === "cabelo")) q.set("foto", foto);
+      for (const [k, v] of Object.entries(extra)) if (v && k !== "foto") q.set(k, v);
+      return `${base}?${q}`;
+    };
+    const ids = selecionados.map((s) => s.id);
+
+    // Serviços de um grupo: tocar escolhe (ou tira) e volta pros grupos.
+    if (grupoAberto) {
+      return (
+        <div className="b-secao b-agendar b-vitrine">
+          <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo={grupoAberto.nome} />
+          <p className="b-escolhido"><Link href={urlGrupos(ids)}>← Voltar pros grupos</Link></p>
+          <ul className="b-vitrine-grade b-grupo-lista">
+            {grupoAberto.lista.map((s) => {
+              const f = fotoDe.get(s.id);
+              const marcado = ids.includes(s.id);
+              // Cabelo é um corte só; os outros grupos ligam e desligam.
+              const novo = marcado ? ids.filter((x) => x !== s.id)
+                : grupoAberto.id === "cabelo" ? [...ids.filter((x) => grupoDoServico(porId.get(x)!.nome) !== "cabelo"), s.id] : [...ids, s.id];
+              const referencia = grupoAberto.id === "cabelo" && f && CATEGORIAS_REFERENCIA.includes(f.categoria) ? f.arquivo : undefined;
+              return (
+                <li key={s.id}>
+                  <Link href={urlGrupos(novo, { foto: marcado ? undefined : referencia })} className={`b-vitrine-item ${marcado ? "marcado" : ""}`} aria-current={marcado ? "true" : undefined}>
+                    <span className="b-vitrine-foto">
+                      {f
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                        : <Scissors size={36} aria-hidden />}
+                      {marcado && <span className="b-grupo-check" aria-hidden><Check size={18} /></span>}
+                    </span>
+                    <span className="b-vitrine-texto">
+                      <strong>{s.nome}</strong>
+                      {s.descricao && <small>{s.descricao}</small>}
+                      <span className="b-vitrine-info">
+                        <span>{s.duracaoMin} min{s.emDomicilio ? " · vou até você" : ""}</span>
+                        {b.mostrarPrecos && <b>{reais(s.precoCentavos)}</b>}
+                      </span>
+                      {marcado && <small className="b-grupo-tirar">Escolhido · toque pra tirar</small>}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      );
     }
-    return (
-      <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="O que vai ser?" />
-        {cortes.length > 0 && <p className="b-escolhido">Sem corte de cabelo · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Quero cortar também</Link></p>}
-        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
-        <form method="get" action={base} className="b-adicionais">
-          <input type="hidden" name="servico" value="sem" />
-          <input type="hidden" name="ad" value="1" />
-          {filtro && <input type="hidden" name="profissional" value={filtro.id} />}
-          <fieldset className="b-vitrine-grade b-vitrine-extras">
-            <legend className="b-so-leitor">Serviços</legend>
-            {naoCortes.map((a) => (
-              <CartaoMarcar key={a.id} nome="escolha" servico={a} foto={fotoDe.get(a.id)} marcado={escolhas.includes(a.id)} precos={b.mostrarPrecos} mais={false} />
-            ))}
-          </fieldset>
-          <div className="b-extras-acoes">
-            <button className="b-botao">Ver horários</button>
-          </div>
-        </form>
-      </div>
-    );
-  }
 
-  // ---------- Passo 1: um carrossel só, "Não vou cortar" primeiro e depois os cortes ----------
-  if (!servico) {
-    const semCorte = naoCortes[0] && fotoDe.get(naoCortes[0].id);
+    // O horário leva um serviço principal (o corte, se tiver) e o resto como adicionais dele.
+    const principal = selecionados.find((s) => grupoDoServico(s.nome) === "cabelo") ?? selecionados.find((s) => !s.adicional) ?? selecionados[0];
+    const validos = new Set(principal ? banco.adicionaisPara(b.id, principal.id).map((a) => a.id) : []);
+    const juntos = selecionados.filter((s) => s !== principal && validos.has(s.id)).slice(0, MAX_ADICIONAIS);
+    const deFora = selecionados.filter((s) => s !== principal && !juntos.includes(s));
+    const noHorario = principal ? [principal, ...juntos] : [];
+    const minutos = noHorario.reduce((t, s) => t + s.duracaoMin, 0);
+    const centavos = noHorario.reduce((t, s) => t + s.precoCentavos, 0);
+    const proximo = principal && (() => {
+      const q = new URLSearchParams({ servico: String(principal.id), ad: "1" });
+      if (filtro) q.set("profissional", String(filtro.id));
+      if (fotoEscolhida && grupoDoServico(principal.nome) === "cabelo") q.set("foto", fotoEscolhida.arquivo);
+      for (const x of juntos) q.append("extra", String(x.id));
+      return `${base}?${q}`;
+    })();
+
     return (
       <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 1 de 4 · ${b.nome}`} titulo="Qual corte vai ser?" />
-        <CarrosselB id="cortes" rotulo="Cortes" className="b-escolha-corte" apoio="Deslize e toque no seu. Depois vêm barba, sobrancelha e o horário.">
-          {naoCortes.length > 0 && (
-            <Link href={link({ servico: "sem", data: undefined, ad: undefined, extra: [], foto: undefined })} className="b-vitrine-item b-nao-cortar">
-              <span className="b-vitrine-foto">
-                {semCorte
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={urlFoto(semCorte.arquivo, "p")} alt="" loading="lazy" width={semCorte.largura} height={semCorte.altura} />
-                  : <Sparkles size={36} aria-hidden />}
-              </span>
-              <span className="b-vitrine-texto">
-                <strong>Não vou cortar</strong>
-                <small>Só {naoCortes.slice(0, 3).map((s) => s.nome.toLowerCase()).join(", ")}{naoCortes.length > 3 ? "…" : ""}</small>
-              </span>
-            </Link>
-          )}
-          {cortes.map((s) => {
-            const f = fotoDe.get(s.id);
-            const referencia = f && CATEGORIAS_REFERENCIA.includes(f.categoria) ? f.arquivo : undefined;
+        <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo={noHorario.length ? "O que mais vamos fazer?" : "O que vamos fazer hoje?"} />
+        {noHorario.length > 0 ? (
+          <div className="b-pedido">
+            <p className="b-pedido-frase">Vamos fazer: <strong>{noHorario.map((s) => s.nome).join(" + ")}</strong></p>
+            <ul className="b-pedido-lista">
+              {noHorario.map((s) => (
+                <li key={s.id}>
+                  <span>{s.nome}</span>
+                  <span className="b-pedido-valor">{s.duracaoMin} min{b.mostrarPrecos && ` · ${reais(s.precoCentavos)}`}</span>
+                  <Link href={urlGrupos(ids.filter((x) => x !== s.id))} aria-label={`Tirar ${s.nome}`}>tirar</Link>
+                </li>
+              ))}
+            </ul>
+            <p className="b-pedido-total">Total: <strong>{minutos} min{b.mostrarPrecos && ` · ${reais(centavos)}`}</strong></p>
+            {deFora.length > 0 && <p className="b-dica">{deFora.map((s) => s.nome).join(" e ")} não {deFora.length > 1 ? "vão" : "vai"} junto nesse horário: dá pra marcar em outro.</p>}
+          </div>
+        ) : (
+          <p className="b-dica">Toque num grupo, escolha o serviço e volte aqui pra somar o que quiser.</p>
+        )}
+        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
+        <ul className="b-vitrine-grade b-grupos">
+          {grupos.map((g) => {
+            const f = fotoDe.get(g.lista[0]!.id);
+            const escolhidos = selecionados.filter((s) => grupoDoServico(s.nome) === g.id);
+            const menor = Math.min(...g.lista.map((s) => s.precoCentavos));
             return (
-              <Link key={s.id} href={link({ servico: String(s.id), data: undefined, ad: undefined, extra: [], foto: referencia })} className="b-vitrine-item">
-                <span className="b-vitrine-foto">
-                  {f
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
-                    : <Scissors size={36} aria-hidden />}
-                </span>
-                <span className="b-vitrine-texto">
-                  <strong>{s.nome}</strong>
-                  {s.descricao && <small>{s.descricao}</small>}
-                  <span className="b-vitrine-info">
-                    <span>{s.duracaoMin} min{s.emDomicilio ? " · vou até você" : ""}</span>
-                    {b.mostrarPrecos && <b>{reais(s.precoCentavos)}</b>}
+              <li key={g.id}>
+                <Link href={urlGrupos(ids, { grupo: g.id })} className={`b-vitrine-item ${escolhidos.length ? "marcado" : ""}`}>
+                  <span className="b-vitrine-foto">
+                    {f
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={urlFoto(f.arquivo, "p")} alt="" loading="lazy" width={f.largura} height={f.altura} />
+                      : <Sparkles size={36} aria-hidden />}
+                    {escolhidos.length > 0 && <span className="b-grupo-check" aria-hidden><Check size={18} /></span>}
                   </span>
-                </span>
-              </Link>
+                  <span className="b-vitrine-texto">
+                    <strong>{g.nome}</strong>
+                    <small>{escolhidos.length ? escolhidos.map((s) => s.nome).join(", ") : `${g.lista.length} ${g.lista.length === 1 ? "opção" : "opções"}`}</small>
+                    {b.mostrarPrecos && !escolhidos.length && <span className="b-vitrine-info"><span>a partir de</span><b>{reais(menor)}</b></span>}
+                  </span>
+                </Link>
+              </li>
             );
           })}
-        </CarrosselB>
+        </ul>
+        {proximo && (
+          <div className="b-extras-acoes">
+            <Link href={proximo} className="b-botao">Escolher o horário</Link>
+          </div>
+        )}
       </div>
     );
   }
 
-  // ---------- Passo 2: adicionais (com foto) ----------
-  if (!respondeu) {
-    const fotoServico = fotoEscolhida ?? fotoDe.get(servico.id);
-    return (
-      <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="Completa o visual?" />
-        <div className="b-escolhido b-escolhido-foto">
-          {fotoServico && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={urlFoto(fotoServico.arquivo, "p")} alt="" width={64} height={64} />
-          )}
-          <p>
-            <strong>{servico.nome}</strong> · {servico.duracaoMin} min{b.mostrarPrecos && ` · ${reais(servico.precoCentavos)}`}
-            {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
-          </p>
-        </div>
-        <p className="b-dica">Já que você vem, sai daqui com tudo alinhado. Toque no que quiser junto.</p>
-        <form method="get" action={base} className="b-adicionais">
-          <input type="hidden" name="servico" value={servico.id} />
-          {filtro && <input type="hidden" name="profissional" value={filtro.id} />}
-          {fotoEscolhida && <input type="hidden" name="foto" value={fotoEscolhida.arquivo} />}
-          <input type="hidden" name="ad" value="1" />
-          <fieldset className="b-vitrine-grade b-vitrine-extras">
-            <legend className="b-so-leitor">Adicionais</legend>
-            {possiveis.map((a) => (
-              <CartaoMarcar key={a.id} nome="extra" servico={a} foto={fotoDe.get(a.id)} marcado={pedidos.includes(a.id)} precos={b.mostrarPrecos} mais />
-            ))}
-          </fieldset>
-          <div className="b-extras-acoes">
-            <button className="b-botao">Continuar</button>
-            <Link href={link({ ad: "1", extra: [] })} className="b-extras-pular">Só {servico.nome.toLowerCase()}, ver horários</Link>
-          </div>
-        </form>
-      </div>
-    );
-  }
+  // Daqui pra frente já tem serviço (o passo 1 acima cobre o resto).
+  if (!servico) redirect(base);
 
   const tempoTotal = servico.duracaoMin + adicionais.reduce((t, a) => t + a.duracaoMin, 0);
   const precoTotal = servico.precoCentavos + adicionais.reduce((t, a) => t + a.precoCentavos, 0);
@@ -361,7 +372,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     const marcandoPeloBarbeiro = await ehOBarbeiro(b.id);
     return (
       <div className="b-secao b-agendar">
-        <Cabeca rotulo={`Passo 4 de 4 · ${b.nome}`} titulo="Confirme seu horário" />
+        <Cabeca rotulo={`Passo 3 de 3 · ${b.nome}`} titulo="Confirme seu horário" />
         {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
@@ -450,7 +461,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     <div className="b-secao b-agendar">
       {remarcando
         ? <Cabeca rotulo={`Remarcar · ${b.nome}`} titulo="Escolha o novo horário" />
-        : <Cabeca rotulo={`Passo 3 de 4 · ${b.nome}`} titulo="Escolha o horário" />}
+        : <Cabeca rotulo={`Passo 2 de 3 · ${b.nome}`} titulo="Escolha o horário" />}
       {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
       {remarcando ? (
         <p className="b-escolhido">
@@ -459,8 +470,14 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       ) : (
         <p className="b-escolhido">
           {nomeTotal} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}
-          {possiveis.length > 0 && <> · <Link href={link({ ad: undefined, data: undefined })}>{adicionais.length ? "Mudar adicionais" : "Adicionar mais um serviço"}</Link></>}
-          {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
+          {servicos.length > 1 && <> · <Link href={(() => {
+            // Volta pros grupos com o que já foi escolhido, pra somar ou trocar.
+            const q = new URLSearchParams();
+            for (const id of [servico.id, ...adicionais.map((x) => x.id)]) q.append("sel", String(id));
+            if (filtro) q.set("profissional", String(filtro.id));
+            if (fotoEscolhida) q.set("foto", fotoEscolhida.arquivo);
+            return `${base}?${q}`;
+          })()}>Mudar serviços</Link></>}
         </p>
       )}
 
@@ -510,34 +527,3 @@ function Cabeca({ rotulo, titulo }: { rotulo: string; titulo: string }) {
   );
 }
 
-/** Cartão com foto que marca com um toque (adicionais e "Não vou cortar"). */
-function CartaoMarcar({ nome, servico, foto, marcado, precos, mais }: {
-  nome: string;
-  servico: { id: number; nome: string; descricao?: string; duracaoMin: number; precoCentavos: number };
-  foto?: { arquivo: string; largura?: number; altura?: number };
-  marcado: boolean;
-  precos: boolean;
-  /** Adicional: tempo e preço com "+" (somam no serviço escolhido). */
-  mais: boolean;
-}) {
-  return (
-    <label className="b-vitrine-item b-extra">
-      <input type="checkbox" name={nome} value={servico.id} defaultChecked={marcado} />
-      <span className="b-vitrine-foto">
-        {foto
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={urlFoto(foto.arquivo, "p")} alt="" loading="lazy" width={foto.largura} height={foto.altura} />
-          : <Sparkles size={32} aria-hidden />}
-        <span className="b-extra-marca" aria-hidden><Check size={18} /></span>
-      </span>
-      <span className="b-vitrine-texto">
-        <strong>{servico.nome}</strong>
-        {servico.descricao && <small>{servico.descricao}</small>}
-        <span className="b-vitrine-info">
-          <span>{mais ? "+" : ""}{servico.duracaoMin} min</span>
-          {precos && <b>{mais ? "+" : ""}{reais(servico.precoCentavos)}</b>}
-        </span>
-      </span>
-    </label>
-  );
-}

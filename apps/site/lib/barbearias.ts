@@ -142,6 +142,28 @@ export function ehCorte(nome: string): boolean {
   return /corte|degrad|fade|taper|navalhado|social|americano|militar|tesoura|m[aá]quina|infantil|cabelo|freestyle|disfar[cç]ado|undercut|moicano|mullet|crop|buzz|topete|pompadour/i.test(nome);
 }
 
+/** Grupos do primeiro passo do agendar, na ordem em que aparecem. */
+export const GRUPOS_SERVICO = [
+  { id: "barba", nome: "Barba" },
+  { id: "cabelo", nome: "Cabelo" },
+  { id: "sobrancelha", nome: "Sobrancelha" },
+  { id: "pigmentacao", nome: "Pigmentação" },
+  { id: "platinado", nome: "Platinado e cor" },
+  { id: "acabamento", nome: "Acabamento e cuidados" },
+] as const;
+export type IdGrupo = (typeof GRUPOS_SERVICO)[number]["id"];
+
+/** Em que grupo o serviço entra, pelo nome ("Corte + barba" é cabelo; "Pigmentação da barba" é pigmentação). */
+export function grupoDoServico(nome: string): IdGrupo {
+  const n = nome.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  if (/pigment/.test(n)) return "pigmentacao";
+  if (/platin|luzes|mecha|colora|tintura|nevou|descolor/.test(n)) return "platinado";
+  if (/sobrancelha/.test(n)) return "sobrancelha";
+  if (ehCorte(nome)) return "cabelo";
+  if (/barba|cavanhaque|bigode/.test(n)) return "barba";
+  return "acabamento";
+}
+
 /**
  * Uma foto pra cada serviço, pelo nome ("barba" → fotos de barba...). Evita repetir enquanto
  * houver foto que ainda não foi usada; sem palavra conhecida, usa os cortes e depois o resto.
