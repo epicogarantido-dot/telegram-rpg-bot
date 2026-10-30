@@ -230,3 +230,13 @@ html:has(.app-venda), body:has(.app-venda) { background: #120b14; }
 .site-cursos .vendas-quem img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none; border: 1px solid var(--linha); }
 .site-cursos .vendas-quem p { color: var(--suave); max-width: 60ch; }
 @media (max-width: 560px) { .site-cursos .vendas-quem { flex-direction: column; gap: 16px; } .site-cursos .vendas-quem img { width: 96px; height: 96px; } }
+
+/* Convite curto abaixo da foto da matéria (FaixaSaas). */
+.site-cursos .faixa-saas {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  margin: 16px 0 24px; padding: 14px 16px; border: 1px solid var(--borda); border-radius: var(--raio-p);
+  background: var(--cartao); font-size: 16px; line-height: 1.45;
+}
+.site-cursos .faixa-saas span { flex: 1 1 240px; color: var(--suave); }
+.site-cursos .faixa-saas strong { color: var(--texto); }
+.site-cursos .faixa-saas a { flex: none; font-weight: 600; }

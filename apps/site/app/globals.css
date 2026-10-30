@@ -721,3 +721,4 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .config-servico-item > .config-servico { margin: 0; border: 0; border-top: 1px solid var(--borda); border-radius: 0 0 var(--raio-p) var(--raio-p); }
 .config-servico-item.desativado > summary { color: var(--suave); }
 .config-servico-selo { margin-left: 8px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--destaque-claro); color: var(--texto); font-weight: 600; }
+.erro > p { margin: 0; } .erro > p + p { margin-top: 8px; } .erro a { color: inherit; font-weight: 600; }

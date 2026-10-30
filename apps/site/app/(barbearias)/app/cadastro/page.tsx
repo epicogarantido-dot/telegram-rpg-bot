@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { contatoResponsavel } from "@/lib/contato";
 import { ErroAgenda, planoDoAmbiente, TEMAS, temaValido } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
@@ -10,6 +12,12 @@ import { porFotosPadrao } from "@/lib/exemplos";
 import { soVenda } from "@/lib/modo";
 
 export const metadata = { title: "Quero o meu site" };
+
+const RASCUNHO = "pedido_rascunho";
+
+function lerRascunho(valor: string | undefined): { barbearia?: string; telefone?: string; nome?: string } {
+  try { return valor ? JSON.parse(valor) : {}; } catch { return {}; }
+}
 
 async function cadastrar(form: FormData) {
   "use server";
@@ -22,7 +30,7 @@ async function cadastrar(form: FormData) {
   try {
     // Até 3 contas novas por aparelho por dia: segura quem tenta criar barbearia em massa.
     const chave = `cadastro:ip:${await chaveDoAparelho()}`;
-    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Muitos pedidos feitos deste aparelho hoje. Tente amanhã ou fale com a gente.");
+    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Este aparelho já fez pedidos hoje. Pra fazer mais um, mande pelo WhatsApp: a gente faz por lá na hora.");
     if (!telefone) throw new ErroAgenda("WhatsApp inválido.");
     // No site de leads o pedido é só barbearia, WhatsApp e nome: e-mail e senha não seguram ninguém antes do Pix.
     const conta = soVenda()
@@ -41,6 +49,9 @@ async function cadastrar(form: FormData) {
     obterBanco().registrarEvento("cadastro");
     if (campo("lead")) obterBanco().registrarEventoDoLead(campo("lead"), "cadastro");
   } catch (e) {
+    // O que a pessoa digitou volta preenchido (cookie de 10 min, só neste aparelho; nada na URL).
+    (await cookies()).set(RASCUNHO, JSON.stringify({ barbearia: campo("barbearia").slice(0, 60), telefone: campo("telefone").slice(0, 20), nome: campo("nome").slice(0, 60) }),
+      { httpOnly: true, sameSite: "lax", maxAge: 600, path: "/app/cadastro" });
     redirect(`/app/cadastro?${new URLSearchParams({ erro: mensagemDeErro(e), ...(demo ? { demo } : {}), ...(campo("estilo") ? { estilo: campo("estilo") } : {}) })}`);
   }
   await gravarSessaoAgenda(token);
@@ -57,6 +68,12 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
   const tema = estilo && temaValido(estilo) ? TEMAS.find((t) => t.id === estilo) : undefined;
   const demo = obterAgenda().demonstracaoPorConvite(convite);
   const plano = planoDoAmbiente();
+  // Só com erro na tela: senão um pedido antigo apareceria preenchido.
+  const rascunho = erro ? lerRascunho((await cookies()).get(RASCUNHO)?.value) : {};
+  const contato = contatoResponsavel();
+  const pedirNoWhats = contato && `${contato.link}?text=${encodeURIComponent(
+    `Oi! Quero o site com agenda pra minha barbearia${rascunho.barbearia ? ` (${rascunho.barbearia})` : ""}. Tentei fazer o pedido pelo site e não consegui.` +
+    `${rascunho.nome ? ` Meu nome é ${rascunho.nome}.` : ""}`)}`;
   return (
     <>
       <Medir evento="cadastro_inicio" />
@@ -75,14 +92,20 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
           : <>Valor: </>}
         contratação de {reais(plano.adesaoCentavos || plano.valorCentavos)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.
       </p>
-      {erro && <p className="erro">{erro}</p>}
+      {erro && (
+        <div className="erro" role="alert">
+          <p>{erro}</p>
+          {pedirNoWhats && <p><a href={pedirNoWhats} target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="erro-pedido">Fazer o pedido pelo WhatsApp</a></p>}
+        </div>
+      )}
       <form action={cadastrar} className="formulario">
         {demo && <input type="hidden" name="demo" value={convite} />}
         {tema && <input type="hidden" name="estilo" value={tema.id} />}
         {tema && <p className="suave pequeno">Estilo escolhido: <strong>{tema.nome}</strong> (dá pra trocar depois). <a href="/#estilos">Ver os outros</a></p>}
-        <label>Nome da barbearia<input name="barbearia" required maxLength={60} defaultValue={demo?.nome} autoComplete="organization" /></label>
-        <label>WhatsApp (com DDD)<input name="telefone" required inputMode="tel" autoComplete="tel" placeholder="(19) 99999-0000" /></label>
-        <label>Seu nome<input name="nome" required maxLength={60} autoComplete="name" /></label>
+        <label>Nome da barbearia<input name="barbearia" required maxLength={60} defaultValue={rascunho.barbearia ?? demo?.nome} autoComplete="organization" /></label>
+        <label>WhatsApp (com DDD)<input name="telefone" required inputMode="tel" autoComplete="tel" placeholder="(19) 99999-0000" defaultValue={rascunho.telefone}
+          pattern="^\D*(\d\D*){10,13}$" title="DDD e número, ex.: (19) 98765-4321" /></label>
+        <label>Seu nome<input name="nome" required maxLength={60} autoComplete="name" defaultValue={rascunho.nome} /></label>
         {soVenda()
           ? <small className="suave">É por esse WhatsApp que a gente fala com você pra montar o site.</small>
           : <>

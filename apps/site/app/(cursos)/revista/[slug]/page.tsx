@@ -5,7 +5,7 @@ import { renderizarMarkdown } from "@/lib/markdown";
 import { dataPorExtenso } from "@/lib/datas";
 import { Carrossel } from "@/componentes/Carrossel";
 import { MAX_ITENS_CARROSSEL } from "@/lib/carrossel";
-import { CartaoMateria, FotoMateria, PropagandaSaas } from "@/componentes/revista";
+import { CartaoMateria, FaixaSaas, FotoMateria, PropagandaSaas } from "@/componentes/revista";
 
 /**
  * Página gerada no build, refeita no servidor a cada 10 min: depois de um deploy, uma versão
@@ -46,6 +46,7 @@ export default async function PaginaArtigo({ params }: { params: Promise<{ slug:
         <p className="artigo-resumo">{a.resumo}</p>
         <p className="suave pequeno">Por Aprenda Livre · <time dateTime={a.publicadoEm}>{dataPorExtenso(a.publicadoEm)}</time></p>
         {a.imagem && <FotoMateria imagem={a.imagem} />}
+        <FaixaSaas />
         <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(a.conteudo) }} />
         <aside className="artigo-fontes">
           <h2>Fontes</h2>

@@ -51,6 +51,19 @@ const PONTES = [
  * Propaganda do SaaS no fim de cada matéria e lição (nunca em curso CC BY-NC). Matéria é texto
  * próprio, então pode. O título muda com o assunto (`assunto`: título e resumo do que foi lido).
  */
+/**
+ * Convite curto logo abaixo da foto da matéria: quem chega pelo grupo e não lê até o fim
+ * também fica sabendo do site. Sem preço (a página é gerada no build); o preço vem na propaganda do fim.
+ */
+export function FaixaSaas() {
+  return (
+    <p className="faixa-saas">
+      <span><strong>Tem barbearia?</strong> Site com agenda online pro cliente marcar sozinho, pronto em até 24 horas.</span>
+      <a href="/#estilos" data-evento="estilos" data-detalhe="faixa-materia">Ver os estilos</a>
+    </p>
+  );
+}
+
 export function PropagandaSaas({ assunto = "" }: { assunto?: string }) {
   const plano = planoDoAmbiente();
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
