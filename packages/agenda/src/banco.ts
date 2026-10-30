@@ -1079,8 +1079,11 @@ export class BancoAgenda {
   }): number {
     const nome = dados.clienteNome.trim().replace(/\s+/g, " ");
     if (nome.length < 2) throw new ErroAgenda("Informe seu nome.");
+    if (nome.length > 60) throw new ErroAgenda("Nome muito longo: use até 60 letras.");
     if (!/^\d{12,13}$/.test(dados.clienteTelefone)) throw new ErroAgenda("WhatsApp inválido.");
     if (!dados.peloBarbeiro) {
+      // Pelo site, só celular (DDD + 9 + 8 dígitos): fixo não recebe a confirmação no WhatsApp.
+      if (!/^55\d{2}9\d{8}$/.test(dados.clienteTelefone)) throw new ErroAgenda("Use o número de celular com WhatsApp, com DDD (ex.: 19 98765-4321).");
       if (this.telefoneBloqueado(dados.barbeariaId, dados.clienteTelefone)) {
         throw new ErroAgenda("Não foi possível agendar por aqui. Fale com a barbearia pelo WhatsApp.");
       }
@@ -1110,7 +1113,7 @@ export class BancoAgenda {
     this.db.exec("BEGIN IMMEDIATE");
     try {
       const livres = this.horariosLivres(dados.barbeariaId, dados.profissionalId, dados.servicoId, dados.data, dados.agora, undefined, { adicionais: adicionais.map((a) => a.id) });
-      if (!livres.includes(dados.hora)) throw new ErroAgenda("Esse horário acabou de ser ocupado. Escolha outro.");
+      if (!livres.includes(dados.hora)) throw new ErroAgenda("Esse horário não está mais livre. Escolha outro.");
       const fim = deMinutos(paraMinutos(dados.hora) + servico.duracaoMin + extraMin);
       const r = this.db.prepare(`INSERT INTO agendamentos
           (barbearia_id, servico_id, profissional_id, cliente_nome, cliente_telefone, inicio, fim, criado_em, referencia_foto, endereco_cliente,
@@ -1572,7 +1575,7 @@ export class BancoAgenda {
     this.db.exec("BEGIN IMMEDIATE");
     try {
       const livres = this.horariosLivres(barbeariaId, novo.profissionalId, h.servicoId, novo.data, agora, h.id, { duracaoMin: h.duracaoMin });
-      if (!livres.includes(novo.hora)) throw new ErroAgenda("Esse horário acabou de ser ocupado. Escolha outro.");
+      if (!livres.includes(novo.hora)) throw new ErroAgenda("Esse horário não está mais livre. Escolha outro.");
       const inicio = `${novo.data}T${novo.hora}`;
       const fim = `${novo.data}T${deMinutos(paraMinutos(novo.hora) + h.duracaoMin)}`;
       this.db.prepare("UPDATE agendamentos SET profissional_id = ?, inicio = ?, fim = ? WHERE id = ? AND barbearia_id = ?")

@@ -138,7 +138,7 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
               <form action={cancelar} className="b-mudar-confirmar" id="cancelar">
                 <input type="hidden" name="slug" value={slug} />
                 <input type="hidden" name="token" value={token} />
-                <p>Cancelar {h.servico.toLowerCase()} de {quando}?</p>
+                <p>Cancelar {h.servico} de {quando}?</p>
                 <div className="b-acoes">
                   <BotaoEnviar className="b-botao" carregando="Cancelando…">Sim, cancelar</BotaoEnviar>
                   <Link className="b-botao-sec" href={base}>Não, manter</Link>

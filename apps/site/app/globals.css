@@ -728,3 +728,4 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .pix-codigo summary { cursor: pointer; }
 .pedido-separar { margin-top: 16px; }
 .pedido-separar ul { margin: 6px 0 12px; padding-left: 20px; }
+.cartao, .agendado, .grade-horario { overflow-wrap: anywhere; }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { Check, Scissors, Sparkles } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_REFERENCIA, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_REFERENCIA, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { CarrosselB } from "@/componentes/barbearia/CarrosselB";
@@ -158,7 +158,12 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   // Adicionais: só os que valem pra esse serviço (ids estranhos na URL são ignorados).
   const possiveis = servico && !remarcando ? banco.adicionaisPara(b.id, servico.id) : [];
   const pedidos = lerExtras(sp.extra);
-  const adicionais = possiveis.filter((a) => pedidos.includes(a.id));
+  // Até MAX_ADICIONAIS: o que passar disso (cliente marcou demais ou URL mexida) fica de fora em vez de quebrar a página.
+  const adicionais = possiveis.filter((a) => pedidos.includes(a.id)).slice(0, MAX_ADICIONAIS);
+  const cortouAdicionais = possiveis.filter((a) => pedidos.includes(a.id)).length > MAX_ADICIONAIS;
+  // A faixa de erro mostra o que o servidor mandou; texto com link (de alguém mexendo na URL) não aparece.
+  const erroVisivel = (sp.erro && !/https?:|www\.|<|>/i.test(sp.erro) ? sp.erro.slice(0, 160) : undefined)
+    ?? (cortouAdicionais ? `Dá pra escolher até ${MAX_ADICIONAIS} adicionais: ficaram os ${MAX_ADICIONAIS} primeiros.` : undefined);
   const respondeu = sp.ad === "1" || possiveis.length === 0;
   // Foto do corte que a pessoa tocou na vitrine (só foto de trabalho desta barbearia).
   const fotoEscolhida = sp.foto && !remarcando ? banco.fotos(b.id).find((f) => f.arquivo === sp.foto && CATEGORIAS_REFERENCIA.includes(f.categoria)) : undefined;
@@ -207,7 +212,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       <div className="b-secao b-agendar b-vitrine">
         <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="O que vai ser?" />
         {cortes.length > 0 && <p className="b-escolhido">Sem corte de cabelo · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Quero cortar também</Link></p>}
-        {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
+        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
         <form method="get" action={base} className="b-adicionais">
           <input type="hidden" name="servico" value="sem" />
           <input type="hidden" name="ad" value="1" />
@@ -327,7 +332,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     return (
       <div className="b-secao b-agendar">
         <Cabeca rotulo={`Remarcar · ${b.nome}`} titulo="Confirme a troca" />
-        {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
+        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
         <div className="b-resumo">
           <p className="b-resumo-antes">De: {quandoAtual}</p>
           <p className="b-resumo-quando">Para: {formatarData(data)} às {sp.hora}</p>
@@ -357,7 +362,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     return (
       <div className="b-secao b-agendar">
         <Cabeca rotulo={`Passo 4 de 4 · ${b.nome}`} titulo="Confirme seu horário" />
-        {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
+        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
           <p>{nomeTotal} com {com.nome} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}</p>
@@ -446,7 +451,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       {remarcando
         ? <Cabeca rotulo={`Remarcar · ${b.nome}`} titulo="Escolha o novo horário" />
         : <Cabeca rotulo={`Passo 3 de 4 · ${b.nome}`} titulo="Escolha o horário" />}
-      {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
+      {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
       {remarcando ? (
         <p className="b-escolhido">
           {remarcando.servico} · horário atual: {quandoAtual} · <Link href={`/b/${slug}/h/${sp.remarcar}`}>Manter esse</Link>
@@ -454,7 +459,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       ) : (
         <p className="b-escolhido">
           {nomeTotal} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}
-          {possiveis.length > 0 && <> · <Link href={link({ ad: undefined, data: undefined })}>{adicionais.length ? "Mudar adicionais" : "Adicionar barba ou outro"}</Link></>}
+          {possiveis.length > 0 && <> · <Link href={link({ ad: undefined, data: undefined })}>{adicionais.length ? "Mudar adicionais" : "Adicionar mais um serviço"}</Link></>}
           {servicos.length > 1 && <> · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Trocar</Link></>}
         </p>
       )}

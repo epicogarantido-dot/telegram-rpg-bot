@@ -131,7 +131,7 @@ describe("BancoAgenda", () => {
     };
     const id = b.agendar(pedido);
     expect(b.horariosLivres(barbearia.id, prof.id, corte.id, "2026-10-28", agora)).not.toContain("09:00");
-    expect(() => b.agendar(pedido)).toThrow(/ocupado/);
+    expect(() => b.agendar(pedido)).toThrow(/não está mais livre/);
     b.cancelar(barbearia.id, id);
     expect(b.horariosLivres(barbearia.id, prof.id, corte.id, "2026-10-28", agora)).toContain("09:00");
   });
@@ -606,6 +606,15 @@ describe("link do cliente: cancelar e remarcar", () => {
     return { b, a, o, agora, dias, s: s!, p: p!, hora, id, token };
   }
 
+  it("pelo site só celular e nome de até 60 letras; o barbeiro pode marcar fixo", () => {
+    const { b, a, dias, s, p, agora } = cenario();
+    const [h1, h2] = b.horariosLivres(a.id, p.id, s.id, dias[3]!, agora);
+    const base = { barbeariaId: a.id, profissionalId: p.id, servicoId: s.id, data: dias[3]!, hora: h1!, agora };
+    expect(() => b.agendar({ ...base, clienteNome: "Fixo", clienteTelefone: "551933334444" })).toThrow(/celular/);
+    expect(() => b.agendar({ ...base, clienteNome: "N".repeat(61), clienteTelefone: "5519977770001" })).toThrow(/muito longo/);
+    expect(b.agendar({ ...base, hora: h2!, clienteNome: "Fixo", clienteTelefone: "551933334444", peloBarbeiro: true })).toBeGreaterThan(0);
+  });
+
   it("horário próprio do profissional: dias e entrada/saída dentro do da barbearia", () => {
     const { b, a, dias, s, p, agora } = cenario();
     const todos = b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora);
@@ -669,7 +678,7 @@ describe("link do cliente: cancelar e remarcar", () => {
     // Outro cliente ocupa um horário; remarcar pra ele falha.
     const ocupada = b.horariosLivres(a.id, p.id, s.id, novoDia, agora)[0]!;
     b.agendar({ barbeariaId: a.id, profissionalId: p.id, servicoId: s.id, data: novoDia, hora: ocupada, clienteNome: "Outro", clienteTelefone: "5519991112222", agora });
-    expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: novoDia, hora: ocupada }, agora)).toThrow(/ocupado/);
+    expect(() => b.remarcarPeloCliente(a.id, token, { profissionalId: p.id, data: novoDia, hora: ocupada }, agora)).toThrow(/não está mais livre/);
   });
 
   it("depois que o horário começou, o link só mostra", () => {
