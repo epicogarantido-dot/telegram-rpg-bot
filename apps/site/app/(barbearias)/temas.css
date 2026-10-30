@@ -1085,3 +1085,10 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 /* "Ver todos os trabalhos" (galeria em /trabalhos): embaixo do mosaico e do antes e depois. */
 .b-mosaico-mais { margin: 0 auto; padding: 4px 16px 24px; text-align: center; }
 .b-galeria-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* Link do horário escrito, com botão de copiar (o cliente guarda ou manda pra si mesmo). */
+.site-b .b-link-horario { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0 14px; }
+.site-b .b-link-horario > span { font-size: 14px; color: var(--suave); overflow-wrap: anywhere; min-width: 0; flex: 1 1 200px; }
+/* Barbeiro que marcou pro cliente: mandar o link é a ação principal. */
+.site-b .b-barbeiro-marcou { display: grid; gap: 12px; justify-items: start; }
+.site-b .b-barbeiro-marcou p { margin: 0; }

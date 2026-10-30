@@ -706,3 +706,18 @@ details.bloquear-horario form { margin-top: 12px; padding: 14px; border: 1px sol
 .campo-arquivo-nome { color: var(--suave); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .campo-arquivo:hover .campo-arquivo-botao { background: var(--destaque-claro); }
 .campo-arquivo:has(input:focus-visible) .campo-arquivo-botao { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+/* Serviços no /app/config: uma linha por serviço, abre pra editar. */
+.config-servicos, .config-servicos-off { display: grid; gap: 6px; margin: 12px 0 18px; }
+.config-servico-item { border: 1px solid var(--borda); border-radius: var(--raio-p); background: var(--cartao); }
+.config-servico-item > summary {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center;
+  padding: 12px 14px; cursor: pointer; list-style: none; min-height: 48px;
+}
+.config-servico-item > summary::-webkit-details-marker { display: none; }
+.config-servico-item > summary::after { content: "Editar"; font-size: 13px; color: var(--suave); text-decoration: underline; grid-column: 3; grid-row: 2; justify-self: end; }
+.config-servico-item[open] > summary::after { content: "Fechar"; }
+.config-servico-item > summary > span:first-child { overflow-wrap: anywhere; }
+.config-servico-item > .config-servico { margin: 0; border: 0; border-top: 1px solid var(--borda); border-radius: 0 0 var(--raio-p) var(--raio-p); }
+.config-servico-item.desativado > summary { color: var(--suave); }
+.config-servico-selo { margin-left: 8px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--destaque-claro); color: var(--texto); font-weight: 600; }

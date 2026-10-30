@@ -5,8 +5,11 @@ import { formatarData } from "@aprenda/agenda";
  * o painel só abre a conversa com a mensagem pronta. Nada de oferecer brinde ou desconto em
  * troca de avaliação: a política do Google Maps proíbe e remove essas avaliações.
  */
-function primeiroNome(nome: string): string {
-  return nome.trim().split(/\s+/)[0] ?? nome;
+/** Nome pra saudação: pula "Seu", "Sr.", "Dona"... ("Seu Joaquim" vira "Joaquim", não "Seu"). */
+export function primeiroNome(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  const tratamento = /^(seu|sr\.?|senhor|sra\.?|senhora|dona|d\.|dr\.?|dra\.?)$/i;
+  return partes.find((p) => !tratamento.test(p)) ?? partes[0] ?? nome;
 }
 
 function quando(inicio: string): string {

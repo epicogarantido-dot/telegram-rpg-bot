@@ -1,3 +1,4 @@
+import { primeiroNome } from "@/lib/pos-atendimento";
 import webpush from "web-push";
 import { formatarData } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
@@ -25,8 +26,7 @@ export function chavesAviso(): { publica: string; privada: string } {
 
 /** Texto que o barbeiro manda pro cliente confirmar o horário. */
 export function mensagemConfirmacao(a: { barbearia: string; cliente: string; servico: string; profissional: string; inicio: string }): string {
-  const primeiroNome = a.cliente.trim().split(/\s+/)[0];
-  return `Olá, ${primeiroNome}! Aqui é da ${a.barbearia}. Confirmando seu horário: ${a.servico} com ${a.profissional}, ` +
+  return `Olá, ${primeiroNome(a.cliente)}! Aqui é da ${a.barbearia}. Confirmando seu horário: ${a.servico} com ${a.profissional}, ` +
     `${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Tudo certo? Se precisar remarcar, é só responder aqui.`;
 }
 

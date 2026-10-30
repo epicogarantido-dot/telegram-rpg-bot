@@ -845,7 +845,10 @@ export class BancoAgenda {
     const principal = todos.find((s) => s.id === servicoId);
     if (!principal) return [];
     const nome = semAcento(principal.nome);
-    return todos.filter((s) => s.adicional && s.id !== servicoId && !nome.includes(semAcento(s.nome)));
+    // Corte de criança: nada de barba, química ou cor; só acabamento (pezinho, sobrancelha, risco, hidratação).
+    const infantil = /infantil|crianca|kids/.test(nome);
+    return todos.filter((s) => s.adicional && s.id !== servicoId && !nome.includes(semAcento(s.nome)) &&
+      (!infantil || /sobrancelha|pezinho|risco|hidrata/.test(semAcento(s.nome))));
   }
 
   /** Valida os adicionais escolhidos (sem repetir) e devolve na ordem do cardápio. */

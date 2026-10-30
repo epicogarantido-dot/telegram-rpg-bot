@@ -205,7 +205,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     }
     return (
       <div className="b-secao b-agendar b-vitrine">
-        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="O que vai ser hoje?" />
+        <Cabeca rotulo={`Passo 2 de 4 · ${b.nome}`} titulo="O que vai ser?" />
         {cortes.length > 0 && <p className="b-escolhido">Sem corte de cabelo · <Link href={`${base}${filtro ? `?profissional=${filtro.id}` : ""}`}>Quero cortar também</Link></p>}
         {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
         <form method="get" action={base} className="b-adicionais">
@@ -350,7 +350,10 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   // ---------- Passo 4: nome e WhatsApp ----------
   if (horaValida && data && com && sp.hora) {
     // Cardápio de cortes: até 12 fotos de trabalho, as mais recentes.
-    const referencias = banco.fotos(b.id).filter((f) => CATEGORIAS_REFERENCIA.includes(f.categoria)).slice(0, 12);
+    // Corte infantil: só fotos de criança (corte de adulto não serve de referência); sem elas, nada de grade.
+    const infantil = /infantil|crian/i.test(servico.nome);
+    const referencias = banco.fotos(b.id).filter((f) => infantil ? f.categoria === "infantil" : CATEGORIAS_REFERENCIA.includes(f.categoria)).slice(0, 12);
+    const marcandoPeloBarbeiro = await ehOBarbeiro(b.id);
     return (
       <div className="b-secao b-agendar">
         <Cabeca rotulo={`Passo 4 de 4 · ${b.nome}`} titulo="Confirme seu horário" />
@@ -372,11 +375,17 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <div className="b-isca" aria-hidden="true">
             <label>Empresa <input name={CAMPO_ISCA} tabIndex={-1} autoComplete="off" /></label>
           </div>
-          <label htmlFor="nome">Seu nome</label>
-          <input id="nome" name="nome" required maxLength={80} autoComplete="name" />
-          <label htmlFor="telefone">Seu WhatsApp com DDD</label>
-          <input id="telefone" name="telefone" required inputMode="tel" autoComplete="tel-national" placeholder="(19) 99999-0000" aria-describedby="telefone-dica" />
-          <small id="telefone-dica" className="b-dica">A barbearia usa esse número pra confirmar ou avisar sobre o seu horário. <a href={`/b/${slug}/privacidade`} target="_blank">Privacidade</a>.</small>
+          <label htmlFor="nome">{marcandoPeloBarbeiro ? "Nome do cliente" : "Seu nome"}</label>
+          <input id="nome" name="nome" required maxLength={80} autoComplete={marcandoPeloBarbeiro ? "off" : "name"} />
+          <label htmlFor="telefone">{marcandoPeloBarbeiro ? "WhatsApp do cliente com DDD" : "Seu WhatsApp com DDD"}</label>
+          {/* O padrão segura o número incompleto ainda no celular: o erro do servidor volta com o formulário vazio. */}
+          <input id="telefone" name="telefone" required inputMode="tel" autoComplete={marcandoPeloBarbeiro ? "off" : "tel-national"} placeholder="(19) 99999-0000" aria-describedby="telefone-dica"
+            pattern="^\D*(\d\D*){10,13}$" title="DDD e número, ex.: (19) 98765-4321" />
+          <small id="telefone-dica" className="b-dica">
+            {marcandoPeloBarbeiro
+              ? "Depois de marcar, você manda o link do horário pra esse número."
+              : <>A barbearia usa esse número pra confirmar ou avisar sobre o seu horário. <a href={`/b/${slug}/privacidade`} target="_blank">Privacidade</a>.</>}
+          </small>
           {servico.emDomicilio && (
             <>
               <label htmlFor="endereco">Endereço do atendimento</label>
@@ -413,8 +422,8 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           )}
           {/* Fixo embaixo no celular: o botão de terminar não fica escondido atrás da rolagem. */}
           <div className="b-confirmar-fixo">
-            <BotaoEnviar className="b-botao" carregando="Confirmando…">Confirmar horário</BotaoEnviar>
-            <small className="b-dica">O horário fica marcado na hora e a barbearia recebe o aviso.</small>
+            <BotaoEnviar className="b-botao" carregando="Confirmando…">{marcandoPeloBarbeiro ? "Marcar pro cliente" : "Confirmar horário"}</BotaoEnviar>
+            {!marcandoPeloBarbeiro && <small className="b-dica">O horário fica marcado na hora e a barbearia recebe o aviso.</small>}
           </div>
         </form>
       </div>
@@ -462,7 +471,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           const atual = escolhido?.d === d;
           const conteudo = <><span>{rotuloDia(d)}</span><strong>{d.slice(8)}/{d.slice(5, 7)}</strong></>;
           return vagas.length === 0
-            ? <span key={d} className="b-dia lotado" title="Sem horários">{conteudo}<small>lotado</small></span>
+            ? <span key={d} className="b-dia lotado" title="Sem horários">{conteudo}<small>{d === hoje ? (b.fechadoEm === hoje ? "fechado" : "encerrado") : "sem vaga"}</small></span>
             : <Link key={d} href={link({ data: d })} className={`b-dia ${atual ? "escolhido" : ""}`} aria-current={atual ? "date" : undefined}>{conteudo}</Link>;
         })}
       </nav>

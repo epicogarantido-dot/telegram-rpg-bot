@@ -60,8 +60,9 @@ async function editarServico(form: FormData) {
     emDomicilio: form.get("domicilio") === "on",
     adicional: form.get("adicional") === "on",
   }));
-  if (!ajustados) return;
-  let aviso = `Tempo novo aplicado ${ajustados === 1 ? "no horário já marcado" : `nos ${ajustados} horários já marcados`} desse serviço.`;
+  const nome = String(form.get("nome") ?? "").trim();
+  if (!ajustados) redirect(`/app/config?aviso=${encodeURIComponent(`${nome} salvo.`)}#servicos`);
+  let aviso = `${nome} salvo. Tempo novo aplicado ${ajustados === 1 ? "no horário já marcado" : `nos ${ajustados} horários já marcados`} desse serviço.`;
   if (conflitos.length) {
     aviso += ` Com o tempo novo, ${conflitos.length === 1 ? "este encosta" : "estes encostam"} no cliente seguinte: ` +
       conflitos.slice(0, 5).map((a) => `${a.clienteNome}, ${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}`).join("; ") +
@@ -228,21 +229,35 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
       </form>
 
       <h2 id="servicos">Serviços</h2>
-      <p className="suave pequeno">Cada serviço tem o seu tempo: ponha quanto você leva de verdade no corte, na barba e no combo. Mudou o tempo? Os horários já marcados desse serviço passam a terminar no tempo novo na sua agenda e no calendário. Marque &quot;Oferecer como adicional&quot; na barba, na sobrancelha ou no que quiser: o cliente escolhe o corte e soma esses junto, com tempo e preço juntos. Mude nome, tempo, preço e o que o serviço inclui, e toque em Salvar. Dizer as etapas (&quot;toalha quente, navalha, massagem&quot;) ajuda o cliente a entender o preço. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
-      {servicos.map((s) => (
-        <form key={s.id} action={editarServico} className={`config-servico ${s.ativo ? "" : "desativado"}`}>
-          <input type="hidden" name="id" value={s.id} />
-          <label>Serviço<input name="nome" defaultValue={s.nome} required maxLength={40} /></label>
-          <label>Tempo (minutos)<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required inputMode="numeric" /></label>
-          <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
-          <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
-          <label className="marcar config-servico-domicilio"><input type="checkbox" name="domicilio" defaultChecked={s.emDomicilio} /> Vou até o cliente (pede o endereço)</label>
-          <label className="marcar config-servico-domicilio config-servico-adicional"><input type="checkbox" name="adicional" defaultChecked={s.adicional} /> Oferecer como adicional (&quot;+ {s.nome}&quot; junto com outro serviço)</label>
-          <div className="acoes">
-            <button className="botao-sec">Salvar</button>
-            <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>
-          </div>
-        </form>
+      <p className="suave pequeno">Cada serviço tem o seu tempo: ponha quanto você leva de verdade no corte, na barba e no combo. Mudou o tempo? Os horários já marcados desse serviço passam a terminar no tempo novo na sua agenda e no calendário. Marque &quot;Oferecer como adicional&quot; na barba, na sobrancelha ou no que quiser: o cliente escolhe o corte e soma esses junto, com tempo e preço juntos. Toque no serviço pra mudar nome, tempo, preço e o que inclui, e depois em Salvar. Dizer as etapas (&quot;toalha quente, navalha, massagem&quot;) ajuda o cliente a entender o preço. Desativar tira o serviço do site sem apagar os horários já marcados.</p>
+      {/* Lista curta: uma linha por serviço (nome, tempo, preço); toca pra editar. Desativados ficam
+          recolhidos no fim, pra não confundir com os ativos de mesmo nome. */}
+      {[servicos.filter((s) => s.ativo), servicos.filter((s) => !s.ativo)].map((lista, desativados) => lista.length > 0 && (
+        <div key={desativados} className={desativados ? "config-servicos-off" : "config-servicos"}>
+          {desativados ? <p className="suave pequeno">Desativados ({lista.length}): não aparecem no site.</p> : null}
+          {lista.map((s) => (
+            <details key={s.id} id={`servico-${s.id}`} className={`config-servico-item ${s.ativo ? "" : "desativado"}`}>
+              <summary>
+                <span>{s.nome}{s.adicional && <small className="config-servico-selo">adicional</small>}</span>
+                <span className="suave">{s.duracaoMin} min</span>
+                <strong>{reais(s.precoCentavos)}</strong>
+              </summary>
+              <form action={editarServico} className="config-servico">
+                <input type="hidden" name="id" value={s.id} />
+                <label>Serviço<input name="nome" defaultValue={s.nome} required maxLength={40} /></label>
+                <label>Tempo (minutos)<input name="duracao" type="number" min={5} max={480} step={5} defaultValue={s.duracaoMin} required inputMode="numeric" /></label>
+                <label>Preço (R$)<input name="preco" defaultValue={(s.precoCentavos / 100).toFixed(2).replace(".", ",")} required inputMode="decimal" /></label>
+                <label className="config-servico-desc">O que inclui (aparece no site)<input name="descricao" defaultValue={s.descricao ?? ""} maxLength={140} placeholder="Ex.: toalha quente, navalha e massagem no fim" /></label>
+                <label className="marcar config-servico-domicilio"><input type="checkbox" name="domicilio" defaultChecked={s.emDomicilio} /> Vou até o cliente (pede o endereço)</label>
+                <label className="marcar config-servico-domicilio config-servico-adicional"><input type="checkbox" name="adicional" defaultChecked={s.adicional} /> Oferecer como adicional (&quot;+ {s.nome}&quot; junto com outro serviço)</label>
+                <div className="acoes">
+                  <button className="botao-sec">Salvar</button>
+                  <button className="botao-sec" formAction={alternarServico} formNoValidate>{s.ativo ? "Desativar" : "Ativar"}</button>
+                </div>
+              </form>
+            </details>
+          ))}
+        </div>
       ))}
       <h3>Novo serviço</h3>
       <form action={novoServico} className="formulario linha">

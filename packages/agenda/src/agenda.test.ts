@@ -101,6 +101,14 @@ describe("BancoAgenda", () => {
     expect(b.usuarioDaSessao(b.entrar("5555999998888", "novasenha123"))?.id).toBe(u.id);
   });
 
+  it("corte infantil não oferece barba nem química", () => {
+    const { b, barbearia } = novo();
+    b.adicionarServico(barbearia.id, { nome: "Corte infantil", duracaoMin: 30, precoCentavos: 3000 });
+    b.adicionarServico(barbearia.id, { nome: "Platinado", duracaoMin: 90, precoCentavos: 12000, adicional: true });
+    const infantil = b.servicos(barbearia.id).find((s) => s.nome === "Corte infantil")!;
+    expect(b.adicionaisPara(barbearia.id, infantil.id).map((s) => s.nome)).toEqual(["Sobrancelha"]);
+  });
+
   it("cria conta com slug, sessão e configuração inicial", () => {
     const { b, barbearia, token } = novo();
     expect(barbearia.slug).toBe("barbearia-sao-joao");

@@ -1,3 +1,5 @@
+import { BotaoCopiar } from "@/componentes/BotaoCopiar";
+import { primeiroNome } from "@/lib/pos-atendimento";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -61,7 +63,7 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
   // O barbeiro marcou pelo próprio celular pro cliente: manda o link pra ele por WhatsApp.
   const barbeiro = await ehOBarbeiro(b.id);
   const linkCliente = urlAbsoluta(base);
-  const mandarLink = linkWhatsapp(h.clienteTelefone, `Olá, ${h.clienteNome.split(" ")[0]}! Seu horário na ${b.nome} está marcado: ${h.servico} com ${h.profissional}, ${quando}. Pra pôr na agenda, remarcar ou cancelar: ${linkCliente}`);
+  const mandarLink = linkWhatsapp(h.clienteTelefone, `Olá, ${primeiroNome(h.clienteNome)}! Seu horário na ${b.nome} está marcado: ${h.servico} com ${h.profissional}, ${quando}. Pra pôr na agenda, remarcar ou cancelar: ${linkCliente}`);
   const titulo = cancelado ? "Horário cancelado" : sp.novo ? "Agendado!" : sp.remarcado ? "Horário trocado!" : h.passou ? "Seu último horário" : "Seu horário";
 
   return (
@@ -70,11 +72,13 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
       {sp.erro && <p className="erro" role="alert">{sp.erro}</p>}
       {sp.cancelado && <p className="b-aviso-ok" role="status">Pronto, cancelamos. O horário ficou livre pra outra pessoa.</p>}
 
+      {/* Barbeiro logado que marcou pro cliente: o que importa é mandar o link pra ele (o resto da página é do cliente). */}
       {barbeiro && podeMudar && (
-        <p className="b-aviso-ok">
-          Você está logado como barbeiro.{" "}
-          <a href={mandarLink} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} aria-hidden /> Mandar este link pra {h.clienteNome.split(" ")[0]} no WhatsApp</a>
-        </p>
+        <div className="b-aviso-ok b-barbeiro-marcou">
+          <p>Marcado na sua agenda. Mande o link pro cliente: por ele, o cliente põe na agenda do celular, remarca ou cancela.</p>
+          <a className="b-botao" href={mandarLink} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> Mandar o link pra {primeiroNome(h.clienteNome)}</a>
+          <a href="/app">Voltar pra agenda</a>
+        </div>
       )}
 
       <div className={`b-resumo ${cancelado ? "riscado" : ""}`}>
@@ -85,7 +89,7 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
         )}
       </div>
 
-      {podeMudar && (
+      {podeMudar && !barbeiro && (
         <>
           <div className="b-lembrete">
             <a className="b-botao" href={android ? google : ics} {...(android ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
@@ -99,6 +103,7 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
 
           <div className="b-mudar">
             <p><strong>Guarde este link:</strong> é por ele que você remarca ou cancela, sem precisar ligar.</p>
+            <p className="b-link-horario"><span>{linkCliente}</span> <BotaoCopiar texto={linkCliente} className="b-botao-sec" /></p>
             {sp.cancelar ? (
               <form action={cancelar} className="b-mudar-confirmar" id="cancelar">
                 <input type="hidden" name="slug" value={slug} />
