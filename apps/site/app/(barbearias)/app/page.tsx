@@ -13,6 +13,7 @@ import { mensagemAvaliacao, mensagemLembrete, primeiroNome } from "@/lib/pos-ate
 import { proximaData } from "@/lib/datas-barbearia";
 import { soEntrega } from "@/lib/modo";
 import { confirmarNoWhatsapp } from "./acoes-whatsapp";
+import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -218,72 +219,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </div>
       </dl>
 
-      <section className="cartao-site" aria-label="Seu site">
-        {capa
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={96} height={96} />
-          : <span />}
-        <div className="cartao-site-texto">
-          <p><strong>Seu site está no ar.</strong> Mande o link pros clientes marcarem sozinhos.</p>
-          <a className="link-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkDoSite.replace(/^https?:\/\//, "")}</a>
-          <div className="cartao-site-acoes">
-            <BotaoCopiar texto={linkDoSite} />
-            <a className="botao-sec" target="_blank" rel="noopener noreferrer"
-              href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkDoSite}`)}`}>
-              <MessageCircle size={16} aria-hidden /> Mandar no WhatsApp
-            </a>
-            <Link className="botao-sec" href="/app/whatsapp">Pôr no WhatsApp Business</Link>
-          </div>
-        </div>
-      </section>
-
-      <div className="atalhos">
-        <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
-        <Link href={`/app?data=${data}&bloquear=1#folgas`}><CalendarOff size={20} aria-hidden /> Bloquear horário</Link>
-        <Link href="/app/agendados?faltam=1"><ListChecks size={20} aria-hidden /> Confirmar horários{faltamConfirmar > 0 ? ` (${faltamConfirmar})` : ""}</Link>
-        <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
-      </div>
-
-      <Hoje barbeariaId={barbearia.id} />
-
-      {(() => {
-        const d = proximaData(hoje);
-        if (!d) return null;
-        const faltam = Math.round((Date.parse(`${d.dia}T12:00:00Z`) - Date.parse(`${hoje}T12:00:00Z`)) / 86_400_000);
-        return (
-          <aside className="data-proxima" aria-label="Próxima data">
-            <p><strong>{faltam === 0 ? "Hoje" : `Daqui a ${faltam} dia${faltam > 1 ? "s" : ""}`}: {d.titulo}</strong></p>
-            <p className="suave pequeno">{d.ideia}{d.link && !soEntrega() && <> <a href={d.link} target="_blank" rel="noopener noreferrer">Ler a matéria</a></>}</p>
-          </aside>
-        );
-      })()}
-
-      {amanha.length > 0 && (
-        <section className="lembretes" aria-labelledby="lembretes-titulo">
-          <h2 id="lembretes-titulo">Lembretes de amanhã <small className="suave">({amanha.filter((a) => !a.lembreteEm).length} pra mandar)</small></h2>
-          <p className="suave pequeno">Um lembrete na véspera diminui as faltas. Toque pra abrir o seu WhatsApp com a mensagem pronta.</p>
-          <ul>
-            {amanha.map((a) => (
-              <li key={a.id} className="hoje-linha">
-                <span><strong>{a.inicio.slice(11)}</strong> · {a.clienteNome} · {a.servico}</span>
-                {a.lembreteEm
-                  ? <span className="suave pequeno">Lembrete enviado ✓</span>
-                  : (
-                    <form action={contatar}>
-                      <input type="hidden" name="id" value={a.id} />
-                      <input type="hidden" name="tipo" value="lembrete" />
-                      <button className="botao-sec"><MessageCircle size={16} aria-hidden /> Lembrar</button>
-                    </form>
-                  )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
-
-
+      {/* O dia primeiro: é o que o barbeiro abre o painel pra ver. O resto vem depois. */}
       <nav className="navegacao">
         <Link href={`/app?data=${somarDias(data, -1)}`}>← dia anterior</Link>
         <strong>{data === hoje ? "Hoje — " : ""}{formatarData(data)}</strong>
@@ -427,6 +363,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
               </form>
             </div>
           )}
+          {a.status === "confirmado" && <SinalDoHorario a={a} voltar={`/app?data=${data}#ag-${a.id}`} />}
           {a.status === "confirmado" && a.inicio > agoraLocal && (
             <div className="acoes">
               <form action={confirmarNoWhatsapp}>
@@ -465,6 +402,73 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           )}
         </div>
       ))}
+
+      <Hoje barbeariaId={barbearia.id} />
+
+      <div className="atalhos">
+        <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
+        <Link href={`/app?data=${data}&bloquear=1#folgas`}><CalendarOff size={20} aria-hidden /> Bloquear horário</Link>
+        <Link href="/app/agendados?faltam=1"><ListChecks size={20} aria-hidden /> Confirmar horários{faltamConfirmar > 0 ? ` (${faltamConfirmar})` : ""}</Link>
+        <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
+      </div>
+
+      {amanha.length > 0 && (
+        <section className="lembretes" aria-labelledby="lembretes-titulo">
+          <h2 id="lembretes-titulo">Lembretes de amanhã <small className="suave">({amanha.filter((a) => !a.lembreteEm).length} pra mandar)</small></h2>
+          <p className="suave pequeno">Um lembrete na véspera diminui as faltas. Toque pra abrir o seu WhatsApp com a mensagem pronta.</p>
+          <ul>
+            {amanha.map((a) => (
+              <li key={a.id} className="hoje-linha">
+                <span><strong>{a.inicio.slice(11)}</strong> · {a.clienteNome} · {a.servico}</span>
+                {a.lembreteEm
+                  ? <span className="suave pequeno">Lembrete enviado ✓</span>
+                  : (
+                    <form action={contatar}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="tipo" value="lembrete" />
+                      <button className="botao-sec"><MessageCircle size={16} aria-hidden /> Lembrar</button>
+                    </form>
+                  )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="cartao-site" aria-label="Seu site">
+        {capa
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={96} height={96} />
+          : <span />}
+        <div className="cartao-site-texto">
+          <p><strong>Seu site está no ar.</strong> Mande o link pros clientes marcarem sozinhos.</p>
+          <a className="link-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">{linkDoSite.replace(/^https?:\/\//, "")}</a>
+          <div className="cartao-site-acoes">
+            <BotaoCopiar texto={linkDoSite} />
+            <a className="botao-sec" target="_blank" rel="noopener noreferrer"
+              href={`https://wa.me/?text=${encodeURIComponent(`Agora dá pra marcar seu horário na ${barbearia.nome} pelo site: ${linkDoSite}`)}`}>
+              <MessageCircle size={16} aria-hidden /> Mandar no WhatsApp
+            </a>
+            <Link className="botao-sec" href="/app/whatsapp">Pôr no WhatsApp Business</Link>
+          </div>
+        </div>
+      </section>
+
+      {(() => {
+        const d = proximaData(hoje);
+        if (!d) return null;
+        const faltam = Math.round((Date.parse(`${d.dia}T12:00:00Z`) - Date.parse(`${hoje}T12:00:00Z`)) / 86_400_000);
+        return (
+          <aside className="data-proxima" aria-label="Próxima data">
+            <p><strong>{faltam === 0 ? "Hoje" : `Daqui a ${faltam} dia${faltam > 1 ? "s" : ""}`}: {d.titulo}</strong></p>
+            <p className="suave pequeno">{d.ideia}{d.link && !soEntrega() && <> <a href={d.link} target="_blank" rel="noopener noreferrer">Ler a matéria</a></>}</p>
+          </aside>
+        );
+      })()}
+
+      <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
+
+
     </>
   );
 }

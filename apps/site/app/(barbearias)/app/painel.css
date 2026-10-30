@@ -193,3 +193,11 @@
   display: inline-flex; align-items: center; gap: 6px; padding: 10px 12px; min-height: 44px; border-radius: 999px;
   background: none; border: 1px solid var(--borda); color: var(--suave); font: 500 13px var(--fonte-texto); cursor: pointer;
 }
+
+/* Sinal do horário (aguardando / recebido). */
+.sinal { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 8px 0 0; font-size: 14px; }
+.sinal > span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: var(--acento-claro); color: var(--texto); font-weight: 600; }
+.sinal.pago > span { background: var(--destaque-claro); }
+.sinal .botao-sec { padding: 6px 12px; font-size: 13px; min-height: 36px; }
+.sinal-desfazer { background: none; border: 0; padding: 4px; color: var(--suave); text-decoration: underline; font-size: 13px; cursor: pointer; }
+.agendado { flex-wrap: wrap; } .agendado > .sinal { flex-basis: 100%; margin: 0; }

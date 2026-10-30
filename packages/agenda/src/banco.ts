@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { horariosLivres, type Expediente } from "./disponibilidade.ts";
 import { conferirSenha, hashSenha, hashToken, novoToken } from "./senha.ts";
+import { gerarPixCopiaECola } from "./pix.ts";
 import { randomBytes, randomUUID } from "node:crypto";
 import { categoriaValida, temaValido, TEMA_PADRAO, type CategoriaFoto, type IdTema } from "./temas.ts";
 import { agoraNoFuso, deMinutos, diaDaSemana, paraMinutos, somarDias, type Data, type DataHora } from "./tempo.ts";
@@ -59,6 +60,14 @@ export interface Barbearia {
   linkAvaliacao?: string;
   /** Em quantos dias o cliente costuma voltar, quando ele ainda não tem histórico. */
   retornoDias: number;
+  /**
+   * Sinal pra garantir o horário marcado pelo site (0 = não cobra). O cliente paga pelo Pix DA
+   * barbearia (chave, nome e cidade abaixo) e o barbeiro marca "Recebi o sinal": sem PSP nem taxa.
+   */
+  sinalCentavos: number;
+  pixChave?: string;
+  pixNome?: string;
+  pixCidade?: string;
 }
 
 /** Categorias de foto que o cliente pode escolher como "quero esse corte" ao marcar. */
@@ -191,6 +200,9 @@ export interface Agendamento {
   avaliacaoEm?: string;
   /** Quando o barbeiro abriu a confirmação do horário no WhatsApp dele (lista de agendados). */
   confirmacaoEm?: string;
+  /** Sinal cobrado ao marcar pelo site (snapshot do valor) e quando o barbeiro marcou que recebeu. */
+  sinalCentavos?: number;
+  sinalPagoEm?: string;
   /** Foto do portfólio que o cliente escolheu ao marcar ("quero esse corte"). */
   referenciaFoto?: string;
   /** Endereço do cliente, só em serviço em domicílio (só o barbeiro vê). */
@@ -244,13 +256,14 @@ export function planoDoAmbiente(): Plano {
 
 const COLUNAS_BARBEARIA = "id, slug, nome, telefone, endereco, fuso, acesso_ate AS acessoAte, tema, bio, cidade, instagram, oferta, desde, " +
   "mostrar_precos AS mostrarPrecos, intervalo_min AS intervaloMin, folga_min AS folgaMin, atendimento, fechado_em AS fechadoEm, fila_pessoas AS filaPessoas, fila_atualizada_em AS filaAtualizadaEm, " +
-  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias, montagem AS emMontagem, suspensa";
+  "demo_ate AS demoAte, link_avaliacao AS linkAvaliacao, retorno_dias AS retornoDias, montagem AS emMontagem, suspensa, " +
+  "sinal_centavos AS sinalCentavos, pix_chave AS pixChave, pix_nome AS pixNome, pix_cidade AS pixCidade";
 
 /** O SQLite devolve 0/1 e null; aqui vira boolean e undefined. */
 function paraBarbearia<T extends Record<string, unknown>>(linha: T | undefined): (Barbearia & T) | undefined {
   if (!linha) return undefined;
   const b = { ...linha, mostrarPrecos: linha.mostrarPrecos === 1, emMontagem: linha.emMontagem === 1, suspensa: linha.suspensa === 1 } as Record<string, unknown>;
-  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte", "linkAvaliacao"]) if (b[k] === null) b[k] = undefined;
+  for (const k of ["fechadoEm", "filaPessoas", "filaAtualizadaEm", "endereco", "bio", "cidade", "instagram", "oferta", "desde", "demoAte", "linkAvaliacao", "pixChave", "pixNome", "pixCidade"]) if (b[k] === null) b[k] = undefined;
   return b as Barbearia & T;
 }
 const COLUNAS_FOTO = "id, arquivo, categoria, legenda, largura, altura, capa, antes_de AS antesDe";
@@ -278,6 +291,12 @@ export const SEM_EMAIL = "@sem-email.invalid";
 /** Conta feita pelo pedido sem e-mail: não mostrar o e-mail de marcação. */
 export function semEmail(email: string | undefined): boolean {
   return !email || email.endsWith(SEM_EMAIL);
+}
+
+/** Pix copia e cola do sinal de um horário, com a chave da barbearia. Sem chave ou sem sinal, nada. */
+export function pixDoSinal(b: Pick<Barbearia, "pixChave" | "pixNome" | "pixCidade" | "nome">, a: { id: number; sinalCentavos?: number }): string | undefined {
+  if (!a.sinalCentavos || !b.pixChave || !b.pixNome || !b.pixCidade) return undefined;
+  return gerarPixCopiaECola({ chave: b.pixChave, nome: b.pixNome, cidade: b.pixCidade, valorCentavos: a.sinalCentavos, txid: `SINAL${a.id}`, descricao: `Sinal ${b.nome}` });
 }
 
 export function gerarSlug(nome: string): string {
@@ -381,6 +400,10 @@ export class BancoAgenda {
     this.garantirColuna("barbearias", "fila_pessoas", "INTEGER");
     for (const c of ["demo_ate", "demo_token_hash", "demo_lead"]) this.garantirColuna("barbearias", c, "TEXT");
     this.garantirColuna("barbearias", "link_avaliacao", "TEXT");
+    this.garantirColuna("barbearias", "sinal_centavos", "INTEGER NOT NULL DEFAULT 0");
+    for (const c of ["pix_chave", "pix_nome", "pix_cidade"]) this.garantirColuna("barbearias", c, "TEXT");
+    this.garantirColuna("agendamentos", "sinal_centavos", "INTEGER");
+    this.garantirColuna("agendamentos", "sinal_pago_em", "TEXT");
     this.garantirColuna("barbearias", "montagem", "INTEGER NOT NULL DEFAULT 0");
     this.garantirColuna("barbearias", "suspensa", "INTEGER NOT NULL DEFAULT 0");
     this.garantirColuna("pagamentos", "comprovante", "TEXT");
@@ -963,12 +986,12 @@ export class BancoAgenda {
     const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
         a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.avaliacao_em AS avaliacaoEm, a.confirmacao_em AS confirmacaoEm,
-        a.referencia_foto AS referenciaFoto, a.endereco_cliente AS enderecoCliente
+        a.referencia_foto AS referenciaFoto, a.endereco_cliente AS enderecoCliente, a.sinal_centavos AS sinalCentavos, a.sinal_pago_em AS sinalPagoEm
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.inicio LIKE ? ${profissionalId ? "AND a.profissional_id = ?" : ""}
       ORDER BY a.inicio`)
       .all(barbeariaId, `${data}%`, ...(profissionalId ? [profissionalId] : [])) as unknown as Agendamento[];
-    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, avaliacaoEm: a.avaliacaoEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, referenciaFoto: a.referenciaFoto ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined, sinalCentavos: a.sinalCentavos ?? undefined, sinalPagoEm: a.sinalPagoEm ?? undefined }));
   }
 
   /**
@@ -1063,6 +1086,10 @@ export class BancoAgenda {
           adicionais.length ? adicionais.map((a) => a.id).join(",") : null,
           adicionais.length ? adicionais.map((a) => a.nome).join(" + ") : null,
           extraMin, adicionais.reduce((t, a) => t + a.precoCentavos, 0));
+      // Sinal só no que o cliente marca pelo site; o que o barbeiro marca (cliente da casa, telefone) fica sem.
+      if (!dados.peloBarbeiro && b.sinalCentavos > 0 && b.pixChave) {
+        this.db.prepare("UPDATE agendamentos SET sinal_centavos = ? WHERE id = ?").run(b.sinalCentavos, Number(r.lastInsertRowid));
+      }
       this.db.exec("COMMIT");
       return Number(r.lastInsertRowid);
     } catch (e) {
@@ -1074,12 +1101,13 @@ export class BancoAgenda {
   agendamento(barbeariaId: number, id: number): Agendamento | undefined {
     const a = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico, a.profissional_id AS profissionalId,
         p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status,
-        a.endereco_cliente AS enderecoCliente, a.adicionais_ids AS ids
+        a.endereco_cliente AS enderecoCliente, a.adicionais_ids AS ids, a.sinal_centavos AS sinalCentavos, a.sinal_pago_em AS sinalPagoEm
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.id = ?`).get(barbeariaId, id) as (Agendamento & { ids: string | null }) | undefined;
     if (!a) return undefined;
     const { ids, ...resto } = a;
-    return { ...resto, enderecoCliente: a.enderecoCliente ?? undefined, adicionais: ids ? ids.split(",").map(Number) : [] };
+    return { ...resto, enderecoCliente: a.enderecoCliente ?? undefined, sinalCentavos: a.sinalCentavos ?? undefined, sinalPagoEm: a.sinalPagoEm ?? undefined,
+      adicionais: ids ? ids.split(",").map(Number) : [] };
   }
 
   cancelar(barbeariaId: number, id: number): void {
@@ -1103,6 +1131,28 @@ export class BancoAgenda {
   registrarContato(barbeariaId: number, id: number, tipo: "lembrete" | "avaliacao" | "confirmacao", agora = new Date()): void {
     const coluna = tipo === "lembrete" ? "lembrete_em" : tipo === "avaliacao" ? "avaliacao_em" : "confirmacao_em";
     this.db.prepare(`UPDATE agendamentos SET ${coluna} = ? WHERE id = ? AND barbearia_id = ?`).run(agora.toISOString(), id, barbeariaId);
+  }
+
+  /** Sinal pelo Pix da barbearia. 0 desliga; ligado, precisa da chave, do nome e da cidade (vão no código do Pix). */
+  atualizarSinal(id: number, dados: { sinalCentavos: number; pixChave?: string; pixNome?: string; pixCidade?: string }): void {
+    const valor = Math.round(dados.sinalCentavos);
+    const chave = dados.pixChave?.trim() || null;
+    const nome = dados.pixNome?.trim() || null;
+    const cidade = dados.pixCidade?.trim() || null;
+    if (!(valor === 0 || (valor >= 500 && valor <= 50000))) throw new ErroAgenda("O sinal tem que ser de R$ 5 a R$ 500 (ou zero pra não cobrar).");
+    if (valor > 0) {
+      if (!chave || chave.length < 3 || chave.length > 77) throw new ErroAgenda("Ponha a sua chave Pix (CPF, CNPJ, celular, e-mail ou aleatória).");
+      if (!nome || nome.length < 2) throw new ErroAgenda("Ponha o nome que aparece no seu Pix.");
+      if (!cidade || cidade.length < 2) throw new ErroAgenda("Ponha a cidade da sua conta.");
+    }
+    this.db.prepare("UPDATE barbearias SET sinal_centavos = ?, pix_chave = ?, pix_nome = ?, pix_cidade = ? WHERE id = ?")
+      .run(valor, chave, nome?.slice(0, 25) ?? null, cidade?.slice(0, 15) ?? null, id);
+  }
+
+  /** O barbeiro conferiu no banco que o sinal caiu (ou desfaz). */
+  marcarSinal(barbeariaId: number, id: number, pago: boolean, agora = new Date()): void {
+    this.db.prepare("UPDATE agendamentos SET sinal_pago_em = ? WHERE id = ? AND barbearia_id = ? AND sinal_centavos IS NOT NULL")
+      .run(pago ? agora.toISOString() : null, id, barbeariaId);
   }
 
   /** Configurações do pós-atendimento: link de avaliação do Google e retorno padrão. */
@@ -1432,11 +1482,13 @@ export class BancoAgenda {
     const ate = somarDias(agora.slice(0, 10) as Data, dias);
     const linhas = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico,
         a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone,
-        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.confirmacao_em AS confirmacaoEm, a.endereco_cliente AS enderecoCliente
+        a.inicio, a.fim, a.status, a.lembrete_em AS lembreteEm, a.confirmacao_em AS confirmacaoEm, a.endereco_cliente AS enderecoCliente,
+        a.sinal_centavos AS sinalCentavos, a.sinal_pago_em AS sinalPagoEm
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.barbearia_id = ? AND a.status = 'confirmado' AND a.inicio >= ? AND a.inicio < ?
       ORDER BY a.inicio LIMIT 300`).all(barbeariaId, agora, `${ate}T99`) as unknown as Agendamento[];
-    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined }));
+    return linhas.map((a) => ({ ...a, lembreteEm: a.lembreteEm ?? undefined, confirmacaoEm: a.confirmacaoEm ?? undefined, enderecoCliente: a.enderecoCliente ?? undefined,
+      sinalCentavos: a.sinalCentavos ?? undefined, sinalPagoEm: a.sinalPagoEm ?? undefined }));
   }
 
   // ---------- link do cliente: ver, cancelar e remarcar sem login ----------
@@ -1455,12 +1507,12 @@ export class BancoAgenda {
     const a = this.db.prepare(`SELECT a.id, a.servico_id AS servicoId, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico,
         CAST(round((julianday(a.fim) - julianday(a.inicio)) * 1440) AS INTEGER) AS duracaoMin,
         a.profissional_id AS profissionalId, p.nome AS profissional, a.cliente_nome AS clienteNome,
-        a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status
+        a.cliente_telefone AS clienteTelefone, a.inicio, a.fim, a.status, a.sinal_centavos AS sinalCentavos, a.sinal_pago_em AS sinalPagoEm
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.token_cliente = ? AND a.barbearia_id = ?`).get(hashToken(token), barbeariaId) as Omit<HorarioCliente, "passou"> | undefined;
     const b = this.barbeariaPorId(barbeariaId);
     if (!a || !b) return undefined;
-    return { ...a, passou: a.inicio <= agoraNoFuso(b.fuso, agora) };
+    return { ...a, sinalCentavos: a.sinalCentavos ?? undefined, sinalPagoEm: a.sinalPagoEm ?? undefined, passou: a.inicio <= agoraNoFuso(b.fuso, agora) };
   }
 
   /** Devolve o horário cancelado (pra avisar o barbeiro). */

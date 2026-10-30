@@ -2,42 +2,44 @@
  * Frases entre as seções do site da barbearia: quebram a sequência de fotos e vendem a ideia
  * (o corte como preparo, presença, ritual). Quatro por estilo, no tom de cada um: três em letreiro entre as seções e a última como título da chamada final.
  */
+// Regras: frase curta, que se lê correndo no letreiro; nada que a barbearia talvez não tenha
+// (café, ar, toalha quente); a quarta chama pra marcar, porque é o título do botão final.
 const FRASES: Record<string, [string, string, string, string]> = {
   potencia: [
-    "Cabelo na régua é armadura. Você sai daqui pronto pra guerra.",
-    "Ninguém lembra de um corte mais ou menos.",
-    "Degradê limpo, cabeça erguida. O resto é consequência.",
-    "Fade alinhado não é luxo. É padrão.",
+    "Degradê na régua do primeiro ao último fio.",
+    "Aqui o fade não acaba. Ele some.",
+    "Sai da cadeira já conferindo no espelho.",
+    "Tua próxima régua tá a um toque.",
   ],
   cerimonia: [
-    "Uma hora só sua. O mundo espera lá fora.",
-    "Elegância não se explica. Se percebe.",
+    "Sem pressa. Cada detalhe no lugar.",
+    "Aqui o relógio anda mais devagar.",
     "Você entra cansado. Sai lembrando quem é.",
-    "Atendimento sem pressa, acabamento sem erro.",
+    "Reserve a sua hora.",
   ],
   extravagancia: [
-    "Reis não pedem licença. Mas marcam horário.",
-    "A navalha certa transforma um homem em presença.",
-    "Todo guerreiro tem seu ritual antes da batalha.",
-    "Brilho de rei começa na navalha.",
+    "Tradição de barbearia, acabamento de joalheiro.",
+    "Barba desenhada fio a fio.",
+    "Todo rei tem a sua cadeira.",
+    "Sua cadeira está esperando.",
   ],
   silencioso: [
+    "Bom corte não precisa de legenda.",
+    "Linhas limpas. Nada sobrando.",
     "O corte certo fala antes de você.",
-    "Menos é mais. Mas tem que ser perfeito.",
-    "Toda grande semana começa na cadeira do barbeiro.",
-    "Detalhe é o que separa o bom do impecável.",
+    "Marque o seu horário.",
   ],
   atemporal: [
+    "Clássico é o corte que nunca sai de moda.",
+    "Tesoura, pente e mão de quem sabe.",
     "Estilo não envelhece.",
-    "Um bom corte não muda quem você é. Revela.",
-    "Barba feita, olhar firme. Pronto pro que vier.",
-    "Clássico é o que nunca precisa de explicação.",
+    "Seu horário de sempre, a um toque.",
   ],
   tecnico: [
-    "Corte em dia, cabeça leve.",
-    "Cuidar de si também é coisa de homem forte.",
-    "Saia daqui pronto pra vencer o dia.",
-    "Hora marcada, atendimento no tempo certo.",
+    "Hora marcada, cadeira pronta quando você chega.",
+    "Do primeiro corte do filho ao degradê do pai.",
+    "Cuidar do visual cabe na sua agenda.",
+    "Escolha o horário que cabe no seu dia.",
   ],
 };
 

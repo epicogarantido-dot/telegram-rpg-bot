@@ -3,6 +3,7 @@ import { agoraNoFuso, formatarData, nomeDia, diaDaSemana, somarDias, type Data }
 import { CalendarPlus, Check, MessageCircle } from "lucide-react";
 import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
 import { confirmarNoWhatsapp } from "../acoes-whatsapp";
+import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
 
 export const metadata = { title: "Agendados", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -58,6 +59,7 @@ export default async function Agendados({ searchParams }: { searchParams: Promis
                     ? <button className="agendado-feito" title="Mandar de novo"><Check size={16} aria-hidden /> Confirmação enviada</button>
                     : <button className="botao-whats-p"><MessageCircle size={16} aria-hidden /> Confirmar</button>}
                 </form>
+                <SinalDoHorario a={a} voltar={`/app/agendados${faltam ? "?faltam=1" : ""}`} />
               </li>
             ))}
           </ul>

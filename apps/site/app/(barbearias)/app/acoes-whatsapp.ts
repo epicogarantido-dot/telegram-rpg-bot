@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
+import { revalidatePath } from "next/cache";
+import { pixDoSinal } from "@aprenda/agenda";
+import { exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
 import { mensagemConfirmacao } from "@/lib/avisos";
 
 /**
@@ -16,7 +18,20 @@ export async function confirmarNoWhatsapp(form: FormData) {
   const a = banco.agendamento(barbearia.id, Number(form.get("id")));
   if (!a || a.status !== "confirmado") redirect("/app/agendados");
   banco.registrarContato(barbearia.id, a.id, "confirmacao");
+  // Sinal ainda não pago: a confirmação já leva o Pix copia e cola pro cliente.
+  const pix = !a.sinalPagoEm ? pixDoSinal(barbearia, a) : undefined;
   redirect(linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({
     barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio,
+    sinal: pix ? { valor: reais(a.sinalCentavos!), pix } : undefined,
   })));
+}
+
+/** "Recebi o sinal" (o barbeiro conferiu no banco) ou desfaz. Volta pra página de onde veio. */
+export async function marcarSinalRecebido(form: FormData) {
+  const { barbearia } = await exigirAcessoAtivo();
+  obterAgenda().marcarSinal(barbearia.id, Number(form.get("id")), form.get("pago") === "1");
+  revalidatePath("/app");
+  revalidatePath("/app/agendados");
+  const voltar = String(form.get("voltar") ?? "");
+  redirect(voltar.startsWith("/app") ? voltar : "/app");
 }

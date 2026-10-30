@@ -5,10 +5,11 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { CalendarPlus, MapPin, MessageCircle } from "lucide-react";
-import { formatarData, linkGoogleAgenda } from "@aprenda/agenda";
+import QRCode from "qrcode";
+import { formatarData, linkGoogleAgenda, pixDoSinal } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
-import { mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { avisarMudancaDoCliente } from "@/lib/avisos";
 import { linkMapa, montarEvento, urlAbsoluta } from "@/lib/barbearias";
 import { ehOBarbeiro, protegerMudanca } from "@/lib/protecao";
@@ -64,6 +65,9 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
   const barbeiro = await ehOBarbeiro(b.id);
   const linkCliente = urlAbsoluta(base);
   const mandarLink = linkWhatsapp(h.clienteTelefone, `Olá, ${primeiroNome(h.clienteNome)}! Seu horário na ${b.nome} está marcado: ${h.servico} com ${h.profissional}, ${quando}. Pra pôr na agenda, remarcar ou cancelar: ${linkCliente}`);
+  // Sinal: só enquanto não foi pago e o horário segue de pé. O Pix é da própria barbearia.
+  const pixSinal = podeMudar && !h.sinalPagoEm ? pixDoSinal(b, h) : undefined;
+  const qrSinal = pixSinal ? await QRCode.toString(pixSinal, { type: "svg", margin: 1, width: 200 }) : "";
   const titulo = cancelado ? "Horário cancelado" : sp.novo ? "Agendado!" : sp.remarcado ? "Horário trocado!" : h.passou ? "Seu último horário" : "Seu horário";
 
   return (
@@ -98,6 +102,22 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
           <p className="b-resumo-local"><MapPin size={16} aria-hidden /> {mapa ? <a href={mapa} target="_blank" rel="noopener noreferrer">{b.endereco}</a> : b.endereco}</p>
         )}
       </div>
+
+      {pixSinal && !barbeiro && (
+        <div className="b-sinal">
+          <h2>Falta o sinal de {reais(h.sinalCentavos!)}</h2>
+          <p>A {b.nome} pede um sinal pelo Pix pra garantir o horário. O restante você acerta no dia.</p>
+          <p><strong>No celular:</strong> copie o código, abra o app do banco e escolha Pix Copia e Cola.</p>
+          <p><BotaoCopiar texto={pixSinal} rotulo="Copiar código do Pix" className="b-botao" /></p>
+          <div className="b-sinal-qr" aria-label="QR code do Pix" dangerouslySetInnerHTML={{ __html: qrSinal }} />
+          <p>
+            <a target="_blank" rel="noopener noreferrer" href={linkWhatsapp(b.telefone, `Olá! Paguei o sinal do meu horário de ${h.servico}, ${quando}. Segue o comprovante.`)}>
+              <MessageCircle size={16} aria-hidden /> Pagou? Mande o comprovante no WhatsApp da barbearia
+            </a>
+          </p>
+        </div>
+      )}
+      {podeMudar && h.sinalCentavos && h.sinalPagoEm && <p className="b-aviso-ok">Sinal de {reais(h.sinalCentavos)} recebido pela barbearia.</p>}
 
       {podeMudar && !barbeiro && (
         <>

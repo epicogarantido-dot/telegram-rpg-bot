@@ -1092,3 +1092,10 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 /* Barbeiro que marcou pro cliente: mandar o link é a ação principal. */
 .site-b .b-barbeiro-marcou { display: grid; gap: 12px; justify-items: start; }
 .site-b .b-barbeiro-marcou p { margin: 0; }
+
+/* Sinal pelo Pix na página do horário do cliente. */
+.site-b .b-sinal { margin: 18px 0; padding: 18px; border: 1px solid var(--destaque); border-radius: var(--raio); background: var(--cartao); }
+.site-b .b-sinal h2 { margin: 0 0 8px; font-size: 1.3rem; }
+.site-b .b-sinal p { margin: 8px 0; }
+.site-b .b-sinal-qr { width: 200px; max-width: 100%; padding: 8px; background: #fff; border-radius: var(--raio-p); margin: 8px 0; }
+.site-b .b-sinal-qr svg { display: block; width: 100%; height: auto; }

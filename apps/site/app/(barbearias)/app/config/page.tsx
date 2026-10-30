@@ -81,6 +81,18 @@ async function salvarFuncionamento(form: FormData) {
   }));
 }
 
+async function salvarSinal(form: FormData) {
+  "use server";
+  const texto = String(form.get("sinal") ?? "").trim();
+  await executar((id) => obterAgenda().atualizarSinal(id, {
+    sinalCentavos: texto ? lerPreco(texto) : 0,
+    pixChave: String(form.get("pixChave") ?? ""),
+    pixNome: String(form.get("pixNome") ?? ""),
+    pixCidade: String(form.get("pixCidade") ?? ""),
+  }));
+  redirect(`/app/config?aviso=${encodeURIComponent(texto && lerPreco(texto) > 0 ? "Sinal ligado: quem marcar pelo site vê o Pix." : "Sinal desligado.")}#sinal`);
+}
+
 async function salvarPosAtendimento(form: FormData) {
   "use server";
   await executar((id) => obterAgenda().atualizarPosAtendimento(id, {
@@ -209,6 +221,19 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
           <input type="checkbox" name="mostrarPrecos" defaultChecked={barbearia.mostrarPrecos} /> Mostrar os preços dos serviços no site
         </label>
         <button>Salvar</button>
+      </form>
+
+      <h2 id="sinal">Sinal pra garantir o horário</h2>
+      <p className="suave pequeno">
+        Opcional. Quem marcar pelo site vê o Pix do sinal (na sua chave, sem taxa) e você confere no seu banco e toca em
+        &quot;Recebi o sinal&quot; no horário. Os horários que você mesmo marca ficam sem sinal. Deixe o valor em branco ou 0 pra não cobrar.
+      </p>
+      <form action={salvarSinal} className="formulario">
+        <label>Valor do sinal (R$)<input name="sinal" inputMode="decimal" placeholder="Ex.: 20,00" defaultValue={barbearia.sinalCentavos ? (barbearia.sinalCentavos / 100).toFixed(2).replace(".", ",") : ""} /></label>
+        <label>Sua chave Pix<input name="pixChave" maxLength={77} defaultValue={barbearia.pixChave ?? ""} placeholder="CPF, CNPJ, celular, e-mail ou chave aleatória" autoComplete="off" /></label>
+        <label>Nome do recebedor (como aparece no Pix)<input name="pixNome" maxLength={25} defaultValue={barbearia.pixNome ?? ""} /></label>
+        <label>Cidade da conta<input name="pixCidade" maxLength={15} defaultValue={barbearia.pixCidade ?? ""} /></label>
+        <button>Salvar sinal</button>
       </form>
 
       <h2 id="depois">Depois do atendimento</h2>

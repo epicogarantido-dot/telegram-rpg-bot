@@ -56,6 +56,7 @@ const PERGUNTAS = [
   ["Como fica o endereço do site?", "Com o nome da sua barbearia, do jeito nome-da-barbearia.squareweb.app. É esse link que você põe no Instagram, no Google e no WhatsApp."],
   ["Como o cliente marca?", "Ele abre o seu link, escolhe o serviço e o horário livre e põe nome e WhatsApp. Não baixa aplicativo nem cria conta."],
   ["O cliente recebe lembrete?", "Ao marcar, ele pode pôr o horário na agenda do celular, com aviso uma hora antes. E no painel você manda o lembrete de amanhã pelo seu WhatsApp, com um toque."],
+  ["Dá pra cobrar sinal pra evitar falta?", "Dá, se você quiser. Você liga no painel e põe o valor (ex.: R$ 20) e a sua chave Pix: quem marca pelo site vê o código do Pix, paga direto pra você, sem taxa, e você marca \"Recebi o sinal\"."],
   ["Posso trocar de estilo depois?", "Pode, quando quiser, sem perder fotos, serviços nem os horários marcados."],
   ["E se eu atrasar a mensalidade?", "A gente te chama no WhatsApp pra combinar. Não tem multa nem juros."],
   ["Quem me ajuda se eu travar?", "A gente, pelo WhatsApp. Quem monta o seu site é quem te atende."],

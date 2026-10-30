@@ -25,9 +25,10 @@ export function chavesAviso(): { publica: string; privada: string } {
 }
 
 /** Texto que o barbeiro manda pro cliente confirmar o horário. */
-export function mensagemConfirmacao(a: { barbearia: string; cliente: string; servico: string; profissional: string; inicio: string }): string {
+export function mensagemConfirmacao(a: { barbearia: string; cliente: string; servico: string; profissional: string; inicio: string; sinal?: { valor: string; pix: string } }): string {
   return `Olá, ${primeiroNome(a.cliente)}! Aqui é da ${a.barbearia}. Confirmando seu horário: ${a.servico} com ${a.profissional}, ` +
-    `${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Tudo certo? Se precisar remarcar, é só responder aqui.`;
+    `${formatarData(a.inicio.slice(0, 10))} às ${a.inicio.slice(11, 16)}. Tudo certo? Se precisar remarcar, é só responder aqui.` +
+    (a.sinal ? `\n\nPra garantir o horário, falta o sinal de ${a.sinal.valor} no Pix. Copie o código abaixo e cole no app do banco (Pix Copia e Cola):\n\n${a.sinal.pix}` : "");
 }
 
 type Aviso = { titulo: string; corpo: string; url: string; whats?: string; tag: string };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BancoAgenda, ErroAgenda, gerarSlug, planoDoAmbiente, semEmail } from "./banco.ts";
+import { BancoAgenda, ErroAgenda, gerarSlug, pixDoSinal, planoDoAmbiente, semEmail } from "./banco.ts";
 import { horariosLivres } from "./disponibilidade.ts";
 import { agoraNoFuso, diaDaSemana, somarDias } from "./tempo.ts";
 import { conferirSenha, hashSenha } from "./senha.ts";
@@ -605,6 +605,25 @@ describe("link do cliente: cancelar e remarcar", () => {
     const token = b.criarLinkCliente(a.id, id);
     return { b, a, o, agora, dias, s: s!, p: p!, hora, id, token };
   }
+
+  it("sinal: só no que o cliente marca pelo site, com Pix da barbearia e baixa manual", () => {
+    const { b, a, dias, s, p, agora } = cenario();
+    expect(() => b.atualizarSinal(a.id, { sinalCentavos: 2000 })).toThrow(ErroAgenda);
+    expect(() => b.atualizarSinal(a.id, { sinalCentavos: 100, pixChave: "x@y.com", pixNome: "Ze", pixCidade: "Campinas" })).toThrow(ErroAgenda);
+    b.atualizarSinal(a.id, { sinalCentavos: 2000, pixChave: "ze@barbearia.com", pixNome: "Jose da Silva", pixCidade: "Campinas" });
+    const horas = b.horariosLivres(a.id, p.id, s.id, dias[1]!, agora);
+    const pelo = b.agendar({ barbeariaId: a.id, profissionalId: p.id, servicoId: s.id, data: dias[1]!, hora: horas[0]!, clienteNome: "Rui", clienteTelefone: "5519911110001", agora });
+    const casa = b.agendar({ barbeariaId: a.id, profissionalId: p.id, servicoId: s.id, data: dias[1]!, hora: horas.at(-1)!, clienteNome: "Leo", clienteTelefone: "5519911110002", agora, peloBarbeiro: true });
+    expect(b.agendamento(a.id, pelo)!.sinalCentavos).toBe(2000);
+    expect(b.agendamento(a.id, casa)!.sinalCentavos).toBeUndefined();
+    const pix = pixDoSinal(b.barbeariaPorId(a.id)!, b.agendamento(a.id, pelo)!)!;
+    expect(pix).toContain("ze@barbearia.com");
+    expect(pix).toContain("540520.00");
+    b.marcarSinal(a.id, pelo, true);
+    expect(b.agendamento(a.id, pelo)!.sinalPagoEm).toBeTruthy();
+    b.marcarSinal(a.id, pelo, false);
+    expect(b.agendamento(a.id, pelo)!.sinalPagoEm).toBeUndefined();
+  });
 
   it("o link só abre na barbearia certa e com o token certo", () => {
     const { b, a, o, token, hora } = cenario();

@@ -423,7 +423,11 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           {/* Fixo embaixo no celular: o botão de terminar não fica escondido atrás da rolagem. */}
           <div className="b-confirmar-fixo">
             <BotaoEnviar className="b-botao" carregando="Confirmando…">{marcandoPeloBarbeiro ? "Marcar pro cliente" : "Confirmar horário"}</BotaoEnviar>
-            {!marcandoPeloBarbeiro && <small className="b-dica">O horário fica marcado na hora e a barbearia recebe o aviso.</small>}
+            {!marcandoPeloBarbeiro && <small className="b-dica">
+              {b.sinalCentavos > 0 && b.pixChave
+                ? `O horário fica marcado na hora. Pra garantir, a barbearia pede um sinal de ${reais(b.sinalCentavos)} pelo Pix: o código aparece na próxima tela.`
+                : "O horário fica marcado na hora e a barbearia recebe o aviso."}
+            </small>}
           </div>
         </form>
       </div>
