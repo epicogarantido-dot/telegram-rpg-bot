@@ -290,3 +290,7 @@
 .acesso-foto img { width: 100%; height: 100%; object-fit: cover; }
 .cartoes-antigos { margin: 12px 0; }
 .cartoes-antigos > summary { cursor: pointer; padding: 10px 0; color: var(--suave); font-weight: 600; }
+/* Horário curto (menos de 30 min): só hora e nome, numa linha. */
+.grade-horario.curto { padding-block: 1px; justify-content: center; }
+.grade-horario.curto span { display: none; }
+.grade-horario.curto strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

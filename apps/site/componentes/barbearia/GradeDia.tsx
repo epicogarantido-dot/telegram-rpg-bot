@@ -96,7 +96,7 @@ export function GradeDia({ barbearia, data, so }: { barbearia: Barbearia; data: 
           const fim = paraMinutos(a.fim.slice(11, 16));
           const passou = data < hoje || (data === hoje && fim <= minutoAgora);
           return (
-            <Link key={a.id} href={`/app?data=${data}#ag-${a.id}`} className={`grade-horario ${passou ? "passou" : ""} ${a.status === "faltou" ? "faltou" : ""}`}
+            <Link key={a.id} href={`/app?data=${data}#ag-${a.id}`} className={`grade-horario ${fim - ini < 30 ? "curto" : ""} ${passou ? "passou" : ""} ${a.status === "faltou" ? "faltou" : ""}`}
               title={`${a.inicio.slice(11, 16)}–${a.fim.slice(11, 16)} · ${a.clienteNome} · ${a.servico}`}
               style={{ gridColumn: coluna(a.profissionalId), gridRow: `${2 + linhaDe(ini)} / span ${Math.max(2, Math.round((Math.min(fim, ate) - Math.max(ini, de)) / 5))}` }}>
               <strong>{a.inicio.slice(11, 16)} {primeiroNome(a.clienteNome)}</strong>

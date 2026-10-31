@@ -103,7 +103,7 @@ export function GradeSemana({ barbearia, inicio, so }: { barbearia: Barbearia; i
           const fim = paraMinutos(a.fim.slice(11, 16));
           const passou = a.fim.slice(0, 10) < hoje || (a.inicio.slice(0, 10) === hoje && fim <= minutoAgora);
           return (
-            <Link key={a.id} href={`/app?data=${a.inicio.slice(0, 10)}#ag-${a.id}`} className={`grade-horario ${passou ? "passou" : ""}`}
+            <Link key={a.id} href={`/app?data=${a.inicio.slice(0, 10)}#ag-${a.id}`} className={`grade-horario ${fim - ini < 30 ? "curto" : ""} ${passou ? "passou" : ""}`}
               title={`${a.inicio.slice(11, 16)}–${a.fim.slice(11, 16)} · ${a.clienteNome} · ${a.servico}`}
               style={{ gridColumn: colunaDo(i, a.profissionalId), gridRow: `${cabecalho + 1 + linhaDe(ini)} / span ${Math.max(2, Math.round((Math.min(fim, ate) - Math.max(ini, de)) / 5))}` }}>
               <strong>{a.inicio.slice(11, 16)} {primeiroNome(a.clienteNome)}</strong>
