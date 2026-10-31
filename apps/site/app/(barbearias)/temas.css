@@ -455,7 +455,8 @@ a.b-dia:focus-visible, .b-horas a:focus-visible, .b-chips a:focus-visible { outl
   --t-sobreposicao: linear-gradient(90deg, rgb(10 10 10 / 0.92) 0%, rgb(10 10 10 / 0.55) 55%, rgb(10 10 10 / 0.2) 100%);
 }
 .site-b[data-tema="potencia"] .b-heroi h1 { line-height: 0.86; }
-.site-b[data-tema="potencia"] .b-botao-sec { color: var(--texto); border-color: var(--texto); }
+/* Botão com borda não leva o corte inclinado: a borda ficava cortada em cima e embaixo. */
+.site-b[data-tema="potencia"] .b-botao-sec { color: var(--texto); border-color: var(--texto); clip-path: none; }
 .site-b[data-tema="potencia"] .b-faixa {
   display: block; background: var(--destaque); color: #0a0a0a; padding: 12px 0;
   font: 800 italic 1.5rem "Barlow Condensed", sans-serif; text-transform: uppercase;

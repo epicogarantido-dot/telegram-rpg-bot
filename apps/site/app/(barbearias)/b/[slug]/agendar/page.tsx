@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { Check, Scissors, Sparkles } from "lucide-react";
@@ -12,6 +13,8 @@ import { CAMPO_ISCA, ehOBarbeiro, profissionalLogado, ErroRajada, primeiraRajada
 
 export const dynamic = "force-dynamic";
 const DIAS_A_FRENTE = 14;
+/** Nome e WhatsApp digitados voltam no formulário se marcar der erro (10 min, só neste aparelho). */
+const RASCUNHO = "agendar_rascunho";
 
 /**
  * Agendar em 3 passos: serviço → dia e horário → nome e WhatsApp.
@@ -85,9 +88,12 @@ async function confirmar(form: FormData) {
     after(() => avisarNovoAgendamento(b.id, id).catch((e) => console.error("Aviso não enviado:", e)));
   } catch (e) {
     if (e instanceof ErroRajada && primeiraRajadaDaHora(b.id)) after(() => avisarRajada(b.id).catch(() => {}));
+    const rascunho = { nome: String(form.get("nome") ?? "").slice(0, 80), telefone: String(form.get("telefone") ?? "").slice(0, 20), endereco: String(form.get("endereco") ?? "").slice(0, 200) };
+    (await cookies()).set(RASCUNHO, JSON.stringify(rascunho), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 600 });
     voltar.set("erro", mensagemDeErro(e));
     redirect(`/b/${slug}/agendar?${voltar}`);
   }
+  (await cookies()).delete(RASCUNHO);
   redirect(`/b/${slug}/h/${token}?novo=1`);
 }
 
@@ -202,7 +208,13 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     const porId = new Map(servicos.map((s) => [s.id, s]));
     const pedidosSel = [...lerExtras(sp.sel), ...(servico && sp.servico !== "sem" ? [servico.id, ...adicionais.map((a) => a.id)] : [])];
     const selecionados = [...new Set(pedidosSel)].map((id) => porId.get(id)).filter((s): s is NonNullable<typeof s> => !!s);
-    const grupos = GRUPOS_SERVICO.map((g) => ({ ...g, lista: servicos.filter((s) => grupoDoServico(s.nome) === g.id) })).filter((g) => g.lista.length > 0);
+    // Com um corte escolhido, os outros grupos só mostram o que vai junto com ele (corte infantil: só acabamento).
+    const corte = selecionados.find((s) => grupoDoServico(s.nome) === "cabelo");
+    const vaiComCorte = corte ? new Set(banco.adicionaisPara(b.id, corte.id).map((a) => a.id)) : undefined;
+    const grupos = GRUPOS_SERVICO.map((g) => ({
+      ...g,
+      lista: servicos.filter((s) => grupoDoServico(s.nome) === g.id && (g.id === "cabelo" || !vaiComCorte || vaiComCorte.has(s.id) || selecionados.includes(s))),
+    })).filter((g) => g.lista.length > 0);
     const grupoAberto = grupos.find((g) => g.id === sp.grupo);
     const urlGrupos = (sel: number[], extra: Record<string, string | undefined> = {}) => {
       const q = new URLSearchParams();
@@ -381,10 +393,23 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     const infantil = /infantil|crian/i.test(servico.nome);
     const referencias = banco.fotos(b.id).filter((f) => infantil ? f.categoria === "infantil" : CATEGORIAS_REFERENCIA.includes(f.categoria)).slice(0, 12);
     const marcandoPeloBarbeiro = await ehOBarbeiro(b.id);
+    const salvo = (await cookies()).get(RASCUNHO)?.value;
+    const rascunho = (() => {
+      try {
+        const r = JSON.parse(salvo ?? "{}") as Record<string, unknown>;
+        const texto = (v: unknown) => (typeof v === "string" ? v : undefined);
+        return { nome: texto(r.nome), telefone: texto(r.telefone), endereco: texto(r.endereco) };
+      } catch { return {} as { nome?: string; telefone?: string; endereco?: string }; }
+    })();
     return (
       <div className="b-secao b-agendar">
         <Cabeca rotulo={`Passo 3 de 3 · ${b.nome}`} titulo="Confirme seu horário" />
-        {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
+        {erroVisivel && (
+          <p className="erro" role="alert">
+            {erroVisivel}
+            {b.telefone && !marcandoPeloBarbeiro && <> <a href={`https://wa.me/${b.telefone}?text=${encodeURIComponent(`Oi! Quero marcar ${nomeTotal} ${formatarData(data)} às ${sp.hora} com ${com.nome}.`)}`} target="_blank" rel="noopener noreferrer">Marcar pelo WhatsApp da barbearia</a></>}
+          </p>
+        )}
         <div className="b-resumo">
           <p className="b-resumo-quando">{formatarData(data)} às {sp.hora}</p>
           <p>{nomeTotal} com {com.nome} · {tempoTotal} min{b.mostrarPrecos && ` · ${reais(precoTotal)}`}</p>
@@ -403,10 +428,10 @@ export default async function Agendar({ params, searchParams }: { params: Promis
             <label>Empresa <input name={CAMPO_ISCA} tabIndex={-1} autoComplete="off" /></label>
           </div>
           <label htmlFor="nome">{marcandoPeloBarbeiro ? "Nome do cliente" : "Seu nome"}</label>
-          <input id="nome" name="nome" required maxLength={80} autoComplete={marcandoPeloBarbeiro ? "off" : "name"} />
+          <input id="nome" name="nome" required maxLength={80} defaultValue={rascunho.nome} autoComplete={marcandoPeloBarbeiro ? "off" : "name"} />
           <label htmlFor="telefone">{marcandoPeloBarbeiro ? "WhatsApp do cliente com DDD" : "Seu WhatsApp com DDD"}</label>
           {/* O padrão segura o número incompleto ainda no celular: o erro do servidor volta com o formulário vazio. */}
-          <input id="telefone" name="telefone" required inputMode="tel" autoComplete={marcandoPeloBarbeiro ? "off" : "tel-national"} placeholder="(19) 99999-0000" aria-describedby="telefone-dica"
+          <input id="telefone" name="telefone" required inputMode="tel" defaultValue={rascunho.telefone} autoComplete={marcandoPeloBarbeiro ? "off" : "tel-national"} placeholder="(19) 99999-0000" aria-describedby="telefone-dica"
             pattern="^\D*(\d\D*){10,13}$" title="DDD e número, ex.: (19) 98765-4321" />
           <small id="telefone-dica" className="b-dica">
             {marcandoPeloBarbeiro
@@ -416,7 +441,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           {servico.emDomicilio && (
             <>
               <label htmlFor="endereco">Endereço do atendimento</label>
-              <input id="endereco" name="endereco" required minLength={8} maxLength={200} autoComplete="street-address" placeholder="Rua, número, bairro e complemento" aria-describedby="endereco-dica" />
+              <input id="endereco" name="endereco" required minLength={8} defaultValue={rascunho.endereco} maxLength={200} autoComplete="street-address" placeholder="Rua, número, bairro e complemento" aria-describedby="endereco-dica" />
               <small id="endereco-dica" className="b-dica">O barbeiro vai até você. Só ele vê o endereço.</small>
             </>
           )}
@@ -515,6 +540,12 @@ export default async function Agendar({ params, searchParams }: { params: Promis
             : <Link key={d} href={link({ data: d })} className={`b-dia ${atual ? "escolhido" : ""}`} aria-current={atual ? "date" : undefined}>{conteudo}</Link>;
         })}
       </nav>
+      {(() => {
+        // Dias em que a barbearia não abre não aparecem na lista: diz quais são, pra ninguém procurar.
+        const abertos = banco.expedientes(b.id);
+        const fechados = [0, 1, 2, 3, 4, 5, 6].filter((d) => !abertos.has(d)).map((d) => nomeDia(d).toLowerCase());
+        return fechados.length > 0 && fechados.length < 7 && <p className="b-dica">Não abre {fechados.join(" e ")}.</p>;
+      })()}
 
       {escolhido ? (
         <>
