@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { revalidatePath } from "next/cache";
 import { pixDoSinal } from "@aprenda/agenda";
-import { exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
+import { exigirAcessoAtivo, obterAgenda, podeMexer, reais } from "@/lib/agenda";
 import { mensagemConfirmacao } from "@/lib/avisos";
 
 /**
@@ -13,10 +13,10 @@ import { mensagemConfirmacao } from "@/lib/avisos";
  * envia é ele; o sistema não manda nada sozinho.
  */
 export async function confirmarNoWhatsapp(form: FormData) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const a = banco.agendamento(barbearia.id, Number(form.get("id")));
-  if (!a || a.status !== "confirmado") redirect("/app/agendados");
+  if (!a || a.status !== "confirmado" || !podeMexer(usuario, a)) redirect("/app/agendados");
   banco.registrarContato(barbearia.id, a.id, "confirmacao");
   // Sinal ainda não pago: a confirmação já leva o Pix copia e cola pro cliente.
   const pix = !a.sinalPagoEm ? pixDoSinal(barbearia, a) : undefined;
@@ -28,8 +28,10 @@ export async function confirmarNoWhatsapp(form: FormData) {
 
 /** "Recebi o sinal" (o barbeiro conferiu no banco) ou desfaz. Volta pra página de onde veio. */
 export async function marcarSinalRecebido(form: FormData) {
-  const { barbearia } = await exigirAcessoAtivo();
-  obterAgenda().marcarSinal(barbearia.id, Number(form.get("id")), form.get("pago") === "1");
+  const { barbearia, usuario } = await exigirAcessoAtivo();
+  const id = Number(form.get("id"));
+  if (!podeMexer(usuario, obterAgenda().agendamento(barbearia.id, id))) redirect("/app");
+  obterAgenda().marcarSinal(barbearia.id, id, form.get("pago") === "1");
   revalidatePath("/app");
   revalidatePath("/app/agendados");
   const voltar = String(form.get("voltar") ?? "");

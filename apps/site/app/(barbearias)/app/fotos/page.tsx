@@ -4,7 +4,7 @@ import { ImagePlus, Star, Trash2, Upload } from "lucide-react";
 import { apagarFoto, CATEGORIAS_FOTO, ErroAgenda, gravarFoto, MAX_FOTOS, processarFoto, type Foto } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { CampoFoto } from "@/componentes/CampoFoto";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { exigirDono, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 import { urlFoto } from "@/lib/barbearias";
 import { acervo } from "@/lib/exemplos";
 
@@ -34,7 +34,7 @@ function voltar(ancora: string, extra = ""): never {
 
 async function enviar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const categoria = String(form.get("categoria") ?? "corte");
   const paraCapa = form.get("capa") === "1";
@@ -66,7 +66,7 @@ async function enviar(form: FormData) {
  */
 async function enviarPar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const antes = form.get("antes");
   const depois = form.get("depois");
@@ -93,7 +93,7 @@ async function enviarPar(form: FormData) {
 /** Desfaz um par: a foto de "antes" volta a ser uma foto comum (ou sai do site, se pedir). */
 async function desfazerPar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const id = Number(form.get("id"));
   try {
@@ -111,7 +111,7 @@ async function desfazerPar(form: FormData) {
 /** Põe no site uma foto do acervo (sem reprocessar: divide o arquivo). Se `capa`, vira a capa. */
 async function doAcervo(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const origem = acervo(barbearia.tema);
   const paraCapa = form.get("capa") === "1";
@@ -130,7 +130,7 @@ async function doAcervo(form: FormData) {
 
 async function editar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const id = Number(form.get("id"));
   const banco = obterAgenda();
   const acao = String(form.get("acao"));
@@ -168,7 +168,7 @@ function Escolha({ foto, acao, campos, rotulo }: { foto: Foto; acao: (f: FormDat
 }
 
 export default async function Fotos({ searchParams }: { searchParams: Promise<{ erro?: string; enviadas?: string }> }) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const sp = await searchParams;
   const banco = obterAgenda();
   const fotos = banco.fotos(barbearia.id);

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { agoraNoFuso, formatarData, somarDias } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { exigirDono, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 
 export const metadata = { title: "Planos mensais", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ function lerValor(texto: string): number {
 
 async function salvar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   try {
     const telefone = normalizarTelefone(String(form.get("telefone") ?? ""));
     if (!telefone) throw new Error("WhatsApp inválido.");
@@ -33,7 +33,7 @@ async function salvar(form: FormData) {
 
 async function renovar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const p = banco.planos(barbearia.id).find((x) => x.id === Number(form.get("id")));
   if (!p) return;
@@ -45,13 +45,13 @@ async function renovar(form: FormData) {
 
 async function remover(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   obterAgenda().removerPlano(barbearia.id, Number(form.get("id")));
   revalidatePath("/app/planos");
 }
 
 export default async function Planos({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const { erro } = await searchParams;
   const planos = obterAgenda().planos(barbearia.id);
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);

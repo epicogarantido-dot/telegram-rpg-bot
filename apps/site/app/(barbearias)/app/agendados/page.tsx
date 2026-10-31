@@ -13,11 +13,12 @@ export const dynamic = "force-dynamic";
  * do barbeiro na conversa do cliente com a mensagem pronta e fica anotado (✓) pra não repetir.
  */
 export default async function Agendados({ searchParams }: { searchParams: Promise<{ faltam?: string }> }) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const { faltam } = await searchParams;
   const agora = agoraNoFuso(barbearia.fuso);
   const hoje = agora.slice(0, 10) as Data;
-  const todos = obterAgenda().proximosAgendados(barbearia.id, agora, 30);
+  // Profissional da equipe vê só os horários dele.
+  const todos = obterAgenda().proximosAgendados(barbearia.id, agora, 30).filter((a) => !usuario.profissionalId || a.profissionalId === usuario.profissionalId);
   const semConfirmar = todos.filter((a) => !a.confirmacaoEm).length;
   const lista = faltam ? todos.filter((a) => !a.confirmacaoEm) : todos;
   const dias = [...new Set(lista.map((a) => a.inicio.slice(0, 10) as Data))];

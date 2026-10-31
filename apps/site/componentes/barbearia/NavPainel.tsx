@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, Images, LayoutTemplate, ListChecks, MessageCircle, Settings, UserRound, Users } from "lucide-react";
+import { BarChart3, CalendarDays, Images, LayoutTemplate, ListChecks, LogOut, MessageCircle, Settings, Smartphone, UserRound, Users } from "lucide-react";
 
 const ITENS = [
   { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
@@ -17,19 +17,29 @@ const ITENS = [
   { href: "/app/conta", rotulo: "Minha conta", Icone: UserRound, aba: true },
 ] as const;
 
+/** Menu de quem entrou com a senha de um profissional da equipe: só a agenda dele. */
+const ITENS_EQUIPE = [
+  { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
+  { href: "/app/agendados", rotulo: "Agendados", Icone: ListChecks, aba: true },
+  { href: "/app/calendario", rotulo: "No celular", Icone: Smartphone, aba: true },
+  { href: "/app/sair", rotulo: "Sair", Icone: LogOut, aba: true },
+] as const;
+
 /** Item ativo: /app só na própria página; os outros também nas subpáginas. */
 function ativo(caminho: string, href: string) {
   return href === "/app" ? caminho === "/app" : caminho === href || caminho.startsWith(`${href}/`);
 }
 
 /** Menu lateral (computador) ou abas embaixo da tela (celular), com o item da página marcado. */
-export function NavPainel({ modo }: { modo: "lado" | "abas" }) {
+export function NavPainel({ modo, equipe = false }: { modo: "lado" | "abas"; equipe?: boolean }) {
   const caminho = usePathname();
-  const itens = modo === "abas" ? ITENS.filter((i) => i.aba) : ITENS;
+  const lista = equipe ? ITENS_EQUIPE : ITENS;
+  const itens = modo === "abas" ? lista.filter((i) => i.aba) : lista;
   return (
     <nav className={modo === "lado" ? "painel-menu" : "painel-abas"} aria-label={modo === "lado" ? "Painel" : "Atalhos do painel"}>
       {itens.map(({ href, rotulo, Icone }) => (
-        <Link key={href} href={href} aria-current={ativo(caminho, href) ? "page" : undefined}>
+        // "Sair" sem prefetch: o navegador não pode visitar o endereço de sair sozinho.
+        <Link key={href} href={href} prefetch={href === "/app/sair" ? false : undefined} aria-current={ativo(caminho, href) ? "page" : undefined}>
           <Icone size={modo === "lado" ? 18 : 22} aria-hidden />
           <span>{modo === "abas" && rotulo === "Minha conta" ? "Conta" : rotulo}</span>
         </Link>

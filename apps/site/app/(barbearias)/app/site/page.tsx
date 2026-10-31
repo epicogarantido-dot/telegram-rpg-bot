@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ExternalLink } from "lucide-react";
 import { TEMAS } from "@aprenda/agenda";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { exigirDono, mensagemDeErro, obterAgenda } from "@/lib/agenda";
 
 export const metadata = { title: "Meu site", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ const AMOSTRAS: Record<string, string[]> = {
 
 async function salvar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const campo = (n: string) => String(form.get(n) ?? "");
   try {
     obterAgenda().atualizarSite(barbearia.id, {
@@ -37,7 +37,7 @@ async function salvar(form: FormData) {
 }
 
 export default async function MeuSite({ searchParams }: { searchParams: Promise<{ erro?: string; salvo?: string }> }) {
-  const { barbearia: b } = await exigirAcessoAtivo();
+  const { barbearia: b } = await exigirDono();
   const { erro, salvo } = await searchParams;
   return (
     <>

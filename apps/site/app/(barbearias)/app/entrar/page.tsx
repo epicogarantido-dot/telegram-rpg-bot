@@ -48,12 +48,15 @@ async function entrarComSenha(form: FormData) {
   let token: string;
   try {
     if (banco.contarTentativas(chaves[0]!, 15) >= 10 || banco.contarTentativas(chaves[1]!, 15) >= 100) throw new ErroAgenda(MUITAS);
-    if (!senhaConfere(String(form.get("senha") ?? ""))) {
+    const senha = String(form.get("senha") ?? "");
+    const b = barbeariaDoApp() ?? await prepararBarbeariaDoApp();
+    // A senha do dono (.env) abre tudo; a de um profissional da equipe abre só a agenda dele.
+    const daEquipe = senhaConfere(senha) ? undefined : banco.entrarComoProfissional(b.id, senha);
+    if (!senhaConfere(senha) && !daEquipe) {
       for (const c of chaves) banco.consumirLimite(c, Number.MAX_SAFE_INTEGER, 15, "");
       throw new ErroAgenda("Senha incorreta.");
     }
-    const b = barbeariaDoApp() ?? await prepararBarbeariaDoApp();
-    token = banco.sessaoDoDono(b.id);
+    token = daEquipe ?? banco.sessaoDoDono(b.id);
   } catch (e) {
     redirect(`/app/entrar?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }

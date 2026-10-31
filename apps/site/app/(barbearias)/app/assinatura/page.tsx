@@ -87,7 +87,9 @@ function SeuPlano({ barbearia }: { barbearia: Barbearia }) {
 }
 
 export default async function Assinatura({ searchParams }: { searchParams: Promise<{ erro?: string; bemvindo?: string }> }) {
-  const { barbearia } = await exigirBarbeiro();
+  const { barbearia, usuario } = await exigirBarbeiro();
+  // Plano e pagamento são do dono; a equipe volta pra agenda.
+  if (usuario.profissionalId) redirect("/app");
   if (soEntrega()) return <SeuPlano barbearia={barbearia} />;
   const { erro, bemvindo } = await searchParams;
   const banco = obterAgenda();

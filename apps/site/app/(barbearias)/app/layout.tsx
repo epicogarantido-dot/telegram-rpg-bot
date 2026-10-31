@@ -89,10 +89,10 @@ export default async function LayoutPainel({ children }: { children: React.React
             : <span className="painel-marca-inicial" aria-hidden>{barbearia.nome[0]}</span>}
           <span>
             <strong>{barbearia.nome}</strong>
-            <small>Painel da barbearia</small>
+            <small>{usuario?.profissionalId ? `Agenda de ${usuario.nome.split(" ")[0]}` : "Painel da barbearia"}</small>
           </span>
         </Link>
-        <NavPainel modo="lado" />
+        <NavPainel modo="lado" equipe={!!usuario?.profissionalId} />
         <a className="painel-ver-site" href={`/b/${barbearia.slug}`} target="_blank" rel="noopener noreferrer">
           <ExternalLink size={16} aria-hidden /> Ver meu site
         </a>
@@ -110,7 +110,7 @@ export default async function LayoutPainel({ children }: { children: React.React
         </a>
       </header>
       <main className="painel-conteudo">{faixa}{children}</main>
-      <NavPainel modo="abas" />
+      <NavPainel modo="abas" equipe={!!usuario?.profissionalId} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { agoraNoFuso, dataValida, formatarData, somarDias, type Agendamento } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { CalendarCheck, MessageCircle } from "lucide-react";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda } from "@/lib/agenda";
+import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, podeMexer } from "@/lib/agenda";
 import { urlAbsoluta } from "@/lib/barbearias";
 import { mensagemRetorno } from "@/lib/pos-atendimento";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
@@ -18,10 +18,10 @@ export const dynamic = "force-dynamic";
  */
 async function marcar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const origem = banco.agendamento(barbearia.id, Number(form.get("origem")));
-  if (!origem) notFound();
+  if (!origem || !podeMexer(usuario, origem)) notFound();
   const data = String(form.get("data"));
   let novo: number;
   try {
@@ -40,10 +40,10 @@ async function marcar(form: FormData) {
 /** Gera o link secreto do novo horário e abre o WhatsApp do barbeiro com a mensagem pronta. */
 async function avisar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const a = banco.agendamento(barbearia.id, Number(form.get("id")));
-  if (!a || a.status !== "confirmado") redirect("/app");
+  if (!a || a.status !== "confirmado" || !podeMexer(usuario, a)) redirect("/app");
   const token = banco.criarLinkCliente(barbearia.id, a.id);
   redirect(linkWhatsapp(a.clienteTelefone, mensagemRetorno({
     barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, inicio: a.inicio,
@@ -55,12 +55,12 @@ export default async function Retorno({ params, searchParams }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ data?: string; prof?: string; erro?: string; marcado?: string }>;
 }) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const { id } = await params;
   const sp = await searchParams;
   const banco = obterAgenda();
   const origem = banco.agendamento(barbearia.id, Number(id));
-  if (!origem) notFound();
+  if (!origem || !podeMexer(usuario, origem)) notFound();
   const nome = origem.clienteNome.split(" ")[0];
 
   if (sp.marcado) {

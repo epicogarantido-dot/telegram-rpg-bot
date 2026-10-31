@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { formatarData } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { MessageCircle } from "lucide-react";
-import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
+import { exigirDono, obterAgenda } from "@/lib/agenda";
 import { linkPublico } from "@/lib/barbearias";
 import { mensagemVolta } from "@/lib/pos-atendimento";
 
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 /** Anota a chamada (some da lista por 14 dias) e abre o WhatsApp do barbeiro com a mensagem pronta. */
 async function chamar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const banco = obterAgenda();
   const c = banco.clientesSumidos(barbearia.id).find((x) => x.telefone === String(form.get("telefone")));
   if (!c) redirect("/app/clientes");
@@ -25,7 +25,7 @@ async function chamar(form: FormData) {
 }
 
 export default async function Clientes() {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const sumidos = obterAgenda().clientesSumidos(barbearia.id);
   return (
     <>

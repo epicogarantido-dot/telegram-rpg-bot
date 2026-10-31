@@ -233,7 +233,11 @@ export interface Bloqueio {
   fim: DataHora;
   motivo?: string;
 }
-export interface Usuario { id: number; barbeariaId: number; nome: string; email: string }
+export interface Usuario {
+  id: number; barbeariaId: number; nome: string; email: string;
+  /** Acesso de um profissional da equipe: só a agenda dele. Vazio = o dono (tudo). */
+  profissionalId?: number;
+}
 
 export class ErroAgenda extends Error {}
 
@@ -442,6 +446,7 @@ export class BancoAgenda {
     this.db.exec("CREATE INDEX IF NOT EXISTS agendamentos_token ON agendamentos(token_cliente)");
     // Link do calendário do barbeiro (assinado no celular): um da barbearia toda e um por profissional.
     this.garantirColuna("barbearias", "token_agenda", "TEXT");
+    this.garantirColuna("usuarios", "profissional_id", "INTEGER");
     this.garantirColuna("profissionais", "token_agenda", "TEXT");
     this.db.exec(`
       -- Limites contra abuso (agendar em massa, chutar senha). Chave já vem com o tipo e um hash do IP/e-mail.
@@ -733,7 +738,7 @@ export class BancoAgenda {
    * o site) e abre a sessão do dono da barbearia.
    */
   sessaoDoDono(barbeariaId: number): string {
-    const u = this.db.prepare("SELECT id FROM usuarios WHERE barbearia_id = ? ORDER BY id LIMIT 1").get(barbeariaId) as { id: number } | undefined;
+    const u = this.db.prepare("SELECT id FROM usuarios WHERE barbearia_id = ? AND profissional_id IS NULL ORDER BY id LIMIT 1").get(barbeariaId) as { id: number } | undefined;
     if (!u) throw new ErroAgenda("Barbearia sem conta de acesso.");
     return this.criarSessao(u.id);
   }
@@ -745,9 +750,10 @@ export class BancoAgenda {
 
   usuarioDaSessao(token: string | undefined): Usuario | undefined {
     if (!token) return undefined;
-    return this.db.prepare(`SELECT u.id, u.barbearia_id AS barbeariaId, u.nome, u.email FROM sessoes s
+    const u = this.db.prepare(`SELECT u.id, u.barbearia_id AS barbeariaId, u.nome, u.email, u.profissional_id AS profissionalId FROM sessoes s
       JOIN usuarios u ON u.id = s.usuario_id WHERE s.token_hash = ? AND s.expira_em > ?`)
       .get(hashToken(token), new Date().toISOString()) as Usuario | undefined;
+    return u && { ...u, profissionalId: u.profissionalId ?? undefined };
   }
 
   sair(token: string): void {
@@ -758,8 +764,48 @@ export class BancoAgenda {
 
   /** Usuários (barbeiros) de uma barbearia, pro admin escolher de quem é o link. */
   usuariosDaBarbearia(barbeariaId: number): Usuario[] {
-    return this.db.prepare("SELECT id, barbearia_id AS barbeariaId, nome, email FROM usuarios WHERE barbearia_id = ? ORDER BY id")
+    return this.db.prepare("SELECT id, barbearia_id AS barbeariaId, nome, email FROM usuarios WHERE barbearia_id = ? AND profissional_id IS NULL ORDER BY id")
       .all(barbeariaId) as unknown as Usuario[];
+  }
+
+  // ---------- acesso da equipe: cada profissional com a própria senha, só a agenda dele ----------
+
+  /** Dá (ou troca) a senha de um profissional; `null` tira o acesso. Trocar derruba as sessões dele. */
+  definirAcessoDoProfissional(barbeariaId: number, profissionalId: number, senha: string | null): void {
+    const p = this.profissionais(barbeariaId).find((x) => x.id === profissionalId);
+    if (!p) throw new ErroAgenda("Profissional não encontrado.");
+    const atual = this.db.prepare("SELECT id FROM usuarios WHERE barbearia_id = ? AND profissional_id = ?").get(barbeariaId, profissionalId) as { id: number } | undefined;
+    if (senha === null) {
+      if (atual) {
+        this.db.prepare("DELETE FROM sessoes WHERE usuario_id = ?").run(atual.id);
+        this.db.prepare("DELETE FROM trocas_senha WHERE usuario_id = ?").run(atual.id);
+        this.db.prepare("DELETE FROM usuarios WHERE id = ?").run(atual.id);
+      }
+      return;
+    }
+    if (senha.length < 6) throw new ErroAgenda("A senha do profissional precisa ter pelo menos 6 caracteres.");
+    // A mesma senha de outra pessoa da casa faria a tela de entrar abrir a conta errada.
+    const outros = this.db.prepare("SELECT id, senha_hash FROM usuarios WHERE barbearia_id = ? AND id IS NOT ?").all(barbeariaId, atual?.id ?? null) as { id: number; senha_hash: string }[];
+    if (outros.some((o) => conferirSenha(senha, o.senha_hash))) throw new ErroAgenda("Essa senha já é de outra pessoa da barbearia. Escolha outra.");
+    if (atual) {
+      this.gravarSenha(atual.id, senha);
+    } else {
+      this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em, profissional_id) VALUES (?, ?, ?, ?, ?, ?)")
+        .run(barbeariaId, p.nome, `equipe-${profissionalId}-${randomBytes(4).toString("hex")}${SEM_EMAIL}`, hashSenha(senha), new Date().toISOString(), profissionalId);
+    }
+  }
+
+  /** Profissionais que já têm senha de acesso. */
+  profissionaisComAcesso(barbeariaId: number): Set<number> {
+    return new Set((this.db.prepare("SELECT profissional_id AS p FROM usuarios WHERE barbearia_id = ? AND profissional_id IS NOT NULL").all(barbeariaId) as { p: number }[]).map((x) => x.p));
+  }
+
+  /** Tela de entrar do app da barbearia: a senha de um profissional abre a sessão dele (só a agenda dele). */
+  entrarComoProfissional(barbeariaId: number, senha: string): string | undefined {
+    const contas = this.db.prepare(`SELECT u.id, u.senha_hash FROM usuarios u JOIN profissionais p ON p.id = u.profissional_id
+      WHERE u.barbearia_id = ? AND p.ativo = 1`).all(barbeariaId) as { id: number; senha_hash: string }[];
+    const u = contas.find((c) => conferirSenha(senha, c.senha_hash));
+    return u && this.criarSessao(u.id);
   }
 
   /**
@@ -1706,7 +1752,7 @@ export class BancoAgenda {
 
   todasBarbearias(): (Barbearia & { email: string })[] {
     return this.db.prepare(`SELECT ${COLUNAS_BARBEARIA.split(", ").map((c) => `b.${c}`).join(", ")},
-      (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id ORDER BY u.id LIMIT 1) AS email
+      (SELECT email FROM usuarios u WHERE u.barbearia_id = b.id AND u.profissional_id IS NULL ORDER BY u.id LIMIT 1) AS email
       FROM barbearias b ORDER BY b.acesso_ate`).all().map((l) => paraBarbearia(l as Record<string, unknown>)) as unknown as (Barbearia & { email: string })[];
   }
 

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { agoraNoFuso, dataValida, formatarData, somarDias } from "@aprenda/agenda";
+import { agoraNoFuso, dataValida, formatarData, somarDias, type Data } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { CalendarCheck, CalendarOff, CalendarPlus, Check, ListChecks, Star, MessageCircle, UserX, Users } from "lucide-react";
-import { exigirAcessoAtivo, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { exigirAcessoAtivo, exigirDono, mensagemDeErro, obterAgenda, podeMexer, reais } from "@/lib/agenda";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { avisoDeTeste, chavesAviso } from "@/lib/avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
@@ -15,14 +15,16 @@ import { soEntrega } from "@/lib/modo";
 import { confirmarNoWhatsapp } from "./acoes-whatsapp";
 import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
 import { GradeSemana } from "@/componentes/barbearia/GradeSemana";
+import { GradeDia } from "@/componentes/barbearia/GradeDia";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 async function cancelar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const id = Number(form.get("id"));
+  if (!podeMexer(usuario, obterAgenda().agendamento(barbearia.id, id))) redirect("/app");
   obterAgenda().cancelar(barbearia.id, id);
   // Volta mostrando o botão de avisar o cliente (cancelar sem avisar = cliente aparece na porta).
   revalidatePath("/app");
@@ -35,11 +37,11 @@ async function cancelar(form: FormData) {
  */
 async function contatar(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const a = banco.agendamento(barbearia.id, Number(form.get("id")));
   const tipo = form.get("tipo") === "avaliacao" ? "avaliacao" : "lembrete";
-  if (!a || a.status !== "confirmado") redirect("/app");
+  if (!a || a.status !== "confirmado" || !podeMexer(usuario, a)) redirect("/app");
   const b = banco.barbeariaPorId(barbearia.id)!;
   if (tipo === "avaliacao" && !b.linkAvaliacao) redirect("/app/config#depois");
   const texto = tipo === "lembrete"
@@ -52,9 +54,10 @@ async function contatar(form: FormData) {
 /** O cliente não apareceu (ou desfaz). Entra nos números do mês. */
 async function marcarFalta(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const data = String(form.get("data") ?? "");
   const id = Number(form.get("id"));
+  if (!podeMexer(usuario, obterAgenda().agendamento(barbearia.id, id))) redirect("/app");
   try {
     obterAgenda().marcarFalta(barbearia.id, id, form.get("faltou") === "1");
   } catch (e) {
@@ -67,10 +70,11 @@ async function marcarFalta(form: FormData) {
 /** Folga em parte do dia (ou o dia todo) de um profissional ou da barbearia toda. */
 async function bloquearHorario(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const data = String(form.get("dia") ?? "");
   const diaTodo = form.get("diaTodo") === "on";
-  const quem = String(form.get("quem") ?? "");
+  // Quem é da equipe só bloqueia o próprio horário.
+  const quem = usuario.profissionalId ? String(usuario.profissionalId) : String(form.get("quem") ?? "");
   try {
     obterAgenda().bloquearPeriodo(barbearia.id, {
       data, de: diaTodo ? "00:00" : String(form.get("de") ?? ""), ate: diaTodo ? "23:59" : String(form.get("ate") ?? ""),
@@ -85,8 +89,14 @@ async function bloquearHorario(form: FormData) {
 
 async function removerFolga(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
-  obterAgenda().removerBloqueio(barbearia.id, Number(form.get("id")));
+  const { barbearia, usuario } = await exigirAcessoAtivo();
+  const id = Number(form.get("id"));
+  if (usuario.profissionalId) {
+    const dia = String(form.get("data") ?? "");
+    const f = obterAgenda().bloqueiosDoDia(barbearia.id, dia as Data).find((x) => x.id === id);
+    if (!f || f.profissionalId !== usuario.profissionalId) redirect("/app");
+  }
+  obterAgenda().removerBloqueio(barbearia.id, id);
   revalidatePath("/app");
   redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}#folgas`);
 }
@@ -94,7 +104,7 @@ async function removerFolga(form: FormData) {
 /** Trote ou quem sempre marca e não vem: bloqueia o número e cancela os horários futuros dele. */
 async function bloquearNumero(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const n = obterAgenda().bloquearTelefone(barbearia.id, String(form.get("telefone")));
   revalidatePath("/app");
   redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}&bloqueado=${n}`);
@@ -102,7 +112,7 @@ async function bloquearNumero(form: FormData) {
 
 async function salvarAviso(inscricao: { endpoint: string; p256dh: string; auth: string }): Promise<string | null> {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   try {
     obterAgenda().salvarInscricaoAviso(barbearia.id, {
       endpoint: String(inscricao.endpoint), p256dh: String(inscricao.p256dh), auth: String(inscricao.auth),
@@ -115,19 +125,19 @@ async function salvarAviso(inscricao: { endpoint: string; p256dh: string; auth: 
 
 async function removerAviso(endpoint: string): Promise<void> {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   obterAgenda().removerInscricaoAviso(String(endpoint), barbearia.id);
 }
 
 async function testarAviso(): Promise<number> {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   return avisoDeTeste(barbearia.id);
 }
 
 async function alternarFechadoHoje(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   obterAgenda().fecharHoje(barbearia.id, form.get("fechar") === "1");
   revalidatePath("/app");
 }
@@ -135,7 +145,7 @@ async function alternarFechadoHoje(form: FormData) {
 /** Fila: + e − mudam de 1 em 1; "Sem fila" zera. Cada toque renova o "atualizado agora" do site. */
 async function mudarFila(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const atual = obterAgenda().barbeariaPorId(barbearia.id)!.filaPessoas ?? 0;
   const acao = String(form.get("acao"));
   const nova = acao === "zerar" ? 0 : Math.min(50, Math.max(0, atual + (acao === "mais" ? 1 : -1)));
@@ -143,32 +153,36 @@ async function mudarFila(form: FormData) {
   revalidatePath("/app");
 }
 
-export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string; bloquear?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; ver?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string; bloquear?: string }> }) {
   const { barbearia, usuario } = await exigirAcessoAtivo();
   const sp = await searchParams;
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
   const data = sp.data && dataValida(sp.data) ? sp.data : hoje;
-  const agenda = obterAgenda().agendamentosDoDia(barbearia.id, data);
+  // Quem entrou com a senha de um profissional vê só a agenda dele.
+  const meu = usuario.profissionalId;
+  const verSemana = sp.ver === "semana";
+  const ehDono = !meu;
+  const agenda = obterAgenda().agendamentosDoDia(barbearia.id, data, meu);
   const linkDoSite = linkPublico(barbearia);
   const diasRestantes = obterAgenda().diasRestantes(barbearia);
   const banco = obterAgenda();
   const profissionais = banco.profissionais(barbearia.id, true);
   // Folgas do dia e quem já estava marcado dentro delas (pra avisar).
-  const folgas = banco.bloqueiosDoDia(barbearia.id, data).map((f) => ({
+  const folgas = banco.bloqueiosDoDia(barbearia.id, data).filter((f) => ehDono || f.profissionalId === undefined || f.profissionalId === meu).map((f) => ({
     ...f,
     conflitos: agenda.filter((a) => a.status === "confirmado" && a.inicio < f.fim && a.fim > f.inicio && (f.profissionalId === undefined || a.profissionalId === f.profissionalId)),
   }));
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
   const agoraLocal = agoraNoFuso(barbearia.fuso);
   const sumidos = banco.clientesSumidos(barbearia.id).length;
-  const faltamConfirmar = banco.proximosAgendados(barbearia.id, agoraLocal, 30).filter((a) => !a.confirmacaoEm).length;
+  const faltamConfirmar = banco.proximosAgendados(barbearia.id, agoraLocal, 30).filter((a) => !a.confirmacaoEm && (ehDono || a.profissionalId === meu)).length;
   const planos = new Map(banco.planos(barbearia.id).map((p) => [p.telefone, p]));
   const linkAvaliacao = banco.barbeariaPorId(barbearia.id)!.linkAvaliacao;
   // Lembretes da véspera: só na tela de hoje, pros horários de amanhã.
-  const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1)).filter((a) => a.status === "confirmado") : [];
+  const amanha = data === hoje ? banco.agendamentosDoDia(barbearia.id, somarDias(hoje, 1), meu).filter((a) => a.status === "confirmado") : [];
   // Quem já tem o próximo horário marcado (pra não oferecer "marcar o próximo" de novo).
   // Resumo de hoje (vale mesmo olhando outro dia na lista).
-  const doDia = (data === hoje ? agenda : banco.agendamentosDoDia(barbearia.id, hoje)).filter((a) => a.status !== "cancelado");
+  const doDia = (data === hoje ? agenda : banco.agendamentosDoDia(barbearia.id, hoje, meu)).filter((a) => a.status !== "cancelado");
   const porVir = doDia.filter((a) => a.status === "confirmado" && a.inicio > agoraLocal);
   const proximoCliente = porVir[0];
   const precos = new Map(banco.servicos(barbearia.id).map((s) => [s.id, s.precoCentavos]));
@@ -214,23 +228,31 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           <dt>Previsto hoje</dt>
           <dd>{reais(previstoHoje)}</dd>
         </div>
-        <div>
-          <dt>No mês até agora</dt>
-          <dd>{reais(mes.faturamentoCentavos)}<small>{mes.atendidos} {mes.atendidos === 1 ? "atendimento" : "atendimentos"}</small></dd>
-        </div>
+        {ehDono && (
+          <div>
+            <dt>No mês até agora</dt>
+            <dd>{reais(mes.faturamentoCentavos)}<small>{mes.atendidos} {mes.atendidos === 1 ? "atendimento" : "atendimentos"}</small></dd>
+          </div>
+        )}
       </dl>
 
-      {/* A semana em tabela (horários x dias), com todos os marcados no lugar; o dia em cartões vem logo abaixo. */}
+      {/* Agenda em tabela: o dia (profissionais nas colunas, horas nas linhas; toque num horário livre pra
+          marcar) ou a semana (dias nas colunas). Os cartões do dia, com as ações, vêm logo abaixo. */}
       <section className="semana" aria-labelledby="semana-titulo">
         <div className="semana-topo">
-          <h2 id="semana-titulo">Agenda da semana</h2>
-          <nav aria-label="Semana">
-            <Link href={`/app?data=${somarDias(data, -7)}`}>← 7 dias</Link>
-            {data !== hoje && <Link href="/app">Hoje</Link>}
-            <Link href={`/app?data=${somarDias(data, 7)}`}>7 dias →</Link>
+          <h2 id="semana-titulo">{verSemana ? "Agenda da semana" : data === hoje ? "Agenda de hoje" : `Agenda de ${formatarData(data)}`}</h2>
+          <nav className="semana-abas" aria-label="Ver por">
+            <Link href={`/app?data=${data}`} aria-current={!verSemana ? "page" : undefined}>Dia</Link>
+            <Link href={`/app?data=${data}&ver=semana`} aria-current={verSemana ? "page" : undefined}>Semana</Link>
+          </nav>
+          <nav aria-label={verSemana ? "Semana" : "Dia"}>
+            <Link href={`/app?data=${somarDias(data, verSemana ? -7 : -1)}${verSemana ? "&ver=semana" : ""}`}>← {verSemana ? "7 dias" : "dia anterior"}</Link>
+            {data !== hoje && <Link href={`/app${verSemana ? "?ver=semana" : ""}`}>Hoje</Link>}
+            <Link href={`/app?data=${somarDias(data, verSemana ? 7 : 1)}${verSemana ? "&ver=semana" : ""}`}>{verSemana ? "7 dias" : "próximo dia"} →</Link>
           </nav>
         </div>
-        <GradeSemana barbearia={barbearia} inicio={data} />
+        {verSemana ? <GradeSemana barbearia={barbearia} inicio={data} so={meu} /> : <GradeDia barbearia={barbearia} data={data} so={meu} />}
+        {!verSemana && <p className="suave pequeno">Toque num horário livre (+) pra marcar um cliente com aquele profissional.</p>}
       </section>
 
       {/* O dia primeiro: é o que o barbeiro abre o painel pra ver. O resto vem depois. */}
@@ -283,7 +305,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
               <label>De<input type="time" name="de" defaultValue="12:00" /></label>
               <label>Até<input type="time" name="ate" defaultValue="14:00" /></label>
             </div>
-            {profissionais.length > 1 && (
+            {ehDono && profissionais.length > 1 && (
               <label>Quem vai faltar
                 <select name="quem" defaultValue="">
                   <option value="">A barbearia toda</option>
@@ -417,13 +439,13 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </div>
       ))}
 
-      <Hoje barbeariaId={barbearia.id} />
+      {ehDono && <Hoje barbeariaId={barbearia.id} />}
 
       <div className="atalhos">
-        <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
+        <Link className="atalho-principal" href={`/b/${barbearia.slug}/agendar${meu ? `?profissional=${meu}` : ""}`}><CalendarPlus size={20} aria-hidden /> Marcar horário</Link>
         <Link href={`/app?data=${data}&bloquear=1#folgas`}><CalendarOff size={20} aria-hidden /> Bloquear horário</Link>
         <Link href="/app/agendados?faltam=1"><ListChecks size={20} aria-hidden /> Confirmar horários{faltamConfirmar > 0 ? ` (${faltamConfirmar})` : ""}</Link>
-        <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>
+        {ehDono && <Link href="/app/clientes"><Users size={20} aria-hidden /> Clientes sumidos{sumidos > 0 ? ` (${sumidos})` : ""}</Link>}
       </div>
 
       {amanha.length > 0 && (
@@ -480,7 +502,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         );
       })()}
 
-      <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />
+      {ehDono && <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />}
 
 
     </>

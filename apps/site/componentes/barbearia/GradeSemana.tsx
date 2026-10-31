@@ -11,13 +11,14 @@ const LINHA = 30;
  * no lugar e no tamanho certos (início ao fim). Com mais de um profissional, cada dia ganha uma
  * coluna por profissional. A linha de agora fica marcada; o que já passou fica apagado.
  */
-export function GradeSemana({ barbearia, inicio }: { barbearia: Barbearia; inicio: Data }) {
+export function GradeSemana({ barbearia, inicio, so }: { barbearia: Barbearia; inicio: Data; so?: number }) {
   const banco = obterAgenda();
   const agora = agoraNoFuso(barbearia.fuso);
   const hoje = agora.slice(0, 10) as Data;
   const minutoAgora = paraMinutos(agora.slice(11, 16));
   const expedientes = banco.expedientes(barbearia.id);
-  const profissionais = banco.profissionais(barbearia.id, true);
+  // `so`: quem entrou com a senha de um profissional vê só a coluna dele.
+  const profissionais = banco.profissionais(barbearia.id, true).filter((p) => !so || p.id === so);
   const varios = profissionais.length > 1;
   const colunasPorDia = varios ? profissionais.length : 1;
 
@@ -38,8 +39,8 @@ export function GradeSemana({ barbearia, inicio }: { barbearia: Barbearia; inici
   const sub = passo / 5;
   const linhaDe = (min: number) => Math.max(0, Math.round((min - de) / 5));
 
-  const marcados = banco.agendamentosEntre(barbearia.id, inicio, somarDias(inicio, DIAS - 1));
-  const bloqueios = banco.bloqueiosEntre(barbearia.id, inicio, somarDias(inicio, DIAS - 1));
+  const marcados = banco.agendamentosEntre(barbearia.id, inicio, somarDias(inicio, DIAS - 1), so);
+  const bloqueios = banco.bloqueiosEntre(barbearia.id, inicio, somarDias(inicio, DIAS - 1), so);
   const colunaDo = (diaIdx: number, profissionalId?: number) =>
     2 + diaIdx * colunasPorDia + (varios && profissionalId ? Math.max(0, profissionais.findIndex((p) => p.id === profissionalId)) : 0);
   const cabecalho = varios ? 2 : 1;

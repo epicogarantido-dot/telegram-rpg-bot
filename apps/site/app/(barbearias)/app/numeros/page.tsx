@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { agoraNoFuso } from "@aprenda/agenda";
-import { exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
+import { exigirDono, obterAgenda, reais } from "@/lib/agenda";
 import { soEntrega } from "@/lib/modo";
 
 export const metadata = { title: "Números do mês", robots: { index: false } };
@@ -20,7 +20,7 @@ function pct(x: number): string {
 
 /** Três números que dizem se falta cliente novo, retorno ou organização (curso "Agenda cheia"). */
 export default async function Numeros({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const { mes: pedido } = await searchParams;
   const atual = agoraNoFuso(barbearia.fuso).slice(0, 7);
   const mes = pedido && /^\d{4}-\d{2}$/.test(pedido) && pedido <= atual ? pedido : atual;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { semEmail, TEMAS } from "@aprenda/agenda";
 import { CalendarDays, CreditCard, Download, KeyRound, LogOut, MessageCircle, Repeat, Settings, Star, Users, BarChart3 } from "lucide-react";
-import { encerrarSessaoAgenda, exigirAcessoAtivo, obterAgenda, reais } from "@/lib/agenda";
+import { encerrarSessaoAgenda, exigirDono, obterAgenda, reais } from "@/lib/agenda";
 import { dataPorExtenso } from "@/lib/datas";
 import { linkPublico } from "@/lib/barbearias";
 import { soEntrega } from "@/lib/modo";
@@ -18,7 +18,7 @@ async function sair() {
 
 /** Dados da conta, do plano e do site num lugar só, com atalhos pro resto do painel. */
 export default async function Conta() {
-  const { barbearia, usuario } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirDono();
   const banco = obterAgenda();
   const b = banco.barbeariaPorId(barbearia.id)!;
   const dias = banco.diasRestantes(b);

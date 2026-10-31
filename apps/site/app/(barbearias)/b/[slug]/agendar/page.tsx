@@ -203,6 +203,8 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       const q = new URLSearchParams();
       for (const id of sel) q.append("sel", String(id));
       if (filtro) q.set("profissional", String(filtro.id));
+      // Veio de um horário livre da agenda do painel: dia, hora e quem atende seguem até o fim.
+      for (const k of ["data", "hora", "com"] as const) if (sp[k]) q.set(k, sp[k]!);
       const foto = extra.foto ?? fotoEscolhida?.arquivo;
       if (foto && sel.some((id) => grupoDoServico(porId.get(id)?.nome ?? "") === "cabelo")) q.set("foto", foto);
       for (const [k, v] of Object.entries(extra)) if (v && k !== "foto") q.set(k, v);
@@ -263,6 +265,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     const proximo = principal && (() => {
       const q = new URLSearchParams({ servico: String(principal.id), ad: "1" });
       if (filtro) q.set("profissional", String(filtro.id));
+      for (const k of ["data", "hora", "com"] as const) if (sp[k]) q.set(k, sp[k]!);
       if (fotoEscolhida && grupoDoServico(principal.nome) === "cabelo") q.set("foto", fotoEscolhida.arquivo);
       for (const x of juntos) q.append("extra", String(x.id));
       return `${base}?${q}`;
@@ -271,6 +274,9 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     return (
       <div className="b-secao b-agendar b-vitrine">
         <Cabeca rotulo={`Passo 1 de 3 · ${b.nome}`} titulo={noHorario.length ? "O que mais vamos fazer?" : "O que vamos fazer hoje?"} />
+        {sp.data && sp.hora && dataValida(sp.data) && (
+          <p className="b-escolhido">Horário: <strong>{formatarData(sp.data)} às {sp.hora}</strong>{profissionais.find((p) => String(p.id) === sp.com) ? ` com ${profissionais.find((p) => String(p.id) === sp.com)!.nome}` : ""}</p>
+        )}
         {noHorario.length > 0 ? (
           <div className="b-pedido">
             <p className="b-pedido-frase">Vamos fazer: <strong>{noHorario.map((s) => s.nome).join(" + ")}</strong></p>

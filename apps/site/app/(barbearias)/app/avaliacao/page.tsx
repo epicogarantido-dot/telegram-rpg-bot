@@ -1,6 +1,6 @@
 import Link from "next/link";
 import QRCode from "qrcode";
-import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
+import { exigirDono, obterAgenda } from "@/lib/agenda";
 import { BotaoImprimir } from "@/componentes/BotaoImprimir";
 
 export const metadata = { title: "Cartão de avaliação", robots: { index: false } };
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 /** Plaquinha pro balcão com QR da página de avaliação no Google. Sem brinde: o Google proíbe. */
 export default async function Avaliacao() {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const b = obterAgenda().barbeariaPorId(barbearia.id)!;
   if (!b.linkAvaliacao) {
     return (

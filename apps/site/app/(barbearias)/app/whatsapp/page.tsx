@@ -1,4 +1,4 @@
-import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
+import { exigirDono, obterAgenda } from "@/lib/agenda";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { linkPublico } from "@/lib/barbearias";
 
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * texto no app dele. Nada de mensagem de ausência nem atendente de IA, que mandam mais mensagens.
  */
 export default async function WhatsappBusiness() {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia } = await exigirDono();
   const b = obterAgenda().barbeariaPorId(barbearia.id)!;
   const site = linkPublico(b);
   const agendar = linkPublico(b, "/agendar");

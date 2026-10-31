@@ -46,6 +46,21 @@ export async function exigirAcessoAtivo(): Promise<{ usuario: Usuario; barbearia
   return sessao;
 }
 
+/**
+ * Páginas e ações só do dono (configurações, fotos, site, números, clientes...). Quem entrou com a
+ * senha de um profissional da equipe volta pra agenda dele.
+ */
+export async function exigirDono(): Promise<{ usuario: Usuario; barbearia: Barbearia }> {
+  const sessao = await exigirAcessoAtivo();
+  if (sessao.usuario.profissionalId) redirect("/app");
+  return sessao;
+}
+
+/** Profissional da equipe só mexe nos horários dele; o dono, em todos. */
+export function podeMexer(usuario: Usuario, a: { profissionalId: number } | undefined): boolean {
+  return !!a && (!usuario.profissionalId || a.profissionalId === usuario.profissionalId);
+}
+
 export const configPix = {
   chave: process.env.PIX_CHAVE ?? "",
   nome: process.env.PIX_NOME ?? "",

@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 
 async function trocarLink(form: FormData) {
   "use server";
-  const { barbearia } = await exigirAcessoAtivo();
-  const p = String(form.get("profissional") ?? "");
+  const { barbearia, usuario } = await exigirAcessoAtivo();
+  // Quem é da equipe só troca o link da própria agenda.
+  const p = usuario.profissionalId ? String(usuario.profissionalId) : String(form.get("profissional") ?? "");
   obterAgenda().tokenAgenda(barbearia.id, p ? Number(p) : undefined, true);
   revalidatePath("/app/calendario");
 }
@@ -24,14 +25,14 @@ async function enderecoDoSite(): Promise<string> {
 }
 
 export default async function Calendario() {
-  const { barbearia } = await exigirAcessoAtivo();
+  const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const site = await enderecoDoSite();
   const host = site.replace(/^https?:\/\//, "");
   const agendas = [
     { titulo: "Agenda da barbearia", dica: "Todos os horários, de todos os profissionais.", profissional: undefined as number | undefined },
     ...banco.profissionais(barbearia.id, true).map((p) => ({ titulo: `Agenda de ${p.nome.split(" ")[0]}`, dica: `Só os horários com ${p.nome}. Mande este link pra ${p.nome.split(" ")[0]} assinar no próprio celular.`, profissional: p.id })),
-  ].map((a) => {
+  ].filter((a) => !usuario.profissionalId || a.profissional === usuario.profissionalId).map((a) => {
     const token = banco.tokenAgenda(barbearia.id, a.profissional);
     const https = `${site}/agenda/${token}.ics`;
     const webcal = `webcal://${host}/agenda/${token}.ics`;

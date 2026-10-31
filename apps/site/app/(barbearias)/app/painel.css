@@ -55,7 +55,7 @@
 .painel-topo-celular .painel-ver-site { padding: 8px 12px; flex: none; }
 .painel-abas {
   position: fixed; z-index: 10; left: 0; right: 0; bottom: 0;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
   padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));
   background: var(--cartao); border-top: 1px solid var(--borda); box-shadow: 0 -4px 20px rgb(27 26 23 / 0.06);
 }
@@ -245,3 +245,16 @@
 .horario-prof .formulario { margin-top: 10px; }
 .dias-prof { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .dias-prof legend { font-size: 14px; color: var(--suave); margin-bottom: 4px; }
+
+/* Agenda do dia (profissionais x horas) e abas Dia/Semana. */
+.semana-abas { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--borda); border-radius: 999px; }
+.semana-abas a { padding: 6px 14px; border-radius: 999px; text-decoration: none; color: var(--suave); font-size: 14px; }
+.semana-abas a[aria-current="page"] { background: var(--destaque); color: var(--sobre-destaque); }
+.grade-dia-tabela .grade { grid-template-columns: 52px repeat(var(--colunas), minmax(120px, 1fr)); }
+.grade-dia-nome { display: block; padding: 8px 4px; font-weight: 600; font-size: 14px; }
+.grade-livre { display: grid; place-items: center; text-decoration: none; color: transparent; }
+.grade-livre span { font-size: 18px; font-weight: 600; line-height: 1; }
+.grade-livre:hover, .grade-livre:focus-visible { background: color-mix(in srgb, var(--destaque) 14%, transparent); color: var(--destaque); }
+@media (hover: none) { .grade-livre { color: color-mix(in srgb, var(--suave) 55%, transparent); } }
+.grade-horario.faltou { background: var(--erro-fundo); color: var(--erro); }
+.grade-vazia { margin: 12px 0; }

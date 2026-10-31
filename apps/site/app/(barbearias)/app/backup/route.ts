@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   if (!soEntrega()) return new Response(null, { status: 404 });
-  const { barbearia } = await exigirBarbeiro();
+  const { barbearia, usuario } = await exigirBarbeiro();
+  // O banco inteiro é coisa do dono, não da equipe.
+  if (usuario.profissionalId) return new Response(null, { status: 403 });
   const pasta = mkdtempSync(join(tmpdir(), "backup-"));
   const arquivo = join(pasta, "agenda.db");
   try {
