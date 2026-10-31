@@ -14,3 +14,5 @@ data/cache/
 data/privado/
 __pycache__/
 apps/bot/.pacote/
+# listas de barbearias pra contatar (vão só no zip do leads)
+data/listas/

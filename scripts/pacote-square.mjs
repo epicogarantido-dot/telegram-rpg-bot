@@ -89,6 +89,9 @@ writeFileSync(join(destino, "VERSAO.txt"), versao + "\n");
 
 for (const app of APPS) {
   writeFileSync(join(destino, "iniciar.cjs"), iniciar(app.modo));
+  // Listas de barbearias pra contatar (/painel/lista): só no site de leads; fora do git (LGPD).
+  rmSync(join(destino, "data/listas"), { recursive: true, force: true });
+  if (app.modo === "leads" && existsSync(join(raiz, "data/listas"))) cpSync(join(raiz, "data/listas"), join(destino, "data/listas"), { recursive: true });
   writeFileSync(join(destino, "squarecloud.config"), `DISPLAY_NAME=${app.nome}
 DESCRIPTION=${app.descricao}
 MAIN=iniciar.cjs

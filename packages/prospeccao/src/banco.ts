@@ -22,6 +22,12 @@ export function chaveCidade(cidade: string): string {
 export const STATUS = ["novo", "contatado", "lembrete", "respondeu", "demo_enviada", "cliente", "sem_resposta", "entrou", "nao_contatar"] as const;
 export type Status = (typeof STATUS)[number];
 
+/** Uma barbearia de lista pronta (data/listas/<nome>.json). */
+export interface ItemLista {
+  cnpj: string; nome: string; cidade: string; uf: string; telefone: string;
+  endereco?: string; abertura?: string; email?: string;
+}
+
 export interface Lead extends Estabelecimento {
   nicho: string;
   cidade: string;
@@ -126,7 +132,7 @@ export class BancoProspeccao {
     `);
     // Colunas novas em bancos antigos.
     const existentes = new Set((this.db.prepare("PRAGMA table_info(leads)").all() as { name: string }[]).map((c) => c.name));
-    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite", "codigo"]) {
+    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite", "codigo", "lista"]) {
       if (!existentes.has(coluna)) this.db.exec(`ALTER TABLE leads ADD COLUMN ${coluna} TEXT`);
     }
     if (!existentes.has("cidade_chave")) {
@@ -182,6 +188,39 @@ export class BancoProspeccao {
       throw erro;
     }
     return { novos, total: achados.length };
+  }
+
+  /**
+   * Lista pronta pra contato (vem no pacote do site de leads, em data/listas/<nome>.json):
+   * grava quem falta e marca a lista. Quem já existe guarda status, observação e Instagram.
+   */
+  importarLista(nome: string, itens: ItemLista[]): { novos: number; total: number } {
+    const ins = this.db.prepare(`
+      INSERT INTO leads (place_id, nicho, cidade, uf, nome, endereco, telefone, status, criado_em, fonte, cnpj, email, abertura, cidade_chave, lista)
+      VALUES (?, 'barbearia', ?, ?, ?, ?, ?, ?, ?, 'receita', ?, ?, ?, ?, ?)
+      ON CONFLICT(place_id) DO UPDATE SET lista = excluded.lista`);
+    const existe = this.db.prepare("SELECT 1 FROM leads WHERE place_id = ?");
+    const agora = new Date().toISOString();
+    let novos = 0;
+    this.db.exec("BEGIN");
+    try {
+      for (const e of itens) {
+        const id = `cnpj:${e.cnpj}`;
+        if (!existe.get(id)) novos++;
+        const status: Status = this.estaBloqueado(e.telefone) ? "nao_contatar" : "novo";
+        ins.run(id, e.cidade, e.uf, e.nome, e.endereco ?? null, e.telefone, status, agora, e.cnpj, e.email ?? null, e.abertura ?? null, chaveCidade(e.cidade), nome);
+      }
+      this.db.exec("COMMIT");
+    } catch (erro) {
+      this.db.exec("ROLLBACK");
+      throw erro;
+    }
+    return { novos, total: itens.length };
+  }
+
+  /** Leads de uma lista de contato, por cidade e nome. */
+  listaDeContato(nome: string): Lead[] {
+    return this.db.prepare(`SELECT ${COLUNAS} FROM leads WHERE lista = ? ORDER BY cidade, nome`).all(nome) as unknown as Lead[];
   }
 
   /**

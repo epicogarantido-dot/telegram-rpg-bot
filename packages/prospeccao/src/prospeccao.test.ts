@@ -189,3 +189,19 @@ describe("funil de venda e link por lead", () => {
   });
 });
 
+
+describe("lista pronta pra contato", () => {
+  it("grava, não repete e não apaga o trabalho de quem já contatou", () => {
+    const b = new BancoProspeccao(":memory:");
+    const item = { cnpj: "123", nome: "Barbearia Sul", cidade: "Pelotas", uf: "RS", telefone: "5553999990000" };
+    expect(b.importarLista("rs-100", [item])).toEqual({ novos: 1, total: 1 });
+    b.marcar("cnpj:123", "contatado");
+    expect(b.importarLista("rs-100", [item])).toEqual({ novos: 0, total: 1 });
+    const lista = b.listaDeContato("rs-100");
+    expect(lista).toHaveLength(1);
+    expect(lista[0]!.status).toBe("contatado");
+    b.bloquear("5553988880000");
+    b.importarLista("rs-100", [{ ...item, cnpj: "456", telefone: "5553988880000" }]);
+    expect(b.lead("cnpj:456")!.status).toBe("nao_contatar");
+  });
+});
