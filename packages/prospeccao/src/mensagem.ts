@@ -23,7 +23,8 @@ export function primeiroNome(nomeNegocio: string): string {
 
 /** Nome da Receita vem em maiúsculas: "BARBEARIA DO ZE" → "Barbearia do Ze". */
 export function nomeParaMensagem(nome: string): string {
-  const curto = primeiroNome(nome);
+  // "BARBEARIA X LTDA" → "Barbearia X": tipo de empresa não vai na conversa.
+  const curto = primeiroNome(nome).replace(/[\s.,-]+(LTDA|ME|EPP|EIRELI|MEI|S\/?A)\.?$/i, "").trim();
   if (curto !== curto.toUpperCase()) return curto;
   // Palavra com número ("3XR", "B2") é sigla: fica como está.
   return curto.split(" ").map((p) => /\d/.test(p) ? p : p.toLowerCase().replace(/^\p{L}/u, (l) => l.toUpperCase())).join(" ")
