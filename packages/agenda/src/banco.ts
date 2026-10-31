@@ -768,44 +768,19 @@ export class BancoAgenda {
       .all(barbeariaId) as unknown as Usuario[];
   }
 
-  // ---------- acesso da equipe: cada profissional com a própria senha, só a agenda dele ----------
+  // ---------- acesso da equipe: depois de entrar com a senha do site, cada um escolhe quem é ----------
 
-  /** Dá (ou troca) a senha de um profissional; `null` tira o acesso. Trocar derruba as sessões dele. */
-  definirAcessoDoProfissional(barbeariaId: number, profissionalId: number, senha: string | null): void {
-    const p = this.profissionais(barbeariaId).find((x) => x.id === profissionalId);
+  /**
+   * Sessão de um profissional da equipe (só a agenda dele). Quem já entrou com a senha do site
+   * escolhe "sou o Bruno" e cai aqui: o usuário dele nasce na primeira vez, sem senha própria.
+   */
+  sessaoDoProfissional(barbeariaId: number, profissionalId: number): string {
+    const p = this.profissionais(barbeariaId, true).find((x) => x.id === profissionalId);
     if (!p) throw new ErroAgenda("Profissional não encontrado.");
     const atual = this.db.prepare("SELECT id FROM usuarios WHERE barbearia_id = ? AND profissional_id = ?").get(barbeariaId, profissionalId) as { id: number } | undefined;
-    if (senha === null) {
-      if (atual) {
-        this.db.prepare("DELETE FROM sessoes WHERE usuario_id = ?").run(atual.id);
-        this.db.prepare("DELETE FROM trocas_senha WHERE usuario_id = ?").run(atual.id);
-        this.db.prepare("DELETE FROM usuarios WHERE id = ?").run(atual.id);
-      }
-      return;
-    }
-    if (senha.length < 6) throw new ErroAgenda("A senha do profissional precisa ter pelo menos 6 caracteres.");
-    // A mesma senha de outra pessoa da casa faria a tela de entrar abrir a conta errada.
-    const outros = this.db.prepare("SELECT id, senha_hash FROM usuarios WHERE barbearia_id = ? AND id IS NOT ?").all(barbeariaId, atual?.id ?? null) as { id: number; senha_hash: string }[];
-    if (outros.some((o) => conferirSenha(senha, o.senha_hash))) throw new ErroAgenda("Essa senha já é de outra pessoa da barbearia. Escolha outra.");
-    if (atual) {
-      this.gravarSenha(atual.id, senha);
-    } else {
-      this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em, profissional_id) VALUES (?, ?, ?, ?, ?, ?)")
-        .run(barbeariaId, p.nome, `equipe-${profissionalId}-${randomBytes(4).toString("hex")}${SEM_EMAIL}`, hashSenha(senha), new Date().toISOString(), profissionalId);
-    }
-  }
-
-  /** Profissionais que já têm senha de acesso. */
-  profissionaisComAcesso(barbeariaId: number): Set<number> {
-    return new Set((this.db.prepare("SELECT profissional_id AS p FROM usuarios WHERE barbearia_id = ? AND profissional_id IS NOT NULL").all(barbeariaId) as { p: number }[]).map((x) => x.p));
-  }
-
-  /** Tela de entrar do app da barbearia: a senha de um profissional abre a sessão dele (só a agenda dele). */
-  entrarComoProfissional(barbeariaId: number, senha: string): string | undefined {
-    const contas = this.db.prepare(`SELECT u.id, u.senha_hash FROM usuarios u JOIN profissionais p ON p.id = u.profissional_id
-      WHERE u.barbearia_id = ? AND p.ativo = 1`).all(barbeariaId) as { id: number; senha_hash: string }[];
-    const u = contas.find((c) => conferirSenha(senha, c.senha_hash));
-    return u && this.criarSessao(u.id);
+    const id = atual?.id ?? Number(this.db.prepare("INSERT INTO usuarios (barbearia_id, nome, email, senha_hash, criado_em, profissional_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(barbeariaId, p.nome, `equipe-${profissionalId}-${randomBytes(4).toString("hex")}${SEM_EMAIL}`, hashSenha(randomBytes(24).toString("base64url")), new Date().toISOString(), profissionalId).lastInsertRowid);
+    return this.criarSessao(id);
   }
 
   /**

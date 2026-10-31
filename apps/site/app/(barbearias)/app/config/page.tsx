@@ -5,7 +5,6 @@ import { ErroAgenda, FOLGAS, formatarData, INTERVALOS, nomeDia } from "@aprenda/
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { exigirDono, gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { soEntrega } from "@/lib/modo";
-import { linkPublico } from "@/lib/barbearias";
 
 export const metadata = { title: "Configurações", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -122,13 +121,6 @@ async function salvarHorarioProfissional(form: FormData) {
   redirect(`/app/config?aviso=${encodeURIComponent("Horário do profissional salvo.")}#equipe`);
 }
 
-async function salvarAcessoProfissional(form: FormData) {
-  "use server";
-  const tirar = form.get("tirar") === "1";
-  await executar((id) => obterAgenda().definirAcessoDoProfissional(id, Number(form.get("id")), tirar ? null : String(form.get("senha") ?? "")));
-  redirect(`/app/config?aviso=${encodeURIComponent(tirar ? "Acesso tirado: aquela senha não entra mais." : "Senha do profissional salva.")}#equipe`);
-}
-
 async function alternarProfissional(form: FormData) {
   "use server";
   await executar((id) => obterAgenda().alternarProfissional(id, Number(form.get("id"))));
@@ -189,7 +181,6 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
   const profissionais = banco.profissionais(barbearia.id);
   const expedientes = banco.expedientes(barbearia.id);
   const fotosEquipe = banco.fotos(barbearia.id, "equipe");
-  const comAcesso = banco.profissionaisComAcesso(barbearia.id);
   const bloqueados = banco.telefonesBloqueados(barbearia.id);
 
   return (
@@ -357,26 +348,6 @@ export default async function Config({ searchParams }: { searchParams: Promise<{
               <button className="botao-sec">Salvar horário</button>
             </form>
           </details>
-          {/* No app de cada barbearia (SaaS), cada profissional pode ter a própria senha: entra no mesmo
-              /admin e vê só a agenda dele. */}
-          {soEntrega() && (
-            <details className="horario-prof">
-              <summary>Acesso de {p.nome.split(" ")[0]} ao painel: {comAcesso.has(p.id) ? "tem senha própria" : "sem acesso"}</summary>
-              <form action={salvarAcessoProfissional} className="formulario">
-                <input type="hidden" name="id" value={p.id} />
-                <label>{comAcesso.has(p.id) ? "Nova senha" : "Senha dele"}<input name="senha" type="text" minLength={6} maxLength={60} required autoComplete="off" placeholder="Pelo menos 6 letras ou números" /></label>
-                <small className="suave">{p.nome.split(" ")[0]} entra em {linkPublico(barbearia).replace(/^https?:\/\//, "")}/admin com essa senha e vê só a agenda dele: os horários, confirmar no WhatsApp, marcar e bloquear o próprio horário. Configurações, fotos, preços e números ficam só com você.</small>
-                <button className="botao-sec">{comAcesso.has(p.id) ? "Trocar a senha" : "Dar acesso"}</button>
-              </form>
-              {comAcesso.has(p.id) && (
-                <form action={salvarAcessoProfissional}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <input type="hidden" name="tirar" value="1" />
-                  <button className="botao-sec">Tirar o acesso</button>
-                </form>
-              )}
-            </details>
-          )}
         </div>
       ))}
       <form action={novoProfissional} className="formulario linha">

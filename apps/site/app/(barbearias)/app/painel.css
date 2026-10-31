@@ -258,3 +258,21 @@
 @media (hover: none) { .grade-livre { color: color-mix(in srgb, var(--suave) 55%, transparent); } }
 .grade-horario.faltou { background: var(--erro-fundo); color: var(--erro); }
 .grade-vazia { margin: 12px 0; }
+
+/* Escolher o acesso (dono ou um barbeiro) depois de entrar. */
+.acesso { max-width: 560px; }
+.acesso-lista { list-style: none; margin: 18px 0; padding: 0; display: grid; gap: 10px; }
+.acesso-lista form { margin: 0; }
+.acesso-opcao {
+  width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; text-align: left; cursor: pointer;
+  border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); color: var(--texto); font: inherit;
+}
+.acesso-opcao:hover, .acesso-opcao:focus-visible { border-color: var(--destaque); }
+.acesso-opcao.atual { box-shadow: 0 0 0 2px var(--destaque); border-color: var(--destaque); }
+.acesso-opcao > span:last-child { display: grid; gap: 2px; }
+.acesso-opcao small { color: var(--suave); font-size: 14px; }
+.acesso-foto {
+  flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: var(--destaque-claro); color: var(--texto); font: 700 1.3rem var(--fonte-titulo);
+}
+.acesso-foto img { width: 100%; height: 100%; object-fit: cover; }

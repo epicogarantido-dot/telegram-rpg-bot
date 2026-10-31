@@ -630,20 +630,16 @@ describe("link do cliente: cancelar e remarcar", () => {
     expect(b.horariosLivres(a.id, p.id, s.id, dias[2]!, agora)).toEqual(todos);
   });
 
-  it("acesso da equipe: senha própria abre só a conta do profissional", () => {
+  it("acesso da equipe: escolher um profissional abre só a conta dele, sem senha própria", () => {
     const { b, a, p } = cenario();
-    expect(() => b.definirAcessoDoProfissional(a.id, p.id, "123")).toThrow(ErroAgenda);
-    b.definirAcessoDoProfissional(a.id, p.id, "bruno2026");
-    expect(b.profissionaisComAcesso(a.id).has(p.id)).toBe(true);
-    const sessao = b.entrarComoProfissional(a.id, "bruno2026")!;
+    const sessao = b.sessaoDoProfissional(a.id, p.id);
     expect(b.usuarioDaSessao(sessao)?.profissionalId).toBe(p.id);
-    expect(b.entrarComoProfissional(a.id, "errada")).toBeUndefined();
+    // A segunda vez reaproveita o mesmo usuário.
+    expect(b.usuarioDaSessao(b.sessaoDoProfissional(a.id, p.id))?.id).toBe(b.usuarioDaSessao(sessao)?.id);
     // O dono continua sendo o primeiro (link de senha, sessão do dono).
     expect(b.usuariosDaBarbearia(a.id).every((u) => !u.profissionalId)).toBe(true);
     expect(b.usuarioDaSessao(b.sessaoDoDono(a.id))?.profissionalId).toBeUndefined();
-    b.definirAcessoDoProfissional(a.id, p.id, null);
-    expect(b.usuarioDaSessao(sessao)).toBeUndefined();
-    expect(b.entrarComoProfissional(a.id, "bruno2026")).toBeUndefined();
+    expect(() => b.sessaoDoProfissional(a.id, 9999)).toThrow(ErroAgenda);
   });
 
   it("sinal: só no que o cliente marca pelo site, com Pix da barbearia e baixa manual", () => {

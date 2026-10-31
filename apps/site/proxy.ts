@@ -26,7 +26,7 @@ export function proxy(req: NextRequest) {
     if (pathname === "/") return NextResponse.rewrite(new URL("/inicio", req.url));
     // Link curto pro WhatsApp e pra bio: endereço do app + /agendar.
     if (/^\/agendar\/?$/.test(pathname)) return NextResponse.rewrite(new URL("/inicio/agendar", req.url));
-    if (/^\/admin\/?$/.test(pathname)) return NextResponse.redirect(new URL("/app", req.url), 307);
+    if (/^\/(admin|login)\/?$/.test(pathname)) return NextResponse.redirect(new URL("/app", req.url), 307);
     // Sem painel do dono no app do barbeiro: o admin é o /admin dele (os ícones em /painel/*.png seguem).
     if (/^\/painel(\/[^.]*)?$/.test(pathname)) return NextResponse.redirect(new URL("/admin", req.url), 307);
     if (DE_VENDA.some((r) => r.test(pathname))) return NextResponse.redirect(new URL("/", req.url), 307);

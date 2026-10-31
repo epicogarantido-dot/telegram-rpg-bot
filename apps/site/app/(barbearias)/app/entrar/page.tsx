@@ -50,18 +50,18 @@ async function entrarComSenha(form: FormData) {
     if (banco.contarTentativas(chaves[0]!, 15) >= 10 || banco.contarTentativas(chaves[1]!, 15) >= 100) throw new ErroAgenda(MUITAS);
     const senha = String(form.get("senha") ?? "");
     const b = barbeariaDoApp() ?? await prepararBarbeariaDoApp();
-    // A senha do dono (.env) abre tudo; a de um profissional da equipe abre só a agenda dele.
-    const daEquipe = senhaConfere(senha) ? undefined : banco.entrarComoProfissional(b.id, senha);
-    if (!senhaConfere(senha) && !daEquipe) {
+    if (!senhaConfere(senha)) {
       for (const c of chaves) banco.consumirLimite(c, Number.MAX_SAFE_INTEGER, 15, "");
       throw new ErroAgenda("Senha incorreta.");
     }
-    token = daEquipe ?? banco.sessaoDoDono(b.id);
+    token = banco.sessaoDoDono(b.id);
   } catch (e) {
     redirect(`/app/entrar?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
   await gravarSessaoAgenda(token);
-  redirect("/app");
+  // Uma senha só pro site; com mais de um profissional, a pessoa escolhe quem é (dono ou um barbeiro).
+  const b = barbeariaDoApp();
+  redirect(b && obterAgenda().profissionais(b.id, true).length > 1 ? "/app/acesso" : "/app");
 }
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
@@ -79,7 +79,8 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
   if (soEntrega()) {
     return (
       <>
-        <h1>Painel da barbearia</h1>
+        <h1>Entrar</h1>
+        <p className="suave">Digite a senha do site. Depois você escolhe com qual acesso entrar.</p>
         {erro && <p className="erro">{erro}</p>}
         <form action={entrarComSenha} className="formulario">
           <input name="senha" type="password" placeholder="Senha" required autoComplete="current-password" aria-label="Senha" />
