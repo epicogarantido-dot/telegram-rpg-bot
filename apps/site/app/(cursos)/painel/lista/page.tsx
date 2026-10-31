@@ -72,7 +72,7 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
                   <span className="etiqueta">{ROTULO[l.status]}</span> <strong>{l.nome}</strong>
                   <br />
                   <small>
-                    {l.cidade} · <a href={`https://wa.me/${l.telefone}`} target="_blank" rel="noopener noreferrer">{l.telefone}</a>
+                    {l.cidade} · <a href={`https://wa.me/${l.telefone}`} target="_blank" rel="noopener noreferrer">{l.telefone ? `(${l.telefone.slice(2, 4)}) ${l.telefone.slice(4, -4)}-${l.telefone.slice(-4)}` : ""}</a>
                     {l.abertura && <> · aberta em {l.abertura.slice(0, 4)}</>}
                     {l.endereco && <> · {l.endereco}</>}
                   </small>
