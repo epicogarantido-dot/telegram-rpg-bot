@@ -16,6 +16,7 @@ import { confirmarNoWhatsapp } from "./acoes-whatsapp";
 import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
 import { GradeSemana } from "@/componentes/barbearia/GradeSemana";
 import { GradeDia } from "@/componentes/barbearia/GradeDia";
+import { AbrirAncora } from "@/componentes/barbearia/AbrirAncora";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -153,7 +154,7 @@ async function mudarFila(form: FormData) {
   revalidatePath("/app");
 }
 
-export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; ver?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string; bloquear?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ data?: string; ver?: string; novo?: string; cancelado?: string; bloqueado?: string; erro?: string; bloquear?: string; de?: string }> }) {
   const { barbearia, usuario } = await exigirAcessoAtivo();
   const sp = await searchParams;
   const hoje = agoraNoFuso(barbearia.fuso).slice(0, 10);
@@ -167,6 +168,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const diasRestantes = obterAgenda().diasRestantes(barbearia);
   const banco = obterAgenda();
   const profissionais = banco.profissionais(barbearia.id, true);
+  const deSemana = ehDono ? profissionais.find((p) => String(p.id) === sp.de)?.id : undefined;
   // Folgas do dia e quem já estava marcado dentro delas (pra avisar).
   const folgas = banco.bloqueiosDoDia(barbearia.id, data).filter((f) => ehDono || f.profissionalId === undefined || f.profissionalId === meu).map((f) => ({
     ...f,
@@ -174,6 +176,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   }));
   const recemCancelado = sp.cancelado ? agenda.find((a) => String(a.id) === sp.cancelado && a.status === "cancelado") : undefined;
   const agoraLocal = agoraNoFuso(barbearia.fuso);
+  const limiteRecente = new Date(Date.parse(`${agoraLocal.slice(0, 16)}:00Z`) - 60 * 60_000).toISOString().slice(0, 16);
   const sumidos = banco.clientesSumidos(barbearia.id).length;
   const faltamConfirmar = banco.proximosAgendados(barbearia.id, agoraLocal, 30).filter((a) => !a.confirmacaoEm && (ehDono || a.profissionalId === meu)).length;
   const planos = new Map(banco.planos(barbearia.id).map((p) => [p.telefone, p]));
@@ -251,7 +254,16 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             <Link href={`/app?data=${somarDias(data, verSemana ? 7 : 1)}${verSemana ? "&ver=semana" : ""}`}>{verSemana ? "7 dias" : "próximo dia"} →</Link>
           </nav>
         </div>
-        {verSemana ? <GradeSemana barbearia={barbearia} inicio={data} so={meu} /> : <GradeDia barbearia={barbearia} data={data} so={meu} />}
+        {verSemana && ehDono && profissionais.length > 1 && (
+          // Semana com vários barbeiros fica larga no celular: dá pra ver um por vez.
+          <nav className="semana-quem" aria-label="Profissional">
+            <Link href={`/app?data=${data}&ver=semana`} aria-current={!deSemana ? "page" : undefined}>Todos</Link>
+            {profissionais.map((p) => (
+              <Link key={p.id} href={`/app?data=${data}&ver=semana&de=${p.id}`} aria-current={deSemana === p.id ? "page" : undefined}>{p.nome.split(" ")[0]}</Link>
+            ))}
+          </nav>
+        )}
+        {verSemana ? <GradeSemana barbearia={barbearia} inicio={data} so={meu ?? deSemana} /> : <GradeDia barbearia={barbearia} data={data} so={meu} />}
         {!verSemana && <p className="suave pequeno">Toque num horário livre (+) pra marcar um cliente com aquele profissional.</p>}
       </section>
 
@@ -329,7 +341,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </p>
       )}
 
-      {agenda.map((a) => (
+      {(() => {
+        const cartao = (a: (typeof agenda)[number]) => (
         <div key={a.id} id={`ag-${a.id}`} className={`cartao lead ${a.status === "cancelado" ? "cancelado" : ""}`}>
           <div>
             <strong>{a.inicio.slice(11)}–{a.fim.slice(11)}</strong> · {a.servico} com {a.profissional}
@@ -437,7 +450,23 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             </p>
           )}
         </div>
-      ))}
+        );
+        // Dia cheio: o que acabou há mais de uma hora (e os cancelados) fica recolhido.
+        const antigos = agenda.filter((a) => a.status === "cancelado" || a.fim.slice(0, 16) < limiteRecente);
+        const atuais = agenda.filter((a) => !antigos.includes(a));
+        return (
+          <>
+            {atuais.map((a) => cartao(a))}
+            {antigos.length > 0 && (
+              <details className="cartoes-antigos">
+                <summary>Já atendidos e cancelados ({antigos.length})</summary>
+                {antigos.map((a) => cartao(a))}
+              </details>
+            )}
+            <AbrirAncora />
+          </>
+        );
+      })()}
 
       {ehDono && <Hoje barbeariaId={barbearia.id} />}
 
@@ -471,7 +500,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         </section>
       )}
 
-      <section className="cartao-site" aria-label="Seu site">
+      {ehDono && <section className="cartao-site" aria-label="Seu site">
         {capa
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={urlFoto(capa.arquivo, "p")} alt="" width={96} height={96} />
@@ -488,7 +517,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
             <Link className="botao-sec" href="/app/whatsapp">Pôr no WhatsApp Business</Link>
           </div>
         </div>
-      </section>
+      </section>}
 
       {(() => {
         const d = proximaData(hoje);

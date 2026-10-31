@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { agoraNoFuso, diaDaSemana, nomeDia, paraMinutos, deMinutos, somarDias, type Barbearia, type Data } from "@aprenda/agenda";
 import { obterAgenda } from "@/lib/agenda";
+import { primeiroNome } from "@/lib/pos-atendimento";
 
 const DIAS = 7;
 /** Altura de cada linha da grade, em px (o CSS usa a mesma variável). */
@@ -17,7 +18,7 @@ export function GradeSemana({ barbearia, inicio, so }: { barbearia: Barbearia; i
   const hoje = agora.slice(0, 10) as Data;
   const minutoAgora = paraMinutos(agora.slice(11, 16));
   const expedientes = banco.expedientes(barbearia.id);
-  // `so`: quem entrou com a senha de um profissional vê só a coluna dele.
+  // `so`: só um profissional (o acesso de um barbeiro, ou o dono escolhendo um).
   const profissionais = banco.profissionais(barbearia.id, true).filter((p) => !so || p.id === so);
   const varios = profissionais.length > 1;
   const colunasPorDia = varios ? profissionais.length : 1;
@@ -105,7 +106,7 @@ export function GradeSemana({ barbearia, inicio, so }: { barbearia: Barbearia; i
             <Link key={a.id} href={`/app?data=${a.inicio.slice(0, 10)}#ag-${a.id}`} className={`grade-horario ${passou ? "passou" : ""}`}
               title={`${a.inicio.slice(11, 16)}–${a.fim.slice(11, 16)} · ${a.clienteNome} · ${a.servico}`}
               style={{ gridColumn: colunaDo(i, a.profissionalId), gridRow: `${cabecalho + 1 + linhaDe(ini)} / span ${Math.max(2, Math.round((Math.min(fim, ate) - Math.max(ini, de)) / 5))}` }}>
-              <strong>{a.inicio.slice(11, 16)} {a.clienteNome.split(" ")[0]}</strong>
+              <strong>{a.inicio.slice(11, 16)} {primeiroNome(a.clienteNome)}</strong>
               <span>{a.servico}</span>
             </Link>
           );

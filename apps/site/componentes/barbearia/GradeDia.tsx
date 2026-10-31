@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { agoraNoFuso, deMinutos, paraMinutos, type Barbearia, type Data } from "@aprenda/agenda";
 import { obterAgenda } from "@/lib/agenda";
+import { primeiroNome } from "@/lib/pos-atendimento";
 
 /** Altura de cada linha (um intervalo da agenda), em px. */
 const LINHA = 34;
@@ -9,7 +10,7 @@ const LINHA = 34;
  * Agenda do dia em tabela: os profissionais nas colunas e as horas nas linhas, cada um com o
  * próprio horário (fora dele fica hachurado). Cada horário marcado ocupa do início ao fim; tocar
  * leva ao cartão dele. Horário livre tem "+": já abre o agendar com o profissional, o dia e a hora.
- * `so` mostra só um profissional (quem entrou com a senha dele).
+ * `so` mostra só um profissional (quem entrou no acesso dele).
  */
 export function GradeDia({ barbearia, data, so }: { barbearia: Barbearia; data: Data; so?: number }) {
   const banco = obterAgenda();
@@ -65,6 +66,19 @@ export function GradeDia({ barbearia, data, so }: { barbearia: Barbearia; data: 
             : <div key={`${p.id}-${m}`} className={classe} style={estilo} />;
         }))}
 
+        {/* Encaixe: quando um cliente termina fora da grade (10:10), o "+" aparece logo ali. */}
+        {colunas.flatMap(({ p, e }, i) => e ? marcados.filter((a) => a.profissionalId === p.id).flatMap((a) => {
+          const m = paraMinutos(a.fim.slice(11, 16));
+          const proxima = de + Math.ceil((m - de) / passo) * passo;
+          if ((m - de) % passo === 0 || proxima > paraMinutos(e.fecha) || (data === hoje && m < minutoAgora)) return [];
+          if (e.pausaInicio && e.pausaFim && m >= paraMinutos(e.pausaInicio) && m < paraMinutos(e.pausaFim)) return [];
+          const livre = !marcados.some((x) => x.profissionalId === p.id && paraMinutos(x.inicio.slice(11, 16)) < proxima && paraMinutos(x.fim.slice(11, 16)) > m)
+            && !bloqueios.some((f) => (f.profissionalId === undefined || f.profissionalId === p.id) && paraMinutos(f.inicio.slice(11, 16)) < proxima && paraMinutos(f.fim.slice(11, 16)) > m);
+          if (!livre) return [];
+          return [<Link key={`e${a.id}`} href={agendar(p.id, m)} className="grade-celula grade-livre grade-encaixe" aria-label={`Encaixar com ${p.nome} às ${deMinutos(m)}`}
+            style={{ gridColumn: 2 + i, gridRow: `${2 + linhaDe(m)} / span ${Math.max(1, (proxima - m) / 5)}` }}><span aria-hidden>+ {deMinutos(m)}</span></Link>];
+        }) : [])}
+
         {bloqueios.flatMap((f) => {
           const ini = Math.max(de, paraMinutos(f.inicio.slice(11, 16)));
           const fim = Math.min(ate, paraMinutos(f.fim.slice(11, 16)));
@@ -85,7 +99,7 @@ export function GradeDia({ barbearia, data, so }: { barbearia: Barbearia; data: 
             <Link key={a.id} href={`/app?data=${data}#ag-${a.id}`} className={`grade-horario ${passou ? "passou" : ""} ${a.status === "faltou" ? "faltou" : ""}`}
               title={`${a.inicio.slice(11, 16)}–${a.fim.slice(11, 16)} · ${a.clienteNome} · ${a.servico}`}
               style={{ gridColumn: coluna(a.profissionalId), gridRow: `${2 + linhaDe(ini)} / span ${Math.max(2, Math.round((Math.min(fim, ate) - Math.max(ini, de)) / 5))}` }}>
-              <strong>{a.inicio.slice(11, 16)} {a.clienteNome.split(" ")[0]}</strong>
+              <strong>{a.inicio.slice(11, 16)} {primeiroNome(a.clienteNome)}</strong>
               <span>{a.servico}</span>
             </Link>
           );

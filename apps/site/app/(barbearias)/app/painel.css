@@ -258,6 +258,16 @@
 @media (hover: none) { .grade-livre { color: color-mix(in srgb, var(--suave) 55%, transparent); } }
 .grade-horario.faltou { background: var(--erro-fundo); color: var(--erro); }
 .grade-vazia { margin: 12px 0; }
+/* Encaixe logo depois de um cliente (fora da grade de meia em meia hora). */
+.grade-livre.grade-encaixe { z-index: 2; border-top: 1px dashed color-mix(in srgb, var(--destaque) 50%, transparent); }
+.grade-livre.grade-encaixe span { font-size: 11px; }
+/* Celular: três barbeiros cabem sem arrastar de lado. */
+@media (max-width: 480px) {
+  .grade-dia-tabela .grade { grid-template-columns: 44px repeat(var(--colunas), minmax(92px, 1fr)); }
+}
+.semana-quem { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.semana-quem a { padding: 6px 12px; border: 1px solid var(--borda); border-radius: 999px; text-decoration: none; color: inherit; font-size: 14px; }
+.semana-quem a[aria-current="page"] { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque, #000); }
 
 /* Escolher o acesso (dono ou um barbeiro) depois de entrar. */
 .acesso { max-width: 560px; }
@@ -276,3 +286,5 @@
   background: var(--destaque-claro); color: var(--texto); font: 700 1.3rem var(--fonte-titulo);
 }
 .acesso-foto img { width: 100%; height: 100%; object-fit: cover; }
+.cartoes-antigos { margin: 12px 0; }
+.cartoes-antigos > summary { cursor: pointer; padding: 10px 0; color: var(--suave); font-weight: 600; }

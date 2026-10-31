@@ -2,13 +2,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { Check, Scissors, Sparkles } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_REFERENCIA, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_REFERENCIA, ErroAgenda, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { ehCorte, fotosDosServicos, GRUPOS_SERVICO, grupoDoServico, urlFoto } from "@/lib/barbearias";
 import { avisarMudancaDoCliente, avisarNovoAgendamento, avisarRajada } from "@/lib/avisos";
-import { CAMPO_ISCA, ehOBarbeiro, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
+import { CAMPO_ISCA, ehOBarbeiro, profissionalLogado, ErroRajada, primeiraRajadaDaHora, protegerAgendamento, protegerMudanca } from "@/lib/protecao";
 
 export const dynamic = "force-dynamic";
 const DIAS_A_FRENTE = 14;
@@ -66,6 +66,9 @@ async function confirmar(form: FormData) {
   const peloBarbeiro = await ehOBarbeiro(b.id);
   try {
     if (!dataValida(campos.data)) throw new Error("data");
+    // Barbeiro da equipe só marca na agenda dele (a tela já esconde os outros; aqui é a trava).
+    const so = await profissionalLogado(b.id);
+    if (so && Number(campos.com) !== so) throw new ErroAgenda("Você só marca horários na sua agenda.");
     const protecao = peloBarbeiro ? undefined : await protegerAgendamento(b.id, form);
     const telefone = normalizarTelefone(String(form.get("telefone") ?? ""));
     const id = obterAgenda().agendar({
@@ -145,7 +148,9 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   }
 
   const servicos = banco.servicos(b.id, true);
-  const profissionais = banco.profissionais(b.id, true);
+  // Barbeiro da equipe logado: o agendar só oferece a agenda dele.
+  const so = await profissionalLogado(b.id);
+  const profissionais = banco.profissionais(b.id, true).filter((p) => !so || p.id === so);
   // Remarcando: o serviço é o do horário (mesmo se saiu do cardápio depois).
   const remarcando = sp.remarcar ? banco.horarioDoCliente(b.id, sp.remarcar) : undefined;
   if (sp.remarcar && (!remarcando || remarcando.status !== "confirmado" || remarcando.passou)) {
@@ -423,7 +428,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
               <img src={urlFoto(fotoEscolhida.arquivo, "p")} alt={fotoEscolhida.legenda ?? "Corte escolhido"} width={72} height={72} />
               <p><strong>Seu corte</strong><br /><span className="b-dica">O barbeiro recebe essa foto junto com o horário.</span></p>
             </div>
-          ) : ehCorte(servico.nome) && referencias.length > 0 && (
+          ) : !marcandoPeloBarbeiro && ehCorte(servico.nome) && referencias.length > 0 && (
             <fieldset className="b-referencias">
               <legend>Quer mostrar o corte? <small>(opcional)</small></legend>
               <p className="b-dica">Toque na foto do trabalho que você quer. O barbeiro recebe junto com o horário.</p>
@@ -469,6 +474,9 @@ export default async function Agendar({ params, searchParams }: { params: Promis
         ? <Cabeca rotulo={`Remarcar · ${b.nome}`} titulo="Escolha o novo horário" />
         : <Cabeca rotulo={`Passo 2 de 3 · ${b.nome}`} titulo="Escolha o horário" />}
       {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
+      {!erroVisivel && data && sp.hora && /^\d{2}:\d{2}$/.test(sp.hora) && (
+        <p className="erro" role="status">O horário das {sp.hora} não está mais livre pra esse serviço (já foi ocupado ou passa do horário). Escolha outro abaixo.</p>
+      )}
       {remarcando ? (
         <p className="b-escolhido">
           {remarcando.servico} · horário atual: {quandoAtual} · <Link href={`/b/${slug}/h/${sp.remarcar}`}>Manter esse</Link>

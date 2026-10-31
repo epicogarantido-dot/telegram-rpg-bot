@@ -26,6 +26,12 @@ export async function ehOBarbeiro(barbeariaId: number): Promise<boolean> {
   return !!u && u.barbeariaId === barbeariaId;
 }
 
+/** Profissional da equipe logado nessa barbearia (só marca na agenda dele); o dono devolve undefined. */
+export async function profissionalLogado(barbeariaId: number): Promise<number | undefined> {
+  const u = obterAgenda().usuarioDaSessao((await cookies()).get("sessao_agenda")?.value);
+  return u && u.barbeariaId === barbeariaId ? u.profissionalId : undefined;
+}
+
 /** Campo isca: invisível pra gente, robô preenche. */
 export const CAMPO_ISCA = "empresa";
 
