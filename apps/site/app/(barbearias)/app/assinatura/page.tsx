@@ -7,7 +7,7 @@ import { BotaoCopiar } from "@/componentes/BotaoCopiar";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { linkWhatsapp } from "@aprenda/prospeccao";
-import { configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
+import { PIX_FIXO, WHATSAPP_PAGAMENTO, configPix, exigirBarbeiro, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { contatoResponsavel } from "@/lib/contato";
 import { soEntrega, soVenda } from "@/lib/modo";
 import { prazoDaConta } from "@/lib/prazo";
@@ -98,10 +98,11 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
   const nuncaPagou = !banco.jaContratou(barbearia.id);
   const contratacao = nuncaPagou && (banco.plano.adesaoCentavos ?? 0) > 0;
   const historico = banco.pagamentosDaBarbearia(barbearia.id).filter((p) => p.id !== pagamento.id);
-  const pixConfigurado = !!(configPix.chave && configPix.nome && configPix.cidade);
-  const copiaECola = pixConfigurado
-    ? gerarPixCopiaECola({ ...configPix, valorCentavos: pagamento.valorCentavos, txid: pagamento.txid, descricao: `Agenda ${barbearia.nome}` })
-    : "";
+  // Site de leads: o Pix é o código fixo gerado no banco (PIX_FIXO). Um app só (dev) com chave própria gera o dele.
+  const copiaECola = soVenda() || !(configPix.chave && configPix.nome && configPix.cidade)
+    ? PIX_FIXO
+    : gerarPixCopiaECola({ ...configPix, valorCentavos: pagamento.valorCentavos, txid: pagamento.txid, descricao: `Agenda ${barbearia.nome}` });
+  const whatsComprovante = linkWhatsapp(WHATSAPP_PAGAMENTO, `Olá! Paguei o Pix do site da ${barbearia.nome}. Segue o comprovante.`);
   const qr = copiaECola ? await QRCode.toString(copiaECola, { type: "svg", margin: 1, width: 240 }) : "";
 
   // Conta nova que já pagou (ou disse que pagou): agora é com a equipe, que chama no WhatsApp.
@@ -162,7 +163,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       <h1>{barbearia.emMontagem ? (bemvindo ? "Último passo: o pagamento" : "Pagamento do seu site") : "Sua assinatura"}</h1>
       {barbearia.emMontagem && ativo ? (
         <aside className="aviso-novo">
-          Pague pelo Pix e mande o comprovante aqui embaixo. Depois disso, nossa equipe confere e chama você no WhatsApp
+          Pague pelo Pix e mande o comprovante no WhatsApp. Depois disso, nossa equipe confere e chama você no WhatsApp
           pra montar o site da {barbearia.nome} com as suas fotos e preços e colocar no ar.
         </aside>
       ) : soVenda() && !barbearia.emMontagem ? (
@@ -200,59 +201,31 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
       {contratacao && (
         <p className="suave">Depois, a mensalidade pra manter o site e a agenda é {reais(banco.plano.valorCentavos)} a cada {banco.plano.dias} dias.</p>
       )}
-      {!pixConfigurado ? (
-        // Falta PIX_CHAVE/PIX_NOME/PIX_CIDADE no .env do app: o cliente não fica sem saída.
-        contatoResponsavel() ? (
-          <div className="cartao">
-            <p>O Pix não carregou nesta página. Chame a gente no WhatsApp que a gente manda o Pix por lá e segue com o seu pedido.</p>
-            <a className="botao" href={`${contatoResponsavel()!.link}?text=${encodeURIComponent(`Olá! Quero pagar o site da ${barbearia.nome} (R$ ${(pagamento.valorCentavos / 100).toFixed(2).replace(".", ",")}). Pode me mandar o Pix?`)}`} target="_blank" rel="noopener noreferrer">Pedir o Pix no WhatsApp</a>
-          </div>
-        ) : <p>O Pix não carregou nesta página. Tente de novo em alguns minutos.</p>
-      ) : (
-        <div className="pix">
-          <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
-          <div>
-            {/* Quem compra está no próprio celular: o copia e cola vem primeiro; o QR é pra quem abriu no computador. */}
-            <p>1. <strong>No celular:</strong> toque em Copiar código do Pix, abra o app do seu banco e escolha <strong>Pix Copia e Cola</strong>.</p>
-            <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
-            <p className="suave pequeno">No computador? Escaneie o QR code com o app do banco.</p>
-            <details className="pix-codigo">
-              <summary className="suave pequeno">Ver o código do Pix</summary>
-              <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
-              <p className="suave pequeno">Identificador do pagamento: <code>{pagamento.txid}</code></p>
-            </details>
-            <p>2. Depois de pagar, mande o comprovante aqui. A gente confere em até 24 horas{barbearia.emMontagem ? ", e chama você no WhatsApp" : soVenda() ? "" : ", e você recebe um aviso no celular"}.</p>
-            {pagamento.status === "informado" && (
-              <p className="atribuicao">
-                ⏳ {pagamento.comprovante ? "Recebemos seu comprovante" : "Recebemos seu aviso"}
-                {pagamento.pagador ? ` (pagador: ${pagamento.pagador})` : ""}. Aguardando confirmação.
-              </p>
-            )}
-            {!pagamento.comprovante && (
-              <form action={jaPaguei} className="formulario">
-                <input type="hidden" name="id" value={pagamento.id} />
-                <label>
-                  Comprovante do Pix <small>(print da tela ou PDF)</small>
-                  <CampoFoto name="comprovante" accept="image/*,application/pdf" ladoMaximo={2400} />
-                </label>
-                {pagamento.status !== "informado" && <input name="pagador" placeholder="Nome no Pix, se for diferente do seu" aria-label="Nome no Pix, se for diferente do seu" maxLength={80} />}
-                <BotaoEnviar carregando="Enviando…">{pagamento.status === "informado" ? "Enviar comprovante" : "Já paguei"}</BotaoEnviar>
-              </form>
-            )}
-            <p className="suave pequeno">
-              {!barbearia.emMontagem && !soVenda() && <>Quer saber na hora? Ligue os avisos no <Link href="/app">painel</Link>.</>}
-              {configPix.whatsappAdmin && (
-                <>{" "}Problema com o Pix?{" "}
-                  <a target="_blank" rel="noopener noreferrer"
-                    href={linkWhatsapp(configPix.whatsappAdmin, `Olá! Estou com dúvida no pagamento da ${barbearia.nome} (identificador ${pagamento.txid}).`)}>
-                    Fale com a gente no WhatsApp
-                  </a>.
-                </>
-              )}
-            </p>
-          </div>
+      <div className="pix">
+        <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
+        <div>
+          {/* Quem compra está no próprio celular: o copia e cola vem primeiro; o QR é pra quem abriu no computador. */}
+          <p>1. Toque em <strong>Copiar código do Pix</strong>, abra o app do seu banco e escolha <strong>Pix Copia e Cola</strong>.</p>
+          <p style={{ marginTop: 8 }}><BotaoCopiar texto={copiaECola} rotulo="Copiar código do Pix" /></p>
+          <p className="suave pequeno">No computador? Escaneie o QR code com o app do banco.</p>
+          <details className="pix-codigo">
+            <summary className="suave pequeno">Ver o código do Pix</summary>
+            <textarea readOnly value={copiaECola} rows={4} aria-label="Pix copia e cola" />
+          </details>
+          <p style={{ marginTop: 16 }}>2. <strong>Pagou? Mande o comprovante no WhatsApp.</strong> A gente confere e monta o seu site em até 24 horas.</p>
+          <p style={{ marginTop: 8 }}>
+            <a className="botao" href={whatsComprovante} target="_blank" rel="noopener noreferrer">Mandar o comprovante no WhatsApp</a>
+          </p>
+          {pagamento.status === "informado" ? (
+            <p className="atribuicao">⏳ Recebemos seu aviso de pagamento. Aguardando confirmação.</p>
+          ) : (
+            <form action={jaPaguei} className="formulario">
+              <input type="hidden" name="id" value={pagamento.id} />
+              <BotaoEnviar className="botao-sec" carregando="Enviando…">Já paguei e mandei no WhatsApp</BotaoEnviar>
+            </form>
+          )}
         </div>
-      )}
+      </div>
 
       {historico.length > 0 && (
         <>

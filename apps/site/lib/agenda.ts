@@ -61,6 +61,15 @@ export function podeMexer(usuario: Usuario, a: { profissionalId: number } | unde
   return !!a && (!usuario.profissionalId || a.profissionalId === usuario.profissionalId);
 }
 
+/**
+ * Pix copia e cola fixo da assinatura (R$ 49,99), gerado no app do banco. Vale mais que a chave:
+ * a página mostra este código e o QR dele. Trocou o valor? Gere outro no banco e ponha em PIX_COPIA_E_COLA.
+ */
+export const PIX_FIXO = process.env.PIX_COPIA_E_COLA?.trim()
+  || "00020126360014BR.GOV.BCB.PIX0114+5555996184362520400005303986540549.995802BR5922Leandro Moraes Machado6009SAO PAULO62140510HmiZ65kELY6304B841";
+/** Pra onde vai o comprovante depois do Pix. */
+export const WHATSAPP_PAGAMENTO = (process.env.ADMIN_WHATSAPP?.replace(/\D/g, "") || "5555996184362");
+
 export const configPix = {
   chave: process.env.PIX_CHAVE ?? "",
   nome: process.env.PIX_NOME ?? "",
