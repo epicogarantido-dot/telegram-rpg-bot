@@ -16,6 +16,9 @@ export async function register() {
       .catch((erro) => console.error("Não deu pra preparar a barbearia do app:", erro));
     return;
   }
+  // Site de leads sem o que a venda precisa: avisa no console da Square logo na subida.
+  const faltam = ["PIX_CHAVE", "PIX_NOME", "PIX_CIDADE", "ADMIN_WHATSAPP", "PAINEL_SENHA"].filter((v) => !process.env[v]?.trim());
+  if (faltam.length) console.warn(`ATENÇÃO: faltam variáveis de ambiente: ${faltam.join(", ")}. Sem elas o Pix da assinatura e o contato não aparecem.`);
   const { criarSitesDeExemplo, sitesDeExemplo } = await import("@/lib/exemplos");
   if (Object.keys(sitesDeExemplo()).length > 0) return;
   criarSitesDeExemplo()

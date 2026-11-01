@@ -201,12 +201,13 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
         <p className="suave">Depois, a mensalidade pra manter o site e a agenda é {reais(banco.plano.valorCentavos)} a cada {banco.plano.dias} dias.</p>
       )}
       {!pixConfigurado ? (
-        <p>
-          Pagamento ainda não configurado.{" "}
-          {contatoResponsavel()
-            ? <a href={`${contatoResponsavel()!.link}?text=${encodeURIComponent(`Olá! Quero pagar o site da ${barbearia.nome}, mas o Pix não apareceu.`)}`} target="_blank" rel="noopener noreferrer">Fale com a gente no WhatsApp</a>
-            : "Fale com quem te vendeu o site."}
-        </p>
+        // Falta PIX_CHAVE/PIX_NOME/PIX_CIDADE no .env do app: o cliente não fica sem saída.
+        contatoResponsavel() ? (
+          <div className="cartao">
+            <p>O Pix não carregou nesta página. Chame a gente no WhatsApp que a gente manda o Pix por lá e segue com o seu pedido.</p>
+            <a className="botao" href={`${contatoResponsavel()!.link}?text=${encodeURIComponent(`Olá! Quero pagar o site da ${barbearia.nome} (R$ ${(pagamento.valorCentavos / 100).toFixed(2).replace(".", ",")}). Pode me mandar o Pix?`)}`} target="_blank" rel="noopener noreferrer">Pedir o Pix no WhatsApp</a>
+          </div>
+        ) : <p>O Pix não carregou nesta página. Tente de novo em alguns minutos.</p>
       ) : (
         <div className="pix">
           <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
