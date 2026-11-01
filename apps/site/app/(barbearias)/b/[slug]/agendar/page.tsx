@@ -25,6 +25,8 @@ const RASCUNHO = "agendar_rascunho";
  * - Passo 1 são os grupos (Barba, Cabelo, Sobrancelha, Pigmentação, Platinado, Acabamento): tocar abre
  *   os serviços do grupo (`grupo`), escolher volta pros grupos com a frase do que vai ser feito e o valor.
  *   A escolha anda em `sel`; "Escolher o horário" vira `servico` (o corte, se tiver) + `extra`.
+ * - Barbearia grande: o cliente escolhe com quem (já nos grupos, com foto) e o período (`periodo`); o passo 2
+ *   mostra o primeiro horário livre e, em "qualquer um", o nome de quem atende em cada horário.
  * Tudo por link (funciona sem JavaScript) e cada passo é uma tela.
  */
 type Busca = {
@@ -37,7 +39,16 @@ type Busca = {
   /** Passo 1: serviços escolhidos até agora (um por serviço) e o grupo aberto. */
   sel?: string | string[];
   grupo?: string;
+  /** Passo 2, barbearia cheia: só manhã, tarde ou noite. */
+  periodo?: string;
 };
+
+/** Filtro de período do passo 2 (pra quem só pode num pedaço do dia). */
+const PERIODOS = [
+  { id: "manha", nome: "Manhã", de: "00:00", ate: "12:00" },
+  { id: "tarde", nome: "Tarde", de: "12:00", ate: "18:00" },
+  { id: "noite", nome: "Noite", de: "18:00", ate: "24:00" },
+] as const;
 
 /** `extra` vem uma vez por adicional; vira lista de ids. */
 function lerExtras(extra: string | string[] | undefined): number[] {
@@ -166,6 +177,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
     ? banco.servicos(b.id).find((s) => s.id === remarcando.servicoId)
     : servicos.length === 1 ? servicos[0] : servicos.find((s) => String(s.id) === sp.servico);
   const filtro = profissionais.find((p) => String(p.id) === sp.profissional);
+  const periodo = PERIODOS.find((x) => x.id === sp.periodo);
   const hoje = agoraNoFuso(b.fuso).slice(0, 10);
   const base = `/b/${slug}/agendar`;
 
@@ -184,7 +196,7 @@ export default async function Agendar({ params, searchParams }: { params: Promis
 
   const link = (extra: Busca) => {
     const tudo: Busca = {
-      servico: servico && String(servico.id), profissional: filtro && String(filtro.id), data: sp.data, remarcar: remarcando && sp.remarcar,
+      servico: servico && String(servico.id), profissional: filtro && String(filtro.id), data: sp.data, remarcar: remarcando && sp.remarcar, periodo: periodo?.id,
       ad: possiveis.length && respondeu ? "1" : undefined, extra: adicionais.map((a) => String(a.id)), foto: fotoEscolhida?.arquivo, ...extra,
     };
     const q = new URLSearchParams();
@@ -313,6 +325,11 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <p className="b-dica">Toque num grupo, escolha o serviço e volte aqui pra somar o que quiser.</p>
         )}
         {erroVisivel && <p className="erro" role="alert">{erroVisivel}</p>}
+        {profissionais.length > 1 && !(sp.com && sp.hora) && (
+          // Barbearia com vários barbeiros: quem já tem o seu escolhe antes, e o horário mostra só a agenda dele.
+          <EscolherBarbeiro titulo="Com quem você quer?" profissionais={profissionais} atual={filtro?.id}
+            link={(id) => { const u = new URL(urlGrupos(ids), "http://x"); if (id) u.searchParams.set("profissional", String(id)); else u.searchParams.delete("profissional"); return `${u.pathname}${u.search}`; }} />
+        )}
         <ul className="b-vitrine-grade b-grupos">
           {grupos.map((g) => {
             const f = fotoDe.get(g.lista[0]!.id);
@@ -487,9 +504,16 @@ export default async function Agendar({ params, searchParams }: { params: Promis
   }
 
   // ---------- Passo 3: dia e horário ----------
-  const dias = Array.from({ length: DIAS_A_FRENTE }, (_, i) => somarDias(hoje, i))
+  const diasTodos = Array.from({ length: DIAS_A_FRENTE }, (_, i) => somarDias(hoje, i))
     .map((d) => ({ d, vagas: vagasDoDia(banco, b.id, servico.id, ids, d, remarcando?.id, duracao), aberto: banco.expedientes(b.id).has(diaDaSemana(d)) }))
     .filter((x) => x.aberto);
+  const noPeriodo = (h: string, x: (typeof PERIODOS)[number] | undefined) => !x || (h >= x.de && h < x.ate);
+  // Só oferece o período que tem vaga em algum dia (barbearia que fecha às 18h não mostra "Noite").
+  const periodosComVaga = PERIODOS.filter((x) => diasTodos.some((d) => d.vagas.some(([h]) => noPeriodo(h, x))));
+  const dias = diasTodos.map((x) => ({ ...x, vagas: x.vagas.filter(([h]) => noPeriodo(h, periodo)) }));
+  const primeiroDia = dias.find((x) => x.vagas.length > 0);
+  const primeiro = primeiroDia && { d: primeiroDia.d, h: primeiroDia.vagas[0]![0], p: primeiroDia.vagas[0]![1] };
+  const nomeDoProf = (id: number) => profissionais.find((p) => p.id === id)?.nome.split(" ")[0] ?? "";
   const escolhido = dias.find((x) => x.d === data) ?? dias.find((x) => x.vagas.length > 0);
   const rotuloDia = (d: Data) => (d === hoje ? "Hoje" : d === somarDias(hoje, 1) ? "Amanhã" : nomeDia(diaDaSemana(d)).slice(0, 3));
 
@@ -521,14 +545,22 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       )}
 
       {profissionais.length > 1 && (
-        <nav className="b-chips" aria-label="Profissional">
-          <Link href={link({ profissional: undefined })} className={`opcao ${!filtro ? "escolhida" : ""}`} aria-current={!filtro ? "true" : undefined}>Qualquer um</Link>
-          {profissionais.map((p) => (
-            <Link key={p.id} href={link({ profissional: String(p.id) })} className={`opcao ${filtro?.id === p.id ? "escolhida" : ""}`} aria-current={filtro?.id === p.id ? "true" : undefined}>
-              {p.nome.split(" ")[0]}
-            </Link>
+        <EscolherBarbeiro titulo="Com quem?" profissionais={profissionais} atual={filtro?.id}
+          link={(id) => link({ profissional: id ? String(id) : undefined, data: undefined })} />
+      )}
+      {periodosComVaga.length > 1 && (
+        <nav className="b-chips b-periodos" aria-label="Período">
+          <Link href={link({ periodo: undefined })} className={`opcao ${!periodo ? "escolhida" : ""}`} aria-current={!periodo ? "true" : undefined}>Todas</Link>
+          {periodosComVaga.map((x) => (
+            <Link key={x.id} href={link({ periodo: x.id })} className={`opcao ${periodo?.id === x.id ? "escolhida" : ""}`} aria-current={periodo?.id === x.id ? "true" : undefined}>{x.nome}</Link>
           ))}
         </nav>
+      )}
+      {primeiro && (
+        <Link className="b-primeiro" href={link({ data: primeiro.d, hora: primeiro.h, com: String(primeiro.p) })}>
+          <span>Primeiro horário livre{filtro ? ` com ${filtro.nome.split(" ")[0]}` : ""}{periodo ? ` de ${periodo.nome.toLowerCase()}` : ""}</span>
+          <strong>{rotuloDia(primeiro.d) === "Hoje" || rotuloDia(primeiro.d) === "Amanhã" ? rotuloDia(primeiro.d).toLowerCase() : formatarData(primeiro.d)} às {primeiro.h}{!filtro && profissionais.length > 1 ? ` com ${nomeDoProf(primeiro.p)}` : ""}</strong>
+        </Link>
       )}
 
       <nav className="b-dias" aria-label="Dia">
@@ -552,12 +584,12 @@ export default async function Agendar({ params, searchParams }: { params: Promis
           <h2 className="b-dia-titulo">{formatarData(escolhido.d)}</h2>
           <ul className="b-horas">
             {escolhido.vagas.map(([h, p]) => (
-              <li key={h}><Link href={link({ data: escolhido.d, hora: h, com: String(p) })}>{h}</Link></li>
+              <li key={h}><Link href={link({ data: escolhido.d, hora: h, com: String(p) })}>{h}{!filtro && profissionais.length > 1 && <small>{nomeDoProf(p)}</small>}</Link></li>
             ))}
           </ul>
         </>
       ) : (
-        <p>Sem horários livres nos próximos {DIAS_A_FRENTE} dias.{b.telefone && <> <a href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">Fale com a barbearia no WhatsApp</a>.</>}</p>
+        <p>Sem horários livres nos próximos {DIAS_A_FRENTE} dias{filtro || periodo ? " com esse filtro" : ""}.{(filtro || periodo) && <> <Link href={link({ profissional: undefined, periodo: undefined })}>Ver todos os horários</Link>.</>}{b.telefone && <> <a href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">Fale com a barbearia no WhatsApp</a>.</>}</p>
       )}
     </div>
   );
@@ -572,3 +604,33 @@ function Cabeca({ rotulo, titulo }: { rotulo: string; titulo: string }) {
   );
 }
 
+
+/** Escolher o barbeiro com foto (ou inicial): "Qualquer um" primeiro. Barbearia grande filtra pela agenda de um só. */
+function EscolherBarbeiro({ titulo, profissionais, atual, link }: {
+  titulo: string; profissionais: { id: number; nome: string; fotoArquivo?: string }[]; atual?: number; link: (id?: number) => string;
+}) {
+  return (
+    <nav className="b-barbeiros" aria-label={titulo}>
+      <p className="b-barbeiros-titulo">{titulo}</p>
+      <ul>
+        <li>
+          <Link href={link()} className={!atual ? "escolhido" : ""} aria-current={!atual ? "true" : undefined}>
+            <span className="b-barbeiro-foto b-barbeiro-todos" aria-hidden>+</span>
+            <span>Qualquer um</span>
+          </Link>
+        </li>
+        {profissionais.map((p) => (
+          <li key={p.id}>
+            <Link href={link(p.id)} className={atual === p.id ? "escolhido" : ""} aria-current={atual === p.id ? "true" : undefined}>
+              {p.fotoArquivo
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img className="b-barbeiro-foto" src={urlFoto(p.fotoArquivo, "p")} alt="" width={56} height={56} loading="lazy" />
+                : <span className="b-barbeiro-foto" aria-hidden>{p.nome.charAt(0).toUpperCase()}</span>}
+              <span>{p.nome.split(" ")[0]}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
