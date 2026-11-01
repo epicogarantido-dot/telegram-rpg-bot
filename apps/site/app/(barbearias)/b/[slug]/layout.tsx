@@ -14,11 +14,21 @@ import { TEMAS } from "@aprenda/agenda";
 import { soEntrega, soVenda } from "@/lib/modo";
 import { Medir } from "@/componentes/ContarOrigem";
 import { contatoResponsavel } from "@/lib/contato";
+import { barbeariaInstalavel, versaoDoIcone } from "@/lib/app-instalavel";
+import { InstalarApp } from "@/componentes/InstalarApp";
 
 /** Demonstração e site em montagem não vão pro Google (nem o site, nem as páginas internas). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const b = obterAgenda().barbeariaPorSlug((await params).slug);
-  return b?.demoAte || b?.emMontagem ? { robots: { index: false, follow: false } } : {};
+  if (b?.demoAte || b?.emMontagem) return { robots: { index: false, follow: false } };
+  // SaaS: o cliente pode pôr o site da barbearia na tela do celular, como app.
+  const app = barbeariaInstalavel();
+  if (!b || app?.id !== b.id) return {};
+  return {
+    manifest: "/manifest-site.webmanifest",
+    appleWebApp: { capable: true, title: b.nome, statusBarStyle: "black-translucent" },
+    icons: { apple: `/icone-app/site-180.png?v=${versaoDoIcone(b)}` },
+  };
 }
 
 /**
@@ -116,6 +126,7 @@ export default async function LayoutSiteBarbearia({ children, params }: { childr
           </section>
         )}
       </main>
+      {noAr && barbeariaInstalavel()?.id === b.id && <InstalarApp tipo="site" nome={b.nome} />}
       <footer className="b-rodape">
         <span>{b.nome}{b.cidade ? ` · ${b.cidade}` : ""}</span>
         {/* Site de cliente não leva propaganda nossa: o convite pra ter um site assim fica só nos exemplos e prévias. */}

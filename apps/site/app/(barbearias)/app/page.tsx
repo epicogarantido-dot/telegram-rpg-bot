@@ -17,6 +17,7 @@ import { SinalDoHorario } from "@/componentes/barbearia/SinalDoHorario";
 import { GradeSemana } from "@/componentes/barbearia/GradeSemana";
 import { GradeDia } from "@/componentes/barbearia/GradeDia";
 import { AbrirAncora } from "@/componentes/barbearia/AbrirAncora";
+import { InstalarApp } from "@/componentes/InstalarApp";
 
 export const metadata = { title: "Minha agenda", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -266,6 +267,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         {verSemana ? <GradeSemana barbearia={barbearia} inicio={data} so={meu ?? deSemana} /> : <GradeDia barbearia={barbearia} data={data} so={meu} />}
         {!verSemana && <p className="suave pequeno">Toque num horário livre (+) pra marcar um cliente com aquele profissional.</p>}
       </section>
+      {soEntrega() && <InstalarApp tipo="painel" nome={barbearia.nome} />}
 
       {/* O dia primeiro: é o que o barbeiro abre o painel pra ver. O resto vem depois. */}
       <nav className="navegacao" id="dia">

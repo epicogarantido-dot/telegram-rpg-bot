@@ -1201,3 +1201,11 @@ html:has(.site-b:is([data-tema="silencioso"], [data-tema="atemporal"])) body { b
 .b-pedido-lista a { font-size: 13px; color: var(--suave); }
 .b-pedido-total { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--borda); font-size: 1.05rem; }
 .b-grupos .b-vitrine-texto small { display: -webkit-box; }
+
+/* Salvar o site na tela inicial (app do cliente, SaaS). */
+.site-b .b-instalar { display: grid; gap: 10px; margin: 0 auto; padding: 20px 16px; max-width: 640px; text-align: center; color: var(--texto); }
+.site-b .b-instalar p { margin: 0; color: var(--suave); }
+.site-b .b-instalar-acoes { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; }
+.site-b .b-instalar-fechar { background: none; border: 0; color: var(--suave); text-decoration: underline; cursor: pointer; font: inherit; }
+.site-b .b-instalar-passos { margin: 0 auto; padding-left: 20px; text-align: left; display: grid; gap: 6px; color: var(--texto); }
+.site-b .b-instalar-passos svg { vertical-align: -2px; }

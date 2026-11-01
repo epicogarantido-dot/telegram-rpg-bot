@@ -11,14 +11,26 @@ import { WhatsFixo } from "@/componentes/WhatsFixo";
 import "./painel.css";
 import "./painel-temas.css";
 import { barbeariaDoApp } from "@/lib/barbearia-do-app";
+import { barbeariaInstalavel, versaoDoIcone } from "@/lib/app-instalavel";
 import "../../(cursos)/imperial.css";
 
-// O painel pode ser instalado no celular como app (avisos de horário novo).
-export const metadata = {
-  manifest: "/painel.webmanifest",
-  appleWebApp: { capable: true, title: "Agenda", statusBarStyle: "default" as const },
-  icons: { apple: "/painel/icone-192.png" },
-};
+// O painel pode ser instalado no celular como app (avisos de horário novo). No SaaS, com o nome,
+// a cor e a foto da barbearia (lib/app-instalavel.ts).
+export async function generateMetadata() {
+  const b = barbeariaInstalavel();
+  if (!b) {
+    return {
+      manifest: "/painel.webmanifest",
+      appleWebApp: { capable: true, title: "Agenda", statusBarStyle: "default" as const },
+      icons: { apple: "/painel/icone-192.png" },
+    };
+  }
+  return {
+    manifest: "/manifest-painel.webmanifest",
+    appleWebApp: { capable: true, title: "Agenda", statusBarStyle: "black-translucent" as const },
+    icons: { apple: `/icone-app/painel-180.png?v=${versaoDoIcone(b)}` },
+  };
+}
 
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
   const banco = obterAgenda();

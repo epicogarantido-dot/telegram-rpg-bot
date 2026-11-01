@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { CalendarDays } from "lucide-react";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
+import { InstalarApp } from "@/componentes/InstalarApp";
+import { soEntrega } from "@/lib/modo";
 import { exigirAcessoAtivo, obterAgenda } from "@/lib/agenda";
 
 export const metadata = { title: "Agenda no celular", robots: { index: false } };
@@ -43,6 +45,7 @@ export default async function Calendario() {
     <>
       <p><Link href="/app">← Voltar pra agenda</Link></p>
       <h1>Agenda no celular</h1>
+      {soEntrega() && <InstalarApp tipo="painel" nome={barbearia.nome} />}
       <p className="suave">
         Seus horários aparecem no calendário do celular, junto com o resto da sua vida, com lembrete 15 minutos antes de cada cliente.
         Cada horário traz o nome do cliente e um link pra confirmar com ele no WhatsApp. Assine uma vez; horário novo aparece e cancelado some sozinho.

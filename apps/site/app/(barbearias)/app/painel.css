@@ -294,3 +294,9 @@
 .grade-horario.curto { padding-block: 1px; justify-content: center; }
 .grade-horario.curto span { display: none; }
 .grade-horario.curto strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Instalar o app da agenda (SaaS). */
+.instalar-app { display: grid; gap: 10px; margin: 16px 0; }
+.instalar-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.instalar-acoes button { display: inline-flex; align-items: center; gap: 6px; }
+.instalar-passos { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.instalar-passos svg { vertical-align: -2px; }
