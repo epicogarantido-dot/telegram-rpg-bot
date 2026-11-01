@@ -35,14 +35,15 @@ const NO_SITE = [
 
 /** Telas reais do sistema (tiradas de um site de teste em public/funcionalidades/), na ordem do uso. */
 const TELAS = [
-  { arquivo: "agendar-grupos", titulo: "O cliente escolhe por grupo", texto: "Barba, cabelo, sobrancelha, pigmentação, platinado: cada grupo com foto e preço a partir de.", alt: "Tela com os grupos de serviço da barbearia" },
+  { arquivo: "agendar-grupos", titulo: "Escolhe o barbeiro e o serviço", texto: "Com quem ele quer, com foto de cada barbeiro, e os grupos de serviço com o preço a partir de.", alt: "Tela com os grupos de serviço da barbearia" },
   { arquivo: "agendar-cabelo", titulo: "Cada corte com foto e preço", texto: "Ele abre o grupo, vê os cortes da sua barbearia e toca no que quer.", alt: "Tela com os cortes do grupo Cabelo" },
   { arquivo: "agendar-pedido", titulo: "Soma tudo e mostra o total", texto: "Corte, barba e sobrancelha juntos, com o tempo e o valor certos antes de marcar.", alt: "Tela com o resumo do que vai ser feito e o total" },
-  { arquivo: "agendar-horario", titulo: "Só horário livre de verdade", texto: "Ele vê os dias e os horários que sobram e marca na hora, sem te chamar.", alt: "Tela de escolher o dia e o horário" },
+  { arquivo: "agendar-horario", titulo: "Só horário livre de verdade", texto: "Filtra por barbeiro e por manhã, tarde ou noite, e já vê o primeiro horário livre. Marca na hora, sem te chamar.", alt: "Tela de escolher o dia e o horário" },
   { arquivo: "agendado", titulo: "Lembrete no celular dele", texto: "Põe na agenda do celular e, se precisar, troca ou cancela pelo link.", alt: "Tela de horário marcado com o botão de adicionar à agenda" },
-  { arquivo: "painel-semana", titulo: "A semana inteira numa tabela", texto: "Horários de um lado, dias do outro. Cada cliente no lugar e no tamanho certos, e o que já passou fica apagado.", alt: "Agenda da semana em tabela, com os horários marcados de cada dia" },
+  { arquivo: "painel-agenda", titulo: "O dia de cada barbeiro", texto: "Um barbeiro em cada coluna, cada cliente no horário certo. Tocou num horário vazio, já marca quem chegou.", alt: "Agenda do dia com uma coluna por barbeiro" },
+  { arquivo: "painel-acesso", titulo: "Cada barbeiro na agenda dele", texto: "Uma senha só. Na entrada, escolhe quem vai usar: o dono vê tudo, cada barbeiro vê só os clientes dele.", alt: "Tela de escolher entre o dono e cada barbeiro" },
+  { arquivo: "painel-semana", titulo: "A semana inteira numa tabela", texto: "Horários de um lado, dias do outro, um barbeiro por vez. Cada cliente no lugar e no tamanho certos.", alt: "Agenda da semana em tabela, com os horários marcados de cada dia" },
   { arquivo: "painel-agendados", titulo: "Confirma cada cliente no WhatsApp", texto: "A lista de quem vem nos próximos dias. Um toque abre o seu WhatsApp com a mensagem pronta pro cliente.", alt: "Lista de agendados com o botão verde Confirmar" },
-  { arquivo: "painel-agenda", titulo: "Sua agenda do dia", texto: "Quem vem, o serviço e a foto do corte que ele escolheu. O painel fica com as cores do seu estilo.", alt: "Painel com os horários do dia" },
   { arquivo: "painel-calendario", titulo: "No calendário do seu celular", texto: "Os horários aparecem no iPhone ou no Google, com lembrete antes de cada cliente.", alt: "Tela de ligar a agenda no calendário do celular" },
   { arquivo: "painel-fotos", titulo: "Suas fotos, por tipo de corte", texto: "Degradê, navalhado, barba, antes e depois: você troca pelo celular.", alt: "Painel de fotos do site" },
   { arquivo: "painel-servicos", titulo: "Serviços, tempos e preços", texto: "Uma linha por serviço, com o tempo e o preço. Toca, muda e salva: mudou no site na hora.", alt: "Painel com os serviços e preços" },
