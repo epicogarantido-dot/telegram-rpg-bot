@@ -78,7 +78,7 @@ npm run pacote:square   # zip pronto pra Square Cloud (docs/deploy-square.md)
 - **Licença antes de tudo.** Nenhum curso entra sem licença aberta que permita tradução (ver `docs/licencas.md` e a skill `adicionar-fonte`). Grátis ≠ aberto.
 - Toda página de curso mostra a atribuição (`fonte.atribuicao`). Não remova.
 - Cursos CC BY-NC: nada de anúncio ou cobrança nessas páginas (`permiteUsoComercial`).
-- Sem bot e sem disparo em massa. Convites de prospecção saem do painel, enviados por uma pessoa, um a um, com limite diário.
+- Sem bot e sem disparo em massa. Convites de prospecção saem do painel, enviados por uma pessoa, um a um (sem limite diário desde 01/11/2026, pedido do dono; o painel só conta as do dia e avisa a partir de 30). O botão de WhatsApp do painel (`componentes/painel/FormWhats.tsx`) anota o envio, recebe o link do servidor e abre o WhatsApp sem travar o botão.
 - Todo convite identifica o remetente e oferece SAIR; opt-out é permanente (`bloqueados`).
 - Dados de Maps só pela Places API oficial; nunca raspar o site do Google Maps.
 - Nunca commitar `.env` nem sessão de WhatsApp.

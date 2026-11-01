@@ -48,6 +48,4 @@ export const config = {
   /** Grupo pra mensagem "Site + grupo": só se o link de verdade estiver no .env. */
   linkGrupo: process.env.COMUNIDADE_LINK && !process.env.COMUNIDADE_LINK.includes("SEU-LINK") ? process.env.COMUNIDADE_LINK : undefined,
   nichoPlural: process.env.NICHO_PLURAL ?? "barbeiros",
-  /** Contatos manuais por dia. Passar disso em número novo é pedir banimento. */
-  limiteDiario: Number(process.env.LIMITE_DIARIO ?? 20),
 };

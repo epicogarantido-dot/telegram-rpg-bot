@@ -8,6 +8,7 @@ import {
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
 import { criarDemonstracaoParaLead, linkDaDemonstracao } from "@/lib/demonstracao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
+import { FormWhats } from "@/componentes/painel/FormWhats";
 
 /* Cartão de um lead no painel (/painel e /painel/lista): etiqueta, o que fez no site e as ações de cada etapa. */
 
@@ -32,7 +33,7 @@ type Envio = "primeira" | "lembrete" | "segunda-whatsapp" | "segunda-chegada" | 
  * Abre o WhatsApp com a mensagem da etapa e já avança o lead. Quem envia é a pessoa, no
  * WhatsApp dela; o painel só monta o texto e anota (ver docs/abordagem.md).
  */
-async function enviar(form: FormData) {
+async function enviar(form: FormData): Promise<string | undefined> {
   "use server";
   await exigirLogin();
   const banco = obterBanco();
@@ -43,7 +44,7 @@ async function enviar(form: FormData) {
   let status: Status | undefined;
   switch (tipo) {
     case "primeira":
-      if (lead.status !== "novo" || banco.contatadosHoje() >= config.limiteDiario) return;
+      if (lead.status !== "novo") return;
       texto = mensagemPrimeiroContato(lead, config, { detalhe: String(form.get("detalhe") ?? ""), onde: String(form.get("onde") ?? "") });
       status = "contatado";
       break;
@@ -72,7 +73,9 @@ async function enviar(form: FormData) {
   }
   if (!texto) return;
   if (status && status !== lead.status) banco.marcar(lead.placeId, status);
-  redirect(linkWhatsapp(lead.telefone, texto));
+  revalidatePath("/painel", "layout");
+  // Devolve o link em vez de redirecionar: o botão não fica preso carregando (ver FormWhats).
+  return linkWhatsapp(lead.telefone, texto);
 }
 
 async function marcar(form: FormData) {
@@ -105,11 +108,11 @@ function Botao({ lead, status, children, perigo }: { lead: Lead; status: Status;
 
 function Enviar({ lead, tipo, children, principal }: { lead: Lead; tipo: Envio; children: React.ReactNode; principal?: boolean }) {
   return (
-    <form action={enviar}>
+    <FormWhats acao={enviar}>
       <input type="hidden" name="id" value={lead.placeId} />
       <input type="hidden" name="tipo" value={tipo} />
-      <BotaoEnviar className={principal ? "botao" : "botao-sec"}>{children}</BotaoEnviar>
-    </form>
+      <BotaoEnviar className={principal ? "botao" : "botao-sec"} carregando="Abrindo o WhatsApp…">{children}</BotaoEnviar>
+    </FormWhats>
   );
 }
 
@@ -142,7 +145,7 @@ function diasParaLembrete(lead: Lead, agora: Date): number {
   return Math.max(0, Math.ceil(DIAS_ATE_LEMBRETE - desde));
 }
 
-export function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeContatar: boolean; agora: Date }) {
+export function AcoesDoLead({ lead, agora }: { lead: Lead; agora: Date }) {
   const celular = !!lead.telefone && ehCelularBR(lead.telefone);
   const passo = proximoPasso(lead, agora);
   const demo = lead.demoSlug && lead.demoConvite ? linkDaDemonstracao(lead.demoSlug, lead.demoConvite) : undefined;
@@ -152,8 +155,8 @@ export function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeCon
   }
   return (
     <div className="etapas-lead">
-      {lead.status === "novo" && (podeContatar ? (
-        <form action={enviar} className="primeira-mensagem">
+      {lead.status === "novo" && (
+        <FormWhats acao={enviar} className="primeira-mensagem">
           <input type="hidden" name="id" value={lead.placeId} />
           <input type="hidden" name="tipo" value="primeira" />
           <label>
@@ -169,9 +172,9 @@ export function AcoesDoLead({ lead, podeContatar, agora }: { lead: Lead; podeCon
             Um detalhe real que você viu <small>(opcional)</small>
             <input name="detalhe" placeholder="do degradê do último post" maxLength={80} />
           </label>
-          <BotaoEnviar className="botao">Abrir 1ª mensagem no WhatsApp</BotaoEnviar>
-        </form>
-      ) : <small>Limite de hoje atingido. Este fica pra amanhã.</small>)}
+          <BotaoEnviar className="botao" carregando="Abrindo o WhatsApp…">Abrir 1ª mensagem no WhatsApp</BotaoEnviar>
+        </FormWhats>
+      )}
 
       {(lead.status === "contatado" || lead.status === "lembrete") && (
         <p className="situacao">

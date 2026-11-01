@@ -19,7 +19,6 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
   const resumo = banco.resumo({ cidade, uf });
   const filtro = (extra: Record<string, string>) => `/painel?${new URLSearchParams({ ...extra, ...(cidade ? { cidade } : {}), ...(uf ? { uf } : {}) })}`;
   const hoje = banco.contatadosHoje();
-  const podeContatar = hoje < config.limiteDiario;
   const inscricoes = banco.inscricoes();
 
   return (
@@ -27,8 +26,8 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       <p><strong>Leads</strong> · <a href="/painel/lista">Pra mandar</a> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Vendas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
       <p>
-        Primeiras mensagens hoje: <strong>{hoje}/{config.limiteDiario}</strong>
-        {!podeContatar && " — limite do dia atingido. Volte amanhã: número que manda muito pra quem não responde é limitado ou banido."}
+        Primeiras mensagens hoje: <strong>{hoje}</strong>
+        {hoje >= 30 && " — muita mensagem pra quem ainda não te conhece pode limitar o seu número. Vá com calma."}
       </p>
       {pendentes.length > 0 && !sp.hoje && (
         <p className="cartao"><strong>{pendentes.length} lembrete(s) ou encerramento(s) pra hoje.</strong> <a href={filtro({ hoje: "1" })}>Ver só esses</a></p>
@@ -85,7 +84,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
                 {l.observacao && <><br /><small>📝 {l.observacao}</small></>}
                 <NoSite lead={l} agora={agora} />
               </div>
-              <AcoesDoLead lead={l} podeContatar={podeContatar} agora={agora} />
+              <AcoesDoLead lead={l} agora={agora} />
             </div>
           );
         })}

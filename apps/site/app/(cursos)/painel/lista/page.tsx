@@ -38,7 +38,6 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
   const mandadas = todos.filter((l) => l.status !== "novo").length;
   const leads = todos.filter((l) => ver === "todas" || (ver === "falta" ? l.status === "novo" : l.status !== "novo"));
   const hoje = banco.contatadosHoje();
-  const podeContatar = hoje < config.limiteDiario;
   const url = (extra: Record<string, string>) => `/painel/lista?${new URLSearchParams({ ...(atual ? { lista: atual.nome } : {}), ...extra })}`;
 
   return (
@@ -54,8 +53,8 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
           )}
           <p><strong>{atual.titulo}</strong>: {mandadas} de {todos.length} já receberam a 1ª mensagem.</p>
           <p>
-            Hoje: <strong>{hoje}/{config.limiteDiario}</strong>
-            {podeContatar ? " primeiras mensagens." : " — limite do dia atingido. Volte amanhã: número que manda muito pra quem não responde é limitado ou banido."}
+            Hoje: <strong>{hoje}</strong> primeiras mensagens.
+            {hoje >= 30 && " Muita mensagem pra quem ainda não te conhece pode limitar o seu número: vá com calma."}
           </p>
           <p><small>Toque em "Abrir 1ª mensagem no WhatsApp": abre a conversa com o texto pronto e você só envia. Uma por vez, com calma. Quem responder segue pelos botões do cartão.</small></p>
           <p>
@@ -77,7 +76,7 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
                     {l.endereco && <> · {l.endereco}</>}
                   </small>
                 </div>
-                <AcoesDoLead lead={l} podeContatar={podeContatar} agora={new Date()} />
+                <AcoesDoLead lead={l} agora={new Date()} />
               </div>
             ))}
             {leads.length === 0 && <p>{ver === "falta" ? "Todas já receberam a 1ª mensagem." : "Nada aqui ainda."}</p>}
