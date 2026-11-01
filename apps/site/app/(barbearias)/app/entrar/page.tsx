@@ -65,6 +65,8 @@ async function entrarComSenha(form: FormData) {
 }
 
 export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+  // Site de leads: não tem mais "Ver o meu pedido". Quem já pediu fala com a gente no WhatsApp.
+  if (soVenda()) redirect("/app/cadastro");
   const { erro } = await searchParams;
   const contato = contatoResponsavel();
   const esqueceu = (

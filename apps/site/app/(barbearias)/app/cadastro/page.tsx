@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { contatoResponsavel } from "@/lib/contato";
@@ -120,7 +119,6 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
         <button type="submit">{plano.testeDias > 0 ? "Começar" : "Continuar para o pagamento"}</button>
         {soVenda() && plano.testeDias === 0 && <small className="suave">No próximo passo aparece o Pix de {reais(plano.adesaoCentavos || plano.valorCentavos)}. Nada é cobrado agora.</small>}
       </form>
-      <p className="suave">Já fez o pedido? <Link href="/app/entrar">Ver o meu pedido</Link></p>
     </>
   );
 }

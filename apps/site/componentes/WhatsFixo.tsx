@@ -29,7 +29,8 @@ function useContato() {
 export function WhatsFixo() {
   const caminho = usePathname();
   const contato = useContato();
-  if (!contato || caminho.startsWith("/painel")) return null;
+  // No pagamento já tem o botão "Falar com alguém no WhatsApp": um só na tela.
+  if (!contato || caminho.startsWith("/painel") || caminho.startsWith("/app/assinatura")) return null;
   const { pagina, texto } = contexto(caminho);
   return (
     <a className="whats-fixo" href={`https://wa.me/${contato.numero}?text=${encodeURIComponent(texto)}`} target="_blank" rel="noopener noreferrer"

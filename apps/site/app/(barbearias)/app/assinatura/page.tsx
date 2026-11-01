@@ -102,7 +102,7 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
   const copiaECola = soVenda() || !(configPix.chave && configPix.nome && configPix.cidade)
     ? PIX_FIXO
     : gerarPixCopiaECola({ ...configPix, valorCentavos: pagamento.valorCentavos, txid: pagamento.txid, descricao: `Agenda ${barbearia.nome}` });
-  const whatsComprovante = linkWhatsapp(WHATSAPP_PAGAMENTO, `Olá! Paguei o Pix do site da ${barbearia.nome}. Segue o comprovante.`);
+  const whatsComprovante = linkWhatsapp(WHATSAPP_PAGAMENTO, `Olá! Fiz o pedido do site da ${barbearia.nome} e paguei o Pix. Segue o comprovante.`);
   const qr = copiaECola ? await QRCode.toString(copiaECola, { type: "svg", margin: 1, width: 240 }) : "";
 
   // Conta nova que já pagou (ou disse que pagou): agora é com a equipe, que chama no WhatsApp.
@@ -214,16 +214,8 @@ export default async function Assinatura({ searchParams }: { searchParams: Promi
           </details>
           <p style={{ marginTop: 16 }}>2. <strong>Pagou? Mande o comprovante no WhatsApp.</strong> A gente confere e monta o seu site em até 24 horas.</p>
           <p style={{ marginTop: 8 }}>
-            <a className="botao" href={whatsComprovante} target="_blank" rel="noopener noreferrer">Mandar o comprovante no WhatsApp</a>
+            <a className="botao" href={whatsComprovante} target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="pix">Falar com alguém no WhatsApp</a>
           </p>
-          {pagamento.status === "informado" ? (
-            <p className="atribuicao">⏳ Recebemos seu aviso de pagamento. Aguardando confirmação.</p>
-          ) : (
-            <form action={jaPaguei} className="formulario">
-              <input type="hidden" name="id" value={pagamento.id} />
-              <BotaoEnviar className="botao-sec" carregando="Enviando…">Já paguei e mandei no WhatsApp</BotaoEnviar>
-            </form>
-          )}
         </div>
       </div>
 
