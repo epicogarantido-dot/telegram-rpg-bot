@@ -306,7 +306,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
           </div>
           <ul>
             <li>Você vê os estilos no ar antes de pagar. Depois do pagamento, a gente te chama no WhatsApp e monta o seu site com as suas fotos e preços.</li>
-            <li>{temEntrada ? "A contratação já inclui o primeiro mês. Depois, só a mensalidade." : "Sem taxa de entrada: o primeiro Pix já é o primeiro mês."}</li>
+            <li>{temEntrada ? "A contratação já inclui o primeiro mês. Depois, só a mensalidade." : "Paga o primeiro mês e já começa. Sem taxa de entrada."}</li>
             <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pode ser pausado até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
           </ul>

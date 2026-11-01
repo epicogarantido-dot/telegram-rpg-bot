@@ -76,7 +76,9 @@ export function PropagandaSaas({ assunto = "" }: { assunto?: string }) {
         <h2 id="propaganda-titulo">{ponte?.titulo ?? "Um site com a cara da sua barbearia."}</h2>
         <p>{ponte?.frase ?? "As suas fotos, os seus serviços e preços e a sua equipe, e o cliente marca sozinho, a qualquer hora."}</p>
         <p className="propaganda-preco">
-          {temEntrada ? <>{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês</> : <>{reais(plano.valorCentavos)} por mês, sem taxa de entrada</>}, no Pix. Sem fidelidade.
+          {temEntrada
+            ? <>{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix. Sem fidelidade.</>
+            : <>{reais(plano.valorCentavos)} por mês, no Pix. Paga o primeiro mês e já começa, sem fidelidade.</>}
         </p>
         <div className="acoes">
           <a href="/#estilos" className="botao" data-evento="estilos">Ver os estilos</a>

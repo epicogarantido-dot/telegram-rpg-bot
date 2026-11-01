@@ -92,7 +92,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
           : <>Valor: </>}
         {(plano.adesaoCentavos ?? 0) > 0 && plano.adesaoCentavos !== plano.valorCentavos
           ? <>contratação de {reais(plano.adesaoCentavos!)} (já inclui o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix.</>
-          : <>{reais(plano.valorCentavos)} por mês, no Pix, sem taxa de entrada.</>}
+          : <>{reais(plano.valorCentavos)} por mês, no Pix. Paga o primeiro mês e já começa.</>}
       </p>
       {erro && (
         <div className="erro" role="alert">

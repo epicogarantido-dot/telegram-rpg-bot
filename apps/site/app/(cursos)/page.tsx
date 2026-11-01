@@ -93,7 +93,7 @@ export default async function Inicio() {
             <a href="#estilos" className="botao" data-evento="estilos">Ver os 6 estilos</a>
             {contato && <a href={whats("Oi! Vi o site de vocês e quero saber do site com agenda pra minha barbearia.")!} className="botao-sec" target="_blank" rel="noopener noreferrer" data-evento="whatsapp" data-detalhe="topo">Falar no WhatsApp</a>}
           </div>
-          <p className="vendas-topo-preco">{temEntrada ? <>{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês.</> : <>{reais(plano.valorCentavos)} por mês, sem taxa de entrada.</>} Pix, sem fidelidade.</p>
+          <p className="vendas-topo-preco">{temEntrada ? <>{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês.</> : <>{reais(plano.valorCentavos)} por mês. Paga o primeiro mês e já começa.</>} Pix, sem fidelidade.</p>
           <p className="vendas-topo-entrega">No ar em até 24 horas depois do Pix: a gente monta com as suas fotos e os seus preços.</p>
           <p className="vendas-topo-cursos">Veio pelos cursos grátis? <Link href="/cursos">Estão aqui</Link>.</p>
         </div>
@@ -178,7 +178,7 @@ export default async function Inicio() {
           ) : (
             <>
               <p><strong>{reais(plano.valorCentavos)}</strong> por mês</p>
-              <p>Sem taxa de entrada: o primeiro Pix já é o primeiro mês</p>
+              <p>Paga o primeiro mês e já começa. Sem taxa de entrada.</p>
             </>
           )}
         </div>
