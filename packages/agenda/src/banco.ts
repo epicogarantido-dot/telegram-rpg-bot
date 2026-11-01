@@ -259,7 +259,7 @@ export interface Plano {
 export function planoDoAmbiente(): Plano {
   return {
     valorCentavos: Math.round(Number(process.env.PLANO_VALOR ?? "49.99") * 100),
-    adesaoCentavos: Math.round(Number(process.env.PLANO_ADESAO ?? "100") * 100),
+    adesaoCentavos: Math.round(Number(process.env.PLANO_ADESAO ?? "0") * 100),
     dias: Number(process.env.PLANO_DIAS ?? 30),
     testeDias: Number(process.env.PLANO_TESTE_DIAS ?? 0),
   };

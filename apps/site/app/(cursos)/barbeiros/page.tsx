@@ -164,6 +164,7 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
   const plano = planoDoAmbiente();
   // Sem contratação configurada, o primeiro pagamento é a própria mensalidade.
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
+  const temEntrada = (plano.adesaoCentavos ?? 0) > 0 && plano.adesaoCentavos !== plano.valorCentavos;
   const cursos = (await carregarCursos()).filter((c) => c.tags.includes("barbearia"));
   const artigos = (await carregarArtigos()).slice(0, 3);
 
@@ -300,12 +301,12 @@ export default async function Barbeiros({ searchParams }: { searchParams: Promis
         <div>
           <h2 id="plano-titulo">Quanto custa</h2>
           <div className="venda-valores">
-            <p className="venda-valor"><strong>{reais(adesao)}</strong> na contratação</p>
-            <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês pra manter</p>
+            {temEntrada && <p className="venda-valor"><strong>{reais(adesao)}</strong> na contratação</p>}
+            <p className="venda-valor"><strong>{reais(plano.valorCentavos)}</strong> por mês{temEntrada ? " pra manter" : ""}</p>
           </div>
           <ul>
             <li>Você vê os estilos no ar antes de pagar. Depois do pagamento, a gente te chama no WhatsApp e monta o seu site com as suas fotos e preços.</li>
-            <li>A contratação já inclui o primeiro mês. Depois, só a mensalidade.</li>
+            <li>{temEntrada ? "A contratação já inclui o primeiro mês. Depois, só a mensalidade." : "Sem taxa de entrada: o primeiro Pix já é o primeiro mês."}</li>
             <li>Pagamento por Pix, sem cartão. Sem fidelidade: se parar de pagar, o site pode ser pausado até você voltar.</li>
             <li>Barbeiros ilimitados, agendamentos ilimitados.</li>
           </ul>

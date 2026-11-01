@@ -67,7 +67,7 @@ cartão com QR na barbearia). Essas inscrições aparecem no topo do painel.
 
 Pronto (MVP, SQLite local):
 - ✅ Cobrança por Pix estático: QR + copia e cola, "já paguei", admin confirma em `/painel/assinaturas`; vencido = painel e página pública bloqueados.
-- ✅ Preço: contratação de R$ 100 (primeiro pagamento, já inclui o 1º mês) e R$ 49,99/mês pra manter (era R$ 50 até 01/11/2026) (`PLANO_ADESAO`, `PLANO_VALOR`, `PLANO_DIAS`). Cursos do site são sempre grátis. Sem período grátis no SaaS (`PLANO_TESTE_DIAS=0`, decisão do dono em 26/10/2026): a conta libera quando o admin confirma o Pix.
+- ✅ Preço: R$ 49,99/mês, sem taxa de entrada (`PLANO_ADESAO=0`; até 01/11/2026 era R$ 100 de contratação + R$ 50/mês) (`PLANO_ADESAO`, `PLANO_VALOR`, `PLANO_DIAS`). Cursos do site são sempre grátis. Sem período grátis no SaaS (`PLANO_TESTE_DIAS=0`, decisão do dono em 26/10/2026): a conta libera quando o admin confirma o Pix.
 - ✅ Cadastro/login do barbeiro (senha com scrypt, sessão por cookie httpOnly).
 - ✅ Configurações: dados da barbearia, serviços (duração e preço), profissionais, horário por dia com pausa.
 - ✅ Página pública `/b/<slug>`: serviço → profissional → dia → horário → nome e WhatsApp.

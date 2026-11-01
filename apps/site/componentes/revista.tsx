@@ -67,6 +67,7 @@ export function FaixaSaas() {
 export function PropagandaSaas({ assunto = "" }: { assunto?: string }) {
   const plano = planoDoAmbiente();
   const adesao = plano.adesaoCentavos || plano.valorCentavos;
+  const temEntrada = (plano.adesaoCentavos ?? 0) > 0 && plano.adesaoCentavos !== plano.valorCentavos;
   const ponte = PONTES.find((p) => p.assunto.test(assunto));
   return (
     <aside className="propaganda" aria-labelledby="propaganda-titulo">
@@ -75,7 +76,7 @@ export function PropagandaSaas({ assunto = "" }: { assunto?: string }) {
         <h2 id="propaganda-titulo">{ponte?.titulo ?? "Um site com a cara da sua barbearia."}</h2>
         <p>{ponte?.frase ?? "As suas fotos, os seus serviços e preços e a sua equipe, e o cliente marca sozinho, a qualquer hora."}</p>
         <p className="propaganda-preco">
-          {reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês, no Pix. Sem fidelidade.
+          {temEntrada ? <>{reais(adesao)} pra começar (com o primeiro mês) e {reais(plano.valorCentavos)} por mês</> : <>{reais(plano.valorCentavos)} por mês, sem taxa de entrada</>}, no Pix. Sem fidelidade.
         </p>
         <div className="acoes">
           <a href="/#estilos" className="botao" data-evento="estilos">Ver os estilos</a>
