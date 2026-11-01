@@ -74,17 +74,19 @@ describe("mensagem", () => {
   it("1ª mensagem: quem é, por que esta barbearia, pergunta fácil, SAIR e nenhum link", () => {
     const m = mensagemPrimeiroContato({ nome: "Barbearia do Zé - Centro" }, cfg,
       { detalhe: "do degradê do último post", onde: "no Instagram", agora });
-    expect(m).toContain("Aqui é João, do Aprenda Livre");
+    expect(m).toContain("Olá, Barbearia do Zé! Tudo bem? Aqui é João, do Aprenda Livre.");
     expect(m).toContain("Vi a Barbearia do Zé no Instagram e gostei do degradê do último post.");
-    expect(m).toContain("pelo WhatsApp ou é por ordem de chegada?");
+    expect(m).toContain("empresário do ramo das barbearias");
+    expect(m).toContain("render mais");
+    expect(m).toContain("Posso te mostrar como ficaria o da Barbearia do Zé?");
     expect(m).toContain("SAIR");
     expect(m).not.toMatch(/https?:/);
   });
 
-  it("sem detalhe usa o tempo de casa, e nada de elogio inventado", () => {
-    expect(mensagemPrimeiroContato({ nome: "BARBEARIA X", abertura: "2019-03-01" }, cfg, { agora })).toContain("desde 2019");
-    const nova = mensagemPrimeiroContato({ nome: "BARBEARIA X", abertura: "2025-03-01" }, cfg, { agora });
-    expect(nova).toContain("Vi a Barbearia X. Pergunta rápida");
+  it("sem detalhe não inventa elogio", () => {
+    const m = mensagemPrimeiroContato({ nome: "BARBEARIA X", abertura: "2019-03-01" }, cfg, { agora });
+    expect(m).toContain("Olá, Barbearia X! Tudo bem?");
+    expect(m).not.toContain("gostei");
   });
 
   it("a sequência: 2ª sem link, demonstração com link, lembrete com SAIR, cursos com o bot", () => {

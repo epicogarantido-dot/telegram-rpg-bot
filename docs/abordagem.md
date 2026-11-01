@@ -16,13 +16,25 @@ personalizada, pergunta fácil de responder, link só depois que a pessoa respon
 
 ## A sequência
 
-**1ª mensagem (sem link):** quem é, por que ESTA barbearia, uma pergunta fácil, e como sair.
+**1ª mensagem (sem link; texto do dono desde 01/11/2026):** quem é, o que fez, como ajuda a
+barbearia a render mais, uma pergunta e como sair (`mensagemPrimeiroContato`).
 
-> Oi, tudo bem? Aqui é o {seu nome}, do Aprenda Livre. Vi a {Barbearia} {no Instagram / no Google}
-> e gostei {do trabalho de degradê / do espaço}. Pergunta rápida: hoje vocês marcam horário pelo
-> WhatsApp ou é por ordem de chegada?
+> Olá, {Barbearia}! Tudo bem? Aqui é {REMETENTE}. [Vi a {Barbearia} {no Instagram} e gostei {do degradê}.]
+>
+> Vi que você é empresário do ramo das barbearias e por isso estou te chamando: eu fiz um site de
+> agendamento e de apresentação pra barbearia, que você mesmo edita do jeito que quiser (fotos,
+> serviços, preços, equipe e horários).
+>
+> Ele ajuda a barbearia a render mais: o cliente marca sozinho, a qualquer hora, sem você parar o
+> corte pra responder no WhatsApp. Os horários vagos ficam à vista de quem quer marcar, e você
+> confirma cada cliente com um toque, o que ajuda a diminuir as faltas.
+>
+> Posso te mostrar como ficaria o da {Barbearia}?
 >
 > (Se preferir não receber mensagem, responde SAIR que eu não mando mais.)
+
+Respondeu que quer ver: monte a demonstração no cartão e mande o link. Os botões de 2ª mensagem
+abaixo continuam pra quem responder contando como marca hoje.
 
 **Se responder**, a 2ª mensagem traz o valor, ainda sem vender:
 

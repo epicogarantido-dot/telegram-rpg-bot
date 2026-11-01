@@ -34,9 +34,10 @@ export function nomeParaMensagem(nome: string): string {
 const SAIR = "(Se preferir não receber mensagem, responde SAIR que eu não mando mais.)";
 
 /**
- * 1ª mensagem. `detalhe` é o que você viu de verdade no perfil ("do trabalho de degradê"),
- * `onde` é onde achou ("no Instagram"). Sem detalhe, usa o tempo de casa (data de abertura
- * da Receita) ou só o nome. Nada de elogio genérico.
+ * 1ª mensagem (texto do dono, 01/11/2026): diz quem é, o que fez (site de agendamento e de
+ * apresentação que o barbeiro edita como quiser), como ajuda a barbearia a render mais e termina
+ * numa pergunta, sem link (o link vai depois que ele responde). `detalhe`/`onde` entram se a pessoa
+ * viu algo de verdade no perfil ("Vi a X no Instagram e gostei do degradê").
  */
 export function mensagemPrimeiroContato(
   lead: Pick<Lead, "nome" | "abertura">,
@@ -45,13 +46,12 @@ export function mensagemPrimeiroContato(
 ): string {
   const nome = nomeParaMensagem(lead.nome);
   const onde = extra.onde?.trim() ? ` ${extra.onde.trim()}` : "";
-  const anoAbertura = Number(lead.abertura?.slice(0, 4));
-  const anos = (extra.agora ?? new Date()).getFullYear() - anoAbertura;
-  const elogio = extra.detalhe?.trim()
-    ? ` e gostei ${extra.detalhe.trim()}`
-    : anos >= 3 ? `. Vi que vocês estão na ativa desde ${anoAbertura}, bonito isso` : "";
+  const visto = extra.detalhe?.trim() ? ` Vi a ${nome}${onde} e gostei ${extra.detalhe.trim()}.` : "";
   return [
-    `Oi, tudo bem? Aqui é ${cfg.remetente}. Vi a ${nome}${onde}${elogio}. Pergunta rápida: hoje vocês marcam horário pelo WhatsApp ou é por ordem de chegada?`,
+    `Olá, ${nome}! Tudo bem? Aqui é ${cfg.remetente}.${visto}`,
+    "Vi que você é empresário do ramo das barbearias e por isso estou te chamando: eu fiz um site de agendamento e de apresentação pra barbearia, que você mesmo edita do jeito que quiser (fotos, serviços, preços, equipe e horários).",
+    "Ele ajuda a barbearia a render mais: o cliente marca sozinho, a qualquer hora, sem você parar o corte pra responder no WhatsApp. Os horários vagos ficam à vista de quem quer marcar, e você confirma cada cliente com um toque, o que ajuda a diminuir as faltas.",
+    `Posso te mostrar como ficaria o da ${nome}?`,
     SAIR,
   ].join("\n\n");
 }
