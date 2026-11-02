@@ -14,13 +14,13 @@ export const dynamic = "force-dynamic";
  */
 const PASTA_LISTAS = join(dirname(PASTA_CURSOS), "listas");
 
-function lerListas(): { nome: string; titulo: string; itens: ItemLista[] }[] {
+function lerListas(): { nome: string; titulo: string; itens: ItemLista[]; soEmail?: boolean }[] {
   let arquivos: string[] = [];
   try { arquivos = readdirSync(PASTA_LISTAS).filter((a) => a.endsWith(".json")).sort(); } catch { return []; }
   return arquivos.map((a) => {
-    const dados = JSON.parse(readFileSync(join(PASTA_LISTAS, a), "utf8")) as { titulo?: string; itens: ItemLista[] };
-    return { nome: a.replace(/\.json$/, ""), titulo: dados.titulo ?? a, itens: dados.itens };
-  });
+    const dados = JSON.parse(readFileSync(join(PASTA_LISTAS, a), "utf8")) as { titulo?: string; itens: ItemLista[]; soEmail?: boolean };
+    return { nome: a.replace(/\.json$/, ""), titulo: dados.titulo ?? a, itens: dados.itens, soEmail: dados.soEmail };
+  }).filter((l) => !l.soEmail); // a de e-mail (emails.json) entra pelo /painel/emails
 }
 
 const FILTROS = { falta: "Falta mandar", mandadas: "Já mandei", todas: "Todas" } as const;
@@ -42,7 +42,7 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
 
   return (
     <>
-      <p><a href="/painel">Leads</a> · <strong>Pra mandar</strong> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/assinaturas">Vendas</a></p>
+      <p><a href="/painel">Leads</a> · <strong>Pra mandar</strong> · <a href="/painel/emails">E-mail</a> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/assinaturas">Vendas</a></p>
       <h1>Pra mandar mensagem</h1>
       {!atual ? (
         <p>Nenhuma lista pronta. As listas vêm no pacote do site (pasta data/listas).</p>

@@ -106,6 +106,25 @@ export function mensagemComunidade(lead: Pick<Lead, "nome">, cfg: ConfigConvite)
   ].join("\n\n");
 }
 
+/** Convite da comunidade por e-mail: mesmo texto do WhatsApp, com o link de sair (obrigatório). */
+export function emailComunidade(lead: Pick<Lead, "nome">, cfg: ConfigConvite, linkSair: string): { assunto: string; texto: string; html: string } | undefined {
+  if (!cfg.linkGrupo) return undefined;
+  const nome = nomeParaMensagem(lead.nome);
+  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  const paragrafos = [
+    `Olá, ${nome}! Aqui é ${cfg.remetente}.`,
+    "Esta comunidade foi criada para que os participantes possam aproveitar as melhores ofertas e economizar tempo e dinheiro! É pra donos de barbearia, e você está convidado.",
+  ];
+  return {
+    assunto: `Convite pra comunidade de donos de barbearia, ${nome}`,
+    texto: [...paragrafos, `Pra entrar no grupo do WhatsApp: ${cfg.linkGrupo}`, `Não quer mais receber? ${linkSair}`].join("\n\n"),
+    html: `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:1.5;color:#222;max-width:560px">${paragrafos.map((p) => `<p>${esc(p)}</p>`).join("")}`
+      + `<p><a href="${esc(cfg.linkGrupo)}" style="display:inline-block;background:#25D366;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold">Entrar na comunidade no WhatsApp</a></p>`
+      + `<p style="font-size:13px;color:#777">Você recebeu este convite porque a ${esc(nome)} aparece como barbearia no cadastro público de empresas (CNPJ). `
+      + `<a href="${esc(linkSair)}" style="color:#777">Não quero mais receber</a>.</p></div>`,
+  };
+}
+
 /** O presente: cursos grátis no site, abertos, sem cadastro. */
 export function mensagemCursos(cfg: ConfigConvite): string | undefined {
   if (!cfg.siteUrl) return undefined;

@@ -23,7 +23,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
 
   return (
     <>
-      <p><strong>Leads</strong> · <a href="/painel/lista">Pra mandar</a> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Vendas</a> · <a href="/painel/backup">Baixar backup</a></p>
+      <p><strong>Leads</strong> · <a href="/painel/lista">Pra mandar</a> · <a href="/painel/emails">E-mail</a> · <a href="/painel/buscar">Buscar</a> · <a href="/painel/cartao">Cartão pra visitas</a> · <a href="/painel/assinaturas">Vendas</a> · <a href="/painel/backup">Baixar backup</a></p>
       <h1>Painel de leads</h1>
       <p>
         Primeiras mensagens hoje: <strong>{hoje}</strong>

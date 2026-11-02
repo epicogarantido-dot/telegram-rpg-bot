@@ -58,6 +58,12 @@ export default function Privacidade() {
         achado em dados públicos (cadastro de CNPJ da Receita Federal, perfil público ou indicação). Toda mensagem diz
         quem está falando e como sair. Quem responde SAIR nunca mais é procurado.
       </p>
+      <p>
+        Também mandamos, uma vez só, um convite por e-mail pra comunidade de donos de barbearia, pro e-mail público do
+        CNPJ da barbearia. O envio passa pelo Brevo (serviço de e-mail), que recebe só o e-mail e o nome da barbearia.
+        Todo convite tem "Não quero mais receber": quem toca nele sai da lista pra sempre (guardamos só o e-mail, pra não
+        mandar de novo).
+      </p>
 
       </>}
 

@@ -218,3 +218,22 @@ describe("convite pra comunidade", () => {
     expect(mensagemComunidade({ nome: "X" }, { remetente: "a" })).toBeUndefined();
   });
 });
+
+describe("convite por e-mail", () => {
+  it("pula contador, quem saiu, quem pediu SAIR e quem já recebeu", () => {
+    const b = new BancoProspeccao(":memory:");
+    b.importarLista(null, [
+      { cnpj: "1", nome: "Barbearia A", cidade: "Pelotas", uf: "RS", email: "a@barbearia.com", abertura: "2026-01-01" },
+      { cnpj: "2", nome: "Barbearia B", cidade: "Pelotas", uf: "RS", email: "joao@contabilidadex.com" },
+      { cnpj: "3", nome: "Barbearia C", cidade: "Pelotas", uf: "RS", email: "c@barbearia.com", telefone: "5553999990000" },
+      { cnpj: "4", nome: "Barbearia D", cidade: "Pelotas", uf: "RS", email: "D@Barbearia.com" },
+      { cnpj: "5", nome: "Barbearia E", cidade: "Pelotas", uf: "RS" },
+    ]);
+    b.bloquear("5553999990000");
+    b.sairDoEmail("d@barbearia.com");
+    expect(b.proximosEmails(10).map((l) => l.nome)).toEqual(["Barbearia A"]);
+    b.marcarEmailEnviado("cnpj:1");
+    expect(b.proximosEmails(10)).toHaveLength(0);
+    expect(b.emailsEnviadosDesde("2000-01-01")).toBe(1);
+  });
+});

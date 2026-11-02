@@ -24,7 +24,7 @@ export type Status = (typeof STATUS)[number];
 
 /** Uma barbearia de lista pronta (data/listas/<nome>.json). */
 export interface ItemLista {
-  cnpj: string; nome: string; cidade: string; uf: string; telefone: string;
+  cnpj: string; nome: string; cidade: string; uf: string; telefone?: string;
   endereco?: string; abertura?: string; email?: string;
 }
 
@@ -129,10 +129,12 @@ export class BancoProspeccao {
         lead_id TEXT NOT NULL, evento TEXT NOT NULL, detalhe TEXT, em TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS lead_eventos_lead ON lead_eventos(lead_id, em);
+      -- E-mails que pediram pra sair do convite por e-mail. Separado dos leads: vale pra sempre.
+      CREATE TABLE IF NOT EXISTS emails_saida (email TEXT PRIMARY KEY, criado_em TEXT NOT NULL);
     `);
     // Colunas novas em bancos antigos.
     const existentes = new Set((this.db.prepare("PRAGMA table_info(leads)").all() as { name: string }[]).map((c) => c.name));
-    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite", "codigo", "lista"]) {
+    for (const coluna of ["fonte", "cnpj", "email", "instagram", "avisos", "abertura", "uf", "cidade_chave", "atualizado_em", "demo_slug", "demo_convite", "codigo", "lista", "email_enviado_em"]) {
       if (!existentes.has(coluna)) this.db.exec(`ALTER TABLE leads ADD COLUMN ${coluna} TEXT`);
     }
     if (!existentes.has("cidade_chave")) {
@@ -194,11 +196,11 @@ export class BancoProspeccao {
    * Lista pronta pra contato (vem no pacote do site de leads, em data/listas/<nome>.json):
    * grava quem falta e marca a lista. Quem já existe guarda status, observação e Instagram.
    */
-  importarLista(nome: string, itens: ItemLista[]): { novos: number; total: number } {
+  importarLista(nome: string | null, itens: ItemLista[]): { novos: number; total: number } {
     const ins = this.db.prepare(`
       INSERT INTO leads (place_id, nicho, cidade, uf, nome, endereco, telefone, status, criado_em, fonte, cnpj, email, abertura, cidade_chave, lista)
       VALUES (?, 'barbearia', ?, ?, ?, ?, ?, ?, ?, 'receita', ?, ?, ?, ?, ?)
-      ON CONFLICT(place_id) DO UPDATE SET lista = excluded.lista`);
+      ON CONFLICT(place_id) DO UPDATE SET lista = COALESCE(excluded.lista, leads.lista), email = COALESCE(leads.email, excluded.email)`);
     const existe = this.db.prepare("SELECT 1 FROM leads WHERE place_id = ?");
     const agora = new Date().toISOString();
     let novos = 0;
@@ -207,8 +209,8 @@ export class BancoProspeccao {
       for (const e of itens) {
         const id = `cnpj:${e.cnpj}`;
         if (!existe.get(id)) novos++;
-        const status: Status = this.estaBloqueado(e.telefone) ? "nao_contatar" : "novo";
-        ins.run(id, e.cidade, e.uf, e.nome, e.endereco ?? null, e.telefone, status, agora, e.cnpj, e.email ?? null, e.abertura ?? null, chaveCidade(e.cidade), nome);
+        const status: Status = e.telefone && this.estaBloqueado(e.telefone) ? "nao_contatar" : "novo";
+        ins.run(id, e.cidade, e.uf, e.nome, e.endereco ?? null, e.telefone ?? null, status, agora, e.cnpj, e.email ?? null, e.abertura ?? null, chaveCidade(e.cidade), nome);
       }
       this.db.exec("COMMIT");
     } catch (erro) {
@@ -216,6 +218,55 @@ export class BancoProspeccao {
       throw erro;
     }
     return { novos, total: itens.length };
+  }
+
+  // ---------- convite por e-mail (automático, poucos por dia; ver apps/site/lib/emails.ts) ----------
+
+  /**
+   * Próximos pra receber o convite por e-mail: barbearia com e-mail que não parece de contador, que
+   * ainda não recebeu nem foi chamado no WhatsApp, não pediu SAIR e não saiu da lista de e-mail. Listas prontas primeiro.
+   */
+  proximosEmails(limite: number): Lead[] {
+    return this.db.prepare(`SELECT ${COLUNAS} FROM leads l
+      WHERE nicho = 'barbearia' AND email LIKE '%_@_%._%' AND email_enviado_em IS NULL AND status = 'novo'
+        AND lower(email) NOT GLOB '*contab*' AND lower(email) NOT GLOB '*contador*' AND lower(email) NOT GLOB '*escritorio*'
+        AND lower(email) NOT GLOB '*assessoria*' AND lower(email) NOT GLOB '*consult*'
+        AND NOT EXISTS (SELECT 1 FROM emails_saida s WHERE s.email = lower(l.email))
+        AND (telefone IS NULL OR NOT EXISTS (SELECT 1 FROM bloqueados b WHERE b.telefone = l.telefone))
+      ORDER BY lista IS NULL, abertura DESC LIMIT ?`).all(limite) as unknown as Lead[];
+  }
+
+  /** Quantos ainda vão receber (o mesmo filtro de `proximosEmails`). */
+  emailsNaFila(): number {
+    return this.proximosEmails(1_000_000).length;
+  }
+
+  marcarEmailEnviado(placeId: string, agora = new Date()): void {
+    this.db.prepare("UPDATE leads SET email_enviado_em = ? WHERE place_id = ?").run(agora.toISOString(), placeId);
+  }
+
+  /** Enviados desde `desde` (ISO): pra respeitar o limite do dia. */
+  emailsEnviadosDesde(desde: string): number {
+    return (this.db.prepare("SELECT COUNT(*) AS n FROM leads WHERE email_enviado_em >= ?").get(desde) as { n: number }).n;
+  }
+
+  /** Últimos convites por e-mail enviados (pro painel). */
+  emailsRecentes(limite: number): { nome: string; cidade: string; email: string; em: string }[] {
+    return this.db.prepare(`SELECT nome, cidade, email, email_enviado_em AS em FROM leads
+      WHERE email_enviado_em IS NOT NULL ORDER BY email_enviado_em DESC LIMIT ?`).all(limite) as never;
+  }
+
+  emailsSaidos(): number {
+    return (this.db.prepare("SELECT COUNT(*) AS n FROM emails_saida").get() as { n: number }).n;
+  }
+
+  emailEnviadoEm(placeId: string): string | undefined {
+    return (this.db.prepare("SELECT email_enviado_em AS em FROM leads WHERE place_id = ?").get(placeId) as { em: string | null } | undefined)?.em ?? undefined;
+  }
+
+  /** "Não quero mais receber": vale pra sempre, mesmo se o lead for importado de novo. */
+  sairDoEmail(email: string): void {
+    this.db.prepare("INSERT OR IGNORE INTO emails_saida (email, criado_em) VALUES (?, ?)").run(email.trim().toLowerCase(), new Date().toISOString());
   }
 
   /** Leads de uma lista de contato, por cidade e nome. */
