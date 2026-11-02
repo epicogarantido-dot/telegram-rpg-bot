@@ -4,7 +4,6 @@ import { contatoResponsavel } from "@/lib/contato";
 import { ErroAgenda, planoDoAmbiente, TEMAS, temaValido } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { gravarSessaoAgenda, mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { chaveDoAparelho } from "@/lib/protecao";
 import { obterBanco } from "@/lib/painel";
 import { CampoOrigem, Medir } from "@/componentes/ContarOrigem";
 import { porFotosPadrao } from "@/lib/exemplos";
@@ -27,9 +26,7 @@ async function cadastrar(form: FormData) {
   let token: string;
   let montagem = false;
   try {
-    // Até 3 contas novas por aparelho por dia: segura quem tenta criar barbearia em massa.
-    const chave = `cadastro:ip:${await chaveDoAparelho()}`;
-    if (obterAgenda().contarTentativas(chave, 24 * 60) >= 3) throw new ErroAgenda("Este aparelho já fez pedidos hoje. Pra fazer mais um, mande pelo WhatsApp: a gente faz por lá na hora.");
+    // Sem limite de pedidos por aparelho (pedido do dono, 02/11/2026): pedido sem Pix não libera nada.
     if (!telefone) throw new ErroAgenda("WhatsApp inválido.");
     // No site de leads o pedido é só barbearia, WhatsApp e nome: e-mail e senha não seguram ninguém antes do Pix.
     const conta = soVenda()
@@ -42,7 +39,6 @@ async function cadastrar(form: FormData) {
     if (temaValido(estilo)) obterAgenda().atualizarSite(conta.barbearia.id, { tema: estilo });
     // No site de leads a conta é só a assinatura (o site do cliente é montado no SaaS): sem fotos.
     if (!soVenda()) porFotosPadrao(conta.barbearia.id, conta.barbearia.tema);
-    obterAgenda().consumirLimite(chave, Number.MAX_SAFE_INTEGER, 24 * 60, "");
     // De onde veio quem virou cliente (link do grupo, cartão, convite, demonstração): só a contagem.
     obterBanco().registrarOrigem(campo("origem") || (demo ? "demonstracao" : "direto"), "cadastro");
     obterBanco().registrarEvento("cadastro");
