@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { TEMAS } from "@aprenda/agenda";
 import {
-  STATUS, ehCelularBR, linkWhatsapp, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
+  STATUS, ehCelularBR, linkWhatsapp, mensagemComunidade, mensagemCursos, mensagemDemonstracao, mensagemLembrete, mensagemPrimeiroContato,
   mensagemSegunda, mensagemSiteEGrupo, proximoPasso, DIAS_ATE_LEMBRETE, type Evento, type Lead, type Status,
 } from "@aprenda/prospeccao";
 import { config, exigirLogin, obterBanco } from "@/lib/painel";
@@ -27,7 +27,7 @@ export const ROTULO: Record<Status, string> = {
 /** Etapas em que a conversa está viva e cabe montar ou mandar a demonstração. */
 const EM_CONVERSA: Status[] = ["contatado", "lembrete", "respondeu", "demo_enviada"];
 
-type Envio = "primeira" | "lembrete" | "segunda-whatsapp" | "segunda-chegada" | "demo" | "cursos" | "site-grupo";
+type Envio = "primeira" | "comunidade" | "lembrete" | "segunda-whatsapp" | "segunda-chegada" | "demo" | "cursos" | "site-grupo";
 
 /**
  * Abre o WhatsApp com a mensagem da etapa e já avança o lead. Quem envia é a pessoa, no
@@ -63,6 +63,11 @@ async function enviar(form: FormData): Promise<string | undefined> {
       // Com o código do lead (?l=), o cartão dele mostra o que ele fez no site.
       texto = mensagemDemonstracao(lead, `${linkDaDemonstracao(lead.demoSlug, lead.demoConvite)}&l=${banco.codigoDoLead(lead.placeId)}`);
       status = "demo_enviada";
+      break;
+    case "comunidade":
+      // Convite pra comunidade: vale como 1º contato (quem era novo passa pra "já mandei").
+      texto = mensagemComunidade(lead, config);
+      if (lead.status === "novo") status = "contatado";
       break;
     case "cursos":
       texto = mensagemCursos(config);
@@ -174,6 +179,9 @@ export function AcoesDoLead({ lead, agora }: { lead: Lead; agora: Date }) {
           </label>
           <BotaoEnviar className="botao" carregando="Abrindo o WhatsApp…">Abrir 1ª mensagem no WhatsApp</BotaoEnviar>
         </FormWhats>
+      )}
+      {config.linkGrupo && (
+        <div className="acoes"><Enviar lead={lead} tipo="comunidade" principal={lead.status === "novo"}>Convidar pra comunidade</Enviar></div>
       )}
 
       {(lead.status === "contatado" || lead.status === "lembrete") && (

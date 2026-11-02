@@ -92,6 +92,20 @@ export function mensagemSiteEGrupo(lead: Pick<Lead, "nome">, cfg: ConfigConvite,
   return `Aqui o site: tem cursos e matérias grátis pra quem tem barbearia (preço, cliente que volta, divulgação), sem cadastro. E dá pra ver como ficaria um site com agenda pra ${nomeParaMensagem(lead.nome)}: ${site}${grupo}`;
 }
 
+/**
+ * Convite pra comunidade de donos de barbearia no WhatsApp (texto do dono, 02/11/2026). Serve como 1º
+ * contato ou depois da conversa; sempre diz quem manda e como sair.
+ */
+export function mensagemComunidade(lead: Pick<Lead, "nome">, cfg: ConfigConvite): string | undefined {
+  if (!cfg.linkGrupo) return undefined;
+  return [
+    `Olá, ${nomeParaMensagem(lead.nome)}! Aqui é ${cfg.remetente}.`,
+    "Esta comunidade foi criada para que os participantes possam aproveitar as melhores ofertas e economizar tempo e dinheiro! É pra donos de barbearia, e você está convidado.",
+    `Pra entrar, é só tocar no link: ${cfg.linkGrupo}`,
+    SAIR,
+  ].join("\n\n");
+}
+
 /** O presente: cursos grátis no site, abertos, sem cadastro. */
 export function mensagemCursos(cfg: ConfigConvite): string | undefined {
   if (!cfg.siteUrl) return undefined;

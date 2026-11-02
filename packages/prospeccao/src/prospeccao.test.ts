@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BancoProspeccao } from "./banco.ts";
 import { buscarEstabelecimentos } from "./google-places.ts";
-import { mensagemCursos, mensagemDemonstracao, mensagemSiteEGrupo, mensagemLembrete, mensagemPrimeiroContato, mensagemSegunda, nomeParaMensagem, proximoPasso } from "./mensagem.ts";
+import { mensagemComunidade, mensagemCursos, mensagemDemonstracao, mensagemSiteEGrupo, mensagemLembrete, mensagemPrimeiroContato, mensagemSegunda, nomeParaMensagem, proximoPasso } from "./mensagem.ts";
 import { buscarNoOSM, montarConsulta } from "./openstreetmap.ts";
 import { ehCelularBR, linkWhatsapp, normalizarTelefone } from "./telefone.ts";
 
@@ -205,5 +205,16 @@ describe("lista pronta pra contato", () => {
     b.bloquear("5553988880000");
     b.importarLista("rs-100", [{ ...item, cnpj: "456", telefone: "5553988880000" }]);
     expect(b.lead("cnpj:456")!.status).toBe("nao_contatar");
+  });
+});
+
+describe("convite pra comunidade", () => {
+  it("diz quem manda, leva o link e a saída", () => {
+    const m = mensagemComunidade({ nome: "BARBEARIA X LTDA" }, { remetente: "o pessoal do Site da Barbearia777", linkGrupo: "https://chat.whatsapp.com/abc" })!;
+    expect(m).toContain("Olá, Barbearia X! Aqui é o pessoal do Site da Barbearia777.");
+    expect(m).toContain("Esta comunidade foi criada para que os participantes possam aproveitar as melhores ofertas e economizar tempo e dinheiro!");
+    expect(m).toContain("https://chat.whatsapp.com/abc");
+    expect(m).toContain("SAIR");
+    expect(mensagemComunidade({ nome: "X" }, { remetente: "a" })).toBeUndefined();
   });
 });

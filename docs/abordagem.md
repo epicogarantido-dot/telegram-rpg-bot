@@ -36,6 +36,17 @@ barbearia a render mais, uma pergunta e como sair (`mensagemPrimeiroContato`).
 Respondeu que sim: mande o vídeo de venda (`dist/video-barbearias777.mp4`, gerado por `apps/site/scripts/video-venda/gravar.mjs`) e depois a demonstração pelo cartão. Os botões de 2ª mensagem
 abaixo continuam pra quem responder contando como marca hoje.
 
+**Convite pra comunidade (botão "Convidar pra comunidade" no cartão; vale como 1º contato):**
+
+> Olá, {Barbearia}! Aqui é {REMETENTE}.
+>
+> Esta comunidade foi criada para que os participantes possam aproveitar as melhores ofertas e economizar
+> tempo e dinheiro! É pra donos de barbearia, e você está convidado.
+>
+> Pra entrar, é só tocar no link: {COMUNIDADE_LINK}
+>
+> (Se preferir não receber mensagem, responde SAIR que eu não mando mais.)
+
 **Se responder**, a 2ª mensagem traz o valor, ainda sem vender:
 
 - *"Pelo WhatsApp"* → "Muita gente perde cliente por não conseguir responder no meio do corte.
