@@ -41,7 +41,7 @@ export function obterBanco(): BancoProspeccao {
 
 export const config = {
   /** Quem assina a 1ª mensagem: "o João, do Site da Barbearia" (REMETENTE no .env). */
-  remetente: process.env.REMETENTE ?? "o pessoal do Site da Barbearia",
+  remetente: process.env.REMETENTE ?? "o pessoal do Site da Barbearia777",
   /** Endereço do site, pro presente dos cursos grátis (abertos, sem cadastro). */
   siteUrl: process.env.SITE_URL?.replace(/\/$/, "") || undefined,
   linkComunidade: process.env.COMUNIDADE_LINK ?? "https://chat.whatsapp.com/SEU-LINK",

@@ -21,7 +21,7 @@ barbearia a render mais, uma pergunta e como sair (`mensagemPrimeiroContato`).
 
 > Olá, {Barbearia}! Tudo bem? Aqui é {REMETENTE}. [Vi a {Barbearia} {no Instagram} e gostei {do degradê}.]
 >
-> Vi que você é empresário do ramo das barbearias e por isso estou te chamando: eu fiz um site de
+> Vi que você é empresário do ramo das barbearias e por isso estou entrando em contato: eu fiz um site de
 > agendamento e de apresentação pra barbearia, que você mesmo edita do jeito que quiser (fotos,
 > serviços, preços, equipe e horários).
 >
@@ -29,11 +29,11 @@ barbearia a render mais, uma pergunta e como sair (`mensagemPrimeiroContato`).
 > corte pra responder no WhatsApp. Os horários vagos ficam à vista de quem quer marcar, e você
 > confirma cada cliente com um toque, o que ajuda a diminuir as faltas.
 >
-> Posso te mostrar como ficaria o da {Barbearia}?
+> Posso te mandar um vídeo propaganda?
 >
 > (Se preferir não receber mensagem, responde SAIR que eu não mando mais.)
 
-Respondeu que quer ver: monte a demonstração no cartão e mande o link. Os botões de 2ª mensagem
+Respondeu que sim: mande o vídeo de venda (`dist/video-barbearias777.mp4`, gerado por `apps/site/scripts/video-venda/gravar.mjs`) e depois a demonstração pelo cartão. Os botões de 2ª mensagem
 abaixo continuam pra quem responder contando como marca hoje.
 
 **Se responder**, a 2ª mensagem traz o valor, ainda sem vender:

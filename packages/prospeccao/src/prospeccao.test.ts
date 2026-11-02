@@ -78,7 +78,7 @@ describe("mensagem", () => {
     expect(m).toContain("Vi a Barbearia do Zé no Instagram e gostei do degradê do último post.");
     expect(m).toContain("empresário do ramo das barbearias");
     expect(m).toContain("render mais");
-    expect(m).toContain("Posso te mostrar como ficaria o da Barbearia do Zé?");
+    expect(m).toContain("Posso te mandar um vídeo propaganda?");
     expect(m).toContain("SAIR");
     expect(m).not.toMatch(/https?:/);
   });

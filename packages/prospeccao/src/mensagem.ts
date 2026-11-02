@@ -49,9 +49,9 @@ export function mensagemPrimeiroContato(
   const visto = extra.detalhe?.trim() ? ` Vi a ${nome}${onde} e gostei ${extra.detalhe.trim()}.` : "";
   return [
     `Olá, ${nome}! Tudo bem? Aqui é ${cfg.remetente}.${visto}`,
-    "Vi que você é empresário do ramo das barbearias e por isso estou te chamando: eu fiz um site de agendamento e de apresentação pra barbearia, que você mesmo edita do jeito que quiser (fotos, serviços, preços, equipe e horários).",
+    "Vi que você é empresário do ramo das barbearias e por isso estou entrando em contato: eu fiz um site de agendamento e de apresentação pra barbearia, que você mesmo edita do jeito que quiser (fotos, serviços, preços, equipe e horários).",
     "Ele ajuda a barbearia a render mais: o cliente marca sozinho, a qualquer hora, sem você parar o corte pra responder no WhatsApp. Os horários vagos ficam à vista de quem quer marcar, e você confirma cada cliente com um toque, o que ajuda a diminuir as faltas.",
-    `Posso te mostrar como ficaria o da ${nome}?`,
+    "Posso te mandar um vídeo propaganda?",
     SAIR,
   ].join("\n\n");
 }
