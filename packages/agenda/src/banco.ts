@@ -1855,6 +1855,17 @@ export class BancoAgenda {
     return { fotos: fotos.filter((a) => !this.db.prepare("SELECT 1 FROM fotos WHERE arquivo = ?").get(a)), comprovantes };
   }
 
+  /**
+   * Foto que saiu do acervo (data/demo-fotos): tira de todos os sites que a usam, reconhecida pela
+   * assinatura categoria + legenda + tamanho. Devolve os arquivos que ficaram sem dono, pra apagar do disco.
+   */
+  retirarFotoDoAcervo(f: { categoria: string; legenda?: string; largura: number; altura: number }): string[] {
+    const achadas = this.db.prepare(`SELECT id, barbearia_id AS barbeariaId FROM fotos
+      WHERE categoria = ? AND COALESCE(legenda, '') = ? AND largura = ? AND altura = ?`)
+      .all(f.categoria, f.legenda ?? "", f.largura, f.altura) as { id: number; barbeariaId: number }[];
+    return achadas.map((x) => this.removerFoto(x.barbeariaId, x.id)).filter((a): a is string => !!a);
+  }
+
   removerFoto(barbeariaId: number, id: number): string | undefined {
     const f = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
     if (!f) return undefined;

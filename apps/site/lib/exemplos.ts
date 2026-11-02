@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { gravarFoto, processarFoto, TEMAS, type Barbearia } from "@aprenda/agenda";
+import { apagarFoto, gravarFoto, processarFoto, TEMAS, type Barbearia } from "@aprenda/agenda";
 import { PASTA_CURSOS } from "@aprenda/catalogo";
 import { obterAgenda } from "./agenda";
 import { porCardapio } from "./cardapio";
@@ -51,6 +51,22 @@ export function sitesDeExemplo(): Record<string, string> {
     const b = banco.barbeariaPorSlug(slug);
     return b && banco.acessoAtivo(b);
   }));
+}
+
+/**
+ * Fotos tiradas do acervo a pedido do dono. Assinatura (depois de processarFoto) pra achar em todos os
+ * sites; o arquivo original já saiu de data/demo-fotos.
+ */
+const FOTOS_RETIRADAS = [
+  // ambiente-15926474.jpg: cadeira vermelha com quadros antigos na parede (02/11/2026).
+  { categoria: "ambiente", largura: 1200, altura: 830 },
+];
+
+export function retirarFotosDoAcervo(): void {
+  const banco = obterAgenda();
+  let n = 0;
+  for (const f of FOTOS_RETIRADAS) for (const arquivo of banco.retirarFotoDoAcervo(f)) { apagarFoto(arquivo); n++; }
+  if (n) console.log(`Fotos retiradas do acervo: ${n}`);
 }
 
 type FotoDemo = { arquivo: string; categoria: string; legenda?: string; licenca?: string };

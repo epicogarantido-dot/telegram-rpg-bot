@@ -9,6 +9,9 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NEXT_PHASE === "phase-production-build") return;
   const { soEntrega } = await import("@/lib/modo");
   // Sem await: o site já atende enquanto as fotos são processadas (a barbearia em si nasce na hora).
+  // Fotos que saíram do acervo: somem de todos os sites (exemplos e clientes que pegaram do acervo).
+  const { retirarFotosDoAcervo } = await import("@/lib/exemplos");
+  retirarFotosDoAcervo();
   // Lembrete no celular do cliente (1 hora antes do horário): confere a cada 5 minutos.
   const g = globalThis as { lembretesLigados?: boolean };
   if (!g.lembretesLigados) {
