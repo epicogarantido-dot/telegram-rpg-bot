@@ -37,7 +37,7 @@ export default function Termos() {
       <h2>Site e agenda pra barbearias</h2>
       <h3>O que você recebe</h3>
       <p>
-        Um site da sua barbearia, num endereço do Aprenda Livre com o nome dela, onde o cliente vê seus trabalhos e marca
+        Um site da sua barbearia, num endereço com o nome dela (nome-da-barbearia.squareweb.app), onde o cliente vê seus trabalhos e marca
         horário, e um painel pra você cuidar de agenda, fotos, equipe, serviços e preços pelo celular.
       </p>
 

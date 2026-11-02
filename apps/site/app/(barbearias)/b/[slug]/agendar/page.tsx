@@ -69,6 +69,11 @@ async function confirmar(form: FormData) {
     servico: String(form.get("servico")), profissional: String(form.get("profissional") ?? ""),
     data: String(form.get("data")), hora: String(form.get("hora")), com: String(form.get("com")),
   };
+  // Site de exemplo ou demonstração: é um teste (o aviso do topo convida a marcar). Nada é salvo;
+  // mostra o "Agendado!" como o cliente veria, com o aviso de que foi teste.
+  if (b.demoAte) {
+    redirect(`/b/${slug}/confirmado?${new URLSearchParams({ servico: campos.servico, profissional: campos.com, data: campos.data, hora: campos.hora, teste: "1" })}`);
+  }
   const extras = form.getAll("extra").map(String);
   const voltar = new URLSearchParams(campos);
   voltar.set("ad", "1");

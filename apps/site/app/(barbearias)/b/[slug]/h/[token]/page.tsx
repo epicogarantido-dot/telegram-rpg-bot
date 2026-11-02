@@ -156,7 +156,8 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
 
       {cancelado && <p><Link className="b-botao" href={`/b/${slug}/agendar?servico=${h.servicoId}`}>Marcar outro horário</Link></p>}
 
-      {!barbeiro && (
+      {/* Cancelado: o "Avisar a barbearia" e o "Marcar outro horário" já dão conta; o texto daqui falaria do horário que não existe mais. */}
+      {!barbeiro && !cancelado && (
         <p className="b-confirmado-ajuda">
           {podeMudar ? "Alguma dúvida?" : "Precisa de algo?"}{" "}
           <a target="_blank" rel="noopener noreferrer" href={whats}><MessageCircle size={16} aria-hidden /> Fale com a barbearia no WhatsApp</a>

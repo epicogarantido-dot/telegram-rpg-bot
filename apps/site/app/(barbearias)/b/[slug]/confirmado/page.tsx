@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CalendarPlus, MapPin, MessageCircle } from "lucide-react";
 import { formatarData, linkGoogleAgenda } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
@@ -10,7 +10,7 @@ import { eventoDoHorario, linkMapa } from "@/lib/barbearias";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Agendado!", robots: { index: false } };
 
-type Busca = { servico?: string; profissional?: string; data?: string; hora?: string };
+type Busca = { servico?: string; profissional?: string; data?: string; hora?: string; teste?: string };
 
 export default async function Confirmado({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Busca> }) {
   const b = obterAgenda().barbeariaPorSlug((await params).slug);
@@ -19,14 +19,9 @@ export default async function Confirmado({ params, searchParams }: { params: Pro
   // Só mostra o que veio na URL, cruzado com dados públicos da barbearia:
   // nada aqui expõe agendamentos de outras pessoas.
   const r = eventoDoHorario(b, sp);
-  if (!r) {
-    return (
-      <section className="b-secao b-indisponivel b-confirmado">
-        <h1>Agendado!</h1>
-        <Link className="b-botao" href={`/b/${b.slug}`}>Voltar pra {b.nome}</Link>
-      </section>
-    );
-  }
+  // Sem os dados do horário não tem o que confirmar: volta pro site (nada de "Agendado!" vazio).
+  if (!r) redirect(`/b/${b.slug}`);
+  const teste = !!b.demoAte;
   const { evento, servico, prof } = r;
   const quando = `${formatarData(sp.data!)} às ${sp.hora}`;
   const ics = `/b/${b.slug}/agenda.ics?${new URLSearchParams({ servico: String(servico.id), profissional: String(prof.id), data: sp.data!, hora: sp.hora! })}`;
@@ -56,6 +51,14 @@ export default async function Confirmado({ params, searchParams }: { params: Pro
         </a>
       </div>
 
+      {teste ? (
+        // Site de exemplo: foi um teste. Mostra o que acontece no site de verdade.
+        <div className="b-aviso-ok" role="status">
+          <p><strong>Isso foi um teste: nada foi marcado.</strong></p>
+          <p>No seu site, o horário fica salvo na hora, o barbeiro recebe o aviso no celular e o cliente ganha um link pra remarcar ou cancelar sozinho.</p>
+          <p><Link className="b-botao" href={`/app/cadastro?estilo=${b.tema}`}>Quero um site assim</Link></p>
+        </div>
+      ) : (
       <p className="b-confirmado-ajuda">
         Precisa remarcar ou cancelar?{" "}
         <a target="_blank" rel="noopener noreferrer"
@@ -63,6 +66,7 @@ export default async function Confirmado({ params, searchParams }: { params: Pro
           <MessageCircle size={16} aria-hidden /> Fale com a barbearia no WhatsApp
         </a>
       </p>
+      )}
     </section>
   );
 }
