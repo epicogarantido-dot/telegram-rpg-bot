@@ -241,3 +241,9 @@ html:has(.app-venda), body:has(.app-venda) { background: #120b14; }
 .site-cursos .faixa-saas span { flex: 1 1 240px; color: var(--suave); }
 .site-cursos .faixa-saas strong { color: var(--texto); }
 .site-cursos .faixa-saas a { flex: none; font-weight: 600; }
+
+/* Painel de vendas: apagar pedido pede confirmação (abre e mostra o botão de verdade). */
+.apagar-pedido > summary { list-style: none; cursor: pointer; display: inline-flex; }
+.apagar-pedido > summary::-webkit-details-marker { display: none; }
+.apagar-pedido[open] > summary { opacity: 0.6; }
+.apagar-pedido form { margin-top: 8px; display: grid; gap: 6px; }

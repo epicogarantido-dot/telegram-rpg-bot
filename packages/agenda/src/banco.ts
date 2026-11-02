@@ -1814,6 +1814,38 @@ export class BancoAgenda {
    * Apaga o registro e devolve o arquivo pra quem chamou remover do disco. Foto de exemplo
    * copiada (`copiarFotos`) divide o arquivo com outros sites: aí só some o registro.
    */
+  /**
+   * Apaga um pedido/assinatura de vez (lista de vendas do admin): a barbearia e tudo o que é dela,
+   * em todas as tabelas com `barbearia_id`. Site de exemplo e demonstração não se apagam por aqui.
+   * Devolve os arquivos que ficaram sem dono (fotos que ninguém mais usa e comprovantes) pra apagar do disco.
+   */
+  apagarBarbearia(id: number): { fotos: string[]; comprovantes: string[] } {
+    const b = this.barbeariaPorId(id);
+    if (!b) throw new ErroAgenda("Barbearia não encontrada.");
+    if (b.demoAte) throw new ErroAgenda("Site de exemplo ou demonstração não se apaga por aqui.");
+    const fotos = (this.db.prepare("SELECT DISTINCT arquivo FROM fotos WHERE barbearia_id = ?").all(id) as { arquivo: string }[]).map((f) => f.arquivo);
+    const comprovantes = (this.db.prepare("SELECT comprovante FROM pagamentos WHERE barbearia_id = ? AND comprovante IS NOT NULL").all(id) as { comprovante: string }[]).map((p) => p.comprovante);
+    // Toda tabela com barbearia_id (as que vierem depois entram sozinhas); filhas primeiro por causa das chaves.
+    const tabelas = (this.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[])
+      .map((t) => t.name).filter((t) => t !== "barbearias" && (this.db.prepare(`PRAGMA table_info(${t})`).all() as { name: string }[]).some((c) => c.name === "barbearia_id"));
+    const ultimas = ["servicos", "profissionais", "usuarios"];
+    this.db.exec("BEGIN");
+    try {
+      const usuarios = "SELECT id FROM usuarios WHERE barbearia_id = ?";
+      this.db.prepare(`DELETE FROM sessoes WHERE usuario_id IN (${usuarios})`).run(id);
+      this.db.prepare(`DELETE FROM trocas_senha WHERE usuario_id IN (${usuarios})`).run(id);
+      for (const t of [...tabelas.filter((t) => !ultimas.includes(t)), ...ultimas.filter((t) => tabelas.includes(t))]) {
+        this.db.prepare(`DELETE FROM ${t} WHERE barbearia_id = ?`).run(id);
+      }
+      this.db.prepare("DELETE FROM barbearias WHERE id = ?").run(id);
+      this.db.exec("COMMIT");
+    } catch (erro) {
+      this.db.exec("ROLLBACK");
+      throw erro;
+    }
+    return { fotos: fotos.filter((a) => !this.db.prepare("SELECT 1 FROM fotos WHERE arquivo = ?").get(a)), comprovantes };
+  }
+
   removerFoto(barbeariaId: number, id: number): string | undefined {
     const f = this.db.prepare("SELECT arquivo FROM fotos WHERE id = ? AND barbearia_id = ?").get(id, barbeariaId) as { arquivo: string } | undefined;
     if (!f) return undefined;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { randomBytes } from "node:crypto";
-import { ErroAgenda, formatarData, semEmail, TEMAS, type Barbearia } from "@aprenda/agenda";
+import { apagarComprovante, apagarFoto, ErroAgenda, formatarData, semEmail, TEMAS, type Barbearia } from "@aprenda/agenda";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
 import { exigirLogin } from "@/lib/painel";
 import { linkWhatsapp, normalizarTelefone } from "@aprenda/prospeccao";
@@ -65,6 +65,37 @@ async function renovar(form: FormData) {
     redirect(`/painel/assinaturas?erro=${encodeURIComponent(mensagemDeErro(e))}`);
   }
   revalidatePath("/painel/assinaturas");
+}
+
+/** Apaga o pedido/assinatura de vez (teste, desistência): banco, comprovantes e fotos sem outro dono. */
+async function apagar(form: FormData) {
+  "use server";
+  await exigirLogin();
+  let nome = "";
+  try {
+    const id = Number(form.get("id"));
+    nome = obterAgenda().barbeariaPorId(id)?.nome ?? "";
+    const { fotos, comprovantes } = obterAgenda().apagarBarbearia(id);
+    for (const f of fotos) apagarFoto(f);
+    for (const c of comprovantes) apagarComprovante(c);
+  } catch (e) {
+    redirect(`/painel/assinaturas?erro=${encodeURIComponent(mensagemDeErro(e))}`);
+  }
+  redirect(`/painel/assinaturas?apagado=${encodeURIComponent(nome)}`);
+}
+
+/** Pede a confirmação antes de apagar (sem JavaScript): abre e mostra o botão de verdade. */
+function Apagar({ b }: { b: Barbearia }) {
+  return (
+    <details className="apagar-pedido">
+      <summary className="botao-sec perigo">Apagar</summary>
+      <form action={apagar}>
+        <input type="hidden" name="id" value={b.id} />
+        <p><small>Apaga {b.nome} de vez: pedido, pagamentos e conta. Não dá pra desfazer.</small></p>
+        <button className="botao-sec perigo">Sim, apagar {b.nome}</button>
+      </form>
+    </details>
+  );
 }
 
 /** SaaS: tira do ar ou põe de volta (site e painel). O prazo vencido sozinho não tira nada. */
@@ -150,9 +181,9 @@ function situacaoDaAssinatura(b: Barbearia) {
   return { ordem: 3, etiqueta: "em dia", alerta: false, texto: `até ${data}` };
 }
 
-export default async function Assinaturas({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+export default async function Assinaturas({ searchParams }: { searchParams: Promise<{ erro?: string; apagado?: string }> }) {
   await exigirLogin();
-  const { erro } = await searchParams;
+  const { erro, apagado } = await searchParams;
   const banco = obterAgenda();
   // Só quem tem conta (e-mail de acesso). Exemplos e demonstrações não têm dono.
   const clientes = banco.todasBarbearias().filter((b) => b.email);
@@ -279,6 +310,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
           <input type="hidden" name="acao" value="recusar" />
           <button className="botao-sec">Recusar</button>
         </form>
+        {(() => { const b = banco.barbeariaPorId(p.barbeariaId); return b && !b.demoAte ? <Apagar b={b} /> : null; })()}
       </div>
     </div>
   );
@@ -295,6 +327,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
         </small></p>
       )}
       {erro && <p className="erro">{erro}</p>}
+      {apagado && <p className="atribuicao" role="status">{apagado} foi apagado.</p>}
 
       <h2>Pagamentos a conferir ({informados.length})</h2>
       <p><small>Confira no extrato do banco se o Pix com o valor e o identificador caiu antes de confirmar.</small></p>
@@ -334,6 +367,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Prom
                 <input type="hidden" name="id" value={b.id} />
                 <button className="botao-sec">Link de nova senha</button>
               </form>
+              <Apagar b={b} />
             </span>
             {/* Pago: o app do barbeiro (um por cliente) sobe na Square com estas variáveis. */}
             {!b.emMontagem && (

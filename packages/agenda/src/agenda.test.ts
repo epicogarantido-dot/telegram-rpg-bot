@@ -86,6 +86,20 @@ describe("BancoAgenda", () => {
     return { b, barbearia, token };
   }
 
+  it("apagar um pedido tira a barbearia, a conta, a sessão e os pagamentos", () => {
+    const b = new BancoAgenda(":memory:", { valorCentavos: 4999, dias: 30, testeDias: 0 });
+    const { barbearia, token } = b.criarPedido({ nomeBarbearia: "Teste Apagar", telefone: "5555999997777", nome: "Ana", agora });
+    const outro = b.criarPedido({ nomeBarbearia: "Fica", telefone: "5555999996666", nome: "Bia", agora });
+    const p = b.pagamentoAberto(barbearia.id);
+    b.informarPagamento(barbearia.id, p.id, "Ana");
+    expect(b.apagarBarbearia(barbearia.id)).toEqual({ fotos: [], comprovantes: [] });
+    expect(b.barbeariaPorId(barbearia.id)).toBeUndefined();
+    expect(b.usuarioDaSessao(token)).toBeUndefined();
+    expect(b.pagamentosDaBarbearia(barbearia.id)).toHaveLength(0);
+    expect(b.barbeariaPorId(outro.barbearia.id)?.nome).toBe("Fica");
+    expect(() => b.apagarBarbearia(barbearia.id)).toThrow(ErroAgenda);
+  });
+
   it("pedido sem e-mail nem senha: segue logado e depois entra pelo WhatsApp", () => {
     const b = new BancoAgenda(":memory:", { valorCentavos: 2990, dias: 30, testeDias: 0 });
     const { barbearia, token } = b.criarPedido({ nomeBarbearia: "Box Sul", telefone: "5555999998888", nome: "Ana", agora });
