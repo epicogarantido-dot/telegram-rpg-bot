@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { Check, Scissors, Sparkles } from "lucide-react";
-import { agoraNoFuso, CATEGORIAS_REFERENCIA, ErroAgenda, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
+import { agoraNoFuso, CATEGORIAS_REFERENCIA, deMinutos, ErroAgenda, paraMinutos, MAX_ADICIONAIS, dataValida, diaDaSemana, formatarData, nomeDia, somarDias, type BancoAgenda, type Data } from "@aprenda/agenda";
 import { normalizarTelefone } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
@@ -587,11 +587,9 @@ export default async function Agendar({ params, searchParams }: { params: Promis
       {escolhido ? (
         <>
           <h2 className="b-dia-titulo">{formatarData(escolhido.d)}</h2>
-          <ul className="b-horas">
-            {escolhido.vagas.map(([h, p]) => (
-              <li key={h}><Link href={link({ data: escolhido.d, hora: h, com: String(p) })}>{h}{!filtro && profissionais.length > 1 && <small>{nomeDoProf(p)}</small>}</Link></li>
-            ))}
-          </ul>
+          <TabelaDoDia banco={banco} b={b} d={escolhido.d} servicoId={servico.id} duracao={duracao} ignorarId={remarcando?.id}
+            colunas={profissionais.filter((p) => ids.includes(p.id))} periodo={periodo} hoje={hoje}
+            link={(h, p) => link({ data: escolhido.d, hora: h, com: String(p) })} />
         </>
       ) : (
         <p>Sem horários livres nos próximos {DIAS_A_FRENTE} dias{filtro || periodo ? " com esse filtro" : ""}.{(filtro || periodo) && <> <Link href={link({ profissional: undefined, periodo: undefined })}>Ver todos os horários</Link>.</>}{b.telefone && <> <a href={`https://wa.me/${b.telefone}`} target="_blank" rel="noopener noreferrer">Fale com a barbearia no WhatsApp</a>.</>}</p>
@@ -637,5 +635,77 @@ function EscolherBarbeiro({ titulo, profissionais, atual, link }: {
         ))}
       </ul>
     </nav>
+  );
+}
+
+/**
+ * Horários do dia em tabela: horas na 1ª coluna, um barbeiro por coluna (com o nome em cima).
+ * Cada célula diz se dá pra marcar (toque), se já está ocupado, se é o descanso entre um cliente
+ * e outro (`folgaMin`) ou se está fora do horário. Nunca mostra quem marcou: só "Ocupado".
+ */
+function TabelaDoDia({ banco, b, d, servicoId, duracao, ignorarId, colunas, periodo, hoje, link }: {
+  banco: BancoAgenda; b: { id: number; fechadoEm?: string; intervaloMin: number; folgaMin: number; fuso: string };
+  d: Data; servicoId: number; duracao: { adicionais?: number[]; duracaoMin?: number }; ignorarId?: number;
+  colunas: { id: number; nome: string }[]; periodo?: (typeof PERIODOS)[number]; hoje: string; link: (h: string, p: number) => string;
+}) {
+  const exp = new Map(colunas.map((p) => [p.id, b.fechadoEm === d ? undefined : banco.expedienteDoProfissional(b.id, p.id, d)]));
+  const abertos = [...exp.values()].filter((e): e is NonNullable<typeof e> => !!e);
+  if (abertos.length === 0) return <p className="b-dica">Ninguém atende neste dia.</p>;
+  const livres = new Map(colunas.map((p) => [p.id, new Set(banco.horariosLivres(b.id, p.id, servicoId, d, undefined, ignorarId, duracao))]));
+  const marcados = banco.agendamentosDoDia(b.id, d).filter((a) => a.status !== "cancelado" && a.id !== ignorarId);
+  const bloqueios = banco.bloqueiosDoDia(b.id, d);
+  const min = (iso: string) => paraMinutos(iso.slice(11, 16));
+  const de = Math.min(...abertos.map((e) => paraMinutos(e.abre)));
+  const ate = Math.max(...abertos.map((e) => paraMinutos(e.fecha)));
+  const agora = d === hoje ? paraMinutos(agoraNoFuso(b.fuso).slice(11, 16)) : -1;
+  // Linhas: a grade da barbearia mais os encaixes (horário livre fora da grade, ex. 10:40).
+  const horas = new Set<number>();
+  for (let m = de; m < ate; m += b.intervaloMin) horas.add(m);
+  for (const l of livres.values()) for (const h of l) horas.add(paraMinutos(h));
+  const linhas = [...horas].sort((x, y) => x - y)
+    .filter((m) => m > agora && (!periodo || (deMinutos(m) >= periodo.de && deMinutos(m) < periodo.ate)));
+  if (linhas.length === 0) return <p className="b-dica">Sem horários nesse período.</p>;
+
+  const estado = (pid: number, m: number): "livre" | "ocupado" | "descanso" | "almoco" | "fora" => {
+    if (livres.get(pid)?.has(deMinutos(m))) return "livre";
+    const e = exp.get(pid);
+    const pausa = e?.pausaInicio && e.pausaFim && m >= paraMinutos(e.pausaInicio) && m < paraMinutos(e.pausaFim);
+    if (pausa) return "almoco";
+    if (!e || m < paraMinutos(e.abre) || m >= paraMinutos(e.fecha)) return "fora";
+    const doProf = marcados.filter((a) => a.profissionalId === pid);
+    if (doProf.some((a) => min(a.inicio) <= m && min(a.fim) > m)) return "ocupado";
+    if (b.folgaMin > 0 && doProf.some((a) => min(a.fim) <= m && min(a.fim) + b.folgaMin > m)) return "descanso";
+    if (bloqueios.some((f) => (f.profissionalId === undefined || f.profissionalId === pid) && min(f.inicio) <= m && min(f.fim) > m)) return "fora";
+    // Livre, mas o serviço escolhido não cabe até o próximo cliente.
+    return "fora";
+  };
+  const ROTULO = { ocupado: "Ocupado", descanso: "Descanso", almoco: "Almoço", fora: "—" } as const;
+
+  return (
+    <div className="b-tabela-wrap">
+      <table className="b-tabela-horas" style={{ "--cols": colunas.length } as React.CSSProperties}>
+        <thead>
+          <tr><th scope="col"><span className="b-so-leitor">Hora</span></th>{colunas.map((p) => <th key={p.id} scope="col">{p.nome.split(" ")[0]}</th>)}</tr>
+        </thead>
+        <tbody>
+          {linhas.map((m) => (
+            <tr key={m}>
+              <th scope="row">{deMinutos(m)}</th>
+              {colunas.map((p) => {
+                const st = estado(p.id, m);
+                return (
+                  <td key={p.id} className={`b-celula ${st}`}>
+                    {st === "livre"
+                      ? <Link href={link(deMinutos(m), p.id)} aria-label={`Marcar ${deMinutos(m)} com ${p.nome}`}>{deMinutos(m)}</Link>
+                      : <span aria-label={st === "fora" ? "Não dá pra marcar" : ROTULO[st]}>{ROTULO[st]}</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="b-tabela-legenda"><span className="b-celula livre"><span>Livre</span></span> toque pra marcar · <span className="b-celula ocupado"><span>Ocupado</span></span>{b.folgaMin > 0 && <> · <span className="b-celula descanso"><span>Descanso</span></span> {b.folgaMin} min entre um cliente e outro</>}</p>
+    </div>
   );
 }

@@ -19,7 +19,7 @@ export default function Privacidade() {
   return (
     <article className="texto-legal">
       <h1>Privacidade</h1>
-      <p className="suave">Atualizado em 29 de outubro de 2026.</p>
+      <p className="suave">Atualizado em 2 de novembro de 2026.</p>
 
       {soEntrega() ? (
         <p>
@@ -88,8 +88,9 @@ export default function Privacidade() {
       <h2>Com quem os dados ficam</h2>
       <p>
         Os dados ficam no nosso servidor, contratado da Square Cloud, que passa o tráfego pela Cloudflare. Não vendemos
-        nem passamos dados pra ninguém. Avisos no celular do barbeiro passam pelo serviço de notificação do navegador
-        dele (Google, Apple ou Mozilla), só com o texto do aviso.
+        nem passamos dados pra ninguém. Avisos no celular (do barbeiro, a cada horário marcado, e do cliente que pediu o
+        lembrete 1 hora antes) passam pelo serviço de notificação do navegador (Google, Apple ou Mozilla), só com o texto
+        do aviso. O endereço de aviso do cliente fica guardado só até o horário passar ou ser cancelado.
       </p>
 
       <h2>Por quanto tempo</h2>

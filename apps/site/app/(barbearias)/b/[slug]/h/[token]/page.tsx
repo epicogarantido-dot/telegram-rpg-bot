@@ -10,15 +10,44 @@ import { formatarData, linkGoogleAgenda, pixDoSinal } from "@aprenda/agenda";
 import { linkWhatsapp } from "@aprenda/prospeccao";
 import { BotaoEnviar } from "@/componentes/BotaoEnviar";
 import { mensagemDeErro, obterAgenda, reais } from "@/lib/agenda";
-import { avisarMudancaDoCliente } from "@/lib/avisos";
+import { avisarMudancaDoCliente, avisoClienteLigado, chavesAviso } from "@/lib/avisos";
+import { barbeariaInstalavel } from "@/lib/app-instalavel";
+import { LembreteCliente } from "@/componentes/barbearia/LembreteCliente";
+import type { Metadata } from "next";
 import { linkMapa, montarEvento, urlAbsoluta } from "@/lib/barbearias";
 import { ehOBarbeiro, protegerMudanca } from "@/lib/protecao";
 
 export const dynamic = "force-dynamic";
-// Link secreto: nunca vai pro Google nem pra outros sites.
-export const metadata = { title: "Seu horário", robots: { index: false, follow: false }, referrer: "no-referrer" as const };
 
 type Busca = { novo?: string; remarcado?: string; cancelado?: string; cancelar?: string; erro?: string };
+
+/** No celular, o app do site abre direto nesta página do horário (o manifesto leva o `inicio`). */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; token: string }> }): Promise<Metadata> {
+  const { slug, token } = await params;
+  // Link secreto: nunca vai pro Google nem pra outros sites.
+  const base: Metadata = { title: "Seu horário", robots: { index: false, follow: false }, referrer: "no-referrer" };
+  const b = barbeariaInstalavel();
+  if (!b || b.slug !== slug || !/^[A-Za-z0-9_-]{40,60}$/.test(token)) return base;
+  return { ...base, manifest: `/manifest-site.webmanifest?inicio=${encodeURIComponent(`/b/${slug}/h/${token}`)}` };
+}
+
+/** "Me avise 1 hora antes": guarda o aparelho do cliente pra esse horário e manda o "aviso ligado". */
+async function ligarLembrete(slug: string, token: string, aparelho: { endpoint: string; p256dh: string; auth: string }): Promise<string | null> {
+  "use server";
+  const banco = obterAgenda();
+  const b = banco.barbeariaPorSlug(slug);
+  const h = b && banco.horarioDoCliente(b.id, token);
+  if (!b || !h || h.status !== "confirmado" || h.passou) return "Este horário não está mais ativo.";
+  try {
+    await protegerMudanca();
+    const dados = { endpoint: String(aparelho.endpoint), p256dh: String(aparelho.p256dh), auth: String(aparelho.auth) };
+    banco.salvarLembreteCliente(b.id, h.id, dados);
+    after(() => avisoClienteLigado(dados, { barbearia: b.nome, slug: b.slug, servico: h.servico, inicio: h.inicio }).catch(() => {}));
+    return null;
+  } catch (e) {
+    return mensagemDeErro(e);
+  }
+}
 
 async function cancelar(form: FormData) {
   "use server";
@@ -39,7 +68,7 @@ async function cancelar(form: FormData) {
 
 /**
  * Página do horário do cliente (link secreto gerado ao marcar). Mostra o
- * horário, adiciona à agenda do celular e deixa cancelar ou remarcar sem login.
+ * horário, liga o aviso no celular 1 hora antes (o site é um app) e deixa cancelar ou remarcar sem login.
  */
 export default async function SeuHorario({ params, searchParams }: { params: Promise<{ slug: string; token: string }>; searchParams: Promise<Busca> }) {
   const { slug, token } = await params;
@@ -54,10 +83,6 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
   const quando = `${formatarData(h.inicio.slice(0, 10))} às ${h.inicio.slice(11, 16)}`;
   const cancelado = h.status === "cancelado";
   const podeMudar = !cancelado && !h.passou;
-  const evento = montarEvento(b, { servico: h.servico, profissional: h.profissional, inicio: h.inicio, duracaoMin: h.duracaoMin, linkGestao: urlAbsoluta(base) });
-  const android = /Android/i.test((await headers()).get("user-agent") ?? "");
-  const ics = `${base}/agenda.ics`;
-  const google = linkGoogleAgenda(evento);
   const mapa = linkMapa(b);
   const whats = linkWhatsapp(b.telefone, `Olá! Tenho horário de ${h.servico} com ${h.profissional}, ${quando}.`);
 
@@ -121,15 +146,7 @@ export default async function SeuHorario({ params, searchParams }: { params: Pro
 
       {podeMudar && !barbeiro && (
         <>
-          <div className="b-lembrete">
-            <a className="b-botao" href={android ? google : ics} {...(android ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-              <CalendarPlus size={18} aria-hidden /> Adicionar à minha agenda
-            </a>
-            <p>{android ? "Abre o Google Agenda com o horário pronto pra salvar." : "Seu celular te lembra 1 hora antes."}</p>
-            <a className="b-lembrete-outro" href={android ? ics : google} {...(android ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
-              {android ? "Prefere outro app? Baixar arquivo de agenda" : "Usa o Google Agenda? Adicionar por lá"}
-            </a>
-          </div>
+          <LembreteCliente chavePublica={chavesAviso().publica} barbearia={b.nome} ligar={ligarLembrete.bind(null, slug, token)} />
 
           <div className="b-mudar">
             <p><strong>Guarde este link:</strong> é por ele que você remarca ou cancela, sem precisar ligar.</p>

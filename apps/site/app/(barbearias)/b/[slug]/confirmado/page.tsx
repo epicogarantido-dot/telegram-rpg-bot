@@ -41,21 +41,12 @@ export default async function Confirmado({ params, searchParams }: { params: Pro
         )}
       </div>
 
-      <div className="b-lembrete">
-        <a className="b-botao" href={android ? google : ics} {...(android ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-          <CalendarPlus size={18} aria-hidden /> Adicionar à minha agenda
-        </a>
-        <p>{android ? "Abre o Google Agenda com o horário pronto pra salvar." : "Seu celular te lembra 1 hora antes."}</p>
-        <a className="b-lembrete-outro" href={android ? ics : google} {...(android ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
-          {android ? "Prefere outro app? Baixar arquivo de agenda" : "Usa o Google Agenda? Adicionar por lá"}
-        </a>
-      </div>
 
       {teste ? (
         // Site de exemplo: foi um teste. Mostra o que acontece no site de verdade.
         <div className="b-aviso-ok" role="status">
           <p><strong>Isso foi um teste: nada foi marcado.</strong></p>
-          <p>No seu site, o horário fica salvo na hora, o barbeiro recebe o aviso no celular e o cliente ganha um link pra remarcar ou cancelar sozinho.</p>
+          <p>No seu site, o horário fica salvo na hora, o barbeiro recebe o aviso no celular e o cliente ganha um link pra remarcar ou cancelar sozinho, com aviso no celular dele 1 hora antes.</p>
           <p><Link className="b-botao" href={`/app/cadastro?estilo=${b.tema}`}>Quero um site assim</Link></p>
         </div>
       ) : (

@@ -300,3 +300,11 @@
 .instalar-acoes button { display: inline-flex; align-items: center; gap: 6px; }
 .instalar-passos { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .instalar-passos svg { vertical-align: -2px; }
+/* Página aberta pelo aviso de horário novo. */
+.confirmar-horario { max-width: 560px; }
+.confirmar-cartao { display: grid; gap: 4px; margin: 12px 0 16px; }
+.confirmar-quando { font-size: 1.25rem; font-weight: 700; }
+.confirmar-foto { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.confirmar-foto img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+.botao-grande { width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 8px; min-height: 52px; font-size: 1.05rem; }
+.passos-avisos { margin: 12px 0; padding-left: 20px; display: grid; gap: 6px; }

@@ -79,7 +79,7 @@ export default async function Conta() {
             <li><Link href="/app/planos"><Repeat size={20} aria-hidden /><span>Planos mensais<small>Clientes que pagam por mês</small></span></Link></li>
             <li><Link href="/app/clientes"><Users size={20} aria-hidden /><span>Clientes que sumiram<small>Quem não volta faz tempo</small></span></Link></li>
             <li><Link href="/app/numeros"><BarChart3 size={20} aria-hidden /><span>Números<small>Atendimentos, faturamento e quem voltou no mês</small></span></Link></li>
-            <li><Link href="/app/calendario"><CalendarDays size={20} aria-hidden /><span>Agenda no celular<small>Ver os horários no calendário do iPhone ou Google</small></span></Link></li>
+            <li><Link href="/app/avisos"><CalendarDays size={20} aria-hidden /><span>Avisos no celular<small>Instalar o app e receber cada horário marcado</small></span></Link></li>
             <li><Link href="/app/avaliacao"><Star size={20} aria-hidden /><span>Placa de avaliação<small>QR pra pedir avaliação no Google</small></span></Link></li>
             {soEntrega()
               ? <li><a href="/app/backup"><Download size={20} aria-hidden /><span>Cópia dos dados<small>Baixar tudo (clientes, horários, serviços) num arquivo</small></span></a></li>

@@ -150,6 +150,24 @@ describe("BancoAgenda", () => {
     expect(b.horariosLivres(barbearia.id, prof.id, corte.id, "2026-10-28", agora)).toContain("09:00");
   });
 
+  it("lembrete do cliente: sai uma vez, 1 hora antes, e some depois do horário", () => {
+    const { b, barbearia } = novo();
+    const prof = b.profissionais(barbearia.id)[0]!;
+    const corte = b.servicos(barbearia.id)[0]!;
+    const id = b.agendar({ barbeariaId: barbearia.id, profissionalId: prof.id, servicoId: corte.id, data: "2026-10-28", hora: "09:00",
+      clienteNome: "Cliente", clienteTelefone: "5519988887777", agora });
+    const aparelho = { endpoint: "https://push.exemplo.com/abc123456", p256dh: "B".repeat(40), auth: "a".repeat(16) };
+    b.salvarLembreteCliente(barbearia.id, id, aparelho);
+    // 7h50 em São Paulo (10h50 UTC): ainda falta mais de 1 hora.
+    expect(b.lembretesPendentes(60, new Date("2026-10-28T10:50:00Z"))).toHaveLength(0);
+    const prontos = b.lembretesPendentes(60, new Date("2026-10-28T11:05:00Z"));
+    expect(prontos).toHaveLength(1);
+    expect(prontos[0]).toMatchObject({ agendamentoId: id, inicio: "2026-10-28T09:00" });
+    b.marcarLembreteEnviado(aparelho.endpoint, id);
+    expect(b.lembretesPendentes(60, new Date("2026-10-28T11:10:00Z"))).toHaveLength(0);
+    expect(() => b.salvarLembreteCliente(barbearia.id, id, { ...aparelho, endpoint: "http://x" })).toThrow(ErroAgenda);
+  });
+
   it("isola barbearias", () => {
     const { b, barbearia } = novo();
     const outra = b.criarConta({ nomeBarbearia: "Outra", telefone: "5519900000009", nome: "Ana", email: "ana@x.com", senha: "segredo123", agora });

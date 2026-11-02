@@ -34,7 +34,8 @@ function nomeCurto(nome: string): string {
   return semBarbearia.length <= 12 ? semBarbearia : semBarbearia.split(/\s+/)[0]!.slice(0, 12);
 }
 
-export function manifesto(b: Barbearia, tipo: TipoApp) {
+/** `inicio`: página onde o app abre (ex.: o horário do cliente, `/b/<slug>/h/<token>`); só caminho dentro do site. */
+export function manifesto(b: Barbearia, tipo: TipoApp, inicio?: string) {
   const { fundo } = coresDoTema(b.tema);
   const site = tipo === "site";
   const icone = (t: string) => `/icone-app/${tipo}-${t}.png?v=${versaoDoIcone(b)}`;
@@ -43,7 +44,7 @@ export function manifesto(b: Barbearia, tipo: TipoApp) {
     short_name: site ? nomeCurto(b.nome) : "Agenda",
     description: site ? `Marque seu horário na ${b.nome}.` : `Agenda e avisos da ${b.nome}.`,
     id: site ? "/" : "/app",
-    start_url: site ? "/" : "/app",
+    start_url: site ? (inicio && new RegExp(`^/b/${b.slug}/h/[A-Za-z0-9_-]{40,60}$`).test(inicio) ? inicio : "/") : "/app",
     scope: site ? "/" : "/app",
     display: "standalone",
     background_color: fundo,

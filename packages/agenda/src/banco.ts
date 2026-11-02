@@ -466,6 +466,13 @@ export class BancoAgenda {
       );
     `);
     this.db.exec(`
+      -- Aviso no celular do CLIENTE (Web Push), 1 hora antes do horário dele. Some depois do horário.
+      CREATE TABLE IF NOT EXISTS lembretes_cliente (
+        endpoint TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
+        agendamento_id INTEGER NOT NULL, barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
+        criado_em TEXT NOT NULL, enviado_em TEXT,
+        PRIMARY KEY (endpoint, agendamento_id)
+      );
       CREATE TABLE IF NOT EXISTS avisos_inscricoes (
         endpoint TEXT PRIMARY KEY,
         barbearia_id INTEGER NOT NULL REFERENCES barbearias(id),
@@ -486,6 +493,8 @@ export class BancoAgenda {
         PRIMARY KEY (barbearia_id, telefone)
       );
     `);
+    // Aviso no celular de um barbeiro da equipe: só recebe os horários dele (vazio = dono, recebe tudo).
+    this.garantirColuna("avisos_inscricoes", "profissional_id", "INTEGER");
   }
 
   /**
@@ -1920,19 +1929,67 @@ export class BancoAgenda {
   // ---------- avisos no celular do barbeiro (Web Push) ----------
 
   /** Guarda o aparelho que pediu avisos. Se o mesmo endpoint já existia, passa a ser desta barbearia. */
-  salvarInscricaoAviso(barbeariaId: number, inscricao: { endpoint: string; p256dh: string; auth: string }): void {
+  salvarInscricaoAviso(barbeariaId: number, inscricao: { endpoint: string; p256dh: string; auth: string }, profissionalId?: number): void {
     const { endpoint, p256dh, auth } = inscricao;
     if (!/^https:\/\/[^\s]{10,}$/.test(endpoint) || endpoint.length > 1000) throw new ErroAgenda("Aparelho inválido.");
     if (!/^[A-Za-z0-9_-]{20,200}$/.test(p256dh) || !/^[A-Za-z0-9_-]{10,100}$/.test(auth)) throw new ErroAgenda("Aparelho inválido.");
     const total = (this.db.prepare("SELECT COUNT(*) AS n FROM avisos_inscricoes WHERE barbearia_id = ? AND endpoint <> ?").get(barbeariaId, endpoint) as { n: number }).n;
     if (total >= 10) throw new ErroAgenda("Limite de 10 aparelhos com aviso. Desligue em algum antes.");
-    this.db.prepare(`INSERT INTO avisos_inscricoes (endpoint, barbearia_id, p256dh, auth, criado_em) VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(endpoint) DO UPDATE SET barbearia_id = excluded.barbearia_id, p256dh = excluded.p256dh, auth = excluded.auth`)
-      .run(endpoint, barbeariaId, p256dh, auth, new Date().toISOString());
+    this.db.prepare(`INSERT INTO avisos_inscricoes (endpoint, barbearia_id, p256dh, auth, criado_em, profissional_id) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(endpoint) DO UPDATE SET barbearia_id = excluded.barbearia_id, p256dh = excluded.p256dh, auth = excluded.auth, profissional_id = excluded.profissional_id`)
+      .run(endpoint, barbeariaId, p256dh, auth, new Date().toISOString(), profissionalId ?? null);
   }
 
-  inscricoesAviso(barbeariaId: number): { endpoint: string; p256dh: string; auth: string }[] {
-    return this.db.prepare("SELECT endpoint, p256dh, auth FROM avisos_inscricoes WHERE barbearia_id = ?").all(barbeariaId) as { endpoint: string; p256dh: string; auth: string }[];
+  /** O cliente pediu aviso no celular antes do horário (pela página do horário, com o link secreto). */
+  salvarLembreteCliente(barbeariaId: number, agendamentoId: number, inscricao: { endpoint: string; p256dh: string; auth: string }): void {
+    const { endpoint, p256dh, auth } = inscricao;
+    if (!/^https:\/\/[^\s]{10,}$/.test(endpoint) || endpoint.length > 1000) throw new ErroAgenda("Aparelho inválido.");
+    if (!/^[A-Za-z0-9_-]{20,200}$/.test(p256dh) || !/^[A-Za-z0-9_-]{10,100}$/.test(auth)) throw new ErroAgenda("Aparelho inválido.");
+    this.db.prepare(`INSERT INTO lembretes_cliente (endpoint, p256dh, auth, agendamento_id, barbearia_id, criado_em) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(endpoint, agendamento_id) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth`)
+      .run(endpoint, p256dh, auth, agendamentoId, barbeariaId, new Date().toISOString());
+  }
+
+  /**
+   * Lembretes de cliente pra mandar agora: horário confirmado que começa em até `minutos` (no fuso da
+   * barbearia) e ainda não avisado. Apaga os de horários que já passaram ou foram cancelados.
+   */
+  lembretesPendentes(minutos = 60, agora = new Date()): { endpoint: string; p256dh: string; auth: string; agendamentoId: number; slug: string; barbearia: string; inicio: string; servico: string; profissional: string }[] {
+    const linhas = this.db.prepare(`SELECT l.endpoint, l.p256dh, l.auth, l.agendamento_id AS agendamentoId, b.slug, b.nome AS barbearia, b.fuso,
+        a.inicio, a.status, s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico, p.nome AS profissional
+      FROM lembretes_cliente l JOIN agendamentos a ON a.id = l.agendamento_id AND a.barbearia_id = l.barbearia_id
+      JOIN barbearias b ON b.id = l.barbearia_id JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
+      WHERE l.enviado_em IS NULL`).all() as { endpoint: string; p256dh: string; auth: string; agendamentoId: number; slug: string; barbearia: string; fuso: string; inicio: string; status: string; servico: string; profissional: string }[];
+    const prontos: ReturnType<BancoAgenda["lembretesPendentes"]> = [];
+    for (const l of linhas) {
+      const agoraLocal = agoraNoFuso(l.fuso, agora);
+      const limite = new Date(Date.parse(`${agoraLocal}:00Z`) + minutos * 60_000).toISOString().slice(0, 16);
+      if (l.status !== "confirmado" || l.inicio <= agoraLocal) {
+        this.db.prepare("DELETE FROM lembretes_cliente WHERE endpoint = ? AND agendamento_id = ?").run(l.endpoint, l.agendamentoId);
+      } else if (l.inicio <= limite) {
+        const { fuso: _f, status: _s, ...resto } = l;
+        prontos.push(resto);
+      }
+    }
+    return prontos;
+  }
+
+  marcarLembreteEnviado(endpoint: string, agendamentoId: number): void {
+    this.db.prepare("UPDATE lembretes_cliente SET enviado_em = ? WHERE endpoint = ? AND agendamento_id = ?").run(new Date().toISOString(), endpoint, agendamentoId);
+  }
+
+  /** O aparelho do cliente sumiu (desinstalou ou desligou avisos). */
+  removerLembreteCliente(endpoint: string): void {
+    this.db.prepare("DELETE FROM lembretes_cliente WHERE endpoint = ?").run(endpoint);
+  }
+
+  /** Aparelhos que recebem o aviso. Com `profissionalId`, o dono (todos) e só o barbeiro daquele horário. */
+  inscricoesAviso(barbeariaId: number, profissionalId?: number): { endpoint: string; p256dh: string; auth: string }[] {
+    if (profissionalId !== undefined) {
+      return this.db.prepare("SELECT endpoint, p256dh, auth FROM avisos_inscricoes WHERE barbearia_id = ? AND (profissional_id IS NULL OR profissional_id = ?)")
+        .all(barbeariaId, profissionalId) as { endpoint: string; p256dh: string; auth: string }[];
+    }
+    return this.db.prepare("SELECT endpoint, p256dh, auth FROM avisos_inscricoes WHERE barbearia_id = ? AND profissional_id IS NULL").all(barbeariaId) as { endpoint: string; p256dh: string; auth: string }[];
   }
 
   /** Remove um aparelho: pelo próprio barbeiro (com barbeariaId) ou quando o serviço de push diz que ele sumiu. */
@@ -1950,8 +2007,8 @@ export class BancoAgenda {
   }
 
   /** Dados de um agendamento pra montar o aviso (só da própria barbearia). */
-  agendamentoParaAviso(barbeariaId: number, id: number): { clienteNome: string; clienteTelefone: string; inicio: string; servico: string; profissional: string; referenciaFoto: string | null } | undefined {
-    return this.db.prepare(`SELECT a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio,
+  agendamentoParaAviso(barbeariaId: number, id: number): { clienteNome: string; clienteTelefone: string; inicio: string; servico: string; profissional: string; profissionalId: number; referenciaFoto: string | null } | undefined {
+    return this.db.prepare(`SELECT a.profissional_id AS profissionalId, a.cliente_nome AS clienteNome, a.cliente_telefone AS clienteTelefone, a.inicio,
         s.nome || COALESCE(' + ' || a.adicionais_nomes, '') AS servico, p.nome AS profissional, a.referencia_foto AS referenciaFoto
       FROM agendamentos a JOIN servicos s ON s.id = a.servico_id JOIN profissionais p ON p.id = a.profissional_id
       WHERE a.id = ? AND a.barbearia_id = ?`).get(id, barbeariaId) as ReturnType<BancoAgenda["agendamentoParaAviso"]>;

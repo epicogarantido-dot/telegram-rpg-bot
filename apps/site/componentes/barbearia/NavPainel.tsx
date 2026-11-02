@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, Images, LayoutTemplate, ListChecks, MessageCircle, Repeat, Settings, Smartphone, UserRound, Users } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Images, LayoutTemplate, ListChecks, MessageCircle, Repeat, Settings, UserRound, Users } from "lucide-react";
 
 const ITENS = [
   { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
@@ -10,6 +10,7 @@ const ITENS = [
   { href: "/app/agendados", rotulo: "Agendados", Icone: ListChecks, aba: true },
   { href: "/app/site", rotulo: "Meu site", Icone: LayoutTemplate, aba: true },
   { href: "/app/fotos", rotulo: "Fotos", Icone: Images, aba: true },
+  { href: "/app/avisos", rotulo: "Avisos no celular", Icone: Bell, aba: false },
   { href: "/app/numeros", rotulo: "Números", Icone: BarChart3, aba: false },
   { href: "/app/clientes", rotulo: "Clientes", Icone: Users, aba: false },
   { href: "/app/whatsapp", rotulo: "WhatsApp", Icone: MessageCircle, aba: false },
@@ -23,7 +24,7 @@ const ITENS = [
 const ITENS_EQUIPE = [
   { href: "/app", rotulo: "Agenda", Icone: CalendarDays, aba: true },
   { href: "/app/agendados", rotulo: "Agendados", Icone: ListChecks, aba: true },
-  { href: "/app/calendario", rotulo: "No celular", Icone: Smartphone, aba: true },
+  { href: "/app/avisos", rotulo: "Avisos", Icone: Bell, aba: true },
   { href: "/app/acesso", rotulo: "Trocar", Icone: Repeat, aba: true },
 ] as const;
 

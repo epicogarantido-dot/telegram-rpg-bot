@@ -33,9 +33,10 @@ export function mensagemConfirmacao(a: { barbearia: string; cliente: string; ser
 
 type Aviso = { titulo: string; corpo: string; url: string; whats?: string; tag: string };
 
-async function enviar(barbeariaId: number, aviso: Aviso): Promise<number> {
+/** `profissionalId`: aviso de um horário, vai pro dono e pro barbeiro dele (não pros outros da equipe). */
+async function enviar(barbeariaId: number, aviso: Aviso, profissionalId?: number): Promise<number> {
   const banco = obterAgenda();
-  const inscricoes = banco.inscricoesAviso(barbeariaId);
+  const inscricoes = banco.inscricoesAviso(barbeariaId, profissionalId);
   if (inscricoes.length === 0) return 0;
   const { publica, privada } = chavesAviso();
   const site = process.env.SITE_URL ?? "";
@@ -68,14 +69,14 @@ export async function avisarNovoAgendamento(barbeariaId: number, agendamentoId: 
   await enviar(barbeariaId, {
     titulo: `Novo horário: ${a.clienteNome}`,
     corpo: `${a.servico} com ${a.profissional} · ${formatarData(data)} às ${a.inicio.slice(11, 16)}${a.referenciaFoto ? " · escolheu o corte nas fotos" : ""}`,
-    url: `/app?data=${data}#ag-${agendamentoId}`,
-    whats: linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({ barbearia: b.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio })),
+    // Tocar no aviso abre a página do horário com o "Confirmar no WhatsApp" (mensagem pronta pro cliente).
+    url: `/app/confirmar/${agendamentoId}`,
     tag: `ag-${agendamentoId}`,
-  });
+  }, a.profissionalId);
 }
 
-export async function avisoDeTeste(barbeariaId: number): Promise<number> {
-  return enviar(barbeariaId, { titulo: "Avisos ligados ✅", corpo: "Assim vai chegar cada horário novo marcado pelo seu site.", url: "/app", tag: "teste" });
+export async function avisoDeTeste(barbeariaId: number, profissionalId?: number): Promise<number> {
+  return enviar(barbeariaId, { titulo: "Avisos ligados ✅", corpo: "Assim vai chegar cada horário novo marcado pelo seu site.", url: "/app", tag: "teste" }, profissionalId);
 }
 
 /** Cliente cancelou ou remarcou pelo link: o barbeiro fica sabendo na hora. */
@@ -83,21 +84,22 @@ export async function avisarMudancaDoCliente(barbeariaId: number, m:
   | { tipo: "cancelou"; id: number; cliente: string; servico: string; inicio: string }
   | { tipo: "remarcou"; id: number; cliente: string; servico: string; inicio: string; novoInicio: string; profissional: string }): Promise<void> {
   const quando = (dh: string) => `${formatarData(dh.slice(0, 10))} às ${dh.slice(11, 16)}`;
+  const prof = obterAgenda().agendamentoParaAviso(barbeariaId, m.id)?.profissionalId;
   if (m.tipo === "cancelou") {
     await enviar(barbeariaId, {
       titulo: `${m.cliente} cancelou`,
       corpo: `${m.servico} · ${quando(m.inicio)}. O horário voltou a ficar livre no site.`,
       url: `/app?data=${m.inicio.slice(0, 10)}#ag-${m.id}`,
       tag: `ag-${m.id}`,
-    });
+    }, prof);
     return;
   }
   await enviar(barbeariaId, {
     titulo: `${m.cliente} remarcou`,
     corpo: `${m.servico} com ${m.profissional}: de ${quando(m.inicio)} para ${quando(m.novoInicio)}.`,
-    url: `/app?data=${m.novoInicio.slice(0, 10)}#ag-${m.id}`,
+    url: `/app/confirmar/${m.id}`,
     tag: `ag-${m.id}`,
-  });
+  }, prof);
 }
 
 /** Alguém está tentando encher a agenda: o barbeiro fica sabendo e pode bloquear números. */
@@ -123,4 +125,50 @@ export async function avisarPagamento(barbeariaId: number, d: { confirmado: bool
     // Aviso é cortesia: falhar aqui não pode desfazer a decisão do admin.
     console.error("Falha ao avisar pagamento:", e);
   }
+}
+
+// ---------- avisos no celular do CLIENTE (lembrete do horário) ----------
+
+type Aparelho = { endpoint: string; p256dh: string; auth: string };
+
+async function enviarPara(aparelho: Aparelho, aviso: Aviso): Promise<"ok" | "sumiu" | "falhou"> {
+  const { publica, privada } = chavesAviso();
+  const site = process.env.SITE_URL ?? "";
+  try {
+    await webpush.sendNotification({ endpoint: aparelho.endpoint, keys: { p256dh: aparelho.p256dh, auth: aparelho.auth } }, JSON.stringify(aviso), {
+      vapidDetails: { subject: site.startsWith("https://") ? site : "mailto:avisos@localhost", publicKey: publica, privateKey: privada },
+      TTL: 60 * 60, timeout: 8000,
+    });
+    return "ok";
+  } catch (e) {
+    const status = (e as { statusCode?: number }).statusCode;
+    if (status === 404 || status === 410) return "sumiu";
+    console.error("Falha ao avisar o cliente:", status ?? e);
+    return "falhou";
+  }
+}
+
+/** Logo que o cliente liga o aviso: chega na hora, pra ele ver que funcionou. */
+export async function avisoClienteLigado(aparelho: Aparelho, h: { barbearia: string; slug: string; servico: string; inicio: string }): Promise<void> {
+  await enviarPara(aparelho, {
+    titulo: `Aviso ligado ✅`,
+    corpo: `A ${h.barbearia} te avisa 1 hora antes: ${h.servico}, ${formatarData(h.inicio.slice(0, 10))} às ${h.inicio.slice(11, 16)}.`,
+    url: `/b/${h.slug}`, tag: "cliente-ligado",
+  });
+}
+
+/** Roda a cada poucos minutos (instrumentation.ts): manda o "daqui a 1 hora" de quem pediu. */
+export async function enviarLembretesClientes(): Promise<number> {
+  const banco = obterAgenda();
+  let enviados = 0;
+  for (const l of banco.lembretesPendentes(60)) {
+    const r = await enviarPara(l, {
+      titulo: `Seu horário na ${l.barbearia} é às ${l.inicio.slice(11, 16)}`,
+      corpo: `${l.servico} com ${l.profissional}. Até já!`,
+      url: `/b/${l.slug}`, tag: `horario-${l.agendamentoId}`,
+    });
+    if (r === "ok") { banco.marcarLembreteEnviado(l.endpoint, l.agendamentoId); enviados++; }
+    else if (r === "sumiu") banco.removerLembreteCliente(l.endpoint);
+  }
+  return enviados;
 }

@@ -35,6 +35,11 @@ export default async function PrivacidadeBarbearia({ params }: { params: Promise
         guardados só como código embaralhado, que não dá pra transformar de volta. Ninguém vende nem passa os seus dados
         pra outras empresas.
       </p>
+      <p>
+        Se você tocar em &quot;Me avise 1 hora antes&quot;, o site guarda o endereço de aviso do seu celular (dado pelo
+        navegador) junto com esse horário, só pra mandar o lembrete. Ele é apagado quando o horário passa ou é cancelado.
+        O aviso passa pelo serviço de notificação do seu navegador (Google, Apple ou Mozilla), só com o texto do lembrete.
+      </p>
       {mapaEmbutido(b) && (
         <p>
           O mapa da página vem do Google Maps e é carregado do Google quando você chega nessa parte do site; o Google

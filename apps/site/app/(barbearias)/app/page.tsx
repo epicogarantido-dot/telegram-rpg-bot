@@ -6,7 +6,8 @@ import { linkWhatsapp } from "@aprenda/prospeccao";
 import { CalendarCheck, CalendarOff, CalendarPlus, Check, ListChecks, Star, MessageCircle, UserX, Users } from "lucide-react";
 import { exigirAcessoAtivo, exigirDono, mensagemDeErro, obterAgenda, podeMexer, reais } from "@/lib/agenda";
 import { BotaoCopiar } from "@/componentes/BotaoCopiar";
-import { avisoDeTeste, chavesAviso } from "@/lib/avisos";
+import { chavesAviso } from "@/lib/avisos";
+import { removerAviso, salvarAviso, testarAviso } from "./acoes-avisos";
 import { AvisosCelular } from "@/componentes/barbearia/AvisosCelular";
 import { linkPublico, situacaoAgora, urlFoto } from "@/lib/barbearias";
 import { mensagemAvaliacao, mensagemLembrete, primeiroNome } from "@/lib/pos-atendimento";
@@ -110,31 +111,6 @@ async function bloquearNumero(form: FormData) {
   const n = obterAgenda().bloquearTelefone(barbearia.id, String(form.get("telefone")));
   revalidatePath("/app");
   redirect(`/app?data=${encodeURIComponent(String(form.get("data") ?? ""))}&bloqueado=${n}`);
-}
-
-async function salvarAviso(inscricao: { endpoint: string; p256dh: string; auth: string }): Promise<string | null> {
-  "use server";
-  const { barbearia } = await exigirDono();
-  try {
-    obterAgenda().salvarInscricaoAviso(barbearia.id, {
-      endpoint: String(inscricao.endpoint), p256dh: String(inscricao.p256dh), auth: String(inscricao.auth),
-    });
-    return null;
-  } catch (e) {
-    return mensagemDeErro(e);
-  }
-}
-
-async function removerAviso(endpoint: string): Promise<void> {
-  "use server";
-  const { barbearia } = await exigirDono();
-  obterAgenda().removerInscricaoAviso(String(endpoint), barbearia.id);
-}
-
-async function testarAviso(): Promise<number> {
-  "use server";
-  const { barbearia } = await exigirDono();
-  return avisoDeTeste(barbearia.id);
 }
 
 async function alternarFechadoHoje(form: FormData) {
@@ -533,7 +509,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
         );
       })()}
 
-      {ehDono && <AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />}
+      {<AvisosCelular chavePublica={chavesAviso().publica} salvar={salvarAviso} remover={removerAviso} testar={testarAviso} />}
 
 
     </>

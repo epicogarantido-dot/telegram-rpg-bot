@@ -9,6 +9,13 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NEXT_PHASE === "phase-production-build") return;
   const { soEntrega } = await import("@/lib/modo");
   // Sem await: o site já atende enquanto as fotos são processadas (a barbearia em si nasce na hora).
+  // Lembrete no celular do cliente (1 hora antes do horário): confere a cada 5 minutos.
+  const g = globalThis as { lembretesLigados?: boolean };
+  if (!g.lembretesLigados) {
+    g.lembretesLigados = true;
+    const { enviarLembretesClientes } = await import("@/lib/avisos");
+    setInterval(() => { enviarLembretesClientes().catch((e) => console.error("Lembretes:", e)); }, 5 * 60_000).unref?.();
+  }
   if (soEntrega()) {
     const { prepararBarbeariaDoApp } = await import("@/lib/barbearia-do-app");
     prepararBarbeariaDoApp()

@@ -13,17 +13,27 @@ import { mensagemConfirmacao } from "@/lib/avisos";
  * envia é ele; o sistema não manda nada sozinho.
  */
 export async function confirmarNoWhatsapp(form: FormData) {
+  const link = await linkDeConfirmacao(form);
+  redirect(link ?? "/app/agendados");
+}
+
+/**
+ * Igual ao de cima, mas devolve o link (pra `FormWhats`, que abre o WhatsApp numa aba nova e não
+ * deixa o botão preso carregando). Usado na página que abre ao tocar no aviso de horário novo.
+ */
+export async function linkDeConfirmacao(form: FormData): Promise<string | undefined> {
   const { barbearia, usuario } = await exigirAcessoAtivo();
   const banco = obterAgenda();
   const a = banco.agendamento(barbearia.id, Number(form.get("id")));
-  if (!a || a.status !== "confirmado" || !podeMexer(usuario, a)) redirect("/app/agendados");
+  if (!a || a.status !== "confirmado" || !podeMexer(usuario, a)) return undefined;
   banco.registrarContato(barbearia.id, a.id, "confirmacao");
+  revalidatePath("/app", "layout");
   // Sinal ainda não pago: a confirmação já leva o Pix copia e cola pro cliente.
   const pix = !a.sinalPagoEm ? pixDoSinal(barbearia, a) : undefined;
-  redirect(linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({
+  return linkWhatsapp(a.clienteTelefone, mensagemConfirmacao({
     barbearia: barbearia.nome, cliente: a.clienteNome, servico: a.servico, profissional: a.profissional, inicio: a.inicio,
     sinal: pix ? { valor: reais(a.sinalCentavos!), pix } : undefined,
-  })));
+  }));
 }
 
 /** "Recebi o sinal" (o barbeiro conferiu no banco) ou desfaz. Volta pra página de onde veio. */
