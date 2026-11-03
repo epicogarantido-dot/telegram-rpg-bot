@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { PASTA_CURSOS } from "@aprenda/catalogo";
 import type { ItemLista } from "@aprenda/prospeccao";
@@ -14,13 +14,29 @@ export const dynamic = "force-dynamic";
  */
 const PASTA_LISTAS = join(dirname(PASTA_CURSOS), "listas");
 
-function lerListas(): { nome: string; titulo: string; itens: ItemLista[]; soEmail?: boolean }[] {
+type Lista = { nome: string; titulo: string; itens: ItemLista[]; soEmail?: boolean };
+/** Lido uma vez por versão do arquivo: a página se refaz a cada envio, e reler/reimportar tudo deixava lento. */
+const cache = ((globalThis as { listasLidas?: Map<string, { mtime: number; lista: Lista }> }).listasLidas ??= new Map());
+
+function lerListas(): Lista[] {
   let arquivos: string[] = [];
   try { arquivos = readdirSync(PASTA_LISTAS).filter((a) => a.endsWith(".json")).sort(); } catch { return []; }
-  return arquivos.map((a) => {
-    const dados = JSON.parse(readFileSync(join(PASTA_LISTAS, a), "utf8")) as { titulo?: string; itens: ItemLista[]; soEmail?: boolean };
-    return { nome: a.replace(/\.json$/, ""), titulo: dados.titulo ?? a, itens: dados.itens, soEmail: dados.soEmail };
-  }).filter((l) => !l.soEmail); // a de e-mail (emails.json) entra pelo /painel/emails
+  const listas: Lista[] = [];
+  for (const a of arquivos) {
+    const caminho = join(PASTA_LISTAS, a);
+    const mtime = statSync(caminho).mtimeMs;
+    let c = cache.get(a);
+    if (!c || c.mtime !== mtime) {
+      const dados = JSON.parse(readFileSync(caminho, "utf8")) as { titulo?: string; itens: ItemLista[]; soEmail?: boolean };
+      const lista: Lista = { nome: a.replace(/\.json$/, ""), titulo: dados.titulo ?? a, itens: dados.itens, soEmail: dados.soEmail };
+      // A de e-mail (emails.json) entra pelo /painel/emails; as outras entram no banco aqui, uma vez por versão.
+      if (!lista.soEmail) obterBanco().importarLista(lista.nome, lista.itens);
+      c = { mtime, lista };
+      cache.set(a, c);
+    }
+    if (!c.lista.soEmail) listas.push(c.lista);
+  }
+  return listas;
 }
 
 const FILTROS = { falta: "Falta mandar", mandadas: "Já mandei", todas: "Todas" } as const;
@@ -31,7 +47,6 @@ export default async function ListaDeContato({ searchParams }: { searchParams: P
   const sp = await searchParams;
   const banco = obterBanco();
   const listas = lerListas();
-  for (const l of listas) banco.importarLista(l.nome, l.itens);
   const atual = listas.find((l) => l.nome === sp.lista) ?? listas[0];
   const ver: Filtro = sp.ver === "mandadas" || sp.ver === "todas" ? sp.ver : "falta";
   const todos = atual ? banco.listaDeContato(atual.nome) : [];
